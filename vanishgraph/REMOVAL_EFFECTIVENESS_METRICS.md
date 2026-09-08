@@ -1,18 +1,3 @@
-# Removal Effectiveness Metrics
+# Removal effectiveness metrics
 
-Purpose: Verified-removal denominator, false positives, reappearance, cost, lag, and human effort.
-
-Status: BLUEPRINT_ONLY. This file defines an executable contract; it is not application implementation.
-
-Rule: every claim is tied to a requirement, command, and evidence path.
-Because: VanishGraph handles high-risk personal data and false success is unsafe.
-Required evidence: current candidate identity, command output, independent readback, and hashed evidence index.
-Or else: the item remains INCOMPLETE, BLOCKED, or NO_GO; it is never promoted by narrative.
-
-## Project requirements
-- LIVE-FIRE-PROOF-01 through LIVE-FIRE-PROOF-12
-- REQUEST_SENT is distinct from VERIFIED_REMOVED
-- SEARCH_DELISTED is distinct from source deletion
-- verified authority is required before external writes
-- provider-authorized transports only
-- manual production deployment only
+Primary metric is independently verified removal / eligible confirmed matches, with denominator and confidence interval. Track false positives, stale recipes, ambiguity, verification lag, reappearance, cost and human minutes. Never optimize requests sent or permanent-deletion claims.

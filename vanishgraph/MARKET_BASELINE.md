@@ -1,18 +1,3 @@
-# Market Baseline
+# Market baseline
 
-Purpose: Gap analysis for Optery, DeleteMe, Incogni, Kanary, and Google Results About You; no copied implementation data.
-
-Status: BLUEPRINT_ONLY. This file defines an executable contract; it is not application implementation.
-
-Rule: every claim is tied to a requirement, command, and evidence path.
-Because: VanishGraph handles high-risk personal data and false success is unsafe.
-Required evidence: current candidate identity, command output, independent readback, and hashed evidence index.
-Or else: the item remains INCOMPLETE, BLOCKED, or NO_GO; it is never promoted by narrative.
-
-## Project requirements
-- LIVE-FIRE-PROOF-01 through LIVE-FIRE-PROOF-12
-- REQUEST_SENT is distinct from VERIFIED_REMOVED
-- SEARCH_DELISTED is distinct from source deletion
-- verified authority is required before external writes
-- provider-authorized transports only
-- manual production deployment only
+Gap analysis only. Optery and DeleteMe establish recurring broker removals, custom URLs, evidence and broad coverage; Incogni and Kanary establish monitoring/removal expectations; Google Results About You establishes separate search delisting. VanishGraph differentiates through authority-bound Identity Exposure Graph, deterministic state machine, lineage, independent verification, lawful certified mail, transparent coverage and reappearance proof. Revalidate public claims in PREFLIGHT; copy no competitor material.

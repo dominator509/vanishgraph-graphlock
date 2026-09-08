@@ -1,33 +1,33 @@
 # PREFLIGHT
 
-Run this once after provisioning. Every external need is declared here. Missing values block only their dependent lane.
-
-| Service | Purpose | Variable | Lane | Scope | Probe | Fallback |
-|---|---|---|---|---|---|---|
-| PostgreSQL | canonical state | DATABASE_URL | REQUIRED_NOW | local or managed database | scripts/probes/database_url.sh | none |
-| Temporal | durable workflows | TEMPORAL_ADDRESS | REQUIRED_BEFORE_INTEGRATION | namespace access | scripts/probes/temporal_address.sh | none |
-| Session signing | auth session integrity | SESSION_SECRET | REQUIRED_NOW | generated secret | - | none |
-| Object storage | encrypted evidence | OBJECT_STORAGE_URL | REQUIRED_BEFORE_INTEGRATION | bucket access | scripts/probes/object_storage_url.sh | local S3-compatible service |
-| Key management | envelope encryption | KMS_KEY_ID | REQUIRED_BEFORE_DEPLOY | tenant data key use | scripts/probes/kms_key_id.sh | isolated local key only for development |
-| Search provider | discovery lane | SEARCH_API_KEY | REQUIRED_BEFORE_E2E | licensed search scope | scripts/probes/search_api_key.sh | user-supplied URLs and public permitted lanes |
-| GitHub App | repair loop | GITHUB_APP_ID | OPTIONAL | minimum repository permissions | scripts/probes/github_app_id.sh | manual issue and draft PR workflow |
-| Mail provider | certified mail | MAIL_PROVIDER_KEY | REQUIRED_BEFORE_E2E | sandbox and allowlisted targets | scripts/probes/mail_provider_key.sh | manual PDF/print/export |
-| Identity verifier | authority enrollment | IDENTITY_VERIFIER_KEY | HUMAN_EXTERNAL | purpose-limited verification | - | counsel-approved manual attestation |
-| Billing provider | subscriptions | BILLING_PROVIDER_KEY | REQUIRED_BEFORE_DEPLOY | test mode first | scripts/probes/billing_provider_key.sh | manual entitlement for pre-billing staging |
-| Provider transport | coding/model lane | PROVIDER_RUNNER_HANDLE | OPTIONAL | official authorized runner only | scripts/probes/provider_runner_handle.sh | self-hosted model |
-| Production staging | artifact proof | STAGING_KUBECONFIG | REQUIRED_BEFORE_DEPLOY | separate staging account | scripts/probes/staging_kubeconfig.sh | none |
+Provision all needs before the graph. Unknown external facts are revalidated from official sources.
 
 PREFLIGHT-TABLE-BEGIN
 DATABASE_URL|REQUIRED|scripts/probes/database_url.sh
 TEMPORAL_ADDRESS|REQUIRED|scripts/probes/temporal_address.sh
+VALKEY_URL|REQUIRED|scripts/probes/valkey_url.sh
+S3_ENDPOINT|REQUIRED|scripts/probes/object_store.sh
+S3_ACCESS_KEY_ID|REQUIRED|-
+S3_SECRET_ACCESS_KEY|REQUIRED|-
+S3_BUCKET|REQUIRED|-
+KEYCLOAK_ISSUER|REQUIRED|scripts/probes/keycloak.sh
+KEYCLOAK_CLIENT_ID|REQUIRED|-
+KEYCLOAK_CLIENT_SECRET|REQUIRED|-
 SESSION_SECRET|REQUIRED|-
-OBJECT_STORAGE_URL|REQUIRED|scripts/probes/object_storage_url.sh
-KMS_KEY_ID|REQUIRED|scripts/probes/kms_key_id.sh
+LOCAL_MODEL_ENDPOINT|REQUIRED|scripts/probes/local_model.sh
 SEARCH_API_KEY|OPTIONAL|scripts/probes/search_api_key.sh
-MAIL_PROVIDER_KEY|OPTIONAL|scripts/probes/mail_provider_key.sh
-BILLING_PROVIDER_KEY|OPTIONAL|scripts/probes/billing_provider_key.sh
-PROVIDER_RUNNER_HANDLE|OPTIONAL|scripts/probes/provider_runner_handle.sh
-STAGING_KUBECONFIG|OPTIONAL|scripts/probes/staging_kubeconfig.sh
+LOB_API_KEY|OPTIONAL|scripts/probes/postal_api.sh
+CLICK2MAIL_API_KEY|OPTIONAL|scripts/probes/postal_api.sh
+POSTGRID_API_KEY|OPTIONAL|scripts/probes/postal_api.sh
+STRIPE_SECRET_KEY|OPTIONAL|scripts/probes/stripe.sh
+STRIPE_WEBHOOK_SECRET|OPTIONAL|-
+GITHUB_APP_ID|REQUIRED|scripts/probes/github_app.sh
+GITHUB_APP_PRIVATE_KEY|REQUIRED|-
+GITHUB_INSTALLATION_ID|REQUIRED|-
+CODEX_RUNNER_HANDLE|OPTIONAL|-
+CLAUDE_RUNNER_HANDLE|OPTIONAL|-
+GROK_RUNNER_HANDLE|OPTIONAL|-
+CLOUD_WORKLOAD_IDENTITY|OPTIONAL|scripts/probes/cloud_identity.sh
 PREFLIGHT-TABLE-END
 
-Production launch remains blocked until legal, provider, accessibility, UAT, security, and deployment gates have real evidence.
+Credential lanes are REQUIRED_NOW, REQUIRED_BEFORE_INTEGRATION, REQUIRED_BEFORE_E2E, REQUIRED_BEFORE_DEPLOY, OPTIONAL and HUMAN_EXTERNAL. Missing credentials block only dependent work.

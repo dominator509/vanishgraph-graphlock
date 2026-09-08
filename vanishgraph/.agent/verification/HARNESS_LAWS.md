@@ -1,10 +1,3 @@
-# Harness Laws
+# Harness laws
 
-Purpose: 484 capabilities, 42 DOD clauses, candidate epochs, evidence ledger, non-cascading blockers, and exact artifact release proof.
-
-Status: BLUEPRINT_ONLY. This file defines an executable contract; it is not application implementation.
-
-Rule: every claim is tied to a requirement, command, and evidence path.
-Because: VanishGraph handles high-risk personal data and false success is unsafe.
-Required evidence: current candidate identity, command output, independent readback, and hashed evidence index.
-Or else: the item remains INCOMPLETE, BLOCKED, or NO_GO; it is never promoted by narrative.
+Exactly 484 individually accounted IDs; 434 supplied source bodies plus 15 reconstructed Blockchain bodies; V-000 through V-021; candidate and artifact immutable per epoch; failures do not blanket-block independent tests; mocks cannot prove final integrations; verdicts GO, NO_GO, CONDITIONAL_EXTERNAL_GATES, INCONCLUSIVE.

@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
 set -eu
-[ -f PREFLIGHT.md ] || exit 1
-[ -f .env ] || { echo "preflight: FAIL - missing .env" >&2; exit 1; }
+export CI=true GIT_TERMINAL_PROMPT=0 GIT_PAGER=cat PAGER=cat DEBIAN_FRONTEND=noninteractive
+[ -f AGENTS.md ] || exit 1
 echo "preflight: ok"

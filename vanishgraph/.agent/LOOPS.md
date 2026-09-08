@@ -1,3 +1,3 @@
-# LOOPS
+# Loops
 
-One active node. Every milestone has at most six attempts. Record first failure, exact command, exit code, evidence, and next action. Continue independent graph branches after a blocker. Never shorten required soak, fuzz, performance, or external validation. Resume from the durable ledger.
+Run graph-next until terminal. Each milestone uses bounded same-signature ladder: targeted fix, diagnosis, real fallback, rollback, structured block. Readiness probes are bounded. No global cutoff; checkpoints and resumes preserve long tests. Candidate epochs are immutable.

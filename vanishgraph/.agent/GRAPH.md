@@ -1,4 +1,4 @@
-# Implementation Graph
+# Graph
 
 GRAPH-TABLE-BEGIN
 NODE EP-000 DEPS -
@@ -14,4 +14,4 @@ NODE EP-009 DEPS EP-008
 NODE EP-010 DEPS EP-009
 GRAPH-TABLE-END
 
-Dispatch the first eligible node from graph-next.sh. CLOSED_BLOCKED affects only explicit dependents.
+One active node; blocked work does not halt unrelated eligible work.

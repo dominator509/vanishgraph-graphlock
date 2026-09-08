@@ -5,4 +5,3 @@ build/
 .next/
 coverage/
 .agent/evidence/
-*.log

@@ -1,18 +1,7 @@
 # Architecture
 
-Purpose: Identity Exposure Graph, policy engine, Temporal workflows, adapters, isolated browser workers, tenant boundaries.
+Next.js/React portals call Fastify APIs; PostgreSQL is canonical with RLS; Temporal owns durable workflows; Valkey coordinates; encrypted S3 evidence; isolated non-root Crawlee/Playwright workers; Keycloak OIDC/MFA; MCP least-privilege gateway; OTel/Prometheus/GlitchTip DLP-safe telemetry.
 
-Status: BLUEPRINT_ONLY. This file defines an executable contract; it is not application implementation.
+Code law: domain imports only standard library; application imports domain; adapters implement ports; HTTP/UI/MCP call application contracts; infrastructure composes implementations. Lower layers never import higher layers.
 
-Rule: every claim is tied to a requirement, command, and evidence path.
-Because: VanishGraph handles high-risk personal data and false success is unsafe.
-Required evidence: current candidate identity, command output, independent readback, and hashed evidence index.
-Or else: the item remains INCOMPLETE, BLOCKED, or NO_GO; it is never promoted by narrative.
-
-## Project requirements
-- LIVE-FIRE-PROOF-01 through LIVE-FIRE-PROOF-12
-- REQUEST_SENT is distinct from VERIFIED_REMOVED
-- SEARCH_DELISTED is distinct from source deletion
-- verified authority is required before external writes
-- provider-authorized transports only
-- manual production deployment only
+Invariants: SEARCH_HIT is not SUBJECT_MATCH; REQUEST_SUBMITTED is not REMOVED; controller acknowledgment is not independent verification; source and search are separate; every write has authority, policy, recipe, idempotency and reconciliation; stale recipes cannot write; remote content is untrusted; every claim maps to requirement, test, artifact and evidence.

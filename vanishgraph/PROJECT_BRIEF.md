@@ -1,18 +1,7 @@
 # VanishGraph Privacy Removal OS
 
-Purpose: Evidence-first multi-tenant privacy removal SaaS.
+VanishGraph Privacy Removal OS is a multi-tenant, evidence-first privacy-removal service. It discovers public exposure for verified subjects, determines lawful/provider-permitted channels, records durable requests and evidence, independently verifies source and search outcomes, and monitors reappearance. It never claims universal crawling or permanent deletion.
 
-Status: BLUEPRINT_ONLY. This file defines an executable contract; it is not application implementation.
+Core outcomes: LIVE-FIRE-PROOF-01 SUBJECT-BOUND DISCOVERY; LIVE-FIRE-PROOF-02 BROKER REMOVAL CLOSED LOOP; LIVE-FIRE-PROOF-03 MULTI-CHANNEL ESCALATION; LIVE-FIRE-PROOF-04 SOURCE-AND-SEARCH SEPARATION; LIVE-FIRE-PROOF-05 REAPPEARANCE MONITORING; LIVE-FIRE-PROOF-06 CUSTOM INTERNET REMOVAL; LIVE-FIRE-PROOF-07 PRIVACY PRESERVATION; LIVE-FIRE-PROOF-08 PROVIDER TRANSPORT; LIVE-FIRE-PROOF-09 FAILURE-RECOVERY; LIVE-FIRE-PROOF-10 BUG-TO-PR LOOP; LIVE-FIRE-PROOF-11 COVERAGE HONESTY; LIVE-FIRE-PROOF-12 ENTERPRISE AUTHORIZATION.
 
-Rule: every claim is tied to a requirement, command, and evidence path.
-Because: VanishGraph handles high-risk personal data and false success is unsafe.
-Required evidence: current candidate identity, command output, independent readback, and hashed evidence index.
-Or else: the item remains INCOMPLETE, BLOCKED, or NO_GO; it is never promoted by narrative.
-
-## Project requirements
-- LIVE-FIRE-PROOF-01 through LIVE-FIRE-PROOF-12
-- REQUEST_SENT is distinct from VERIFIED_REMOVED
-- SEARCH_DELISTED is distinct from source deletion
-- verified authority is required before external writes
-- provider-authorized transports only
-- manual production deployment only
+Non-goals: stalking, arbitrary third-party campaigns, bypassing CAPTCHA/OTP/access controls, cookie/session theft, false legal claims, public-interest suppression, PII sale, external-model training on raw customer PII, and autonomous production deployment.

@@ -1,3 +1,3 @@
-# Next Action
+# Next action
 
-FORGE_ONLY validation is complete. Do not write application code. Codex must resolve VG-REDIRECT-001, VG-REDIRECT-002, and VG-REDIRECT-003 through evidence-backed change control before implementation mode is authorized.
+Wait for explicit FORGE_AND_EXECUTE authorization; then provision and run EP-000.

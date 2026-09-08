@@ -1,1 +1,3 @@
-{"status":"BLUEPRINT_ONLY","verdict":"INCONCLUSIVE","candidate_epoch":0,"next_action":"Codex must resolve redirection cards before implementation authorization.","production_deployment_authorized":false}
+{
+  "status": "PLANNED"
+}
