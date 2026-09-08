@@ -73,6 +73,9 @@
 - .agent/verification/state/RUN_STATE.json
 - .agent/verification/state/STATUS_TRANSITION_AUDIT.jsonl
 - .agent/verification/state/TEST_LEDGER.jsonl
+- .agent/verification/source-library/security/blockchain-security-testing-prompts.md
+- .agent/verification/source-library/security/general-dev-security-testing-prompts.md
+- .agent/verification/source-library/security/hipaa-software-dev-security-testing-prompts.md
 - .env.example
 - .gitignore
 - AGENTS.md
@@ -199,4 +202,4 @@
 - .agent/verification/stage-plans/V-021-uat-external-gates-and-final-accounting.md
 - TESTING.md
 
-TOTAL FILES: 200
+TOTAL FILES: 203

@@ -1,0 +1,16 @@
+{
+  "mode": "FORGE_ONLY",
+  "application_code_written": false,
+  "production_deployment": false,
+  "generated_file_count": 204,
+  "registry_rows": 484,
+  "dod_rows": 42,
+  "validation_command": "python3 scripts/validate-generated-pack.py /root/vanishgraph-graphlock/vanishgraph",
+  "validation_sentinel": "generated pack validation: ok",
+  "anti_gaming_command": "python3 scripts/anti-gaming-scan.py /root/vanishgraph-graphlock/vanishgraph",
+  "anti_gaming_exit_code": 0,
+  "anti_gaming_match_count": 272,
+  "anti_gaming_verdict": "matches require classification; all observed matches are control/source prose or scanner self-signatures, not application production code",
+  "captured_output": ".agent/evidence/anti-gaming-scan.txt",
+  "recorded_at_utc": "2026-09-08T16:52:46.198886+00:00"
+}
