@@ -178,5 +178,37 @@ Every file is generated for the VanishGraph planned target.
 - scripts/typecheck.sh
 - scripts/validate-generated-pack.py
 - scripts/verify.sh
+- .agent/reality-patterns
+- .agent/reality-allow
+- .agent/specs/SPEC-000-product-scope.md
+- .agent/specs/SPEC-001-core-domain.md
+- .agent/specs/SPEC-002-data-model.md
+- .agent/specs/SPEC-003-api-contracts.md
+- .agent/specs/SPEC-004-ui-ux-behavior.md
+- .agent/specs/SPEC-005-auth-and-permissions.md
+- .agent/specs/SPEC-006-error-handling.md
+- .agent/specs/SPEC-007-observability.md
+- .agent/specs/SPEC-008-production-readiness.md
+- .agent/verification/REQUIREMENT_TRACEABILITY.csv
+- .agent/verification/APPLICABILITY_MATRIX.csv
+- .agent/verification/CAPABILITY_MATRIX.md
+- .agent/verification/TEST_ENVIRONMENT_MANIFEST.md
+- .agent/verification/EXECUTION_DAG.md
+- .agent/verification/casebooks/e2e-suites.jsonl
+- .agent/verification/casebooks/supplemental-gates.jsonl
+- .agent/verification/state/RUN_MANIFEST.json
+- .agent/verification/state/RUN_STATE.json
+- .agent/verification/state/TEST_LEDGER.jsonl
+- .agent/verification/state/DOD_STATUS.jsonl
+- .agent/verification/state/EVIDENCE_INDEX.json
+- .agent/verification/state/DEPENDENCY_BLOCKER_GRAPH.json
+- .agent/verification/state/CHANGE_INVALIDATION_GRAPH.md
+- .agent/verification/state/STATUS_TRANSITION_AUDIT.jsonl
+- .agent/verification/state/NEXT_ACTION.md
+- .agent/verification/reports/COMPLETE_TEST_ACCOUNTING.csv
+- .agent/verification/reports/CLAIM_TO_RELEASE_TRACEABILITY.csv
+- .agent/verification/reports/FINAL_PRODUCTION_READINESS_REPORT.md
+- .agent/verification/reports/RELEASE_GATE.json
+- .agent/verification/reports/RESIDUAL_RISK_AND_EXTERNAL_GATES.md
 
-TOTAL FILES: 176
+TOTAL FILES: 209

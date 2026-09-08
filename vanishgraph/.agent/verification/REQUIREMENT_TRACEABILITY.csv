@@ -1,0 +1,13 @@
+requirement_id,source,test_id,acceptance,evidence_path,status
+LIVE-FIRE-PROOF-01,subject-bound discovery,E2E-001,real sources with explainable match,.agent/evidence/pending,PLANNED
+LIVE-FIRE-PROOF-02,broker removal closed loop,E2E-002,independent verification,.agent/evidence/pending,PLANNED
+LIVE-FIRE-PROOF-03,multi-channel escalation,E2E-003,lawful channel and delivery proof,.agent/evidence/pending,PLANNED
+LIVE-FIRE-PROOF-04,source/search separation,E2E-004,separate terminal states,.agent/evidence/pending,PLANNED
+LIVE-FIRE-PROOF-05,reappearance monitoring,E2E-005,deduplicated recurrence,.agent/evidence/pending,PLANNED
+LIVE-FIRE-PROOF-06,custom URL removal,E2E-006,quarantine and proof,.agent/evidence/pending,PLANNED
+LIVE-FIRE-PROOF-07,privacy preservation,E2E-007,tenant isolation and deletion,.agent/evidence/pending,PLANNED
+LIVE-FIRE-PROOF-08,provider transport,E2E-008,official transports only,.agent/evidence/pending,EXTERNAL_REQUIRED
+LIVE-FIRE-PROOF-09,failure recovery,E2E-009,restart without duplicate effect,.agent/evidence/pending,PLANNED
+LIVE-FIRE-PROOF-10,bug to draft PR,E2E-010,sanitized isolated draft PR,.agent/evidence/pending,PLANNED
+LIVE-FIRE-PROOF-11,coverage honesty,E2E-011,measured coverage report,.agent/evidence/pending,PLANNED
+LIVE-FIRE-PROOF-12,enterprise authorization,E2E-012,authority and tenant boundary,.agent/evidence/pending,EXTERNAL_REQUIRED

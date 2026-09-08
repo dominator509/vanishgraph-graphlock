@@ -1,0 +1,6 @@
+test_id,applicability_predicate,evidence_basis,default_status,owner_stage
+GEN-001 through GEN-122,repository evidence and security surface,architecture and dependency inspection,PENDING,V-004
+HIPAA-001 through HIPAA-125,regulated data evidence,DATA_EGRESS_MATRIX and SECURITY.md,PENDING,V-013
+BC-001 through BC-202,blockchain components only,repository technology inventory,SKIPPED_NOT_APPLICABLE_PENDING,V-013
+E2E-001 through E2E-020,core user outcomes,PROJECT_BRIEF.md,PENDING,V-008
+SUP-001 through SUP-015,release applicability,PRODUCTION_READINESS.md,PENDING,V-021
