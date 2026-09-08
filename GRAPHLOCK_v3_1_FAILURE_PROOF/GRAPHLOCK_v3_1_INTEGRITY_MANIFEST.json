@@ -1,0 +1,130 @@
+{
+  "bundle": "GRAPHLOCK_v3_1_FAILURE_PROOF_VANISHGRAPH",
+  "created_at_utc": "2026-08-28T19:10:36.084883+00:00",
+  "source_bundle": "GRAPHLOCK_v3_1_FAILURE_PROOF_BUNDLE(4).zip",
+  "customization": "VanishGraph Privacy Removal OS project inputs and research, 2026-08-28",
+  "primary_master": "6Layer-MasterPrompt-v3.1-GRAPHLOCK-FAILURE-PROOF.md",
+  "validation_report": "GRAPHLOCK_v3_1_VALIDATION_REPORT.json",
+  "files": [
+    {
+      "path": "6Layer-MasterPrompt-v3.1-GRAPHLOCK-FAILURE-PROOF.md",
+      "bytes": 790460,
+      "sha256": "7d30cbead436d1a7468fcef71b9ab2418d96ab26be9e0af928b986df3f87410f"
+    },
+    {
+      "path": "GRAPHLOCK_v3_1_BOOTSTRAP_LAUNCHER.md",
+      "bytes": 2949,
+      "sha256": "388e9a4a509bde56e3f3c011dad8a982d1763da48af00151cde4fff703cb4fb3"
+    },
+    {
+      "path": "GRAPHLOCK_v3_1_CHANGELOG.md",
+      "bytes": 2497,
+      "sha256": "dc60b94d64ec1d08ad919513a98c930dd460ed7eec904bb1d23544573486f349"
+    },
+    {
+      "path": "GRAPHLOCK_v3_1_DEFINITION_OF_DONE.csv",
+      "bytes": 18499,
+      "sha256": "66a083018bceeb6c15295e2eff7572c43ab16f70d8e5e4450f8f8c0c3b46c9c4"
+    },
+    {
+      "path": "GRAPHLOCK_v3_1_EMBEDDED_TEST_REGISTRY.csv",
+      "bytes": 101092,
+      "sha256": "fb83d016aab6ccc2d306be146d3d492c03a5aa439b3651a4ce6545954495bb58"
+    },
+    {
+      "path": "GRAPHLOCK_v3_1_README.md",
+      "bytes": 2227,
+      "sha256": "8c0db4685a0a5e6f11ec04c988c37e7ef315ea65849a8d6b49c2d55e5f2090ec"
+    },
+    {
+      "path": "GRAPHLOCK_v3_1_VALIDATION_REPORT.json",
+      "bytes": 326,
+      "sha256": "5a555c780bae4c2badcbfc5e82140accb58033af0c8c80965b43a82e10b82934"
+    },
+    {
+      "path": "PROJECT_CUSTOMIZATION_SUMMARY.md",
+      "bytes": 2543,
+      "sha256": "d84d9235b31c4f85159ef044a81f47aeec6f5c501f8346b33998c9963bfda8af"
+    },
+    {
+      "path": "PROJECT_RESEARCH_BRIEF.md",
+      "bytes": 22093,
+      "sha256": "d6e17829f634f5f3a4be4798852f612d046109e7651d37375651d567d1957dc6"
+    },
+    {
+      "path": "archive_original_v3/6Layer-MasterPrompt-v3-GRAPHLOCK-VERIFIED.md",
+      "bytes": 707325,
+      "sha256": "a3af7c8506e3a55ad8888f3a0eb23a24b9c94f36c25d930571095ba8c2491099"
+    },
+    {
+      "path": "archive_original_v3/GRAPHLOCK_v3_BOOTSTRAP_LAUNCHER.md",
+      "bytes": 1461,
+      "sha256": "b029ff1949d4c9f0f27a883c5f58f25da0ed99f3948531476c3966d174416f7f"
+    },
+    {
+      "path": "archive_original_v3/GRAPHLOCK_v3_CHANGELOG.md",
+      "bytes": 2486,
+      "sha256": "75858c0f622557aa5131960bea3a3f4fbad08362f8e4224741b78c5c4ce06164"
+    },
+    {
+      "path": "archive_original_v3/GRAPHLOCK_v3_DEFINITION_OF_DONE.csv",
+      "bytes": 18499,
+      "sha256": "66a083018bceeb6c15295e2eff7572c43ab16f70d8e5e4450f8f8c0c3b46c9c4"
+    },
+    {
+      "path": "archive_original_v3/GRAPHLOCK_v3_EMBEDDED_TEST_REGISTRY.csv",
+      "bytes": 101092,
+      "sha256": "fb83d016aab6ccc2d306be146d3d492c03a5aa439b3651a4ce6545954495bb58"
+    },
+    {
+      "path": "archive_original_v3/GRAPHLOCK_v3_INTEGRITY_MANIFEST.json",
+      "bytes": 1563,
+      "sha256": "3c8e75cd2f4c2caed90294a75c00272138e9e0137bbcaa57c77b6dd21a4010f7"
+    },
+    {
+      "path": "archive_original_v3/GRAPHLOCK_v3_README.md",
+      "bytes": 2042,
+      "sha256": "04686f18727b110157a727412e2e1165d96765647c52b1825ef252f397f4d5a9"
+    },
+    {
+      "path": "archive_original_v3/GRAPHLOCK_v3_VALIDATION_REPORT.json",
+      "bytes": 1066,
+      "sha256": "bbefea8a62b7bf69c10247cb3f2436b667833b701e1d35ebe469023a66e786a8"
+    },
+    {
+      "path": "archive_original_v3/validate_graphlock_v3.py",
+      "bytes": 15054,
+      "sha256": "5ba6d488c07c43cd9e3a485504d374cbf658b41224695590f76c4b8c0213566f"
+    },
+    {
+      "path": "schemas/anti-gaming-review.schema.json",
+      "bytes": 2929,
+      "sha256": "9448708ffdc843979544431e1247ed0a66fc3fd26d4ab77cd8cdbbc7353af7db"
+    },
+    {
+      "path": "schemas/blocked-node.schema.json",
+      "bytes": 3706,
+      "sha256": "0224093e83ea135ebbd7514403207ba43cb9293629707613a0c5c0e97c41effc"
+    },
+    {
+      "path": "scripts/anti-gaming-scan.py",
+      "bytes": 2501,
+      "sha256": "1c74f4779882527f7eafb02616f904a4c292c0caf1a49437078c17e291b4e0d3"
+    },
+    {
+      "path": "scripts/validate-generated-pack.py",
+      "bytes": 5459,
+      "sha256": "476b5f545a8dc6f2d318ea310b8de820352b0d6ad219464ac0c101a9b81b7213"
+    },
+    {
+      "path": "scripts/validate-hash-ledger.py",
+      "bytes": 1231,
+      "sha256": "27f85597a4b47f13bb47652062298b571c161e61946b605a48edf63d0fa9b846"
+    },
+    {
+      "path": "validate_graphlock_v3_1.py",
+      "bytes": 3692,
+      "sha256": "3beeb5937da6f7711452269dc41d64239ce1d1a267d348761eea3d8e6b05d22c"
+    }
+  ]
+}

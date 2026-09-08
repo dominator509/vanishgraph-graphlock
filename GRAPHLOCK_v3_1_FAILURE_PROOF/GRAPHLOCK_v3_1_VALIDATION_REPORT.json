@@ -1,0 +1,13 @@
+{
+  "valid": true,
+  "errors": [],
+  "warnings": [],
+  "file": "6Layer-MasterPrompt-v3.1-GRAPHLOCK-FAILURE-PROOF.md",
+  "bytes": 790460,
+  "lines": 8672,
+  "words": 57944,
+  "sha256": "7d30cbead436d1a7468fcef71b9ab2418d96ab26be9e0af928b986df3f87410f",
+  "registry_count": 484,
+  "dod_count": 42,
+  "verification_stages": 22
+}

@@ -1,0 +1,36 @@
+{
+  "valid": true,
+  "errors": [],
+  "warnings": [],
+  "file": "6Layer-MasterPrompt-v3-GRAPHLOCK-VERIFIED.md",
+  "bytes": 707325,
+  "lines": 8130,
+  "words": 47347,
+  "sha256": "a3af7c8506e3a55ad8888f3a0eb23a24b9c94f36c25d930571095ba8c2491099",
+  "registry_count": 484,
+  "prefix_counts": {
+    "GEN": 122,
+    "HIPAA": 125,
+    "BC": 202,
+    "E2E": 20,
+    "SUP": 15
+  },
+  "registry_source_status_counts": {
+    "embedded-original-source": 434,
+    "embedded-reconstructed-source": 15,
+    "embedded-suite": 20,
+    "embedded-supplemental": 15
+  },
+  "dod_count": 42,
+  "verification_stages": 22,
+  "embedded_original_prompt_bodies": 434,
+  "embedded_source_body_counts": {
+    "security/blockchain-security-testing-prompts.md": 187,
+    "security/general-dev-security-testing-prompts.md": 122,
+    "security/hipaa-software-dev-security-testing-prompts.md": 125
+  },
+  "embedded_archive_sha256": "b9b07b2bd16bf5a284a645735a3fedeff5f8d80da06e428c39daa5e143608826",
+  "e2e_suite_count": 20,
+  "supplemental_gate_count": 15,
+  "reconstructed_blockchain_count": 15
+}

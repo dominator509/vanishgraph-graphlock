@@ -1,0 +1,45 @@
+{
+  "bundle_version": "GRAPHLOCK-VERIFIED/3.0",
+  "harness_schema": "GRAPHLOCK-VERIFIED-HARNESS/3.0",
+  "registry_count": 484,
+  "dod_count": 42,
+  "verification_stages": 22,
+  "embedded_original_prompt_bodies": 434,
+  "reconstructed_blockchain_prompt_bodies": 15,
+  "e2e_suites": 20,
+  "supplemental_gates": 15,
+  "files": {
+    "6Layer-MasterPrompt-v3-GRAPHLOCK-VERIFIED.md": {
+      "bytes": 707325,
+      "sha256": "a3af7c8506e3a55ad8888f3a0eb23a24b9c94f36c25d930571095ba8c2491099"
+    },
+    "GRAPHLOCK_v3_BOOTSTRAP_LAUNCHER.md": {
+      "bytes": 1461,
+      "sha256": "b029ff1949d4c9f0f27a883c5f58f25da0ed99f3948531476c3966d174416f7f"
+    },
+    "GRAPHLOCK_v3_EMBEDDED_TEST_REGISTRY.csv": {
+      "bytes": 101092,
+      "sha256": "fb83d016aab6ccc2d306be146d3d492c03a5aa439b3651a4ce6545954495bb58"
+    },
+    "GRAPHLOCK_v3_DEFINITION_OF_DONE.csv": {
+      "bytes": 18499,
+      "sha256": "66a083018bceeb6c15295e2eff7572c43ab16f70d8e5e4450f8f8c0c3b46c9c4"
+    },
+    "GRAPHLOCK_v3_README.md": {
+      "bytes": 2042,
+      "sha256": "04686f18727b110157a727412e2e1165d96765647c52b1825ef252f397f4d5a9"
+    },
+    "GRAPHLOCK_v3_CHANGELOG.md": {
+      "bytes": 2486,
+      "sha256": "75858c0f622557aa5131960bea3a3f4fbad08362f8e4224741b78c5c4ce06164"
+    },
+    "validate_graphlock_v3.py": {
+      "bytes": 15054,
+      "sha256": "5ba6d488c07c43cd9e3a485504d374cbf658b41224695590f76c4b8c0213566f"
+    },
+    "GRAPHLOCK_v3_VALIDATION_REPORT.json": {
+      "bytes": 1066,
+      "sha256": "bbefea8a62b7bf69c10247cb3f2436b667833b701e1d35ebe469023a66e786a8"
+    }
+  }
+}

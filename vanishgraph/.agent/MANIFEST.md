@@ -11,6 +11,7 @@
 - .agent/checklists/rollback.md
 - .agent/checklists/validation.md
 - .agent/evidence/forge-validation.json
+- .agent/evidence/anti-gaming-scan.txt
 - .agent/execplans/EP-000-node.md
 - .agent/execplans/EP-001-node.md
 - .agent/execplans/EP-002-node.md
@@ -38,6 +39,7 @@
 - .agent/specs/SPEC-006-errors.md
 - .agent/specs/SPEC-007-observability.md
 - .agent/specs/SPEC-008-production-readiness.md
+- .agent/state/LEDGER.jsonl
 - .agent/state/LEDGER.md
 - .agent/templates/adr-template.md
 - .agent/templates/execplan-template.md
@@ -202,4 +204,4 @@
 - .agent/verification/stage-plans/V-021-uat-external-gates-and-final-accounting.md
 - TESTING.md
 
-TOTAL FILES: 203
+TOTAL FILES: 205

@@ -1,0 +1,26 @@
+{
+  "card_id": "CODEX-20260908-GIT-COMMIT-CONFLICT",
+  "status": "OPEN",
+  "assigned_to": "codex",
+  "model": "gpt-5.6-luna",
+  "title": "Resolve Forge-only commit requirement against explicit no-repository-init constraint",
+  "exact_evidence": {
+    "working_root": "/root/vanishgraph-graphlock",
+    "planned_target": "/root/vanishgraph-graphlock/vanishgraph",
+    "mode": "FORGE_ONLY",
+    "launcher_requirement": "Commit generated pack with clear messages; maintain evidence.",
+    "safety_constraint": "Do NOT create/init the vanishgraph repo unless a later operator flips MODE to FORGE_AND_EXECUTE.",
+    "observed_state": [
+      "/root/vanishgraph-graphlock/vanishgraph/.git does not exist",
+      "/root/vanishgraph-graphlock/.git does not exist",
+      "git status and git log cannot run because neither path is a repository"
+    ],
+    "validation_evidence": [
+      "python3 scripts/validate-generated-pack.py /root/vanishgraph-graphlock/vanishgraph -> generated pack validation: ok",
+      "python3 scripts/anti-gaming-scan.py /root/vanishgraph-graphlock/vanishgraph -> exit 0; matches require classification"
+    ]
+  },
+  "requested_direction": "Decide whether Forge-only may record a non-git immutable artifact digest/evidence instead of committing, or authorize a repository-init/commit exception. Do not infer authorization.",
+  "release_impact": "The blueprint pack is validated, but commit evidence is unresolved. No application code or production deployment may begin.",
+  "created_utc": "2026-09-08T00:00:00Z"
+}
