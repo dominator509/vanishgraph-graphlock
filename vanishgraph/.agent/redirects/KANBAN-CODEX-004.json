@@ -1,0 +1,12 @@
+{
+  "card_id": "KANBAN-CODEX-004",
+  "title": "Select and authorize identity-verification and certified-mail providers",
+  "assigned_to": {"agent": "codex", "model": "gpt-5.6-luna"},
+  "status": "OPEN",
+  "mode": "FORGE_ONLY",
+  "evidence": ["PREFLIGHT.md:14-15", "PROJECT_RESEARCH_BRIEF.md:211-236"],
+  "exact_question": "Choose counsel/privacy-reviewed identity-verification and postal adapters, confirming minimum-data handling, sandbox behavior, certified/return-receipt semantics, webhook authenticity, retention, and provider terms.",
+  "safe_boundary": "Use manual attestation or manual PDF/print/export only; never claim verified authority, mailing, delivery, or return receipt without provider or human evidence.",
+  "unblock_condition": "Provider ADRs, current docs, sandbox evidence, DPA/retention review, and credential lane assignments are recorded.",
+  "release_impact": "Blocks identity and certified-mail live-fire claims; unrelated local workflow work continues."
+}
