@@ -9,8 +9,8 @@
   "validation_sentinel": "generated pack validation: ok",
   "anti_gaming_command": "python3 scripts/anti-gaming-scan.py /root/vanishgraph-graphlock/vanishgraph",
   "anti_gaming_exit_code": 0,
-  "anti_gaming_match_count": 272,
-  "anti_gaming_verdict": "matches require classification; all observed matches are control/source prose or scanner self-signatures, not application production code",
+  "anti_gaming_match_count": 274,
+  "anti_gaming_verdict": "matches require classification; all observed matches are control/source prose, registry titles, validator/scanner patterns, or evidence text; no application production code exists in FORGE_ONLY",
   "captured_output": ".agent/evidence/anti-gaming-scan.txt",
   "recorded_at_utc": "2026-09-08T16:52:46.198886+00:00"
 }
