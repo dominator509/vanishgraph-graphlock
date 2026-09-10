@@ -1,0 +1,10 @@
+{
+  "reviewed": true,
+  "node": "EP-000",
+  "verdict": "PASS",
+  "issues_found": 0,
+  "exemptions": [
+    ".agent/evidence/EP-000/anti-gaming.txt",
+    ".agent/reality-patterns"
+  ]
+}

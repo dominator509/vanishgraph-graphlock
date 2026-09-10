@@ -1,0 +1,3 @@
+generated pack validation: ok
+WARN: possible incomplete prose/code in .agent/reality-patterns
+WARN: possible incomplete prose/code in .agent/evidence/EP-000/anti-gaming.txt
