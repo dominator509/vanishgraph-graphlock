@@ -29,8 +29,7 @@ bind the *service boundary only*; they are satisfied only when the underlying
 
 ## 1. Purpose and layer position
 
-This specification defines the HTTP contract of the Fastify service layer for the
-Next.js portals and the MCP/agent gateway. Per `ARCHITECTURE.md` code law and
+This specification defines the HTTP contract of the Fastify service layer for the Vite + React portal SPA and the MCP/agent gateway. Per `ARCHITECTURE.md` code law and
 SPEC-001 §1, the HTTP layer calls **application contracts only**: it must not
 import domain internals or adapters directly. A route handler validates input,
 resolves the caller's tenant, roles, and scopes, dispatches exactly one application
@@ -1047,14 +1046,14 @@ These four routes require **no** bearer token and are the only such routes. They
 
 **5.17.1 `GET /v1/health`** — aggregate dependency state.
 Success `200` (all required dependencies reachable) or `503` (any required dependency unreachable).
-Body: `{"dependencyState":"HEALTHY|DEGRADED|UNHEALTHY","checkedAt":"…","service":"vanishgraph-api","apiVersion":"v1","dependencies":[{"name":"postgresql","reachable":true,"latencyMs":3},{"name":"valkey","reachable":true,"latencyMs":1},{"name":"temporal","reachable":true,"latencyMs":7},{"name":"object-store","reachable":true,"latencyMs":11},{"name":"keycloak-jwks","reachable":true,"cacheAgeSeconds":42}],"degraded":[]}`
+Body: `{"dependencyState":"HEALTHY|DEGRADED|UNHEALTHY","checkedAt":"…","service":"vanishgraph-api","apiVersion":"v1","dependencies":[{"name":"postgresql","reachable":true,"latencyMs":3},{"name":"valkey","reachable":true,"latencyMs":1},{"name":"job-worker","reachable":true,"latencyMs":2},{"name":"object-store","reachable":true,"latencyMs":11},{"name":"keycloak-jwks","reachable":true,"cacheAgeSeconds":42}],"degraded":[]}`
 The `service` value is the `service.name` resource attribute fixed by SPEC-007 (`vanishgraph-api`). The state field is named `dependencyState`, not `status`: it is a dependency-health classification and must never be confused with a truth state.
 
 **5.17.2 `GET /v1/ready`** — readiness for traffic. Owned by SPEC-007 §7 for its full per-check body; this file fixes the path and the two vocabulary fields.
-Success `200` with `{"dependencyState":"READY","checkedAt":"…","failedChecks":[]}`; `503` with `{"dependencyState":"NOT_READY","failedChecks":[{"name":"postgresql","reason":"CONNECTION_REFUSED","state":"FAIL"}]}` when a **required** dependency fails. Readiness reflects real dependency state; it must not return `200` from a static handler, a cached value, or a startup-time snapshot, and a static `200` while a dependency is down fails acceptance (VG-OPS-001, SPEC-007 `VG-OBS-025`). Dependency names are this section's vocabulary (`postgresql`, `valkey`, `temporal`, `object-store`, `keycloak-jwks`), with `provider-transport` added by SPEC-007 §7.2.
+Success `200` with `{"dependencyState":"READY","checkedAt":"…","failedChecks":[]}`; `503` with `{"dependencyState":"NOT_READY","failedChecks":[{"name":"postgresql","reason":"CONNECTION_REFUSED","state":"FAIL"}]}` when a **required** dependency fails. Readiness reflects real dependency state; it must not return `200` from a static handler, a cached value, or a startup-time snapshot, and a static `200` while a dependency is down fails acceptance (VG-OPS-001, SPEC-007 `VG-OBS-025`). Dependency names are this section's vocabulary (`postgresql`, `valkey`, `job-worker`, `object-store`, `keycloak-jwks`), with `provider-transport` added by SPEC-007 §7.2.
 
 **5.17.3 `GET /v1/live`** — process liveness only.
-Success `200` with `{"dependencyState":"ALIVE","startedAt":"…","uptimeSeconds":12345}`. Liveness performs no dependency I/O: it must not touch the database, Valkey, Temporal, the object store, Keycloak, or any provider transport, must not authenticate, and must not return non-`200` because a downstream dependency is slow or down (SPEC-007 `VG-OBS-023`).
+Success `200` with `{"dependencyState":"ALIVE","startedAt":"…","uptimeSeconds":12345}`. Liveness performs no dependency I/O: it must not touch the database, Valkey, the object store, Keycloak, or any provider transport, must not authenticate, and must not return non-`200` because a downstream dependency is slow or down (SPEC-007 `VG-OBS-023`).
 
 **5.17.4 `GET /v1/startup`** — startup completion: migration applied, configuration and secrets resolved, resource attributes resolved.
 Success `200` with `{"dependencyState":"STARTED","checkedAt":"…","configurationResolved":true,"migrationApplied":true,"resourceAttributesResolved":true}`; `503` with `{"dependencyState":"NOT_STARTED","failedChecks":[{"name":"configuration","state":"FAIL"}]}` before initialization completes. Startup must not report started before resource attributes and configuration resolve, because doing so would emit unattributed telemetry (SPEC-007 §7.1).

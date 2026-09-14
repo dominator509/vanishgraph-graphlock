@@ -330,6 +330,6 @@ CREATE POLICY tenant_isolation ON protected_subject
 - Jurisdiction retention windows and erasure bases require counsel review
   (`LEGAL_REVIEW_REQUIRED.md`). This file defines the mechanism; it asserts no
   statutory period and no legal conclusion.
-- Real PostgreSQL/Temporal/Valkey are `PROVISIONABLE_ENVIRONMENT` per
+- Real PostgreSQL and Valkey are `PROVISIONABLE_ENVIRONMENT` per
   `CAPABILITY_MATRIX.md`. Until provisioned, database-dependent requirements are
   `BLOCKED_ENVIRONMENT`, never PASS.

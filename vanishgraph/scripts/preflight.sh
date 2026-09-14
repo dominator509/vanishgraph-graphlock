@@ -36,7 +36,7 @@ command -v python3 >/dev/null 2>&1 || fail "python3 is required but not found"
 # 4. Report (do not fail on) missing credentials declared REQUIRED in PREFLIGHT.md.
 #    These gate dependent work only; they do not invalidate the local environment.
 missing_blockers=""
-for var in DATABASE_URL TEMPORAL_ADDRESS VALKEY_URL S3_ENDPOINT KEYCLOAK_ISSUER LOCAL_MODEL_ENDPOINT GITHUB_APP_ID; do
+for var in DATABASE_URL VALKEY_URL S3_ENDPOINT KEYCLOAK_ISSUER LOCAL_MODEL_ENDPOINT GITHUB_APP_ID; do
   eval "value=\${$var:-}"
   if [ -z "$value" ]; then
     missing_blockers="${missing_blockers}  - ${var}

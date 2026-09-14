@@ -605,7 +605,7 @@ remediation.
 | `fail-closed-authority` | expired `AuthorityGrant`; revoked grant; forged agent instrument | External write refused with the typed error; no `ExternalAction` row; audit row present; `HUMAN_REQUIRED` where the spec requires a human step, never a bypass (VG-AUTHZ-001, VG-AUTHZ-002) |
 | `fail-closed-recipe` | tampered signature; expired freshness; unclear permission | Execution refused with the classified reason; recipe auto-disabled; no write; staleness counter incremented (VG-CHANNEL-002, VG-CHANNEL-003) |
 | `fail-closed-credentials` | provider credential rejected; token expired; permission denied | Typed refusal, no external effect, classified `reason_code`; no default or cached credential substituted (VG-SEC-002, DOD-014) |
-| `fail-closed-dependency` | PostgreSQL, Valkey, Temporal, object store, and `keycloak-jwks` unavailable in turn | Operation fails closed with a dependency-specific error; no partial write; no false success; recovery after the dependency returns |
+| `fail-closed-dependency` | PostgreSQL, Valkey, object store, and `keycloak-jwks` unavailable in turn | Operation fails closed with a dependency-specific error; no partial write; no false success; recovery after the dependency returns |
 | `fail-closed-egress` | `IDENTITY_DOCUMENT` and `AUTH_SECRET`-classified values attempting every egress sink; base64-, URL-, and truncated-encoded canaries | Denied unconditionally, no payload emitted, denial counted, and the canary value absent from exported bytes (VG-EGRESS-001, VG-EGRESS-002) |
 
 Canary values are generated at run time from a recorded seed (DOD-013). Every suite asserts

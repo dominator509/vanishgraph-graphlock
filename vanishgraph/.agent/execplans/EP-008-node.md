@@ -95,7 +95,7 @@ Reality of the repository at the time this plan was authored:
 - `scripts/probes/` holds credential probes for the external dependencies. Those are the
   discovery half of readiness; the readiness probe itself is product code, not a shell probe.
 - `.agent/verification/TEST_ENVIRONMENT_MANIFEST.md` records `clean-local` and `staging` as
-  `NOT_PROVISIONED`. Until PostgreSQL, Valkey, Temporal, the object store and Keycloak exist, rows
+  `NOT_PROVISIONED`. Until PostgreSQL, Valkey, the object store and Keycloak exist, rows
   that need them are `ERROR` (provisioning gap the adapter can fix), `BLOCKED_ENVIRONMENT`, or
   `BLOCKED_CREDENTIALS` — never `PASS` (DOD-033).
 - `.agent/verification/state/RUN_STATE.json` is `PLANNED` and
@@ -328,7 +328,7 @@ Readiness semantics: any `FAIL`, `TIMEOUT`, or `UNKNOWN` on a required dependenc
 depends on a dependency and returns `200` during a dependency outage. Readiness is never served
 from a static handler, a cached value, or a startup-time snapshot. `/metrics` is cluster-internal
 only and must be unreachable from the public ingress. The required dependency sets per role, and
-the probe performed for each, are exactly SPEC-007 §7.2: `postgresql`, `valkey`, `temporal`,
+the probe performed for each, are exactly SPEC-007 §7.2: `postgresql`, `valkey`, `job-worker`,
 `object-store`, `keycloak-jwks`, `provider-transport`.
 
 ### 7.8 Status vocabulary
@@ -722,8 +722,8 @@ CONTENT:
 action and hard timeout from SPEC-007 §7.2: `postgresql` (pooled connection
 `BEGIN; SELECT 1; ROLLBACK`, plus verification that the session role is the tenant-scoped
 application role, 300 ms); `valkey` (`PING`, then write/read/delete under a namespaced probe key,
-200 ms); `temporal` (frontend health RPC plus `DescribeNamespace` for the configured namespace,
-400 ms); `object-store` (`HeadBucket` plus a signed `GetObject` of a probe key that must return the
+200 ms); `job-worker` (queue heartbeat freshness: at least one worker heartbeat inside the declared
+window, 200 ms); `object-store` (`HeadBucket` plus a signed `GetObject` of a probe key that must return the
 expected digest, 400 ms); `keycloak-jwks` (OIDC discovery plus JWKS retrieval over TLS, no token
 minted, 300 ms); `provider-transport` (read-only or no-op reachability per declared official
 transport, **never a form write**, 400 ms each). At most one retry inside a probe, and the total
@@ -775,8 +775,8 @@ EXPECT: `readiness induced failure: ok`.
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-008 MILESTONE_PASS "M5 readiness induced failure: ok"`
 
 FALLBACK: if a dependency class cannot be provisioned at all, the probe is exercised against a
-locally provisioned disposable instance of the same production-type service (PostgreSQL, Valkey,
-and Temporal are `PROVISIONABLE_ENVIRONMENT` per `CAPABILITY_MATRIX.md`) and the row stays `ERROR`
+locally provisioned disposable instance of the same production-type service (PostgreSQL and Valkey are
+`PROVISIONABLE_ENVIRONMENT` per `CAPABILITY_MATRIX.md`) and the row stays `ERROR`
 until provisioned. Never substitute an in-process fake for a dependency probe, and never mark a
 dependency `PASS` because no probe result arrived.
 

@@ -7,3 +7,5 @@
 2026-09-14T04:22:19Z | forge | EP-000 | M3 | typecheck: ok; import boundary: ok; lint: ok; build: ok
 2026-09-14T04:22:20Z | forge | EP-000 | M4 | gate-toolchain: ok
 2026-09-14T04:22:20Z | forge | EP-000 | M5 | preflight: ok; generated pack validation: ok
+2026-09-14T05:33:27Z | forge | EP-000 | FORGE_EXECPLANS_COMPLETE | all 11 execplans authored: 91 milestones, 14 sections each, all grammar keywords present, zero boxes checked
+2026-09-14T05:33:27Z | forge | EP-000 | STACK_FINALISED | ADR-014 Apache-2.0; ADR-016 Temporal removed for Postgres-native jobs; ADR-007 Vite+React replaces Next.js; TEMPORAL_ADDRESS removed from preflight surface

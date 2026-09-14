@@ -193,7 +193,7 @@ of the FORGE completion of this specification set:
 | ExecPlans EP-000…EP-010 | Authored to the Section 11 grammar |
 | Product source code | Present only for the domain layer (EP-002 partial); no API, UI, persistence adapter, or infrastructure |
 | Database migrations | Not created — EP-003 not executed |
-| Keycloak, Temporal, Valkey, object store, KMS | Not provisioned (`PROVISIONABLE_ENVIRONMENT` / `BLOCKED_CREDENTIALS`) |
+| Keycloak, Valkey, object store, KMS | Not provisioned (`PROVISIONABLE_ENVIRONMENT` / `BLOCKED_CREDENTIALS`) |
 | Registry accounting (484 IDs) | Not begun — `COMPLETE_TEST_ACCOUNTING.csv` empty |
 | Verification subgraph V-000…V-021 | Not executed |
 | Artifact, clean-room, deployment, rollback | Not performed |

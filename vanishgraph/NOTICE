@@ -1,0 +1,49 @@
+VanishGraph Privacy Removal OS
+Copyright [COPYRIGHT HOLDER NOT YET RECORDED] 
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+-------------------------------------------------------------------------------
+ACTION REQUIRED BEFORE PUBLIC RELEASE
+-------------------------------------------------------------------------------
+The copyright holder name above is a placeholder. Apache-2.0 Section 4(d)
+requires any distributed NOTICE file to be preserved and reproduced, and the
+copyright notice must name the actual holder.
+
+Set the holder name in this file and in the header of LICENSE's appendix
+boilerplate before publishing a release or announcing the project publicly.
+Tracked in DECISIONS.md section 5 (open decisions requiring the owner) and
+LEGAL_REVIEW_REQUIRED.md.
+
+-------------------------------------------------------------------------------
+THIRD-PARTY ATTRIBUTION
+-------------------------------------------------------------------------------
+Populate this section from the generated SBOM at each release (EP-009). Entries
+must record: component, version/revision, SPDX identifier, and required notice.
+
+Required attributions already identified:
+
+1. PersProtect data-broker-opt-out-list
+   Licence: CC BY 4.0
+   Use: bootstrap seed data, attribution required
+   Status: NOT YET INCORPORATED. Attribution only becomes required if and when
+   seed data is actually included in a distribution. Every actionable row must be
+   revalidated against current official controller pages and regulator registries
+   before use (PROJECT_RESEARCH_BRIEF.md section 5).
+
+2. Embedded security test source library
+   Path: .agent/verification/source-library/
+   Status: PROVENANCE AND LICENCE NOT YET CONFIRMED. This pack content embeds
+   material derived from third-party test prompt collections. It must be reviewed
+   before redistribution in a public release.
+
+Runtime and build dependencies (Fastify, Kysely, Zod, node-pg-migrate, Graphile
+Worker, React, TanStack, OpenTelemetry, Playwright, Crawlee, Testcontainers and
+their transitive dependencies) are MIT or Apache-2.0. The complete list with
+versions and SPDX identifiers is generated as an SBOM in EP-009; this file must be
+regenerated from that artifact rather than maintained by hand.
+
+Deliberately NOT incorporated (see LICENSE_POLICY.md):
+  - optery/optery-data-brokers-directory (CC BY-NC-SA 4.0) - FORBIDDEN
+  - DrCaiola/optout (CC BY-NC-SA) - FORBIDDEN
+  - Enthropic-Data-LLC/data-removal (all rights reserved) - FORBIDDEN

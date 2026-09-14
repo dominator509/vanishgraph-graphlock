@@ -37,7 +37,7 @@ SKIP_DIRS = {".git", "node_modules", ".venv", "venv", "target", "dist", "build",
 # JSON such as {"page": {...}} as placeholder residue. That produced false errors on
 # correct specification files (measured on SPEC-003 and EP-004). This pattern keeps
 # the true positive (an unresolved token) while dropping the false one.
-PLACEHOLDER_RX = re.compile(r"\{\{\s*[A-Za-z0-9_.\-]+\s*\}\}")
+PLACEHOLDER_RX = re.compile(r"\{\{\s*[A-Za-z_][A-Za-z0-9_]*\s*\}\}")
 
 # Placeholder residue.
 for p in root.rglob("*"):

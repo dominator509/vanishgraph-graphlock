@@ -534,7 +534,7 @@ does not increment. Telemetry is downstream of truth, never upstream of it.
 
 | Endpoint | Method | Purpose | Must not do |
 |---|---|---|---|
-| `GET /v1/live` | GET | Liveness only: the process is running, the event loop is responsive, and the HTTP listener accepts connections. No dependency I/O. | Must not touch the database, Valkey, Temporal, the object store, Keycloak, or any provider transport; must not authenticate; must not be blocked by a dependency outage. |
+| `GET /v1/live` | GET | Liveness only: the process is running, the event loop is responsive, and the HTTP listener accepts connections. No dependency I/O. | Must not touch the database, Valkey, the object store, Keycloak, or any provider transport; must not authenticate; must not be blocked by a dependency outage. |
 | `GET /v1/ready` | GET | Readiness: this instance may receive traffic and workflow tasks, because every **required** dependency for its role is usable right now. | Must not return `200` from a static handler, a cached value, or a startup-time snapshot. |
 | `GET /v1/health` | GET | Aggregate dependency-health classification for operators and for the readiness probe's own reporting. | Must not be confused with a truth state: the field is `dependencyState`, never `status` (SPEC-003 §5.17.1). |
 | `GET /v1/startup` | GET | Startup: initialization (migration-applied check, configuration resolution, secret resolution, resource attributes resolved) has completed. Added by this specification; SPEC-003 §5.17 does not define a startup route. | Must not report started before resource attributes and configuration resolve, because that would emit unattributed telemetry. |
@@ -559,12 +559,12 @@ specification requires:
   "candidateEpoch": "GENERATION",
   "artifactDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
   "failedChecks": [
-    { "name": "temporal", "reason": "TIMEOUT" }
+    { "name": "job-worker", "reason": "STALE_HEARTBEAT" }
   ],
   "checks": [
     { "name": "postgresql", "required": true,  "status": "PASS", "latencyMs": 4,   "reasonCode": null },
     { "name": "valkey",     "required": true,  "status": "PASS", "latencyMs": 2,   "reasonCode": null },
-    { "name": "temporal",   "required": true,  "status": "FAIL", "latencyMs": 400, "reasonCode": "TIMEOUT" },
+    { "name": "job-worker", "required": false, "status": "FAIL", "latencyMs": 200, "reasonCode": "STALE_HEARTBEAT" },
     { "name": "object-store", "required": true, "status": "PASS", "latencyMs": 61, "reasonCode": null },
     { "name": "keycloak-jwks", "required": true, "status": "PASS", "latencyMs": 22, "reasonCode": null },
     { "name": "provider-transport", "required": false, "status": "SKIPPED", "latencyMs": 0, "reasonCode": "NOT_REQUIRED_FOR_ROLE" }
@@ -581,16 +581,17 @@ and must match this table.
 |---|---|---|---|---|
 | `postgresql` | Pooled connection: `BEGIN; SELECT 1; ROLLBACK`, plus verification that the session role is the tenant-scoped application role (proves RLS is in force, VG-TENANT-001/002). | 300 ms | yes | yes |
 | `valkey` | `PING`, then write/read/delete under a namespaced probe key. | 200 ms | yes | yes |
-| `temporal` | Frontend health RPC plus namespace `DescribeNamespace` for the configured namespace. | 400 ms | yes | yes |
+| `job-worker` | Queue heartbeat freshness: at least one worker heartbeat inside the declared freshness window, read from the Postgres-backed queue. Optional by design so a stalled worker fleet is visible without taking the web tier down, but always reported (rule 1). | 200 ms | no | no |
 | `object-store` | `HeadBucket` plus a signed `GetObject` of a probe key that must return the expected digest. | 400 ms | yes | yes |
 | `keycloak-jwks` | OIDC discovery document fetch and JWKS retrieval over TLS; no token is minted by the probe. | 300 ms | yes | no |
 | `provider-transport` | Transport-level reachability for each declared official provider transport, using a read-only or no-op path. **Never a form write** (VG-DISC-001). | 400 ms each | no | yes |
 
-Dependency names are the SPEC-003 §5.17 vocabulary (`postgresql`, `valkey`, `temporal`,
+Dependency names are the SPEC-003 §5.17 vocabulary (`postgresql`, `valkey`,
 `object-store`, `keycloak-jwks`) so that the readiness body is identical across both
 specifications. `provider-transport` is added here because SPEC-003 §5.17 enumerates only the
-five shared datastore/identity dependencies; the worker role additionally requires its official
-transports.
+shared datastore/identity dependencies and the worker role additionally requires its official
+transports; `job-worker` is added because ADR-016 moved durable execution into PostgreSQL, so
+queue availability is already covered by the `postgresql` probe while worker liveness is not.
 
 Rules:
 
@@ -614,7 +615,7 @@ Rules:
   after a required dependency is known to be down.
 - The instance is removed from the ready set within one probe interval (5 s) and, in the same
   window, stops accepting new requests (web role) and stops polling new workflow tasks
-  (worker role). In-flight units are allowed to finish or to be handed back to Temporal, and
+  (worker role). In-flight units are allowed to finish or to be handed back to the queue, and
   must not be left in an ambiguous state.
 - Liveness is deliberately independent: a dependency outage must **not** fail `/v1/live` and
   must not cause a restart loop. Restarting a healthy process because a database is down
@@ -634,8 +635,7 @@ procedure, executed per dependency:
 1. Confirm the steady state: `/v1/ready` returns `200`, the check named `<key>` is `PASS`, and
    `vanishgraph_readiness_status{dependency_key="<key>"} == 1`.
 2. Induce exactly one failure: stop the PostgreSQL container (`postgresql`);
-   `valkey-cli SHUTDOWN NOSAVE` (`valkey`); block the Temporal frontend port with a
-   network policy (`temporal`); revoke the probe credential or remove the probe object
+   `valkey-cli SHUTDOWN NOSAVE` (`valkey`); withhold worker heartbeats so the `job-worker` freshness window lapses (`job-worker`); revoke the probe credential or remove the probe object
    (`object-store`); stop the Keycloak frontend so discovery/JWKS fetch fails
    (`keycloak-jwks`); force the provider transport
    to return an auth rejection (`provider-transport`).
@@ -735,7 +735,7 @@ required negative case. They are one requirement per ID, not two.
 
 - **Environment:** the staging environment at the pinned `vanishgraph.candidate_epoch` and
   `vanishgraph.artifact.digest`, provisioned from the declared environment manifest with
-  production-type dependencies (PostgreSQL, Valkey, Temporal, object store, Keycloak). Local
+  production-type dependencies (PostgreSQL, Valkey, object store, Keycloak). Local
   and CI environments may run the harness but may not produce an SLO verdict.
 - **Workload model `WL-1`:** a synthetic census of `T` tenants (default 10) × `S` subjects per
   tenant (default 25) × the declared source catalogue subset, executed by the standard
@@ -919,7 +919,7 @@ have run (SPEC-000 §9.1).
 
 | ID | Requirement | Acceptance oracle | Required negative case |
 |---|---|---|---|
-| `VG-OBS-013` | `correlationId` propagates from the HTTP entry point through the Temporal workflow, discovery, external action, and independent verification, and every signal in the flow carries it (§5.3). | `OBS-CORR-001`: one end-to-end run emits logs at every stage with an identical `correlationId`; the trace backend shows one connected trace spanning the HTTP root through workflow, activity, action, and verification spans; the incoming `traceparent` is honoured when present. | `OBS-CORR-NEG-001`: an activity invoked without a `correlationId` must be refused with a typed missing-identity error at the boundary and must emit no signal with a zeroed, empty, or freshly generated substitute identifier. |
+| `VG-OBS-013` | `correlationId` propagates from the HTTP entry point through the durable job queue, discovery, external action, and independent verification, and every signal in the flow carries it (§5.3). | `OBS-CORR-001`: one end-to-end run emits logs at every stage with an identical `correlationId`; the trace backend shows one connected trace spanning the HTTP root through workflow, activity, action, and verification spans; the incoming `traceparent` is honoured when present. | `OBS-CORR-NEG-001`: an activity invoked without a `correlationId` must be refused with a typed missing-identity error at the boundary and must emit no signal with a zeroed, empty, or freshly generated substitute identifier. |
 | `VG-OBS-014` | A single case is reconstructible from telemetry: given `caseId` or `correlationId`, the ordered timeline of truth-state transitions, external actions, verification observations, and refusals is recoverable, and it agrees with the append-only `AuditEvent` stream. | `OBS-RECON-001`: for a case taken to `VERIFIED_REMOVED`, an independent query returns the full ordered timeline; the count and ordering of truth-state transitions match the audit stream for that case, and each transition resolves to an evidence digest. | `OBS-RECON-NEG-001`: for a case whose telemetry is incomplete (one transition record removed for the test), the reconstruction must report a gap and fail validation rather than presenting a shorter timeline as complete. |
 | `VG-OBS-015` | Join keys between traces, logs, and metrics are declared and documented: `trace_id`/`span_id` (log ↔ trace), `correlationId` (all three), and the metric label set plus `caseId` carried in span attributes and log fields (metric ↔ case). | `OBS-JOIN-001`: a single case is joined across one trace, one log record, and one derived metric sample; the join resolves to the same `caseId`, tenant class, and candidate epoch, and the join query returns a non-empty result set. | `OBS-JOIN-NEG-001`: a metric sample missing a declared label must make the join return no row and must make the join validator report a missing label key; the dimension must not be silently dropped and no dashboard may compute the metric from the incomplete sample. |
 
@@ -942,7 +942,7 @@ have run (SPEC-000 §9.1).
 | `VG-OBS-023` | `GET /v1/live`, `GET /v1/ready`, `GET /v1/health`, `GET /v1/startup`, and `GET /metrics` exist with the distinct semantics of §7.1; liveness performs no dependency I/O and `GET /metrics` is cluster-internal only. | `OBS-HEALTH-001`: with all dependencies healthy, `/v1/live`, `/v1/ready`, `/v1/health`, and `/v1/startup` return `200` with the documented bodies, and `/metrics` returns a valid exposition; a network test from outside the cluster cannot reach `/metrics`. | `OBS-HEALTH-NEG-001`: with every dependency down, `/v1/live` must still return `200` (no dependency entanglement, no restart loop) while `/v1/ready` returns `503`; and `/metrics` must not be reachable from the public ingress. |
 | `VG-OBS-024` | Readiness reflects real dependency state: the declared required set per role is exactly §7.2, every declared dependency appears in the `checks` array with status and `reasonCode`, and probe timeouts are hard bounds. | `OBS-READY-001`: the `checks` array contains every declared dependency for the role with `name`, `required`, `status`, `latencyMs`, and `reasonCode`, and `failedChecks` agrees with it; per-probe latency stays inside the declared timeout; the overall `dependencyState` equals the conjunction of required checks. | `OBS-READY-NEG-001`: a probe that times out or returns an unknown result must register `FAIL` with `reasonCode: "TIMEOUT"` (or `"UNKNOWN"`), never `PASS`; and an omitted dependency in the response must fail the response schema check rather than being treated as healthy. |
 | `VG-OBS-025` | Fail-closed readiness: any required-dependency failure makes the instance unready on the first failing evaluation, removes it from the ready set within one probe interval, and stops new work acceptance (§7.3); a static `200` is a defect (VG-OPS-001). | `OBS-FAILCLOSED-001`: step 3 and step 5 of §7.4 — induced failure flips `/v1/ready` to `503` within 10 s with the failing dependency named in `failedChecks` and `checks`, `vanishgraph_readiness_status` drops to `0`, a `ReadinessChanged` `ERROR` record exists, and new-work counters for that instance stop advancing. | `OBS-FAILCLOSED-NEG-001`: a static readiness handler that always returns `200` must fail step 3 of §7.4, proving the acceptance test discriminates a real check from a fabricated one. |
-| `VG-OBS-026` | Every declared dependency's probe is discriminating and is proven by induced failure across the full set: `postgresql`, `valkey`, `temporal`, `object-store`, `keycloak-jwks`, `provider-transport` (§7.4). | `OBS-INDUCE-001`: the §7.4 procedure executed once per dependency yields, for each, a `503` readiness response naming that dependency, an increment of `vanishgraph_dependency_probe_failures_total` with a classified `reason_code`, and a recorded latency inside the timeout; each dependency's control run (uninduced) reports `PASS`. | `OBS-INDUCE-NEG-001`: the harness must demonstrate discrimination per dependency by showing `PASS` before injection and `FAIL` after injection for the same probe code path; a probe that reports `PASS` in both states is a defect, and a missing probe for a declared dependency fails the check-manifest validation. |
+| `VG-OBS-026` | Every declared dependency's probe is discriminating and is proven by induced failure across the full set: `postgresql`, `valkey`, `job-worker`, `object-store`, `keycloak-jwks`, `provider-transport` (§7.4). | `OBS-INDUCE-001`: the §7.4 procedure executed once per dependency yields, for each, a `503` readiness response naming that dependency, an increment of `vanishgraph_dependency_probe_failures_total` with a classified `reason_code`, and a recorded latency inside the timeout; each dependency's control run (uninduced) reports `PASS`. | `OBS-INDUCE-NEG-001`: the harness must demonstrate discrimination per dependency by showing `PASS` before injection and `FAIL` after injection for the same probe code path; a probe that reports `PASS` in both states is a defect, and a missing probe for a declared dependency fails the check-manifest validation. |
 
 ### 12.6 Alerting
 

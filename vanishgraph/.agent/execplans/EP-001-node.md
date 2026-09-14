@@ -60,7 +60,7 @@ application/API/UI work, any credential provisioning, any deployment.
   and EP-003 own those; a foundation node that grows domain code is a scope breach.
 - No new runtime dependency, no dependency swap, no package-manager change away from
   the committed lockfile, no reformatting beyond line-ending normalization (§M2).
-- No credential provisioning, no cloud/KMS/Keycloak/Temporal/Valkey/object-store
+- No credential provisioning, no cloud/KMS/Keycloak/Valkey/object-store
   setup, no `.env` creation. Missing credentials stay `BLOCKED_CREDENTIALS`.
 - **No claim that `sh scripts/verify.sh` passes.** It cannot pass in this node, and
   printing `verify: ok` before the artifact stages exist would be a fabrication

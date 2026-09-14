@@ -91,10 +91,10 @@ Reality of the repository at the time this plan was authored:
   and `@types/node` 24.10.1 exact-pinned. `.gitignore` exists; `.env.example` declares 25 keys, all
   valued `PROVISION_ME`.
 - `.agent/verification/TEST_ENVIRONMENT_MANIFEST.md` declares `clean-local` (disposable checkout;
-  pinned tools, PostgreSQL, Temporal, Valkey, browser) and `staging` (managed US cloud, separate
+  pinned tools, PostgreSQL, Valkey, browser) and `staging` (managed US cloud, separate
   account; Kubernetes, KMS, object store, managed PostgreSQL, browser pool) — both
   `NOT_PROVISIONED`, and `production` `UNAUTHORIZED`.
-  `.agent/verification/CAPABILITY_MATRIX.md` classifies PostgreSQL/Valkey/Temporal/browser runtime
+  `.agent/verification/CAPABILITY_MATRIX.md` classifies PostgreSQL/Valkey/browser runtime
   as `PROVISIONABLE_ENVIRONMENT` and cloud/KMS/object store/Kubernetes as
   `BLOCKED_EXTERNAL_CREDENTIAL`; production deployment is `MANUAL_ONLY`.
 - `PREFLIGHT.md` declares 25 credential rows with probes under `scripts/probes/`. A missing
@@ -703,7 +703,7 @@ EXPECT: `rollback drill: ok`, `upgrade drill: ok`, `backup restore: ok`; the fin
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-009 MILESTONE_PASS "M6 rollback drill: ok; upgrade drill: ok; backup restore: ok"`
 
 FALLBACK: if the container runtime is unavailable, the drills run directly against locally
-provisioned PostgreSQL, Valkey, and Temporal processes with the same fault injection and the same
+provisioned PostgreSQL and Valkey processes with the same fault injection and the same
 reconciliation assertions; the environment fingerprint records the difference. A drill that cannot
 be executed at all is recorded `BLOCKED_ENVIRONMENT` with the provisioning attempt log, and no
 recovery claim is made from it.

@@ -13,7 +13,7 @@ NODE-META-END
 
 Build the four SPEC-004 surfaces — Subject portal (`/portal`), Operations console
 (`/console`), Tenant admin console (`/admin`), Auditor view (`/auditor`) — as a real
-Next.js/React application that consumes the EP-004 `/v1` contract and **cannot tell a
+Vite + React application that consumes the EP-004 `/v1` contract and **cannot tell a
 comfortable lie about removal**.
 
 The product risk this node exists to close is specific and well documented in the
@@ -58,7 +58,7 @@ finished by an agent and are not written as if they can:
 
 In scope:
 
-- The Next.js/React application shell, its build, and its route manifest for the 24
+- The Vite + React application shell, its build, and its route manifest for the 24
   declared routes of SPEC-004 §1.
 - The canonical eleven-token truth-state module and `TruthStateBadge` /
   `StateQualifier` / `TruthTimeline` components with the §2.3 colour tokens, glyphs,
@@ -114,8 +114,8 @@ In scope:
 
 | Element | Real state |
 |---|---|
-| UI source | **Does not exist.** No `src/ui`, `app/`, `pages/`, `components/`, or Next.js config anywhere. |
-| `package.json` | Two devDependencies. **No React, no Next.js, no Playwright, no axe-core.** |
+| UI source | **Does not exist.** No `ui/`, no `vite.config.ts`, no React dependency, and no route tree anywhere. |
+| `package.json` | Two devDependencies. **No React, no Vite, no TanStack, no Playwright, no axe-core.** |
 | EP-004 (API) | ExecPlan authored; **not executed.** The `/v1` contract is specified (SPEC-003) but no route exists. |
 | EP-003 (persistence) | **Largely unstarted**; `DATABASE_URL` unprovisioned. |
 | `scripts/copy-lint-gate.sh` | Introduced by **EP-004 M8** (`copy lint gate: ok`). If EP-004 is incomplete it does not exist yet; see M2. |
@@ -203,30 +203,30 @@ Project documents:
 
 Created:
 
-- `src/ui/app/**` — the Next.js App Router tree for the 24 declared routes.
-- `src/ui/components/truth/**` — `TruthStateBadge.tsx`, `StateQualifier.tsx`,
+- `ui/src/routes/**` — the TanStack Router route tree for the 24 declared routes.
+- `ui/src/components/truth/**` — `TruthStateBadge.tsx`, `StateQualifier.tsx`,
   `TruthTimeline.tsx`.
-- `src/ui/components/coverage/**` — `CoveragePanel.tsx`, `CoverageSummaryInline.tsx`,
+- `ui/src/components/coverage/**` — `CoveragePanel.tsx`, `CoverageSummaryInline.tsx`,
   `MetricFigure.tsx`, `ConfidenceBasis.tsx`, `PartialCoverageBanner.tsx`.
-- `src/ui/components/evidence/**` — `EvidenceViewer.tsx`, `DigestDisplay.tsx`,
+- `ui/src/components/evidence/**` — `EvidenceViewer.tsx`, `DigestDisplay.tsx`,
   `RedactionDisclosure.tsx`, `PiiRedactor.tsx`.
-- `src/ui/components/states/**` — `LoadingRegion.tsx`, `EmptyState.tsx`, `ErrorState.tsx`,
+- `ui/src/components/states/**` — `LoadingRegion.tsx`, `EmptyState.tsx`, `ErrorState.tsx`,
   `AccessDenied.tsx`, `HumanGateNotice.tsx`, `SessionExpiryNotice.tsx`.
-- `src/ui/components/scope/**` — `ServiceScopeStatement.tsx` (the verbatim VG-UI-070
+- `ui/src/components/scope/**` — `ServiceScopeStatement.tsx` (the verbatim VG-UI-070
   block).
-- `src/ui/copy/truth-state.ts` — **the single canonical mapping** (VG-UI-007).
-- `src/ui/copy/service-scope.ts`, `src/ui/copy/catalogue.ts` — the closed copy catalogues.
-- `src/ui/tokens/**` — the §2.3 CSS custom properties.
-- `src/ui/lib/url.ts` — the only URL builder (no PII may enter a URL), and
-  `src/ui/lib/telemetry.ts` — the closed event catalogue emitter.
-- `src/ui/route-manifest.json` — the emitted manifest used by the equality check.
+- `ui/src/copy/truth-state.ts` — **the single canonical mapping** (VG-UI-007).
+- `ui/src/copy/service-scope.ts`, `ui/src/copy/catalogue.ts` — the closed copy catalogues.
+- `ui/src/tokens/**` — the §2.3 CSS custom properties.
+- `ui/src/lib/url.ts` — the only URL builder (no PII may enter a URL), and
+  `ui/src/lib/telemetry.ts` — the closed event catalogue emitter.
+- `ui/src/route-manifest.json` — the emitted manifest used by the equality check.
 - `tests/contract/truth-state-copy.test.ts`, `tests/contract/route-manifest.test.ts`,
   `tests/contract/coverage-presentation.test.ts`, `tests/contract/vocabulary-ui.test.ts`,
   `tests/contract/pii-url.test.ts`, `tests/contract/portal-surfaces.test.ts`,
   `tests/contract/surface-ownership.test.ts`, `tests/contract/auditor-readonly.test.ts`.
 - `tests/ui/**` — Playwright + axe-core suites (browser-runtime dependent).
 - `scripts/ep005-gate.sh` — this node's gate.
-- `playwright.config.ts`, `next.config.mjs`, `postcss.config.mjs`.
+- `playwright.config.ts`, `vite.config.ts`, `postcss.config.mjs`.
 - `.agent/evidence/EP-005/**`.
 
 Modified:
@@ -235,7 +235,7 @@ Modified:
   `@playwright/test`, `axe-core`, `@axe-core/playwright`.
 - `COMMANDS.md` — every command this node introduces, with its sentinel.
 - `scripts/test-e2e.sh` — real implementation replacing the loud-fail placeholder.
-- `scripts/import-boundary.sh` — add the `src/ui/**` rule.
+- `scripts/import-boundary.sh` — add the `ui/src/**` rule.
 - `tsconfig.ui.json` (created) — JSX settings; keep the strict flags.
 - `ARCHITECTURE.md`, `ASSUMPTIONS.md`, `TESTING.md`.
 - `.agent/verification/EXPECTED_TEST_MANIFEST.txt`.
@@ -377,7 +377,7 @@ conformance claim may be made without the manual gate of VG-UI-064.**
 
 ### M1: UI foundation, route manifest, and this node's gate
 
-GOAL: A Next.js/React application builds from a pinned, locked dependency set; its route
+GOAL: A Vite + React application builds from a pinned, locked dependency set; its route
 tree emits a manifest that equals the 24 declared SPEC-004 §1 routes as a set in both
 directions; and this node has a gate that genuinely fails when the UI contract suites
 fail.
@@ -387,11 +387,11 @@ READ: `ARCHITECTURE.md`, `package.json`, `tsconfig.json`, `scripts/verify.sh`,
 `COMMANDS.md`, `PREFLIGHT.md`, `SPEC-004` §0.1/§0.3/§1, `SPEC-003` §2.1,
 `.agent/DONE_LAW.md` DOD-007/DOD-024.
 
-CHANGE: `package.json`, `package-lock.json`, `next.config.mjs`, `postcss.config.mjs`,
-`playwright.config.ts`, `tsconfig.ui.json`, `src/ui/app/layout.tsx`,
-`src/ui/app/not-found.tsx`, `src/ui/app/portal/page.tsx`,
-`src/ui/app/console/queue/page.tsx`, `src/ui/app/admin/tenant/page.tsx`,
-`src/ui/app/auditor/claims/page.tsx`, `src/ui/route-manifest.json`,
+CHANGE: `package.json`, `package-lock.json`, `vite.config.ts`, `postcss.config.mjs`,
+`playwright.config.ts`, `tsconfig.ui.json`, `ui/src/routes/__root.tsx`,
+`ui/src/routes/not-found.tsx`, `ui/src/routes/portal.tsx`,
+`ui/src/routes/console.queue.tsx`, `ui/src/routes/admin.tenant.tsx`,
+`ui/src/routes/auditor.claims.tsx`, `ui/src/route-manifest.json`,
 `tests/contract/route-manifest.test.ts`, `scripts/ep005-gate.sh`,
 `scripts/test-e2e.sh`, `scripts/import-boundary.sh`,
 `.agent/verification/EXPECTED_TEST_MANIFEST.txt`, `COMMANDS.md`, `ARCHITECTURE.md`,
@@ -404,10 +404,10 @@ CONTENT:
    `@axe-core/playwright`. Add scripts `build:web` (`next build`), `test:ui`
    (`playwright test`), `test:a11y` (the axe-only Playwright project). Record the
    resolved versions in `ARCHITECTURE.md` with the reason each is present.
-2. `src/ui/app/not-found.tsx` — the not-found state for an undeclared route
+2. `ui/src/routes/not-found.tsx` — the not-found state for an undeclared route
    (VG-UI-004 negative case). It must not disclose whether a route exists.
-3. `src/ui/route-manifest.json` — written by a post-build script that walks
-   `src/ui/app/**/page.tsx` and derives the declared path. The manifest is compared, as a
+3. `ui/src/route-manifest.json` — written by a post-build script that walks
+   `ui/src/routes/**` and derives the declared path. The manifest is compared, as a
    set in both directions, against the 24 rows of SPEC-004 §1, which the test parses from
    the specification file (do not hand-copy the list into the test; a hand-copied list
    drifts and stops being a check). The 24 declared routes are:
@@ -420,7 +420,7 @@ CONTENT:
    `/admin/users`, `/admin/metrics`,
    `/auditor/claims`, `/auditor/cases/[caseId]`, `/auditor/evidence/[evidenceId]`,
    `/auditor/exports`.
-4. `scripts/import-boundary.sh` — add rule (c): `src/ui/**` may import only `node:*`,
+4. `scripts/import-boundary.sh` — add rule (c): `ui/src/**` may import only `node:*`,
    relative paths, the generated application-contract types the UI consumes, and the UI's
    own modules. It may **not** import `src/domain/**`, `src/adapters/**`, `src/http/**`,
    or `src/infrastructure/**`. Print `import boundary: ok` only when all four rules hold
@@ -451,8 +451,8 @@ set -eu
 export CI=true GIT_TERMINAL_PROMPT=0 GIT_PAGER=cat PAGER=cat DEBIAN_FRONTEND=noninteractive
 cd "$(dirname "$0")/.."
 
-[ -f src/ui/copy/truth-state.ts ] || { echo "ep005 ui gate: FAIL - canonical truth-state mapping is missing" >&2; exit 1; }
-[ -f src/ui/route-manifest.json ] || { echo "ep005 ui gate: FAIL - route manifest is missing; run npm run build:web" >&2; exit 1; }
+[ -f ui/src/copy/truth-state.ts ] || { echo "ep005 ui gate: FAIL - canonical truth-state mapping is missing" >&2; exit 1; }
+[ -f ui/src/route-manifest.json ] || { echo "ep005 ui gate: FAIL - route manifest is missing; run npm run build:web" >&2; exit 1; }
 
 npx --no-install tsc -p tsconfig.ui.json --noEmit || { echo "ep005 ui gate: FAIL - UI typecheck failed" >&2; exit 1; }
 sh scripts/import-boundary.sh || { echo "ep005 ui gate: FAIL - layer import boundary violated" >&2; exit 1; }
@@ -493,7 +493,7 @@ sh scripts/ep005-gate.sh
 git status --short
 ```
 
-EXPECT: `next build` succeeds and writes `src/ui/route-manifest.json`; the manifest
+EXPECT: `next build` succeeds and writes `ui/src/route-manifest.json`; the manifest
 suite passes; `playwright --version` prints a version (browser binaries are a separate
 question, probed in M4); the final line `ep005 ui gate: ok`; `git status --short` listing
 only files from §6. `verify.sh` does **not** print `verify: ok` at this node and must not
@@ -501,7 +501,7 @@ be made to.
 
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-005 MILESTONE_PASS "M1 ep005 ui gate: ok; route manifest equals SPEC-004 route set"`
 
-FALLBACK: if the App Router's route emission proves awkward to introspect, generate the
+FALLBACK: if the TanStack Router's generated route tree proves awkward to introspect, generate the
 manifest from a single declarative route table that the app tree imports, and make the
 equality test assert that every table entry resolves to a real page module (so the table
 cannot drift from the tree). A hand-maintained duplicate list is not an acceptable
@@ -519,17 +519,17 @@ READ: `SPEC-004` §0.3, §2.1, §2.2, §2.3, §2.4, §11, §14 (VG-UI-080…083)
 `SPEC-000` §4, §5, §5.1; `src/domain/truth-state.ts` (read for the token list and the
 non-collapse facts; do not import it).
 
-CHANGE: `src/ui/copy/truth-state.ts`, `src/ui/copy/catalogue.ts`,
-`src/ui/tokens/truth-state.css`, `src/ui/components/truth/TruthStateBadge.tsx`,
-`src/ui/components/truth/StateQualifier.tsx`,
-`src/ui/components/scope/ServiceScopeStatement.tsx`, `src/ui/copy/service-scope.ts`,
+CHANGE: `ui/src/copy/truth-state.ts`, `ui/src/copy/catalogue.ts`,
+`ui/src/tokens/truth-state.css`, `ui/src/components/truth/TruthStateBadge.tsx`,
+`ui/src/components/truth/StateQualifier.tsx`,
+`ui/src/components/scope/ServiceScopeStatement.tsx`, `ui/src/copy/service-scope.ts`,
 `tests/contract/truth-state-copy.test.ts`, `tests/contract/vocabulary-ui.test.ts`,
 `scripts/copy-lint-gate.sh` (only if EP-004 has not created it), `COMMANDS.md`,
 `.agent/verification/EXPECTED_TEST_MANIFEST.txt`, `.agent/state/LEDGER.md`.
 
 CONTENT:
 
-- `src/ui/copy/truth-state.ts` — the **only** declaration of the mapping (VG-UI-007).
+- `ui/src/copy/truth-state.ts` — the **only** declaration of the mapping (VG-UI-007).
   Structure:
 
 ```ts
@@ -576,16 +576,16 @@ export const TRUTH_STATE_COPY: Readonly<Record<TruthStateToken, TruthStateCopy>>
 });
 ```
 
-- `src/ui/components/truth/TruthStateBadge.tsx` — the §2.4 props and rendered output
+- `ui/src/components/truth/TruthStateBadge.tsx` — the §2.4 props and rendered output
   contract, including the scope suffix template
   `` ` · Source: ${sourceId} · window ${windowDays}d` `` appended inside the label when
   `scope` is supplied. `state` is the eleven-member union with no `string` overload, so a
   mistyped token cannot compile. The machine value renders in a monospace class. The
   component reads nothing but `TRUTH_STATE_COPY`.
-- `src/ui/components/truth/StateQualifier.tsx` — renders the qualifier as visible,
+- `ui/src/components/truth/StateQualifier.tsx` — renders the qualifier as visible,
   untruncated prose, never inside `[hidden]`, `aria-hidden="true"`, a closed `<details>`,
   or a tooltip role subtree (VG-UI-010).
-- `src/ui/copy/service-scope.ts` — the VG-UI-070 block as a single exported constant, used
+- `ui/src/copy/service-scope.ts` — the VG-UI-070 block as a single exported constant, used
   by `/portal/limitations`, the `/portal` footer, `/admin/metrics`, and the dashboard
   header. One constant, four consumers, one equality test.
 - `scripts/copy-lint-gate.sh` — **if EP-004 M8 already created it, do not duplicate it**:
@@ -599,7 +599,7 @@ export const TRUTH_STATE_COPY: Readonly<Record<TruthStateToken, TruthStateCopy>>
   `label` and `qualifier` equal the specification cell text after whitespace
   normalisation, (b) the module's `group`, `glyph`, and `cssVar` equal the §2.3 table
   row, and (c) `TRUTH_STATE_COPY` has exactly eleven keys with no extras. It also scans
-  `src/ui/**` and asserts the mapping object is declared exactly once. **Required negative
+  `ui/src/**` and asserts the mapping object is declared exactly once. **Required negative
   case:** rendering `REQUEST_SUBMITTED` with the label "Submitted for removal" must fail
   the copy-equality test — implement this as a test-local override fixture asserted to
   fail, not as a permanent second mapping.
@@ -643,12 +643,12 @@ coverage bounds, and `Confidence` always renders with its basis and threshold.
 READ: `SPEC-004` §2.2 row 8, §3, §8, §9 (partial-coverage), `SPEC-000` §7 (all six
 rules), `REMOVAL_EFFECTIVENESS_METRICS.md`, `SPEC-003` §7.4.
 
-CHANGE: `src/ui/components/coverage/CoveragePanel.tsx`,
-`src/ui/components/coverage/CoverageSummaryInline.tsx`,
-`src/ui/components/coverage/MetricFigure.tsx`,
-`src/ui/components/coverage/ConfidenceBasis.tsx`,
-`src/ui/components/coverage/PartialCoverageBanner.tsx`,
-`src/ui/components/truth/TruthTimeline.tsx`, `tests/contract/coverage-presentation.test.ts`,
+CHANGE: `ui/src/components/coverage/CoveragePanel.tsx`,
+`ui/src/components/coverage/CoverageSummaryInline.tsx`,
+`ui/src/components/coverage/MetricFigure.tsx`,
+`ui/src/components/coverage/ConfidenceBasis.tsx`,
+`ui/src/components/coverage/PartialCoverageBanner.tsx`,
+`ui/src/components/truth/TruthTimeline.tsx`, `tests/contract/coverage-presentation.test.ts`,
 `.agent/verification/EXPECTED_TEST_MANIFEST.txt`, `.agent/state/LEDGER.md`.
 
 CONTENT:
@@ -715,11 +715,11 @@ READ: `SPEC-004` §9 (VG-UI-048…055), §10 (VG-UI-056…064), `SPEC-005` §2 (
 (step-up), `SPEC-006` §2 (an outcome is not an error), `.agent/DONE_LAW.md` DOD-039,
 `SPEC-008` §9.
 
-CHANGE: `src/ui/components/states/LoadingRegion.tsx`,
-`src/ui/components/states/EmptyState.tsx`, `src/ui/components/states/ErrorState.tsx`,
-`src/ui/components/states/AccessDenied.tsx`,
-`src/ui/components/states/HumanGateNotice.tsx`,
-`src/ui/components/states/SessionExpiryNotice.tsx`, `src/ui/app/**` (state wiring),
+CHANGE: `ui/src/components/states/LoadingRegion.tsx`,
+`ui/src/components/states/EmptyState.tsx`, `ui/src/components/states/ErrorState.tsx`,
+`ui/src/components/states/AccessDenied.tsx`,
+`ui/src/components/states/HumanGateNotice.tsx`,
+`ui/src/components/states/SessionExpiryNotice.tsx`, `ui/src/routes/**` (state wiring),
 `tests/ui/states.spec.ts`, `tests/ui/keyboard.spec.ts`, `tests/ui/a11y.spec.ts`,
 `tests/ui/reduced-motion.spec.ts`, `scripts/test-e2e.sh`, `COMMANDS.md`,
 `.agent/evidence/EP-005/accessibility/**`, `.agent/state/LEDGER.md`.
@@ -817,7 +817,7 @@ READ: `SPEC-004` §1 (subject portal rows), §4 (VG-UI-023…028), §5 (VG-UI-02
 §5.1/§5.2/§5.5/§5.7/§5.10/§5.11/§5.12; `SPEC-005` §3 (grant kinds and scope), §4
 (identity levels).
 
-CHANGE: `src/ui/app/portal/**`, `src/ui/components/portal/**`,
+CHANGE: `ui/src/routes/portal/**`, `ui/src/components/portal/**`,
 `tests/contract/portal-surfaces.test.ts`,
 `.agent/verification/EXPECTED_TEST_MANIFEST.txt`, `.agent/state/LEDGER.md`.
 
@@ -898,9 +898,9 @@ filter, and pagination.
 READ: `SPEC-004` §1 (all four surface rows), §9 (VG-UI-055), §11, §12, `SPEC-005` §2
 (roles), §5 (authorization matrix), `SPEC-003` §5.3/§5.6/§5.12/§5.15/§5.16.
 
-CHANGE: `src/ui/app/console/**`, `src/ui/app/admin/**`, `src/ui/app/auditor/**`,
-`src/ui/components/console/**`, `src/ui/components/admin/**`,
-`src/ui/components/auditor/**`, `tests/contract/surface-ownership.test.ts`,
+CHANGE: `ui/src/routes/console/**`, `ui/src/routes/admin/**`, `ui/src/routes/auditor/**`,
+`ui/src/components/console/**`, `ui/src/components/admin/**`,
+`ui/src/components/auditor/**`, `tests/contract/surface-ownership.test.ts`,
 `tests/contract/auditor-readonly.test.ts`,
 `.agent/verification/EXPECTED_TEST_MANIFEST.txt`, `.agent/state/LEDGER.md`.
 
@@ -952,10 +952,10 @@ EXPECT: both suites pass; `copy lint gate: ok`; `ep005 ui gate: ok`.
 
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-005 MILESTONE_PASS "M6 console, admin, auditor surfaces; auditor write methods 405"`
 
-FALLBACK: if Next.js route-handler registration makes a method matrix awkward to assert
+FALLBACK: if TanStack Router typed route registration makes a method matrix awkward to assert
 at build time, assert it against the running built application in the Playwright API
 project, and keep a build-time assertion that no route module under
-`src/ui/app/auditor/**` exports any write method. Both assertions are required; neither
+`ui/src/routes/auditor/**` exports any write method. Both assertions are required; neither
 alone is sufficient.
 
 COMMIT: `git add -A && git commit -m "[EP-005][M6] operations console, tenant admin console, read-only auditor view"`
@@ -969,21 +969,21 @@ audited reveal; and no third-party tracker loads on a PII route.
 READ: `SPEC-004` §12 (VG-UI-073…079), §14 (VG-UI-083), `SPEC-000` VG-EGRESS-001/002,
 `DATA_EGRESS_MATRIX.md`, `SECURITY.md`, `SPEC-003` §7.1/§7.2.
 
-CHANGE: `src/ui/lib/url.ts`, `src/ui/lib/telemetry.ts`,
-`src/ui/components/evidence/PiiRedactor.tsx`,
-`src/ui/components/evidence/DigestDisplay.tsx`, `src/ui/middleware.ts`,
+CHANGE: `ui/src/lib/url.ts`, `ui/src/lib/telemetry.ts`,
+`ui/src/components/evidence/PiiRedactor.tsx`,
+`ui/src/components/evidence/DigestDisplay.tsx`, `ui/src/middleware.ts`,
 `tests/contract/pii-url.test.ts`, `tests/ui/privacy.spec.ts`, `COMMANDS.md`,
 `.agent/verification/EXPECTED_TEST_MANIFEST.txt`, `.agent/state/LEDGER.md`.
 
 CONTENT:
 
-- `src/ui/lib/url.ts` — the **only** URL builder in the UI. Every path segment, query
+- `ui/src/lib/url.ts` — the **only** URL builder in the UI. Every path segment, query
   value, fragment, and `history.state` write goes through a guard that tests the value
   against the VG-UI-083 PII pattern set (eight classes, including alias matching with
   case-folding and diacritic folding, and `Identifier` values matched by **digest
   comparison** against the encrypted store rather than plaintext scan). A match **throws
   in development and refuses in production** — a match is a defect, not a warning.
-- `src/ui/middleware.ts` — server-side refusal of a non-allowlisted filter value in a
+- `ui/src/middleware.ts` — server-side refusal of a non-allowlisted filter value in a
   path or query before rendering (VG-UI-005, VG-UI-073). Required negative case: a
   request to `/portal/cases?email=<value>` is refused server-side with the
   invalid-parameter response and renders no case (VG-UI-005).
@@ -992,7 +992,7 @@ CONTENT:
   recorded as an audit event (actor, artefact, field, timestamp). Before reveal, no
   unmasked PII exists in text nodes, accessible names, `title`, `alt`, `aria-label`,
   `data-*`, or serialized props — including in the server payload (VG-UI-074).
-- `src/ui/lib/telemetry.ts` — a closed event catalogue. Event names come from the
+- `ui/src/lib/telemetry.ts` — a closed event catalogue. Event names come from the
   catalogue; free-form strings are never emitted; only allowlisted opaque ID classes are
   attached; every emitted value passes the DLP scrub class for its egress class
   (VG-UI-075). An unlisted event name is rejected in tests.
@@ -1011,7 +1011,7 @@ CONTENT:
 - `tests/contract/pii-url.test.ts` — drives the URL builder with one fixture per PII
   pattern class and asserts every class is refused; asserts the fixture set itself covers
   all eight classes (a missing class fails the self-test); and asserts the URL builder is
-  the only place in `src/ui/**` that constructs a path or query string. Required negative
+  the only place in `ui/src/**` that constructs a path or query string. Required negative
   case: a pattern set that misses case-folded alias forms fails its own coverage
   self-test.
 - `tests/ui/privacy.spec.ts` — browser-runtime dependent (M4 records the runtime status):
@@ -1109,7 +1109,7 @@ COMMIT: `git add -A && git commit -m "[EP-005][M8] close UI/client node with ext
 ## 9. Validation and Acceptance
 
 1. `sh scripts/ep005-gate.sh` prints `ep005 ui gate: ok` and exits 0.
-2. `src/ui/route-manifest.json` equals the 24 SPEC-004 §1 routes as a set in both
+2. `ui/src/route-manifest.json` equals the 24 SPEC-004 §1 routes as a set in both
    directions; an undeclared route renders the not-found state and appears in the
    manifest diff (VG-UI-004).
 3. All eleven states render the §2.2 label and qualifier byte-for-byte, with the §2.3
@@ -1181,7 +1181,7 @@ To re-enter this node cold:
 
 Recovery properties:
 
-- No milestone is destructive. `rm -rf .next src/ui/route-manifest.json` regenerates the
+- No milestone is destructive. `rm -rf .next ui/src/route-manifest.json` regenerates the
   build output.
 - If `.next` or the Playwright browser cache is suspect:
   `rm -rf .next node_modules && npm ci`, then re-provision browsers and record the
@@ -1221,7 +1221,7 @@ Recovery properties:
        dependency here.
      - The real /v1 boundary may not exist yet; M5/M6 render against typed fixtures with
        the real-boundary proof recorded as blocked, never simulated in a production build.
-     - Next.js is a large dependency; if the locked install cannot be completed, that is
+     - Vite and React are large dependencies; if the locked install cannot be completed, that is
        a blocking prerequisite for every UI milestone, not something to work around with
        a hand-rolled renderer. -->
 

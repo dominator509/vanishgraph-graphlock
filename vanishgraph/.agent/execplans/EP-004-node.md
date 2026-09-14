@@ -12,7 +12,7 @@ NODE-META-END
 ## 1. Purpose / Big Picture
 
 Build the Fastify `/v1` service boundary specified by SPEC-003: the single HTTP entry
-point through which the Next.js portals and the MCP gateway reach the application
+point through which the Vite + React portal SPA and the MCP gateway reach the application
 layer. At the end of this node the route catalogue of SPEC-003 §5 and SPEC-003 §6
 exists as a real, running service that a black-box client can call, that fails closed
 when a precondition cannot be established, and that refuses to invent a truth state.
@@ -181,7 +181,7 @@ Project documents:
 
 - `ARCHITECTURE.md`, `SECURITY.md`, `PREFLIGHT.md`, `.env.example`,
   `DATA_EGRESS_MATRIX.md`, `TOS_AUTOMATION_MATRIX.md`, `TESTING.md`, `ENVIRONMENT.md`,
-  `DECISIONS.md` (ADR-001 PostgreSQL + Temporal, ADR-003 unclear writes are human-only)
+  `DECISIONS.md` (ADR-001/ADR-016 PostgreSQL with a Postgres-native durable job queue, ADR-003 unclear writes are human-only, ADR-008 Kysely + SQL-first migrations)
 - `PROJECT_RESEARCH_BRIEF.md` §3 (California DROP), §5 (provider transports)
 - `.agent/verification/GRAPH.md`, `.agent/verification/stage-plans/V-009-api-integration-and-concurrency.md`,
   `.agent/verification/stage-plans/V-013-dynamic-security-and-domain-packs.md`

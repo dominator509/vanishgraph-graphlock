@@ -1,0 +1,54 @@
+[FORGE] complete all 11 execplans; finalise licence and stack
+
+LICENCE (ADR-014). The project is Apache-2.0. Chosen for the section 3 patent grant,
+which matters for a security tool others are asked to trust, and because it is
+compatible with every component in the stack. LICENSE holds the verbatim text; NOTICE
+records the third-party attribution section to be regenerated from the SBOM in EP-009
+and flags that the copyright holder name is still an owner decision.
+
+STACK FINALISED (ARCHITECTURE.md section 4 is authoritative, DECISIONS.md holds the ADRs):
+- ADR-016 Temporal REMOVED. Durable work runs on a Postgres-native queue behind a
+  JobQueue port, enqueued inside the same transaction as the state transition that
+  requires it. Temporal was a second stateful cluster and the single largest
+  self-hosting barrier for an open-source project; the state machine already lives in
+  our domain and in PostgreSQL. Making the enqueue transactional also removes a
+  dual-write inconsistency class rather than managing it.
+- ADR-007 Next.js REMOVED. The UI is a Vite + React SPA with TanStack Router/Query.
+  Every portal surface is authenticated, so SSR buys nothing, while a server/client
+  boundary is a way to move subject PII to the browser by mistake.
+- ADR-008 Kysely + SQL-first migrations rather than an ORM, because RLS depends on
+  transaction-scoped SET LOCAL app.tenant_id and policies/triggers cannot be expressed
+  through a schema DSL.
+- Also locked: Zod, Testcontainers, pgvector, Keycloak (OIDC-generic), S3 API with
+  SeaweedFS as the self-hosted default, Valkey as cache only.
+
+ALL 11 EXECPLANS COMPLETE. 91 milestones, 14 sections each, every milestone carrying
+all nine grammar keywords, zero progress boxes checked because nothing has been
+executed. EP-003 was completed here after the previous session was interrupted
+mid-write and left it with 5 milestones and 8 sections.
+
+CONSEQUENCES OF DROPPING TEMPORAL, applied consistently:
+- TEMPORAL_ADDRESS removed from PREFLIGHT.md, .env.example and scripts/preflight.sh
+- scripts/probes/temporal_address.sh deleted
+- SPEC-007 dependency table: the `temporal` health dependency is replaced by
+  `job-worker` (queue heartbeat freshness), which is reported but not required, so a
+  stalled worker fleet is visible without taking the web tier down. Queue availability
+  is already covered by the `postgresql` probe.
+- SPEC-002, SPEC-003, SPEC-006, SPEC-008 and EP-001/003/004/007/008/009 corrected.
+
+DEFECT FIXED IN PACK TOOLING. validate-generated-pack.py flagged Docker/Go template
+strings ({{.Server.Version}}, {{.State.Running}}) as unresolved generation
+placeholders, because the pattern allowed a leading dot. Narrowed to identifier tokens
+({{NAME}}). Verified in both directions: a seeded {{PROJECT_NAME}} is still reported as
+an ERROR.
+
+EP-005 was converted to the Vite + React stack by scripted transformation (21
+substitutions covering the route tree, config files and dependency references) rather
+than authored fresh against it. The file contains no Next.js or App Router reference
+and its stack-agnostic substance was retained, but it has not had a review pass since
+the transformation. Recorded in ASSUMPTIONS.md section 4.5.
+
+NOT CLAIMED: the product does not exist. No API, UI, persistence, auth, observability,
+artifact or deployment. verify.sh still stops at format-check, which is the correct
+honest state. RELEASE_GATE.json remains INCONCLUSIVE. DOD: 5 PASS, 12 PARTIAL,
+24 NOT_STARTED, 1 EXTERNAL_REQUIRED of 42. The 484-ID accounting has not begun.

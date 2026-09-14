@@ -4,7 +4,6 @@ Provision all needs before the graph. Unknown external facts are revalidated fro
 
 PREFLIGHT-TABLE-BEGIN
 DATABASE_URL|REQUIRED|scripts/probes/database_url.sh
-TEMPORAL_ADDRESS|REQUIRED|scripts/probes/temporal_address.sh
 VALKEY_URL|REQUIRED|scripts/probes/valkey_url.sh
 S3_ENDPOINT|REQUIRED|scripts/probes/object_store.sh
 S3_ACCESS_KEY_ID|REQUIRED|-
