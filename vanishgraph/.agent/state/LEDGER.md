@@ -24,3 +24,4 @@
 2026-09-14T06:58:12Z | forge | EP-001 | NODE_DONE | EP-001 complete: gate-foundation: ok (re-closed after deliberate reopen test)
 2026-09-14T07:05:40Z | forge | EP-002 | MILESTONE_PASS | M1 baseline measured (177 pass / 0 fail); requirement-to-test map created (31 lines, 5 PASS)
 2026-09-14T07:15:16Z | forge | EP-002 | MILESTONE_PASS | M2 value objects complete; typecheck: ok; test-unit: ok (198 pass); two regex gaps found by failing tests and fixed
+2026-09-14T07:24:14Z | forge | EP-002 | MILESTONE_PASS | M3 entities complete (27 types, validating factories); typecheck: ok; test-unit: ok (226 pass); two mutations detected and restored
