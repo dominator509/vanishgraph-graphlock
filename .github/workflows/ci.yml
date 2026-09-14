@@ -1,9 +1,12 @@
-# Baseline CI (EP-001 scope, seeded in EP-000 so the toolchain is exercised).
+# Baseline CI (EP-001). Every step is a real command that can fail.
 #
-# Every step is a real command that can fail. There is deliberately no
-# continue-on-error, no `|| true`, and no ignored exit code anywhere in this file:
-# DOD-024 forbids masking failures, and a CI file that cannot go red is a false
-# green (AGENTS.md: "Software that appears to work is a failure state").
+# There is deliberately no continue-on-error, no `|| true`, and no ignored exit code:
+# DOD-024 forbids masking failures, and a CI file that cannot go red is a false green
+# (AGENTS.md: "Software that appears to work is a failure state").
+#
+# The project root is the `vanishgraph` subdirectory of this repository, so every step
+# sets working-directory. Gate sentinels are asserted by the gates themselves; CI adds
+# the clean-checkout install (DOD-002) that no local run can prove.
 name: ci
 
 on:
@@ -11,9 +14,13 @@ on:
     branches: ['**']
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
-  verify:
+  foundation:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -23,9 +30,9 @@ jobs:
           cache: 'npm'
           cache-dependency-path: vanishgraph/package-lock.json
 
-      - name: Install locked dependencies
+      - name: Clean install from the committed lockfile (DOD-002)
         working-directory: vanishgraph
-        run: npm ci
+        run: npm ci --no-audit --no-fund
 
       - name: Preflight
         working-directory: vanishgraph
@@ -35,6 +42,14 @@ jobs:
         working-directory: vanishgraph
         run: sh scripts/lint.sh
 
+      - name: Format check
+        working-directory: vanishgraph
+        run: sh scripts/format-check.sh
+
+      - name: Environment contract
+        working-directory: vanishgraph
+        run: sh scripts/validate-env.sh
+
       - name: Unit tests
         working-directory: vanishgraph
         run: sh scripts/test-unit.sh
@@ -43,14 +58,37 @@ jobs:
         working-directory: vanishgraph
         run: sh scripts/test-collection-guard.sh
 
+      - name: Reality gate (DOD-019)
+        working-directory: vanishgraph
+        run: sh scripts/reality-gate.sh
+
       - name: Build
         working-directory: vanishgraph
         run: sh scripts/build.sh
+
+      - name: Dependency audit and SBOM (DOD-021)
+        working-directory: vanishgraph
+        run: sh scripts/dependency-audit.sh
 
       - name: Toolchain gate
         working-directory: vanishgraph
         run: sh scripts/gate-toolchain.sh
 
+      - name: Foundation gate
+        working-directory: vanishgraph
+        run: sh scripts/gate-foundation.sh
+
       - name: Pack validation
         working-directory: vanishgraph
         run: python3 scripts/validate-generated-pack.py .
+
+      - name: Upload gate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-evidence
+          path: |
+            vanishgraph/.agent/evidence/**
+            vanishgraph/dist/**
+          if-no-files-found: warn
+          retention-days: 14

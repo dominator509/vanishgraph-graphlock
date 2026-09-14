@@ -1,0 +1,268 @@
+preflight: NOTICE - the following PREFLIGHT.md credentials are not provisioned.
+These block only their dependent work (integration, E2E, live-fire, deploy).
+  - DATABASE_URL
+  - VALKEY_URL
+  - S3_ENDPOINT
+  - KEYCLOAK_ISSUER
+  - LOCAL_MODEL_ENDPOINT
+  - GITHUB_APP_ID
+See PREFLIGHT.md and .env.example. Capability state: BLOCKED_CREDENTIALS.
+preflight: ok
+typecheck: ok
+import boundary: ok
+lint: ok
+format-check: ok
+env validation: PREFLIGHT.md declares 24 variables (14 REQUIRED, 10 OPTIONAL); .env.example matches
+env validation: NOTICE - unprovisioned REQUIRED credentials; state BLOCKED_CREDENTIALS, blocking only their dependent work (DOD-032):
+  - DATABASE_URL
+  - VALKEY_URL
+  - S3_ENDPOINT
+  - S3_ACCESS_KEY_ID
+  - S3_SECRET_ACCESS_KEY
+  - S3_BUCKET
+  - KEYCLOAK_ISSUER
+  - KEYCLOAK_CLIENT_ID
+  - KEYCLOAK_CLIENT_SECRET
+  - SESSION_SECRET
+  - LOCAL_MODEL_ENDPOINT
+  - GITHUB_APP_ID
+  - GITHUB_APP_PRIVATE_KEY
+  - GITHUB_INSTALLATION_ID
+env validation: see PREFLIGHT.md and .env.example; provision then re-run.
+env validation: ok
+▶ SPEC-000 §5 — the eleven truth states
+  ✔ exactly eleven states exist and they are the canonical set (1.5068ms)
+  ✔ every state has recorded non-collapse facts (0.4226ms)
+  ✔ ONLY VERIFIED_REMOVED asserts a verified removal (1.5297ms)
+  ✔ ONLY SEARCH_DELISTED asserts search delisting, and it never means removal (0.4736ms)
+  ✔ REQUEST_SUBMITTED and ACKNOWLEDGED never count as progress toward removal (0.2953ms)
+  ✔ HUMAN_REQUIRED and NOT_REMOVABLE are legitimate outcomes, not failures (0.2778ms)
+  ✔ VERIFIED_REMOVED is the only state requiring an independent observation (0.3448ms)
+  ✔ isTruthState rejects non-members including ad-hoc success words (0.3578ms)
+✔ SPEC-000 §5 — the eleven truth states (7.9161ms)
+▶ SPEC-001 §4.1 — every legal transition succeeds with its guard satisfied
+  ✔ the table contains exactly 21 transitions, T1..T21 (1.392ms)
+  ✔ T1: (initial) -> DISCOVERED_CANDIDATE succeeds and yields evidence (0.6862ms)
+  ✔ T1: refused when its guard is not satisfied (0.9482ms)
+  ✔ T2: (initial) -> VERIFIED_NOT_PRESENT succeeds and yields evidence (0.1772ms)
+  ✔ T2: refused when its guard is not satisfied (0.1515ms)
+  ✔ T3: DISCOVERED_CANDIDATE -> MATCH_CONFIRMED succeeds and yields evidence (0.4127ms)
+  ✔ T3: refused when its guard is not satisfied (0.2191ms)
+  ✔ T4: DISCOVERED_CANDIDATE -> VERIFIED_NOT_PRESENT succeeds and yields evidence (0.1959ms)
+  ✔ T4: refused when its guard is not satisfied (0.1819ms)
+  ✔ T5: MATCH_CONFIRMED -> REQUEST_READY succeeds and yields evidence (0.2086ms)
+  ✔ T5: refused when its guard is not satisfied (0.1521ms)
+  ✔ T6: MATCH_CONFIRMED -> NOT_REMOVABLE succeeds and yields evidence (0.1678ms)
+  ✔ T6: refused when its guard is not satisfied (0.1308ms)
+  ✔ T7: MATCH_CONFIRMED -> HUMAN_REQUIRED succeeds and yields evidence (0.1503ms)
+  ✔ T7: refused when its guard is not satisfied (0.1565ms)
+  ✔ T8: REQUEST_READY -> REQUEST_SUBMITTED succeeds and yields evidence (0.1653ms)
+  ✔ T8: refused when its guard is not satisfied (0.1243ms)
+  ✔ T9: REQUEST_READY -> HUMAN_REQUIRED succeeds and yields evidence (0.1175ms)
+  ✔ T9: refused when its guard is not satisfied (0.1581ms)
+  ✔ T10: REQUEST_READY -> NOT_REMOVABLE succeeds and yields evidence (0.1288ms)
+  ✔ T10: refused when its guard is not satisfied (0.2421ms)
+  ✔ T11: REQUEST_SUBMITTED -> ACKNOWLEDGED succeeds and yields evidence (0.2669ms)
+  ✔ T11: refused when its guard is not satisfied (0.1599ms)
+  ✔ T12: REQUEST_SUBMITTED -> HUMAN_REQUIRED succeeds and yields evidence (0.126ms)
+  ✔ T12: refused when its guard is not satisfied (0.1562ms)
+  ✔ T13: REQUEST_SUBMITTED -> NOT_REMOVABLE succeeds and yields evidence (0.1263ms)
+  ✔ T13: refused when its guard is not satisfied (0.1501ms)
+  ✔ T14: ACKNOWLEDGED -> VERIFIED_REMOVED succeeds and yields evidence (0.2027ms)
+  ✔ T14: refused when its guard is not satisfied (0.2782ms)
+  ✔ T15: ACKNOWLEDGED -> NOT_REMOVABLE succeeds and yields evidence (0.1624ms)
+  ✔ T15: refused when its guard is not satisfied (0.1355ms)
+  ✔ T16: ACKNOWLEDGED -> HUMAN_REQUIRED succeeds and yields evidence (0.0948ms)
+  ✔ T16: refused when its guard is not satisfied (0.1275ms)
+  ✔ T17: VERIFIED_REMOVED -> REAPPEARED succeeds and yields evidence (0.1532ms)
+  ✔ T17: refused when its guard is not satisfied (0.1389ms)
+  ✔ T18: REAPPEARED -> REQUEST_READY succeeds and yields evidence (0.2183ms)
+  ✔ T18: refused when its guard is not satisfied (0.1531ms)
+  ✔ T19: REAPPEARED -> NOT_REMOVABLE succeeds and yields evidence (0.0954ms)
+  ✔ T19: refused when its guard is not satisfied (0.1907ms)
+  ✔ T20: SEARCH_DELISTED -> REAPPEARED succeeds and yields evidence (0.098ms)
+  ✔ T20: refused when its guard is not satisfied (0.2034ms)
+  ✔ T21: MATCH_CONFIRMED -> SEARCH_DELISTED succeeds and yields evidence (0.2015ms)
+  ✔ T21: refused when its guard is not satisfied (0.1209ms)
+  ✔ no guard is satisfied by an all-false fact set (guards are non-vacuous) (0.2214ms)
+✔ SPEC-001 §4.1 — every legal transition succeeds with its guard satisfied (12.1604ms)
+▶ SPEC-001 §4.2 — forbidden transitions are refused with their reason
+  ✔ the six documented forbidden pairs are all present in the table (0.3587ms)
+  ✔ REQUEST_SUBMITTED -> VERIFIED_REMOVED is refused and names the danger (0.6781ms)
+  ✔ REQUEST_READY -> VERIFIED_REMOVED is refused and names the danger (0.2141ms)
+  ✔ MATCH_CONFIRMED -> REQUEST_SUBMITTED is refused and names the danger (0.1379ms)
+  ✔ DISCOVERED_CANDIDATE -> REQUEST_READY is refused and names the danger (0.1234ms)
+  ✔ SEARCH_DELISTED -> VERIFIED_REMOVED is refused and names the danger (0.1774ms)
+  ✔ VERIFIED_NOT_PRESENT -> VERIFIED_REMOVED is refused and names the danger (0.1585ms)
+  ✔ removal theater is refused even when every other fact is satisfied (0.2141ms)
+  ✔ an unlisted pair is refused as non-existent (14.8931ms)
+✔ SPEC-001 §4.2 — forbidden transitions are refused with their reason (18.6164ms)
+▶ SPEC-001 §4.2 — the independent-observation guard
+  ✔ T14 is refused with ObservationNotIndependent when only independence is missing (0.5698ms)
+  ✔ T14 succeeds once the observation is independent (0.3203ms)
+  ✔ a missing window is refused even when the observation is independent (0.5423ms)
+✔ SPEC-001 §4.2 — the independent-observation guard (7.182ms)
+▶ SPEC-001 §4.3 — state machine invariants
+  ✔ SM-1: exactly one current truth state may be asserted (0.4618ms)
+  ✔ SM-2/SM-3: every transition names evidence, so audit has something to record (0.1576ms)
+  ✔ SM-4: a verified removal is revocable by REAPPEARED (0.1067ms)
+  ✔ SM-6: state cannot be set arbitrarily — only listed transitions apply (3.1776ms)
+  ✔ initial states are exactly T1 and T2 (0.2692ms)
+✔ SPEC-001 §4.3 — state machine invariants (4.5008ms)
+▶ availableTransitions reports only evidence-backed options
+  ✔ a fully-satisfied REQUEST_READY offers submission, human gate and non-removability (0.3343ms)
+  ✔ with nothing satisfied, no transition is offered (0.1446ms)
+✔ availableTransitions reports only evidence-backed options (0.6179ms)
+▶ Confidence (VG-IDENT-003)
+  ✔ a score with a basis is constructible (1.7141ms)
+  ✔ a score with NO basis is unrepresentable (1.0134ms)
+  ✔ a score with a blank basis entry is refused (0.3365ms)
+  ✔ out-of-range and non-finite values are refused (0.4057ms)
+  ✔ boundary values 0 and 1 are accepted (0.2489ms)
+  ✔ basis is frozen against later mutation (0.3213ms)
+  ✔ equality is by value including basis (0.4723ms)
+  ✔ atLeast compares against the policy threshold (0.2824ms)
+✔ Confidence (VG-IDENT-003) (7.2786ms)
+▶ IdempotencyKey (VG-ACTION-001)
+  ✔ a normal key is accepted (0.4931ms)
+  ✔ empty and blank keys are refused (0.5294ms)
+  ✔ untrimmed keys are refused, because keys are compared exactly (0.2866ms)
+  ✔ over-long keys are refused (0.2664ms)
+✔ IdempotencyKey (VG-ACTION-001) (2.0708ms)
+▶ EvidenceDigest (VG-EVIDENCE-001)
+  ✔ a valid SHA-256 hex digest is accepted (0.3456ms)
+  ✔ malformed digests are refused (0.4877ms)
+✔ EvidenceDigest (VG-EVIDENCE-001) (1.0218ms)
+▶ ObservationWindow (VG-VERIFY-002)
+  ✔ a positive duration with a method is accepted (0.3142ms)
+  ✔ non-positive or non-integer durations are refused (0.2933ms)
+  ✔ a window with no method is refused (0.1594ms)
+  ✔ elapsed time is evaluated against the start, not assumed (0.1507ms)
+✔ ObservationWindow (VG-VERIFY-002) (1.155ms)
+▶ PermissionClass (VG-CHANNEL-002, TOS_AUTOMATION_MATRIX)
+  ✔ only WRITE_PERMITTED allows an automated write (0.1597ms)
+  ✔ WRITE_UNCLEAR is treated exactly like PROHIBITED (0.1586ms)
+✔ PermissionClass (VG-CHANNEL-002, TOS_AUTOMATION_MATRIX) (0.4607ms)
+▶ EgressClass (VG-EGRESS-001, DATA_EGRESS_MATRIX)
+  ✔ the four protected classes are deny-by-default (1.366ms)
+  ✔ protected classes require an explicit tenant policy (0.1979ms)
+  ✔ opaque ids and nothing-at-all do not require a policy decision (0.1271ms)
+✔ EgressClass (VG-EGRESS-001, DATA_EGRESS_MATRIX) (1.9341ms)
+▶ every shell gate is POSIX-parseable
+  ✔ scripts/artifact-identity.sh passes sh -n (596.2279ms)
+  ✔ scripts/build.sh passes sh -n (935.9934ms)
+  ✔ scripts/dependency-audit.sh passes sh -n (492.1855ms)
+  ✔ scripts/dod-gate.sh passes sh -n (899.8044ms)
+  ✔ scripts/format-check.sh passes sh -n (572.7929ms)
+  ✔ scripts/gate-toolchain.sh passes sh -n (560.8501ms)
+  ✔ scripts/graph-next.sh passes sh -n (588.6089ms)
+  ✔ scripts/harness-accounting.sh passes sh -n (659.517ms)
+  ✔ scripts/harness-init.sh passes sh -n (1501.6575ms)
+  ✔ scripts/harness-next.sh passes sh -n (2354.1422ms)
+  ✔ scripts/harness-run-stage.sh passes sh -n (1779.3731ms)
+  ✔ scripts/harness-validate.sh passes sh -n (1452.4318ms)
+  ✔ scripts/import-boundary.sh passes sh -n (1469.6679ms)
+  ✔ scripts/install.sh passes sh -n (1346.054ms)
+  ✔ scripts/ledger.sh passes sh -n (779.6685ms)
+  ✔ scripts/lint.sh passes sh -n (209.9365ms)
+  ✔ scripts/live-fire.sh passes sh -n (207.689ms)
+  ✔ scripts/materialize-atomic-sources.sh passes sh -n (184.4712ms)
+  ✔ scripts/preflight.sh passes sh -n (178.4816ms)
+  ✔ scripts/production-readiness-check.sh passes sh -n (152.3684ms)
+  ✔ scripts/reality-gate.sh passes sh -n (142.858ms)
+  ✔ scripts/security-check.sh passes sh -n (142.1558ms)
+  ✔ scripts/smoke-test.sh passes sh -n (131.6614ms)
+  ✔ scripts/test-collection-guard.sh passes sh -n (142.582ms)
+  ✔ scripts/test-e2e.sh passes sh -n (156.6298ms)
+  ✔ scripts/test-integration.sh passes sh -n (147.0943ms)
+  ✔ scripts/test-unit.sh passes sh -n (135.4823ms)
+  ✔ scripts/typecheck.sh passes sh -n (138.6784ms)
+  ✔ scripts/validate-env.sh passes sh -n (120.2764ms)
+  ✔ scripts/verify.sh passes sh -n (120.3377ms)
+✔ every shell gate is POSIX-parseable (18304.1863ms)
+▶ no script prints a success sentinel from a fake path
+  ✔ scripts/build.sh performs real work before its sentinel (1.0585ms)
+  ✔ scripts/dependency-audit.sh performs real work before its sentinel (0.1492ms)
+  ✔ scripts/format-check.sh performs real work before its sentinel (0.1216ms)
+  ✔ scripts/gate-toolchain.sh performs real work before its sentinel (0.1254ms)
+  ✔ scripts/import-boundary.sh performs real work before its sentinel (0.1035ms)
+  ✔ scripts/lint.sh performs real work before its sentinel (0.1565ms)
+  ✔ scripts/materialize-atomic-sources.sh performs real work before its sentinel (0.1183ms)
+  ✔ scripts/preflight.sh performs real work before its sentinel (0.1158ms)
+  ✔ scripts/reality-gate.sh performs real work before its sentinel (0.1449ms)
+  ✔ scripts/test-collection-guard.sh performs real work before its sentinel (0.1253ms)
+  ✔ scripts/test-unit.sh performs real work before its sentinel (0.0988ms)
+  ✔ scripts/typecheck.sh performs real work before its sentinel (0.1117ms)
+  ✔ scripts/validate-env.sh performs real work before its sentinel (0.1247ms)
+  ✔ scripts/verify.sh performs real work before its sentinel (0.0929ms)
+✔ no script prints a success sentinel from a fake path (3.2963ms)
+▶ loud-fail placeholders fail loudly (VG-SHIP-033)
+  ✔ scripts/artifact-identity.sh exits non-zero with the mandated ERROR signature and no sentinel (167.4955ms)
+  ✔ scripts/dod-gate.sh exits non-zero with the mandated ERROR signature and no sentinel (162.6127ms)
+  ✔ scripts/harness-accounting.sh exits non-zero with the mandated ERROR signature and no sentinel (197.5965ms)
+  ✔ scripts/harness-init.sh exits non-zero with the mandated ERROR signature and no sentinel (280.5672ms)
+  ✔ scripts/harness-next.sh exits non-zero with the mandated ERROR signature and no sentinel (219.085ms)
+  ✔ scripts/harness-run-stage.sh exits non-zero with the mandated ERROR signature and no sentinel (161.347ms)
+  ✔ scripts/harness-validate.sh exits non-zero with the mandated ERROR signature and no sentinel (163.5957ms)
+  ✔ scripts/install.sh exits non-zero with the mandated ERROR signature and no sentinel (155.6917ms)
+  ✔ scripts/live-fire.sh exits non-zero with the mandated ERROR signature and no sentinel (162.3032ms)
+  ✔ scripts/production-readiness-check.sh exits non-zero with the mandated ERROR signature and no sentinel (151.3728ms)
+  ✔ scripts/security-check.sh exits non-zero with the mandated ERROR signature and no sentinel (166.5755ms)
+  ✔ scripts/smoke-test.sh exits non-zero with the mandated ERROR signature and no sentinel (159.2778ms)
+  ✔ scripts/test-e2e.sh exits non-zero with the mandated ERROR signature and no sentinel (150.2966ms)
+  ✔ scripts/test-integration.sh exits non-zero with the mandated ERROR signature and no sentinel (144.4985ms)
+✔ loud-fail placeholders fail loudly (VG-SHIP-033) (2443.4601ms)
+▶ test collection guard (DOD-007)
+  ✔ the guard is parameterised rather than hard-coding its glob and manifest (0.3828ms)
+  ✔ the guard uses the JUnit reporter, which carries the per-case file attribute (0.156ms)
+  ✔ the guard fails when zero tests are collected (DOD-007) (0.146ms)
+  ✔ the guard fails when a manifest suite contributes nothing (DOD-007) (0.1414ms)
+  ✔ the guard fails when a collected test fails (DOD-006, DOD-024) (0.1217ms)
+  ✔ the guard reports skips rather than hiding them (DOD-006) (0.1276ms)
+  ✔ the guard does not print its sentinel when it fails (0.1498ms)
+✔ test collection guard (DOD-007) (1.6054ms)
+▶ verify.sh stage order is the mandated fifteen stages (line 1357)
+  ✔ stage names appear once each, in order (1.7901ms)
+  ✔ no stage is exempted and no failure is masked (0.5709ms)
+✔ verify.sh stage order is the mandated fifteen stages (line 1357) (2.5516ms)
+▶ PREFLIGHT contract and .env.example agree (independent parse)
+  ✔ the table declares at least one REQUIRED credential (0.1801ms)
+  ✔ every declared variable is documented (0.196ms)
+  ✔ no stale entries in .env.example (0.1839ms)
+  ✔ .env.example holds no value other than the placeholder (VG-SEC-002) (0.4688ms)
+✔ PREFLIGHT contract and .env.example agree (independent parse) (1.2426ms)
+▶ repository hygiene
+  ✔ the lockfile is tracked by git (DOD-002) (116.4318ms)
+  ✔ zero runtime dependencies and exact-pinned devDependencies (0.6476ms)
+  ✔ .gitignore keeps credentials out and evidence in (DOD-025, VG-SEC-002) (0.3955ms)
+✔ repository hygiene (117.6692ms)
+▶ gates that M4 depends on really pass
+  ✔ scripts/format-check.sh prints format-check: ok (13346.3058ms)
+  ✔ scripts/validate-env.sh prints env validation: ok (2089.6755ms)
+  ✔ scripts/import-boundary.sh prints import boundary: ok (231.1474ms)
+  ✔ scripts/typecheck.sh prints typecheck: ok (3949.2715ms)
+  ✔ scripts/gate-toolchain.sh prints gate-toolchain: ok (10536.8026ms)
+✔ gates that M4 depends on really pass (30153.6243ms)
+ℹ tests 173
+ℹ suites 20
+ℹ pass 173
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 51896.7442
+test-unit: ok
+{"tests":173,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":4,"manifestChecked":3,"verdict":"OK"}
+test collection guard: ok
+reality gate: ok
+build: ok
+gate-toolchain: ok
+generated pack validation: ok
+WARN: possible incomplete prose/code in .agent\reality-patterns
+WARN: possible incomplete prose/code in .agent\execplans\EP-004-node.md
+WARN: possible incomplete prose/code in .agent\execplans\EP-005-node.md
+WARN: possible incomplete prose/code in .agent\execplans\EP-006-node.md
+WARN: possible incomplete prose/code in .agent\execplans\EP-008-node.md
+WARN: possible incomplete prose/code in .agent\execplans\EP-010-node.md
+WARN: possible incomplete prose/code in .agent\specs\SPEC-007-observability.md
+WARN: NODE_DONE lacks anti_gaming_review.json for EP-000
