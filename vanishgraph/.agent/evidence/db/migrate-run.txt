@@ -1,2 +1,2 @@
-migrate: verified 5 applied migration(s), no drift
+migrate: verified 7 applied migration(s), no drift
 migrate: ok

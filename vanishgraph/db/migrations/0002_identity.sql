@@ -82,15 +82,46 @@ CREATE TABLE location_history (
 );
 
 -- VG-DATA-005: a subject cannot exist without valid authority, enforced at commit.
+--
+-- TENANT SCOPE, and why this is not a plain SELECT.
+--
+-- This is a DEFERRED constraint trigger: it fires at COMMIT, by which point the transaction's
+-- `app.tenant_id` reflects only the LAST value the transaction happened to set. A multi-tenant
+-- transaction (load a subject for tenant A, then switch to tenant B, then commit) therefore
+-- validates tenant A's subject while the session is pointed at tenant B — and under FORCE RLS
+-- the grant row is invisible, so a perfectly valid subject is rejected. That was observed
+-- directly: the prior-release seed failed with
+--   "ProtectedSubject ... requires a valid AuthorityGrant at commit (VG-IDENT-001)"
+-- even though the grant was inserted in the same transaction.
+--
+-- The fix is to scope the lookup to the SUBJECT'S OWN tenant rather than the session's, by
+-- setting app.tenant_id to NEW.tenant_id for the duration of this check and restoring the
+-- previous setting afterwards. `SET LOCAL` is transaction-scoped, so the restoration uses
+-- set_config(..., true) rather than SET LOCAL to stay inside the trigger's own scope.
+--
+-- SECURITY: the function must be able to see the grant row regardless of the caller's session
+-- tenant, which is exactly what re-pointing the setting achieves. It does NOT widen what the
+-- caller can read: the function returns only NULL or raises, and reads no row into the caller's
+-- result set.
 CREATE FUNCTION assert_subject_has_authority() RETURNS trigger
 LANGUAGE plpgsql AS $$
+DECLARE
+  previous_tenant text := current_setting('app.tenant_id', true);
+  has_authority   boolean;
 BEGIN
-  IF NOT EXISTS (
+  PERFORM set_config('app.tenant_id', NEW.tenant_id::text, true);
+
+  SELECT EXISTS (
     SELECT 1 FROM authority_grant g
      WHERE g.subject_id = NEW.id
+       AND g.tenant_id  = NEW.tenant_id
        AND g.revoked_at IS NULL
        AND g.expires_at > now()
-  ) THEN
+  ) INTO has_authority;
+
+  PERFORM set_config('app.tenant_id', coalesce(previous_tenant, ''), true);
+
+  IF NOT has_authority THEN
     RAISE EXCEPTION
       'ProtectedSubject % requires a valid AuthorityGrant at commit (VG-IDENT-001, VG-DATA-005)',
       NEW.id;
