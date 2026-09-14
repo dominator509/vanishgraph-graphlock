@@ -1,0 +1,27 @@
+                      ?column?                       
+-----------------------------------------------------
+ vg_app super=false bypassrls=false createdb=false
+ vg_owner super=false bypassrls=false createdb=false
+(2 rows)
+
+== databases owned by vg_owner ==
+       datname       
+---------------------
+ vanishgraph_empty
+ vanishgraph_failure
+ vanishgraph_main
+ vanishgraph_prior
+(4 rows)
+
+== vg_app can connect and is NOT the table owner (RLS-4) ==
+                 ?column?                  
+-------------------------------------------
+ vg_app is_superuser=false bypassrls=false
+(1 row)
+
+== vg_app holds no table ownership ==
+         ?column?         
+--------------------------
+ 0 tables owned by vg_app
+(1 row)
+

@@ -33,3 +33,4 @@
 2026-09-14T08:19:33Z | forge | EP-002 | NODE_DONE | EP-002 complete: gate-domain: ok; candidate ffb808f622add1ff2cfc2a5b7818f1a8714b5936
 2026-09-14T08:19:33Z | forge | EP-002 | KNOWN_GAPS | unproven: SPEC-001 section 6 names no command owning transition T21 (MATCH_CONFIRMED -> SEARCH_DELISTED), so T21 is reachable only through the state-machine API; no other SPEC-001 item is unproven at the domain layer
 2026-09-14T08:19:59Z | forge | EP-002 | NODE_CLOSE_RECORD | EP-002 closed: 3 of 11 nodes; graph advances to EP-003
+2026-09-14T08:45:06Z | forge | EP-003 | MILESTONE_PASS | M1 db provision: ok (Docker postgres:16, 2 roles NOBYPASSRLS, 4 databases); db teardown: ok with proof

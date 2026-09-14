@@ -122,4 +122,23 @@ binding suite table. One definition of "the unit tests" exists, in the script.
 durable identity, safe to bind evidence to under DOD-029) or `VOLATILE` (the file embeds
 a timestamp, UUID or measurement, so no digest is recorded for it). A single
 indiscriminate hash of every evidence file is wrong by construction, because run
-transcripts legitimately differ on every run.
+transcripts legitimately differ on every run. Pass a node id to index that node's
+evidence: `sh scripts/evidence-index.sh EP-002`.
+
+## Database (disposable, provisioned by the graph; never production)
+
+`sh scripts/db-provision.sh` (db provision: ok); `sh scripts/db-teardown.sh`
+(db teardown: ok).
+
+`db-provision.sh` starts a pinned `postgres:16` container on a free local port and creates
+two roles — `vg_owner` (owns schema objects, runs migrations) and `vg_app` (runtime, no
+ownership, **no `BYPASSRLS`**, no `TRUNCATE`) — plus four isolated databases:
+`vanishgraph_main` (integration), `vanishgraph_empty` (MIG-1), `vanishgraph_prior`
+(MIG-2) and `vanishgraph_failure` (MIG-4). It is idempotent: a running container with a
+valid state file is reused.
+
+Generated passwords live **only** in a mode-0600 state file outside the repository
+(`${TMPDIR}/vanishgraph-db.env`), never in the repository and never in `argv`
+(VG-SEC-002). When the Docker daemon is unreachable and `DATABASE_URL` is unset, the
+command classifies the outcome `BLOCKED_ENVIRONMENT` and prints no sentinel — it never
+reports success and never records a candidate failure (DOD-032, DOD-033).

@@ -1,0 +1,3 @@
+db provision: container vanishgraph-ep003-postgres removed; no container remains
+db provision: state file removed
+db teardown: ok

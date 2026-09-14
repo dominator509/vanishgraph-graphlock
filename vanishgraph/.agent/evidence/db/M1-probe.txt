@@ -1,0 +1,4 @@
+Docker version 29.7.2, build a7dcaa6
+psql (PostgreSQL) 16.14
+v24.14.1
+29.7.2
