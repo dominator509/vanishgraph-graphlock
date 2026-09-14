@@ -46,3 +46,4 @@
 2026-09-14T12:25:01Z | forge | EP-003 | NODE_CLOSE_RECORD | EP-003 closed: 4 of 11 nodes; graph advances to EP-004
 2026-09-14T13:13:05Z | forge | EP-004 | MILESTONE_PASS | M1 gate-api: ok; import boundary: ok (3 rules); 333 unit tests 0 fail; DATABASE_URL/VALKEY_URL/KEYCLOAK_ISSUER BLOCKED_CREDENTIALS
 2026-09-14T13:29:54Z | forge | EP-004 | MILESTONE_PASS | M2 error envelope and code registry parity: ok; 4 spec defects + 2 impl defects found and recorded; 40 contract tests, 351 unit tests
+2026-09-14T13:51:17Z | forge | EP-004 | MILESTONE_PASS | M3 token validation and tenant resolution: ok; KEYCLOAK_ISSUER BLOCKED_CREDENTIALS; 85 contract tests; stale camelCase plan text corrected against SPEC-003 R-1
