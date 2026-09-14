@@ -1332,19 +1332,105 @@ Recovery properties:
 
 ## 12. Surprises & Discoveries
 
+### 2026-09-14 — SPEC-003 §8.2 and SPEC-006 §6.2 disagree on `INVALID_TRUTH_STATE` (400 vs 422)
+
+This is the divergence the plan's Surprises comment anticipated. Found by the contract test
+comparing the two specification files mechanically, not by review.
+
+The conflict, with citations:
+
+| Source | Status it states | Reading |
+|---|---|---|
+| SPEC-003 §8.2 status table | **400** | "Malformed request, missing required header/parameter, opaque-value validation" |
+| SPEC-003 §2.3 | **400** | unknown `truthState` filter token is rejected, never ignored |
+| SPEC-003 §5.5 (route 5.5.1 errors) | **400** | `400 INVALID_TRUTH_STATE`, `400 INVALID_CURSOR`, `400 FILTER_TOO_BROAD` |
+| SPEC-003 §7.3 | **400** | "Filtering rejects unknown tokens (`400 INVALID_TRUTH_STATE`)" |
+| SPEC-003 §11.4 VG-API-006 | **400** | `?truthState=DONE` returns `400 INVALID_TRUTH_STATE` |
+| SPEC-006 §6.2 family table ("Codes owned by SPEC-003 §8.2") | **400** | agrees with SPEC-003 |
+| SPEC-006 §6.2 domain-class table | 422 | lists it as an *example* under `INVALID_VALUE_OBJECT` (semantic) |
+
+So **SPEC-006 contradicts itself**, and its 422 mention is not a rule about this code: that row's
+own wire-code cell reads "field-specific code **from SPEC-003 §8.2**", i.e. it defers to SPEC-003
+for the status of the specific code.
+
+**Resolution: 400**, and the reasoning is recorded in `tests/contract/route-registry.test.ts`
+rather than left implicit:
+
+1. SPEC-003 §8.4 states SPEC-006 "owns the taxonomy; this file owns the **wire**", so SPEC-003's
+   status wins for a wire code.
+2. SPEC-006's own family table agrees at 400.
+3. Semantically, an unknown `truthState` **query token** is opaque-value validation (400), not a
+   semantic body failure (422). SPEC-003 §8.2's own "409 versus 422" paragraph reserves 422 for
+   "the request itself is semantically invalid or a required input is absent".
+
+The contract test pins this three ways so the resolution cannot silently rot: it asserts the
+registry equals SPEC-003, asserts SPEC-006's conflicting row still says 422 (if that changes, the
+resolution is stale and must be revisited), and carries a guard test that FAILS if a **second**
+SPEC-003/SPEC-006 status conflict ever appears. Neither specification is edited in this node.
+
+**Owner ratification wanted:** this is a specification defect, and the honest fix is an
+amendment to SPEC-006 §6.2 naming `INVALID_TRUTH_STATE` explicitly under 400.
+
+### 2026-09-14 — SPEC-003 §5 contains **78** routes, not 79, and 5.9.1's Scope line is unparseable
+
+MEASURED while building the route registry, three independent ways over
+`.agent/specs/SPEC-003-api-contracts.md`:
+
+- table rows matching `` ^\| 5\.\d+\.\d+ \| ``: **78**
+- bold prose headings matching `` ^\*\*5\.\d+\.\d+ ``: **78**
+- the two sets match 1:1 with no gaps
+
+Per-group: 5.1=10, 5.2=3, 5.3=10, 5.4=5, 5.5=5, 5.6=4, 5.7=6, 5.8=6, 5.9=3, 5.10=3,
+5.11=3, 5.12=5, 5.13=3, 5.14=3, 5.15=2, 5.16=3, 5.17=4 → **78**.
+
+An earlier working assumption of 79 in this session was a miscount and is corrected here.
+Section 6's three webhook routes (6.1–6.3) are the only other route rows in the document and
+would give 81, not 79. The registry holds **78** §5 entries, with the 3 webhook routes kept
+separately in `WEBHOOK_ROUTES`.
+
+**Source defect (SPEC-003 §5.9.1), recorded not fixed** — specifications are not edited inside
+this node:
+
+```
+...or T13 (`NOT_REMOVABLE`).Scope `vg.cases.write`. Idempotency **Required**.
+```
+
+The heading sentence and the `Scope` sentence are joined with no separating whitespace, so a
+line-anchored `^Scope ` extractor matches **zero** lines for this route (verified) and would
+silently emit an empty scope set — a route that then denies every caller. The registry records
+`vg.cases.write` for 5.9.1, established by reading the sentence.
+
+Related, lower impact: several lines join adjacent tokens with no space (`VG-ACTION-002SPEC-001`,
+`VG-IDENT-003SPEC-000`), so a tokenizer splitting on whitespace alone yields malformed IDs.
+
+**Interpretation choice worth recording:** for 5.1.6 and 5.1.8 the `vg.pii.reveal` scope and the
+step-up requirement come from the `includeValue` **query parameter**, not from the base `Scope`
+line. The registry includes them, because a caller needs the scope to exercise that reveal path;
+the contract test asserts the vocabulary is closed either way.
+
 <!-- Append only observed, dated findings with the exact command that produced them.
      Record specification defects here (for example a status divergence between
      SPEC-003 §8.2 and SPEC-006 §6.2) with both citations. Never resolve a
      specification conflict by editing a specification inside this node. -->
-<!-- KNOWN BEFORE EXECUTION, recorded so the executor is not surprised:
-     - DATABASE_URL, VALKEY_URL, and KEYCLOAK_ISSUER are REQUIRED by PREFLIGHT.md and
-       are not provisioned, so the RLS, durable-idempotency, webhook-replay, and
-       real-IdP rows of this node cannot reach PASS.
-     - EP-003 (schema, migrations, RLS policy, repositories) is largely unstarted, so
-       M6 is BLOCKED_PREREQUISITE on it in addition to BLOCKED_CREDENTIALS.
-     - scripts/test-integration.sh and scripts/security-check.sh are loud-fail
-       placeholders; verify.sh exits non-zero at the first of them and cannot print
-       verify: ok at the end of this node. -->
+<!-- KNOWN BEFORE EXECUTION, recorded so the executor is not surprised.
+     REVISED 2026-09-14 after EP-003 closed: several of these notes were true when written
+     and are now stale. Corrections are marked so the executor is not misled the other way. -->
+<!-- STALE, corrected: "EP-003 is largely unstarted, so M6 is BLOCKED_PREREQUISITE on it".
+     EP-003 is DONE. The schema, 10 migrations, RLS on 29 tables, the generated policies,
+     the job queue and the crypto/retention adapters all exist and are asserted by
+     `sh scripts/gate-data.sh` (gate-data: ok). M6 is therefore NOT blocked on EP-003. -->
+<!-- STALE, corrected: "scripts/test-integration.sh is a loud-fail placeholder".
+     EP-003 M9 implemented it; it now provisions, migrates, seeds, runs the database suites
+     through the manifest guard, and prints `test-integration: ok`. `verify.sh` clears it. -->
+<!-- STILL TRUE: scripts/security-check.sh (EP-006) and every stage after it are loud-fail
+     placeholders, so `verify.sh` still exits non-zero and cannot print `verify: ok`. -->
+<!-- STILL TRUE: DATABASE_URL, VALKEY_URL and KEYCLOAK_ISSUER are not exported as environment
+     variables, so the RLS-over-HTTP, durable-idempotency, webhook-replay and real-IdP rows of
+     this node record BLOCKED_CREDENTIALS. NOTE the nuance, because it matters for honesty:
+     PostgreSQL IS provisioned and reachable (EP-003 M2/M5/M8 prove it) and its credentials
+     live in the mode-0600 state file outside the repository. What is absent is the exported
+     `DATABASE_URL` variable the probe reads. Those are different facts and must not be
+     reported as though the database did not exist. -->
 
 ## 13. Decision Log
 

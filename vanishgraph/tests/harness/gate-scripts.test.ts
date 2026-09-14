@@ -271,15 +271,93 @@ describe('repository hygiene', () => {
     assert.equal(result.status, 0, 'package-lock.json is not tracked');
   });
 
-  test('zero runtime dependencies and exact-pinned devDependencies', () => {
+  /**
+   * The invariant is EXACT PINNING, not the absence of runtime dependencies.
+   *
+   * EP-001 wrote `assert.deepEqual(Object.keys(pkg.dependencies ?? {}), [])`, which held only
+   * because the project was domain-only and the domain imports nothing but the standard library.
+   * EP-004 legitimately adds a service layer with runtime dependencies (HTTP framework, DB
+   * driver, OIDC verification, structured logging), so an empty-dependencies assertion would
+   * fail for real progress — and deleting it would drop the reproducibility property it was
+   * actually protecting (DOD-002).
+   *
+   * What replaces it is the same property stated correctly, plus a guard that the production
+   * set cannot grow silently: a new runtime dependency must be added to the allow-list below in
+   * the same change that adds it, so the decision is visible in review rather than appearing in
+   * a lock file.
+   */
+  test('every runtime and dev dependency is exact-pinned to a concrete version', () => {
     const pkg = JSON.parse(read('package.json')) as {
       dependencies?: Record<string, string>;
       devDependencies?: Record<string, string>;
     };
-    assert.deepEqual(Object.keys(pkg.dependencies ?? {}), []);
-    for (const [name, spec] of Object.entries(pkg.devDependencies ?? {})) {
-      assert.match(spec, /^\d+\.\d+\.\d+$/, `${name} is not exact-pinned: ${spec}`);
+
+    // An allowed production dependency set. Adding to it is a deliberate act.
+    const allowedRuntime = [
+      '@fastify/type-provider-json-schema-to-ts',
+      'fastify',
+      'ioredis',
+      'jose',
+      'pg',
+      'pino',
+    ];
+
+    for (const name of Object.keys(pkg.dependencies ?? {})) {
+      assert.ok(
+        allowedRuntime.includes(name),
+        `${name} is a new runtime dependency; add it to allowedRuntime deliberately (EP-004 M1)`,
+      );
     }
+
+    // No range specifier anywhere: `^`, `~`, `*`, `latest`, or a bare tag makes two installs of
+    // the same lock file disagree about what is installed.
+    for (const [name, spec] of Object.entries({
+      ...(pkg.dependencies ?? {}),
+      ...(pkg.devDependencies ?? {}),
+    })) {
+      assert.match(
+        spec,
+        /^\d+\.\d+\.\d+$/,
+        `${name} is not exact-pinned: ${spec}`,
+      );
+    }
+  });
+
+  test('the domain layer still imports only the standard library, now that runtime deps exist', () => {
+    // EP-001's original assertion (`dependencies` is empty) was a PROXY for this property, and a
+    // proxy that stopped being true the moment a service layer was added. The property itself is
+    // what matters: nothing in src/domain may import fastify, pg, ioredis, jose or pino, because
+    // a privacy rule that can be satisfied by a network call is not a rule.
+    //
+    // scripts/import-boundary.sh is the enforcement; this asserts the enforcement is doing its
+    // job on the real tree rather than trusting it ran.
+    const violations: string[] = [];
+    // `read()` resolves against ROOT, so walk relative paths and let `read` do the joining. A
+    // first version passed absolute paths into `read` and produced a doubled root in the ENOENT.
+    const walk = (relativeDir: string): void => {
+      for (const entry of readdirSync(join(ROOT, relativeDir), { withFileTypes: true })) {
+        const relative = `${relativeDir}/${entry.name}`;
+        if (entry.isDirectory()) {
+          walk(relative);
+        } else if (entry.name.endsWith('.ts')) {
+          const text = read(relative);
+          for (const match of text.matchAll(/(?:from|import)\s*'([^']+)'/g)) {
+            const spec = match[1] ?? '';
+            const isRelative = spec.startsWith('./') || spec.startsWith('../');
+            const isBuiltin = spec.startsWith('node:');
+            if (!isRelative && !isBuiltin) {
+              violations.push(`${relative}: ${spec}`);
+            }
+          }
+        }
+      }
+    };
+    walk('src/domain');
+    assert.ok(
+      readdirSync(join(ROOT, 'src', 'domain')).length > 0,
+      'src/domain must exist and be non-empty, or this check proves nothing',
+    );
+    assert.deepEqual(violations, [], 'src/domain must import only node:* and relative paths');
   });
 
   test('.gitignore keeps credentials out and evidence in (DOD-025, VG-SEC-002)', () => {

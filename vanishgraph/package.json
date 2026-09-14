@@ -21,7 +21,15 @@
     "verify": "sh scripts/verify.sh"
   },
   "devDependencies": {
-    "typescript": "5.9.3",
-    "@types/node": "24.10.1"
+    "@types/node": "24.10.1",
+    "typescript": "5.9.3"
+  },
+  "dependencies": {
+    "@fastify/type-provider-json-schema-to-ts": "5.0.0",
+    "fastify": "5.12.4",
+    "ioredis": "6.0.0",
+    "jose": "6.2.12",
+    "pg": "8.23.0",
+    "pino": "10.3.1"
   }
 }
