@@ -33,6 +33,12 @@
 *.yaml  text eol=lf
 *.txt   text eol=lf
 
+# SQL migrations MUST be LF, and this is not cosmetic: `schema_migration` stores a checksum
+# of each applied migration (MIG-5), so a CRLF rewrite on another machine makes an unchanged
+# migration register as drift. Measured: the committed blobs for 0001–0008 are LF, and this
+# rule keeps them that way instead of relying on each contributor's core.autocrlf.
+*.sql   text eol=lf
+
 # Archive and image formats are binary by definition.
 *.tar.gz binary
 *.tgz    binary

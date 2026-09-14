@@ -28,7 +28,24 @@ export type IdKind =
 
 /** Canonical opaque-id shape: starts alphanumeric, then [A-Za-z0-9._:-], max 128. */
 const ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
-/** A run of seven or more digits looks like a phone number or a government id. */
+/**
+ * A canonical UUID (any version, RFC 4122 text form).
+ *
+ * This is an opaque identifier, not PII, and it must be representable: SPEC-002 §1 declares
+ * every table's `id` and `tenant_id` as `uuid`, so a `TenantId` that cannot hold a UUID cannot
+ * represent the tenants the schema stores. MEASURED DEFECT: without this exemption
+ * `new TenantId('11111111-1111-4111-8111-111111111111')` threw, because the UUID's leading
+ * 8-hex-digit group matched LONG_DIGIT_RUN below — the phone-number heuristic firing on a hex
+ * run. Every domain test used `tenant-0001`, so the gap was never exercised until the
+ * Postgres-backed job-queue suite passed a real tenant id.
+ */
+const UUID_SHAPE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/**
+ * A run of seven or more digits looks like a phone number or a government id.
+ *
+ * Applied only to identifiers that are NOT canonical UUIDs, because a UUID's groups are hex
+ * and may legitimately consist of digits (see UUID_SHAPE).
+ */
 const LONG_DIGIT_RUN = /\d{7,}/;
 /** An email address is PII, and must never be an identifier. */
 const EMAIL_LIKE = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+/;
@@ -59,7 +76,10 @@ export abstract class OpaqueId {
         `must be an opaque identifier of at most 128 characters starting alphanumerically; received length ${value.length}`,
       );
     }
-    if (EMAIL_LIKE.test(value) || LONG_DIGIT_RUN.test(value) || SSN_LIKE.test(value)) {
+    // A canonical UUID is exempt from the digit-run heuristic (see UUID_SHAPE). The email and
+    // SSN checks still apply to every identifier, UUID or not, because neither shape is a UUID.
+    const isUuid = UUID_SHAPE.test(value);
+    if (EMAIL_LIKE.test(value) || SSN_LIKE.test(value) || (!isUuid && LONG_DIGIT_RUN.test(value))) {
       throw new InvalidValueObject(
         kind,
         'must be an opaque identifier, never a raw PII value (SPEC-001 §2)',

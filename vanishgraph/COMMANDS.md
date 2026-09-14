@@ -142,3 +142,35 @@ Generated passwords live **only** in a mode-0600 state file outside the reposito
 (VG-SEC-002). When the Docker daemon is unreachable and `DATABASE_URL` is unset, the
 command classifies the outcome `BLOCKED_ENVIRONMENT` and prints no sentinel — it never
 reports success and never records a candidate failure (DOD-032, DOD-033).
+
+### Migrations
+
+`sh scripts/migrate.sh up --dsn <owner-dsn>` (migrate: ok) applies `db/migrations/*.sql`
+in order and records each in `schema_migration`; `up` is the declared entry point, and
+`--dsn` defaults to `VG_TEST_DSN_OWNER`. `sh scripts/generate-rls.ts --write|--check`
+(rls generation: ok) embeds the RLS block for every tenant-scoped table into the
+migration that creates it; `--check` is what the gates run, and it also refuses a table
+with a `tenant_id` column that `db/tenant-scoped-tables.txt` does not name.
+`sh scripts/check-rls-coverage.sh` (rls coverage: ok) verifies the live database
+instead of the source text.
+
+### Database test suites
+
+The database suites run against the provisioned PostgreSQL, never a substitute, so they
+are **not** in the unit stage. Run them through the integration manifest:
+
+```sh
+sh scripts/db-provision.sh
+. "${VG_DB_STATE_FILE:-${TMPDIR:-/tmp}/vanishgraph-db.env}"
+sh scripts/migrate.sh up --dsn "$VG_TEST_DSN_OWNER"
+export VG_TEST_DSN_OWNER VG_TEST_DSN_APP
+VG_TEST_GLOB="tests/db/**/*.test.ts" \
+  VG_EXPECTED_MANIFEST=.agent/verification/EXPECTED_INTEGRATION_MANIFEST.txt \
+  sh scripts/test-collection-guard.sh
+```
+
+`tests/db/rls.test.ts` proves tenant isolation (VG-DATA-001…003) and
+`tests/db/job-queue.test.ts` proves the transactional enqueue property of ADR-016 — that
+a rolled-back transition leaves no job row. Each asserts against the real database because
+RLS, FORCE RLS and constraint behaviour are exactly what an in-memory substitute would
+change.

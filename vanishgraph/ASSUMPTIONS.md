@@ -97,6 +97,44 @@ The main fixture was verified un-sabotaged afterwards
 (`protected_subject | relrowsecurity=true | relforcerowsecurity=true`) and the suite is
 green against it (7/7).
 
+### 3.4 The domain `TenantId` could not represent a UUID (a real spec-vs-code defect)
+
+Found while executing EP-003 M6, and it is the most significant defect of the node.
+
+`OpaqueId`'s PII heuristic `LONG_DIGIT_RUN = /\d{7,}/` rejected
+`11111111-1111-4111-8111-111111111111`, because the UUID's leading 8-hex-digit group is a
+seven-plus digit run. **SPEC-002 §1 declares every table's `id` and `tenant_id` as `uuid`**,
+so the domain's `TenantId` could not represent the tenants the schema stores. Every domain
+test used `tenant-0001`, which passes, so the gap was never exercised: it surfaced only when
+the Postgres-backed job-queue suite passed a real tenant id and construction threw.
+
+The fix exempts a **canonical UUID shape** from the digit-run heuristic only. The email and
+SSN checks still apply to every identifier, UUID or not. Verified by probe — accepted:
+`11111111-…`, `22222222-…`, `aaaaaaaa-…`, `0f8fad5b-…`, `tenant-0001`, `tenant_01`;
+still rejected: `123-45-6789`, `user@example.com`, `+15551234567`, `5551234567`,
+`123456789`, `12345678`. Regression tests were added to `tests/domain/identifiers.test.ts`,
+including the boundary case that a seven-hex-digit leading group is **not** a UUID (eight are
+required) and so keeps facing the heuristic.
+
+A second, related trap was fixed in the adapter: `OpaqueId.toString()` renders as
+`TenantId:<uuid>` for log legibility, so `String(tenantId)` produced
+`invalid input syntax for type uuid: "TenantId:1111…"`. The wire form of an identifier is
+`.value`, never its diagnostic form.
+
+### 3.5 The job queue's transactional property was shown to have teeth
+
+EP-003 M6's central claim is that a rolled-back transition leaves no job row — the property
+ADR-016 exists to protect. A test for it that passes vacuously would be worthless, so a
+negative control was run: `runTransaction` was temporarily changed to ignore the rollback
+request. The suite then failed with
+`a rolled-back transition must leave NO job row; a job that survives its transition is the
+dual-write bug`, and passed again (12/12) once restored.
+
+Also measured during M6: the queue insert was initially refused with
+`new row violates row-level security policy for table "job"`, because FORCE RLS applies to
+the table owner too and the transaction had no `app.tenant_id`. That refusal is correct
+behaviour; `runTransaction` now sets the tenant transaction-locally as the first statement.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a
@@ -109,8 +147,15 @@ green against it (7/7).
    stack.
 3. **`LICENSE`/`NOTICE` carry a copyright placeholder.** Apache-2.0 §4(d) requires the
    holder to be named. Owner decision (`DECISIONS.md` §5).
-4. **Every unimplemented gate is still a loud-fail placeholder.** `verify.sh` stops at
-   `format-check`. That is the correct honest state.
+4. **Every unimplemented gate is still a loud-fail placeholder.** `verify.sh` passes
+   preflight, lint, format-check, typecheck, unit and the collection guard; it stops at
+   `integration`, which EP-003 has not yet implemented (`test-integration.sh` is still a
+   loud-fail placeholder). `verify: ok` is unreachable until EP-009/EP-010. That is the
+   correct honest state, and `gate-domain` asserts it: the integration stage must still
+   fail loudly and `verify: ok` must never appear.
+5. **`dist/` contains build output from an earlier run.** It is not consumed by the
+   database gates, but it can make a stale compiled file look current. A future node
+   should confirm `build.sh` regenerates it and that nothing imports it.
 
 ## 5. Consistency review of the 11 ExecPlans (executed)
 

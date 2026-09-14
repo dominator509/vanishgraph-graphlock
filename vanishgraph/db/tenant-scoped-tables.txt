@@ -18,6 +18,7 @@ evidence_artifact
 exposure
 external_action
 identifier
+job              # carries tenant_id; one tenant must never observe or drain another's work
 jurisdiction_policy
 location_history
 mail_piece
@@ -36,3 +37,5 @@ verification_observation
 # EXCLUDED from tenant-scoped isolation, each with a reason (RLS-2 requires the reason):
 # tenant             the isolation boundary itself; it has no tenant_id column
 # schema_migration   migration bookkeeping, owned by the migration role only
+# job_worker         worker liveness is infrastructure serving every tenant, not tenant data;
+#                    a tenant-scoped heartbeat would be invisible exactly when it is needed

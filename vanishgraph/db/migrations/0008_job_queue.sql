@@ -1,0 +1,104 @@
+-- 0008 — the Postgres-native job queue (ADR-016, SPEC-007 §7.2 `job-worker`).
+--
+-- ADR-016 removed Temporal. Durable follow-up work is therefore a plain table in the same
+-- database as the state it belongs to. That is the whole reason the `JobQueue` port takes the
+-- caller's transaction handle: a transition and the work it schedules commit together or not at
+-- all, so the dual-write inconsistency class an external orchestrator would have introduced
+-- cannot occur (SPEC-001 §10).
+--
+-- Two tables:
+--
+--   job             the queue itself. Tenant-scoped, so one tenant can never observe or drain
+--                   another's work. The idempotency key is unique PER TENANT, which is what
+--                   makes enqueue at-most-once without letting one tenant's keys block another's.
+--   job_worker      heartbeat/liveness. Deliberately NOT tenant-scoped and NOT in
+--                   db/tenant-scoped-tables.txt: a worker is infrastructure that serves every
+--                   tenant, and a heartbeat scoped to a tenant would be invisible exactly when it
+--                   is needed. SPEC-007 §7.2 probes this table as `job-worker`.
+
+CREATE TABLE job (
+  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id       uuid NOT NULL REFERENCES tenant(id),
+  kind            text NOT NULL CHECK (length(kind) > 0),
+  -- Opaque payload. Job payloads carry identifiers, never personal data (VG-SEC-002).
+  payload         jsonb NOT NULL DEFAULT '{}'::jsonb,
+  run_at          timestamptz NOT NULL DEFAULT now(),
+  -- At-most-once per tenant, mirroring ExternalAction's idempotency key (VG-ACTION-001).
+  idempotency_key text NOT NULL CHECK (length(idempotency_key) > 0),
+  status          text NOT NULL DEFAULT 'PENDING'
+                    CHECK (status IN ('PENDING','RUNNING','SUCCEEDED','FAILED','CANCELLED')),
+  attempt         integer NOT NULL DEFAULT 0 CHECK (attempt >= 0),
+  max_attempts    integer NOT NULL DEFAULT 5 CHECK (max_attempts > 0),
+  last_error      text,
+  -- Set when a worker claims the row; used to reclaim work abandoned by a dead worker.
+  claimed_at      timestamptz,
+  claimed_by      text,
+  completed_at    timestamptz,
+  created_at      timestamptz NOT NULL DEFAULT now(),
+  updated_at      timestamptz NOT NULL DEFAULT now(),
+
+  -- The constraint that makes the idempotency assertion real. Scoped by tenant so two tenants
+  -- may legitimately use the same key string.
+  CONSTRAINT job_tenant_idempotency_key UNIQUE (tenant_id, idempotency_key),
+  -- A job may not be born already finished.
+  CONSTRAINT job_status_lifecycle CHECK (
+    (status = 'PENDING'   AND completed_at IS NULL) OR
+    (status = 'RUNNING'   AND completed_at IS NULL AND claimed_at IS NOT NULL) OR
+    (status IN ('SUCCEEDED','FAILED','CANCELLED') AND completed_at IS NOT NULL)
+  ),
+  -- attempt may not exceed the budget it is measured against.
+  CONSTRAINT job_attempt_within_budget CHECK (attempt <= max_attempts)
+);
+
+-- The worker's claim query: oldest eligible pending job for one tenant. The index matches the
+-- predicate so claiming does not degrade into a scan as the queue grows.
+CREATE INDEX job_claimable_idx ON job (tenant_id, run_at, status)
+  WHERE status = 'PENDING';
+
+-- Reclaiming work abandoned by a crashed worker.
+CREATE INDEX job_running_idx ON job (tenant_id, claimed_at)
+  WHERE status = 'RUNNING';
+
+-- The heartbeat table SPEC-007 §7.2 probes as `job-worker`. No tenant_id: liveness is
+-- infrastructure, not tenant data. `worker_id` is the natural key, so a restarted worker
+-- updates its own row rather than accumulating ghost liveness rows that would make a dead
+-- worker look alive.
+CREATE TABLE job_worker (
+  worker_id       text PRIMARY KEY,
+  started_at      timestamptz NOT NULL DEFAULT now(),
+  heartbeat_at    timestamptz NOT NULL DEFAULT now(),
+  -- What the worker is doing now, for diagnosis. Opaque, never personal data.
+  current_kind    text,
+  jobs_completed  bigint NOT NULL DEFAULT 0 CHECK (jobs_completed >= 0),
+  jobs_failed     bigint NOT NULL DEFAULT 0 CHECK (jobs_failed >= 0)
+);
+
+-- updated_at maintenance, matching the convention established in 0006.
+CREATE TRIGGER job_set_updated_at BEFORE UPDATE ON job
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- Terminal states are terminal. A row may not be resurrected once it has completed, because a
+-- resurrected job would run work whose transition already committed.
+CREATE FUNCTION job_terminal_is_final() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+  IF OLD.status IN ('SUCCEEDED','FAILED','CANCELLED') AND NEW.status <> OLD.status THEN
+    RAISE EXCEPTION 'job % is terminal (%); a completed job may not change status (ADR-016)',
+      OLD.id, OLD.status;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER job_terminal_is_final BEFORE UPDATE ON job
+  FOR EACH ROW EXECUTE FUNCTION job_terminal_is_final();
+
+-- RLS-GENERATED-BEGIN (generated by scripts/generate-rls.ts; do not edit by hand)
+-- table: job
+ALTER TABLE job ENABLE ROW LEVEL SECURITY;
+ALTER TABLE job FORCE  ROW LEVEL SECURITY;
+
+CREATE POLICY tenant_isolation ON job
+  USING      (tenant_id = current_setting('app.tenant_id', true)::uuid)
+  WITH CHECK (tenant_id = current_setting('app.tenant_id', true)::uuid);
+-- RLS-GENERATED-END
