@@ -24,7 +24,8 @@ import { buildServer, type ServerDependencies } from '../../src/http/server.ts';
 import { ApiError } from '../../src/http/plugins/error-handler.ts';
 import { requireTenantContext, withRequestTenant, type RequestContext } from '../../src/http/plugins/tenancy.ts';
 import type { FastifyRequest } from 'fastify';
-import { testIdentity, testTenancy, TEST_TOKEN } from './server-support.ts';
+import { testIdempotency, testIdentity, testTenancy, TEST_TOKEN } from './server-support.ts';
+import { TenantId } from '../../src/domain/identifiers.ts';
 
 const TENANT_A = '11111111-1111-4111-8111-111111111111';
 const TENANT_B = '22222222-2222-4222-8222-222222222222';
@@ -40,6 +41,7 @@ function serverWith(options: {
     logLevel: 'silent',
     identity: testIdentity({ tenantId: options.tenantId ?? TENANT_A }),
     tenancy: tenancy.runner,
+    idempotency: testIdempotency(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),
@@ -66,7 +68,9 @@ describe('the tenant comes from the token and nowhere else (VG-API-004)', () => 
       headers: { authorization: `Bearer ${TEST_TOKEN}` },
     });
     assert.equal(res.statusCode, 200);
-    assert.equal((JSON.parse(res.body) as { tenantId: string }).tenantId, TENANT_A);
+    // The context carries the BRANDED TenantId, which serialises to {kind, value}. The assertion is on
+    // the value, because that is the tenant the database sees.
+    assert.equal((JSON.parse(res.body) as { tenantId: { value: string } }).tenantId.value, TENANT_A);
     // The transaction was opened for exactly the token's tenant, once.
     assert.equal(tenancy.recorded.length, 1);
     assert.equal(tenancy.recorded[0]?.tenantId, TENANT_A);
@@ -95,8 +99,8 @@ describe('the tenant comes from the token and nowhere else (VG-API-004)', () => 
       payload: JSON.stringify({ tenantId: TENANT_B }),
     });
     assert.equal(res.statusCode, 200);
-    const body = JSON.parse(res.body) as Record<string, string>;
-    assert.equal(body['boundTenant'], TENANT_A, 'the token tenant must win');
+    const body = JSON.parse(res.body) as { boundTenant: { value: string }; sawPath: string };
+    assert.equal(body.boundTenant.value, TENANT_A, 'the token tenant must win');
     assert.equal(body['sawPath'], TENANT_B, 'the path value is visible but not authoritative');
     assert.equal(tenancy.recorded[0]?.tenantId, TENANT_A, 'the transaction must bind the token tenant');
     await app.close();
@@ -114,8 +118,11 @@ describe('no tenant binding means REFUSE, never an unscoped query (SPEC-006 §7.
   });
 
   test('an empty tenant in the context is TOKEN_INVALID_CLAIMS', () => {
+    // An empty tenant cannot be built as a branded TenantId (the domain refuses it), so the case is
+    // simulated by removing the field: this is exactly what a context built by something other than
+    // the identity plugin would look like.
     const request = {
-      vgContext: { tenantId: '   ' } as unknown as RequestContext,
+      vgContext: { tenantId: { value: '   ' } } as unknown as RequestContext,
     } as unknown as FastifyRequest;
     assert.throws(
       () => requireTenantContext(request),
@@ -128,7 +135,7 @@ describe('no tenant binding means REFUSE, never an unscoped query (SPEC-006 §7.
     // at the boundary names the problem where it can be acted on.
     for (const bad of ['not-a-uuid', '11111111-1111-4111-8111', '../../etc/passwd', "'; DROP TABLE tenant; --"]) {
       const request = {
-        vgContext: { tenantId: bad } as unknown as RequestContext,
+        vgContext: { tenantId: { value: bad } } as unknown as RequestContext,
       } as unknown as FastifyRequest;
       assert.throws(
         () => requireTenantContext(request),
@@ -159,7 +166,9 @@ describe('no tenant binding means REFUSE, never an unscoped query (SPEC-006 §7.
 describe('withRequestTenant opens the transaction for the token tenant', () => {
   const tenantA = (): RequestContext =>
     ({
-      tenantId: TENANT_A,
+      // The context carries the BRANDED value, so a test builds it the same way the identity plugin
+      // does rather than passing a bare string that would bypass the constructor's validation.
+      tenantId: new TenantId(TENANT_A),
       actorIdentity: 'op',
       roles: ['OPERATOR'],
       scopes: [],
@@ -207,6 +216,7 @@ describe('tenancy is required by the server type, so it cannot be forgotten', ()
     const deps: Omit<ServerDependencies, 'health' | 'version' | 'commit'> = {
       identity: testIdentity(),
       tenancy: testTenancy().runner,
+      idempotency: testIdempotency(),
     };
     assert.ok(deps.identity !== undefined);
     assert.ok(deps.tenancy !== undefined);

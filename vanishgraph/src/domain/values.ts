@@ -72,8 +72,19 @@ export class IdempotencyKey {
         'must not have leading or trailing whitespace (keys are compared exactly)',
       );
     }
-    if (value.length > 200) {
-      throw new InvalidValueObject('IdempotencyKey', 'must be at most 200 characters');
+    // SPEC-003 §4.2 fixes the caller-facing bounds at 16–255 characters. The domain type previously
+    // capped at 200, which was NARROWER than the contract it serves: a caller following the
+    // specification could send a 255-character key and have construction fail inside the domain,
+    // producing a 500 for input the contract declared valid. MEASURED before the fix:
+    // `new IdempotencyKey('a'.repeat(255))` threw. The bound now matches the contract, so the wire
+    // layer and the domain agree about what a key is.
+    //
+    // The domain does NOT enforce the 16-character MINIMUM or the `[A-Za-z0-9._:-]` charset:
+    // SPEC-001 §2 says only "non-empty, stable across retries, unique per intended effect", and a
+    // domain-side minimum would refuse internal keys that never cross the wire. The shape rules are
+    // a `/v1` contract, enforced at the boundary (src/http/plugins/idempotency.ts).
+    if (value.length > 255) {
+      throw new InvalidValueObject('IdempotencyKey', 'must be at most 255 characters');
     }
     this.value = value;
   }

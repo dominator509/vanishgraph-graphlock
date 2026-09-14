@@ -24,6 +24,7 @@ import { installCorrelation } from './plugins/correlation.ts';
 import { installErrorHandler } from './plugins/error-handler.ts';
 import { installIdentity, type IdentityPluginOptions } from './plugins/identity.ts';
 import { installTenancy, type TenancyPluginOptions } from './plugins/tenancy.ts';
+import { installIdempotency, type IdempotencyPluginOptions } from './plugins/idempotency.ts';
 
 /**
  * The concrete Fastify type every route in this service is registered against.
@@ -61,6 +62,14 @@ export interface ServerDependencies {
    * binding must be unrepresentable rather than merely refused by convention.
    */
   readonly tenancy: TenancyPluginOptions;
+  /**
+   * Idempotency (SPEC-003 §4, VG-ACTION-001).
+   *
+   * REQUIRED, for the same reason as identity: an optional idempotency plugin is a configuration in
+   * which an effect-bearing route can submit a duplicate external write, and the mistake would be
+   * invisible because the handler looks correct.
+   */
+  readonly idempotency: IdempotencyPluginOptions;
   readonly logLevel?: string;
 }
 
@@ -107,6 +116,9 @@ export function buildServer(deps: ServerDependencies): VgFastify {
   // without a context.
   installIdentity(app, deps.identity);
   installTenancy(app, deps.tenancy);
+  // Idempotency runs AFTER identity (the scope key includes the tenant) and BEFORE routes, so the
+  // claim happens before any handler can produce an effect.
+  installIdempotency(app, deps.idempotency);
 
   app.register(healthRoutes, {
     deps: deps.health,

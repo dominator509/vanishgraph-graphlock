@@ -58,7 +58,7 @@ export interface TenancyPluginOptions {
 const TENANT_ID_SHAPE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * Refuse to proceed without a usable tenant.
+ * Refuse to proceed without a usable tenant.\n *\n * The TenantId constructor already validates the shape, so the re-check here is a DEFENCE IN DEPTH\n * for a context built by something other than the identity plugin — a test double, or a future\n * code path. It costs one regex and closes the case where an unvalidated tenant reaches the database.
  *
  * Called by any route that needs data. It is a separate function from the plugin so the refusal is
  * testable without a database, and so a route cannot "just this once" skip it.
@@ -70,12 +70,12 @@ export function requireTenantContext(request: FastifyRequest): RequestContext {
     throw new ApiError('TOKEN_MISSING');
   }
   const { tenantId } = request.vgContext;
-  if (tenantId.trim().length === 0) {
+  if (tenantId.value.trim().length === 0) {
     // The token verifier already refuses a missing `tenant_id`, so reaching here means a context was
     // constructed by something other than the verifier. Refusing is the only safe reading.
     throw new ApiError('TOKEN_INVALID_CLAIMS', { field: 'tenant_id' });
   }
-  if (!TENANT_ID_SHAPE.test(tenantId)) {
+  if (!TENANT_ID_SHAPE.test(tenantId.value)) {
     // A tenant id that is not a UUID cannot be a row in `tenant(id)`, which is `uuid`. Binding it
     // would produce a cast error deep in a query; refusing here names the problem at the boundary.
     throw new ApiError('TOKEN_INVALID_CLAIMS', { field: 'tenant_id' });
@@ -98,7 +98,7 @@ export async function withRequestTenant<T>(
   fn: (tx: TenantTransaction) => Promise<T>,
 ): Promise<T> {
   const context = requireTenantContext(request);
-  return options.runner.withTenantTransaction(context.tenantId, fn);
+  return options.runner.withTenantTransaction(context.tenantId.value, fn);
 }
 
 export function installTenancy(app: FastifyInstance, options: TenancyPluginOptions): void {

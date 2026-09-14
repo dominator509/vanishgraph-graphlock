@@ -97,8 +97,14 @@ describe('IdempotencyKey (VG-ACTION-001)', () => {
     assert.throws(() => new IdempotencyKey(' key '), InvalidValueObject);
   });
 
-  test('over-long keys are refused', () => {
-    assert.throws(() => new IdempotencyKey('k'.repeat(201)), InvalidValueObject);
+  test('over-long keys are refused at the SPEC-003 §4.2 bound of 255', () => {
+    // The bound was 200 here until EP-004 M5, which was NARROWER than the contract: a caller
+    // following SPEC-003 §4.2 could send a 255-character key and have construction fail inside the
+    // domain, producing a 500 for input the contract declared valid. The test asserted the
+    // implementation's value rather than the specification's.
+    assert.throws(() => new IdempotencyKey('k'.repeat(256)), InvalidValueObject);
+    // And the maximum the contract permits is accepted, which is the half that was missing.
+    assert.equal(new IdempotencyKey('k'.repeat(255)).value.length, 255);
   });
 });
 

@@ -95,6 +95,7 @@ expected=$(printf '%s\n' \
   src/domain/events.ts \
   src/domain/identifiers.ts \
   src/domain/invariants.ts \
+  src/domain/ports/idempotency-store.ts \
   src/domain/ports/index.ts \
   src/domain/ports/key-provider.ts \
   src/domain/state-machine.ts \

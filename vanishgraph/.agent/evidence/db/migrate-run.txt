@@ -8,5 +8,6 @@ migrate: applying 0007_rls_invariant_assert.sql
 migrate: applying 0008_job_queue.sql
 migrate: applying 0009_retention.sql
 migrate: applying 0010_repair_vacuous_array_checks.sql
-migrate: applied 10 migration(s); at version 10
+migrate: applying 0011_http_idempotency.sql
+migrate: applied 11 migration(s); at version 11
 migrate: ok

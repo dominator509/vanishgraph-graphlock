@@ -1332,6 +1332,90 @@ Recovery properties:
 
 ## 12. Surprises & Discoveries
 
+### 2026-09-14 — the domain refused an `IdempotencyKey` the HTTP contract REQUIRES it to accept
+
+`src/domain/values.ts` capped `IdempotencyKey` at **200 characters**, but SPEC-003 §4.2 fixes the
+caller-facing bound at **16–255**. MEASURED before the fix: `new IdempotencyKey('a'.repeat(255))`
+threw. A caller following the specification could send a 255-character key and have construction
+fail INSIDE the domain, producing a 500 for input the contract declared valid.
+
+The bound now matches the contract. The domain deliberately does NOT enforce the 16-character MINIMUM
+or the `[A-Za-z0-9._:-]` charset: SPEC-001 §2 says only "non-empty, stable across retries, unique per
+intended effect", and a domain minimum would refuse internal keys that never cross the wire. Those
+are `/v1` shape rules, enforced at the boundary.
+
+The existing test asserted the implementation's 200 rather than the specification's 255, so it had to
+be corrected too — a test that encodes a bug is how a bug survives a refactor.
+
+### 2026-09-14 — the fingerprint was STORED but never COMPARED, so a changed body replayed
+
+The idempotency plugin computed the body fingerprint, wrote it into the record, and then never read
+it back. `begin` returned `COMPLETED` for a key regardless of the new body, so **a request with a
+changed body silently received the first request's 201** — SPEC-003 §4.3's
+`IDEMPOTENCY_KEY_REUSE` conflict never fired.
+
+Found by the contract suite's "a changed body is refused 409" test, which is exactly the assertion
+that would have been easy to omit. The comparison now lives at the boundary, because the store is a
+state machine that does not know the policy.
+
+### 2026-09-14 — `begin` could not tell the CLAIMER from a concurrent reader, so no request proceeded
+
+After the fingerprint fix, a two-caller race returned `IN_FLIGHT + IN_FLIGHT` — neither request
+proceeded — and a 20-caller race reported **zero** claims. The implementation inferred "did I insert?"
+by comparing the stored fingerprint against its own, which cannot distinguish the inserter from a
+concurrent caller sending the same body: both match.
+
+The fix uses the `INSERT ... RETURNING state` output, which answers the question unambiguously.
+MEASURED both ways against the live database: the inserting statement emits `IN_FLIGHT`, and the
+`ON CONFLICT DO NOTHING` path emits `(0 rows)`. Without this, an effect-bearing request would have
+returned `409 IDEMPOTENCY_IN_FLIGHT` forever instead of executing exactly once — a fail-closed bug
+that looks like a busy system.
+
+### 2026-09-14 — the same `set_config` echo-row trap as EP-003 M5, in a new place
+
+`PostgresIdempotencyStore.read` parsed `rows[0]` as the state, but `scopedSql` opens with
+`SELECT set_config(...)`, whose return value is the FIRST output line. The store therefore read the
+tenant UUID as the state and reported `unrecognised stored state (11111111-...-111111111111)` for
+every operation.
+
+This is the **second** occurrence of this trap in the graph (the first was `asTenant` in EP-003 M5),
+which makes it a pattern rather than an accident. The row is now selected by matching its `vg_state=`
+label rather than by position.
+
+### 2026-09-14 — the store's statements were refused by RLS until the tenant was set
+
+Every store operation initially failed with `new row violates row-level security policy for table
+"http_idempotency"`. FORCE RLS applies to the table OWNER too (SPEC-002 RLS-4), so the statement must
+carry `app.tenant_id`. All four operations now run inside a transaction with a transaction-local
+setting, which is also what stops one tenant's claim colliding with another's.
+
+Related, a diagnostic defect: the adapter reported only `begin failed`, hiding the RLS refusal. It now
+includes the redacted psql output, because a specific, actionable fault should not look like a generic
+one.
+
+### 2026-09-14 — `IdempotencyStore` was a spec-named domain port that EP-002 never declared
+
+SPEC-001 §5.1 lists `IdempotencyStore` with location `src/domain/ports/` and the reason "at-most-once
+is a domain invariant (VG-ACTION-001)". EP-002 — which owns port declaration per §5.1 rule 4 —
+declared neither it nor `AuthorityGrantRepository`, and its execplan never mentions them. This node
+declares `IdempotencyStore` once, here. `AuthorityGrantRepository` remains undeclared and is recorded
+in ASSUMPTIONS.md as an open gap.
+
+The M5 plan text contradicted itself on the same point: it named `src/domain/ports/idempotency-store.ts`
+and then said "the port is declared in the application layer". The specification's placement table won.
+
+### 2026-09-14 — `src/http` needed the port's types, and the tenant brand, without importing the domain
+
+Two boundary refusals in this milestone, both correct:
+
+1. The plugin imported `IdempotencyScope`/`IdempotencyStore` from `src/domain/ports/`. The
+   application contracts barrel now re-exports them.
+2. The plugin constructed `new TenantId(...)`, which required importing the domain class. The fix is
+   better than the workaround: `RequestContext.tenantId` now carries the BRANDED `TenantId` (the
+   application layer may import the domain, ARCHITECTURE.md §2), minted ONCE by the identity plugin
+   through a sanctioned `tenantIdFrom` factory. Every consumer receives the validated brand and
+   cannot substitute a plain string, so there is no second place the shape can be loosened.
+
 ### 2026-09-14 — `src/http` needed the truth-state vocabulary but may not import the domain
 
 `src/http/query/strict.ts` must validate a `truthState` filter token against the ELEVEN canonical

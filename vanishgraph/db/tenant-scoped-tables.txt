@@ -18,6 +18,7 @@ erasure_tombstone
 evidence_artifact
 exposure
 external_action
+http_idempotency # carries tenant_id; one tenant's key space must not be visible to another
 identifier
 job              # carries tenant_id; one tenant must never observe or drain another's work
 jurisdiction_policy

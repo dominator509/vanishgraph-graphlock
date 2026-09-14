@@ -1,3 +1,5 @@
+import type { TenantId } from '../../domain/identifiers.ts';
+
 /**
  * The per-request context handed to application commands (SPEC-003 §2.4, §3.2 item 6).
  *
@@ -25,8 +27,16 @@ export interface Clock {
 }
 
 export interface RequestContext {
-  /** From the verified token only. Never from a body, query string, or path (VG-API-004). */
-  readonly tenantId: string;
+  /**
+   * From the verified token only. Never from a body, query string, or path (VG-API-004).
+   *
+   * Carries the BRANDED domain type rather than a bare string. SPEC-001 §2 makes identifiers opaque
+   * branded values so a CaseId cannot be passed where a TenantId is expected; carrying a plain
+   * string here would force every consumer to rebuild the brand, and a consumer that rebuilt it
+   * WRONG (or skipped validation) would inject an unvalidated tenant into a scoped query. The
+   * application layer may import the domain (ARCHITECTURE.md §2), so the brand is available here.
+   */
+  readonly tenantId: TenantId;
   /** The human operator (SPEC-005 IDP-4 `sub`). Never a `ProtectedSubject`. */
   readonly actorIdentity: string;
   /**

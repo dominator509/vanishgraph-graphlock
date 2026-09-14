@@ -24,6 +24,8 @@ import type { ProbeResult } from '../http/routes/health.ts';
 import { AUDIENCES, verifyToken } from '../adapters/oidc/verify.ts';
 import { JwksCache, httpsJwksFetcher } from '../adapters/oidc/jwks.ts';
 import type { TenantTransactionRunner } from '../http/plugins/tenancy.ts';
+import { PostgresIdempotencyStore } from '../adapters/idempotency/postgres-store.ts';
+import { parseDsn } from '../adapters/../infrastructure/database/psql.ts';
 
 /** Build identity. Read from the environment so CI can stamp a real commit. */
 const VERSION = process.env.npm_package_version ?? '0.1.0';
@@ -121,6 +123,14 @@ async function main(): Promise<number> {
     },
     tenancy: {
       runner: unavailableTransactionRunner(),
+    },
+    idempotency: {
+      // The durable store is PostgreSQL (SPEC-003 §4.2): the effect must survive a process restart,
+      // so an in-memory store would defeat the mechanism it implements.
+      store: new PostgresIdempotencyStore({ dsn: parseDsn(config.databaseUrl) }),
+      // Every route's requirement comes from the registry; until the handlers exist (M6) no route is
+      // registered, so every lookup resolves to optional and no key is claimed.
+      requirementFor: () => undefined,
     },
     health: {
       startedAt: new Date(),

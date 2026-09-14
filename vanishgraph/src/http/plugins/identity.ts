@@ -21,6 +21,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
 import { ApiError } from './error-handler.ts';
 import { bearerFrom, type IdentityResult } from '../../application/contracts/identity.ts';
+import { tenantIdFrom } from '../../application/contracts/index.ts';
 import type { RequestContext } from '../../application/contracts/request-context.ts';
 import { isStepUpFresh } from '../../application/contracts/request-context.ts';
 
@@ -81,7 +82,10 @@ export function installIdentity(app: FastifyInstance, options: IdentityPluginOpt
 
     const claims = result.claims;
     request.vgContext = {
-      tenantId: claims.tenant_id,
+      // The ONE place a TenantId is minted for a request. The constructor validates the shape, so a
+      // token carrying a malformed tenant cannot reach a scoped query. Every consumer downstream
+      // receives the branded value and cannot substitute a plain string.
+      tenantId: tenantIdFrom(claims.tenant_id),
       actorIdentity: claims.sub,
       roles: claims.roles,
       scopes: claims.scopes ?? [],

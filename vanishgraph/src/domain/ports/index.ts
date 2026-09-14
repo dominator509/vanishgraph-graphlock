@@ -135,3 +135,18 @@ export interface SecretResolver {
  * sources of truth for the same interface.
  */
 export type { KeyProvider, ValueHasher, WrappedKey } from './key-provider.ts';
+
+/**
+ * At-most-once execution (VG-ACTION-001).
+ *
+ * Re-exported from `./idempotency-store.ts` per SPEC-001 §5.1 rule 1 (one file per port, barrel at
+ * `ports/index.ts`). SPEC-001 §5.1's table places it in the DOMAIN because at-most-once is a domain
+ * invariant, not orchestration.
+ */
+export type {
+  BeginResult,
+  IdempotencyRecord,
+  IdempotencyScope,
+  IdempotencyState,
+  IdempotencyStore,
+} from './idempotency-store.ts';

@@ -452,6 +452,9 @@ export const DETAILS_ALLOWLIST = [
   'failedCheck', 'reason', 'candidateCount', 'expectedDigest', 'actualDigest',
   'requestedField', 'allowedFields', 'idempotencyKeyHash', 'gateKind',
   'earliestEligibleAt', 'timeRangeFrom', 'timeRangeTo', 'collection', 'filterName',
+  // SPEC-003 §4.3 names originalResourceId in the IDEMPOTENCY_KEY_REUSE conflict body. It is an
+  // identifier in the caller's OWN tenant, never a request body value.
+  'originalResourceId',
 ] as const;
 
 export type DetailsKey = (typeof DETAILS_ALLOWLIST)[number];
