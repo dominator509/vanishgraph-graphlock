@@ -1,20 +1,72 @@
 #!/usr/bin/env sh
-# reality gate -- PRE-DISCOVERY LOUD-FAIL PLACEHOLDER.
+# Reality gate: no simulated, unfinished, or placeholder behaviour in production paths.
 #
-# Implemented command (declared in COMMANDS.md): sh scripts/reality-gate.sh
+# Sentinel: `reality gate: ok`
 #
-# SPEC BASIS: 6Layer-MasterPrompt-v3.1-GRAPHLOCK-FAILURE-PROOF.md, Section 10
-# "Scripts", line 1357: placeholder scripts never pass silently. A script that
-# prints a success sentinel without running the real check is a fabrication
-# defect under DOD-024 (failure masking) and DOD-027 (fabricated success).
+# Replaces the pre-discovery loud-fail placeholder (EP-001 milestone M5).
 #
-# ORIGINAL DEFECT (corrected here): this script previously printed a success
-# sentinel unconditionally, with no check of any kind. It is replaced by this
-# loud-fail guard so the gate can no longer report a false green.
+# Implements DOD-019 (placeholder/stub/fake/unfinished scans over production paths) and
+# the production-path half of DOD-020 (no simulated adapter selected in production).
+# Patterns come from .agent/reality-patterns. A hit is permitted only by an explicit
+# path:line entry in .agent/reality-allow, which is a reviewed decision, never a
+# wildcard.
 #
-# DO NOT replace this with an echo of the sentinel. The real implementation
-# binds to the toolchain chosen in EP-000 milestone M1.
+# Scope: src/** is the production path set. Tests, scripts, and pack documents are not
+# production paths. As src/ grows, this gate covers the new code automatically.
 set -eu
 export CI=true GIT_TERMINAL_PROMPT=0 GIT_PAGER=cat PAGER=cat DEBIAN_FRONTEND=noninteractive
-. "$(dirname "$0")/lib/loud-fail.sh"
-vg_loud_fail 'reality gate' 'EP-001'
+cd "$(dirname "$0")/.."
+
+fail() { echo "reality gate: FAIL - $1" >&2; exit 1; }
+
+[ -d src ] || fail "src/ is missing"
+[ -f .agent/reality-patterns ] || fail ".agent/reality-patterns is missing; the pattern contract is undefined"
+[ -f .agent/reality-allow ] || fail ".agent/reality-allow is missing; there is no allow-list contract"
+
+hits=""
+
+# 1. Declared lexical patterns.
+while IFS= read -r pattern; do
+  case "$pattern" in ''|'#'*) continue ;; esac
+  found=$(grep -rniE -- "$pattern" src 2>/dev/null || true)
+  [ -z "$found" ] || hits="${hits}${found}
+"
+done < .agent/reality-patterns
+
+# 2. Production paths must not contain simulated adapters. Test doubles live in tests/.
+simulated=$(find src -type f \( -iname '*mock*' -o -iname '*fake*' -o -iname '*stub*' \
+  -o -iname '*demo*' -o -iname '*sample*' -o -iname '*.simulation.*' \) -print 2>/dev/null | sort || true)
+[ -z "$simulated" ] || hits="${hits}${simulated}
+"
+
+# 3. Production paths must not print a gate sentinel or an unconditional success.
+sentinel_like=$(grep -rnE "console\.(log|info)\([^)]*: ok" src 2>/dev/null || true)
+[ -z "$sentinel_like" ] || hits="${hits}${sentinel_like}
+"
+
+if [ -n "$hits" ]; then
+  unallowed=""
+  while IFS= read -r hit; do
+    [ -n "$hit" ] || continue
+    case "$hit" in
+      *:*) file=${hit%%:*}; rest=${hit#*:}; line=${rest%%:*} ;;
+      *)   file=$hit; line=0 ;;
+    esac
+    if ! grep -qE "^${file}:${line}([[:space:]]|$)" .agent/reality-allow; then
+      unallowed="${unallowed}  - ${hit}
+"
+    fi
+  done <<EOF
+$hits
+EOF
+  if [ -n "$unallowed" ]; then
+    echo "reality gate: FAIL - placeholder, simulated, or unfinished behaviour in production paths:" >&2
+    printf '%s' "$unallowed" >&2
+    echo "Replace the behaviour with a real implementation, or add a reviewed path:line" >&2
+    echo "entry to .agent/reality-allow with a reason. Never blanket-allow (DOD-019, DOD-027)." >&2
+    exit 1
+  fi
+  echo "reality gate: NOTICE - hits present and individually allowed by .agent/reality-allow" >&2
+fi
+
+echo "reality gate: ok"

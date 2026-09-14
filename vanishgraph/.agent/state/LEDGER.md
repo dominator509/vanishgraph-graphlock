@@ -14,3 +14,4 @@
 2026-09-14T06:12:27Z | forge | EP-001 | MILESTONE_PASS | M2 format-check: ok; CRLF normalized to LF
 2026-09-14T06:15:32Z | forge | EP-001 | MILESTONE_PASS | M3 env validation: ok; REQUIRED credentials unprovisioned => BLOCKED_CREDENTIALS
 2026-09-14T06:26:08Z | forge | EP-001 | MILESTONE_PASS | M4 harness self-tests green (173 tests); zero-collection proof automated in gate-foundation per FALLBACK
+2026-09-14T06:30:19Z | forge | EP-001 | MILESTONE_PASS | M5 reality gate: ok (negative proofs verified); dependency audit: ok (registry reachable; advisory scan clean; sbom sha256 e114f426bb4f562247f933231410aa5c0fc428e6e00fd9006e9740bbfe13096a)
