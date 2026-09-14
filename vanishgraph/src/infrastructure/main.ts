@@ -23,8 +23,8 @@ import { buildServer, listen } from '../http/server.ts';
 import type { ProbeResult } from '../http/routes/health.ts';
 import { AUDIENCES, verifyToken } from '../adapters/oidc/verify.ts';
 import { JwksCache, httpsJwksFetcher } from '../adapters/oidc/jwks.ts';
-import type { TenantTransactionRunner } from '../http/plugins/tenancy.ts';
 import { PostgresIdempotencyStore } from '../adapters/idempotency/postgres-store.ts';
+import { PostgresTenantRunner, postgresReadinessProbe } from '../adapters/persistence/postgres-runner.ts';
 import { parseDsn } from '../adapters/../infrastructure/database/psql.ts';
 
 /** Build identity. Read from the environment so CI can stamp a real commit. */
@@ -60,28 +60,6 @@ function configuredProbe(name: string, envName: string): () => Promise<ProbeResu
   };
 }
 
-/**
- * The tenant transaction runner for a build with no database pool yet.
- *
- * IT REFUSES. IT DOES NOT PRETEND. EP-004 M6 wires the PostgreSQL pool that opens a real transaction
- * and issues `SET LOCAL app.tenant_id`; until then there is no correct way to answer a data query, so
- * this runner throws and the boundary maps the throw to `503 DEPENDENCY_UNAVAILABLE`.
- *
- * The alternative would be an in-memory object that returns empty rows, which is the worst possible
- * substitute here: a route that reads no rows looks exactly like a tenant with no data, so isolation
- * failures and empty results would be indistinguishable. `tests/contract/server-support.ts` contains
- * exactly such a recorder, and it is confined to tests for that reason.
- */
-function unavailableTransactionRunner(): TenantTransactionRunner {
-  return {
-    withTenantTransaction: async () => {
-      throw new Error(
-        'the tenant transaction runner is not wired: the PostgreSQL pool arrives in EP-004 M6',
-      );
-    },
-  };
-}
-
 async function main(): Promise<number> {
   let config;
   try {
@@ -105,6 +83,10 @@ async function main(): Promise<number> {
   // verification time rather than an "accept unverified" fallback (see adapters/oidc/jwks.ts).
   const jwks = new JwksCache({ fetchJwks: httpsJwksFetcher(), now: () => Date.now() });
 
+  // The tenant-scoped pool. Constructed once for the process: a pool per request would defeat the
+  // point of pooling and exhaust PostgreSQL's connection limit under load.
+  const runner = new PostgresTenantRunner({ dsn: parseDsn(config.databaseUrl) });
+
   const app = buildServer({
     version: VERSION,
     commit: COMMIT,
@@ -122,7 +104,10 @@ async function main(): Promise<number> {
         }),
     },
     tenancy: {
-      runner: unavailableTransactionRunner(),
+      // The REAL runner (EP-004 M6), replacing the M3 stub that refused every call. It opens a
+      // transaction, sets `app.tenant_id` with transaction-local scope, and releases the connection
+      // only after the transaction has ended.
+      runner,
     },
     idempotency: {
       // The durable store is PostgreSQL (SPEC-003 §4.2): the effect must survive a process restart,
@@ -136,7 +121,9 @@ async function main(): Promise<number> {
       startedAt: new Date(),
       now: () => new Date(),
       probes: [
-        configuredProbe('postgres', 'DATABASE_URL'),
+        // A REAL query, not a configuration check: a probe that only read the environment would
+        // report ready for a database that is down (VG-API-059).
+        () => postgresReadinessProbe(runner),
         configuredProbe('valkey', 'VALKEY_URL'),
         configuredProbe('keycloak', 'KEYCLOAK_ISSUER'),
       ],
@@ -151,6 +138,8 @@ async function main(): Promise<number> {
   const shutdown = async (signal: string): Promise<void> => {
     console.log(`serve: ${signal} received, closing`);
     await app.close();
+    // Close the pool so in-flight transactions finish and no connection is left open.
+    await runner.close();
     process.exit(0);
   };
   process.on('SIGTERM', () => void shutdown('SIGTERM'));
