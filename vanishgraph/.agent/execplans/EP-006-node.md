@@ -2,8 +2,8 @@ NODE-META-BEGIN
 ID: EP-006
 DEPS: EP-005
 MAX_ATTEMPTS_PER_MILESTONE: 6
-VERIFY: sh scripts/ep006-gate.sh
-VERIFY_SENTINEL: ep006 security gate: ok
+VERIFY: sh scripts/gate-security.sh
+VERIFY_SENTINEL: gate-security: ok
 GREEN_TAG: green/EP-006
 NODE-META-END
 
@@ -207,7 +207,7 @@ Existing code and scripts:
 - `tests/domain/state-machine.test.ts`, `tests/domain/values.test.ts`
 - `package.json`, `tsconfig.json`, `tsconfig.build.json`
 - `scripts/security-check.sh`, `scripts/verify.sh`, `scripts/import-boundary.sh`,
-  `scripts/gate-toolchain.sh`, `scripts/ep004-gate.sh`, `scripts/ep005-gate.sh`,
+  `scripts/gate-toolchain.sh`, `scripts/gate-api.sh`, `scripts/gate-ui.sh`,
   `scripts/copy-lint-gate.sh` (if present), `scripts/probes/keycloak.sh`,
   `scripts/probes/valkey_url.sh`, `scripts/probes/database_url.sh`,
   `scripts/lib/loud-fail.sh`
@@ -255,7 +255,7 @@ Created:
 - `tests/fixtures/local-oidc/**` — a locally generated key pair and signing helper used
   only to exercise verification logic. Never a production code path.
 - `scripts/secret-scan.sh` — the VG-AUTH-014 secret-scanning gate.
-- `scripts/ep006-gate.sh` — this node's gate.
+- `scripts/gate-security.sh` — this node's gate.
 - `.agent/evidence/EP-006/**`.
 
 Modified:
@@ -438,12 +438,12 @@ fail, and this node has a gate that genuinely fails when the security suites fai
 
 READ: `SECURITY.md`, `PREFLIGHT.md`, `.env.example`, `ENVIRONMENT.md`,
 `SPEC-005` §1/§8/§9, `SPEC-003` §3.2/§3.3, `SPEC-006` §7.1/§8, `COMMANDS.md`,
-`scripts/security-check.sh`, `scripts/ep004-gate.sh`, `scripts/ep005-gate.sh`,
+`scripts/security-check.sh`, `scripts/gate-api.sh`, `scripts/gate-ui.sh`,
 `scripts/import-boundary.sh`, `scripts/lib/loud-fail.sh`.
 
 CHANGE: `src/application/security/scope-catalogue.ts`,
 `src/application/security/role-bundles.ts`, `src/adapters/config/security-config.ts`,
-`scripts/security-check.sh`, `scripts/ep006-gate.sh`, `scripts/import-boundary.sh`,
+`scripts/security-check.sh`, `scripts/gate-security.sh`, `scripts/import-boundary.sh`,
 `tests/contract/scope-catalogue.test.ts`, `COMMANDS.md`, `ARCHITECTURE.md`,
 `SECURITY.md`, `ASSUMPTIONS.md`,
 `.agent/verification/EXPECTED_TEST_MANIFEST.txt`, `.agent/state/LEDGER.md`.
@@ -489,7 +489,7 @@ sh scripts/probes/local_model.sh; echo "probe exit: $?"
    fail closed and print no sentinel when a required credential prevents a suite from
    running: those suites record `BLOCKED_CREDENTIALS` with the probe command and exit code
    (SPEC-006 §4.1), and the gate's output names them.
-6. `scripts/ep006-gate.sh` — this node's gate. Real content:
+6. `scripts/gate-security.sh` — this node's gate. Real content:
 
 ```sh
 #!/usr/bin/env sh
@@ -543,7 +543,7 @@ echo "  - realm MFA policy, refresh rotation, global sign-out, administrative re
 echo "  - manual assistive-technology validation of verification flows (SPEC-005 section 11, DOD-039): EXTERNAL_REQUIRED"
 echo "  - counsel review of authorized-agent evidence, minors, identity-method sufficiency (SPEC-005 section 11): EXTERNAL_REQUIRED"
 
-echo "ep006 security gate: ok"
+echo "gate-security: ok"
 ```
 
 7. `tests/contract/scope-catalogue.test.ts` — asserts the catalogue equals the SPEC-003
@@ -552,8 +552,8 @@ echo "ep006 security gate: ok"
    contains `*`, asserts `vg.webhooks.ingest` is not in any caller bundle, and asserts the
    four service-token-forbidden scopes are declared. Required negative case: adding a
    scope to a bundle that is not in the catalogue fails.
-8. `COMMANDS.md` — add, each with its sentinel: `sh scripts/ep006-gate.sh`
-   (`ep006 security gate: ok`); `sh scripts/security-check.sh` (`security check: ok`);
+8. `COMMANDS.md` — add, each with its sentinel: `sh scripts/gate-security.sh`
+   (`gate-security: ok`); `sh scripts/security-check.sh` (`security check: ok`);
    `sh scripts/secret-scan.sh` (`secret scan: ok`);
    `node --test "tests/contract/scope-catalogue.test.ts"` and
    `node --test "tests/security/**/*.test.ts"` (the credential-free security suites the
@@ -574,18 +574,18 @@ sh scripts/probes/valkey_url.sh; echo "probe exit: $?"
 sh scripts/probes/cloud_identity.sh; echo "probe exit: $?"
 sh scripts/probes/local_model.sh; echo "probe exit: $?"
 node --test "tests/contract/scope-catalogue.test.ts"
-sh scripts/ep006-gate.sh
+sh scripts/gate-security.sh
 git status --short
 ```
 
 EXPECT: every probe exits non-zero (none of `KEYCLOAK_*`, `DATABASE_URL`, `VALKEY_URL`,
 `CLOUD_WORKLOAD_IDENTITY`, `LOCAL_MODEL_ENDPOINT` is provisioned — this is the current
 true state, recorded as `BLOCKED_CREDENTIALS`, not a defect to route around); the scope
-suite passes; the final line `ep006 security gate: ok` with its
+suite passes; the final line `gate-security: ok` with its
 `UNVERIFIED-BY-THIS-GATE` block present; `git status --short` listing only §6 files.
 `verify.sh` does **not** print `verify: ok` at this node and must not be made to.
 
-EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-006 MILESTONE_PASS "M1 ep006 security gate: ok; audience blanks recorded BLOCKED_CREDENTIALS; scope catalogue closed"`
+EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-006 MILESTONE_PASS "M1 gate-security: ok; audience blanks recorded BLOCKED_CREDENTIALS; scope catalogue closed"`
 
 FALLBACK: if the specification's scope table cannot be parsed reliably, generate the
 catalogue from a checked-in machine-readable extract and make the test assert the extract
@@ -647,11 +647,11 @@ RUN:
 node --test "tests/contract/audience-binding.test.ts"
 node --test "tests/contract/mfa-enforcement.test.ts"
 sh scripts/probes/keycloak.sh; echo "probe exit: $?"
-sh scripts/ep006-gate.sh
+sh scripts/gate-security.sh
 ```
 
 EXPECT: both suites pass against locally signed tokens; the keycloak probe exits
-non-zero; `ep006 security gate: ok` with `KEYCLOAK_ISSUER: BLOCKED_CREDENTIALS` in its
+non-zero; `gate-security: ok` with `KEYCLOAK_ISSUER: BLOCKED_CREDENTIALS` in its
 output.
 
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-006 MILESTONE_PASS "M2 OIDC verification, audience binding, MFA enforcement: ok; realm config BLOCKED_CREDENTIALS KEYCLOAK_ISSUER"`
@@ -713,10 +713,10 @@ RUN:
 ```
 node --test "tests/contract/role-matrix.test.ts"
 node --test "tests/contract/scope-enforcement.test.ts"
-sh scripts/ep006-gate.sh
+sh scripts/gate-security.sh
 ```
 
-EXPECT: both suites pass; `ep006 security gate: ok`.
+EXPECT: both suites pass; `gate-security: ok`.
 
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-006 MILESTONE_PASS "M3 role matrix and scope enforcement: ok; wildcard scope refused on every route"`
 
@@ -739,7 +739,7 @@ READ: `SPEC-005` §3 (all of it), §3.1 (VG-AUTHZ-010…014), §4 (VG-AUTH-001�
 
 CHANGE: `src/application/security/authority-service.ts`,
 `src/application/security/enrollment-controls.ts`,
-`src/application/ports/authority-repository.ts`,
+`src/domain/ports/authority-repository.ts`,
 `src/adapters/persistence/authority-repository.ts`,
 `tests/contract/authority-grant.test.ts`,
 `tests/contract/enrollment-controls.test.ts`,
@@ -800,7 +800,7 @@ CONTENT:
   refused; a velocity breach routes to review; a contest suspends writes immediately
   (asserted by a write attempt immediately after the contest); a second agent for the same
   subject creates a conflict; enrollment with no recorded notice fails acceptance.
-- `src/application/ports/authority-repository.ts` — the port. `src/adapters/persistence/
+- `src/domain/ports/authority-repository.ts` — the port. `src/adapters/persistence/
   authority-repository.ts` implements it against PostgreSQL; its real-database proof is
   `BLOCKED_CREDENTIALS` (`DATABASE_URL`) and `BLOCKED_PREREQUISITE` (EP-003). The contract
   suite header must state that the logic proofs use an isolation double and that the
@@ -811,10 +811,10 @@ RUN:
 node --test "tests/contract/authority-grant.test.ts"
 node --test "tests/contract/enrollment-controls.test.ts"
 sh scripts/probes/database_url.sh; echo "probe exit: $?"
-sh scripts/ep006-gate.sh
+sh scripts/gate-security.sh
 ```
 
-EXPECT: both suites pass; the database probe exits non-zero; `ep006 security gate: ok`
+EXPECT: both suites pass; the database probe exits non-zero; `gate-security: ok`
 with `DATABASE_URL: BLOCKED_CREDENTIALS` in its output.
 
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-006 MILESTONE_PASS "M4 AuthorityGrant lifecycle and enrollment controls: ok; durable-store proof BLOCKED_CREDENTIALS DATABASE_URL"`
@@ -869,10 +869,10 @@ CONTENT:
 RUN:
 ```
 node --test "tests/contract/step-up.test.ts"
-sh scripts/ep006-gate.sh
+sh scripts/gate-security.sh
 ```
 
-EXPECT: the step-up suite passes; `ep006 security gate: ok`.
+EXPECT: the step-up suite passes; `gate-security: ok`.
 
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-006 MILESTONE_PASS "M5 step-up enforced across six sensitive operation classes"`
 
@@ -945,13 +945,13 @@ RUN:
 node --test "tests/contract/jit-support-access.test.ts"
 node --test "tests/contract/rate-limit-abuse.test.ts"
 sh -c 'sh scripts/probes/valkey_url.sh'; echo "probe exit: $?"
-sh scripts/ep006-gate.sh
+sh scripts/gate-security.sh
 ```
 
 EXPECT: both suites pass for the credential-free logic paths; the Valkey probe exits
 non-zero, so the durable rate-limit and replay counter suite records
 `BLOCKED_CREDENTIALS` (`VALKEY_URL`) with the probe command and exit code;
-`ep006 security gate: ok` with `VALKEY_URL: BLOCKED_CREDENTIALS` in its output.
+`gate-security: ok` with `VALKEY_URL: BLOCKED_CREDENTIALS` in its output.
 
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-006 MILESTONE_PASS "M6 JIT support access, lockout, rate limits, enumeration inhibition: ok; durable counters BLOCKED_CREDENTIALS VALKEY_URL"`
 
@@ -1019,10 +1019,10 @@ CONTENT:
 RUN:
 ```
 node --test "tests/contract/mcp-least-privilege.test.ts"
-sh scripts/ep006-gate.sh
+sh scripts/gate-security.sh
 ```
 
-EXPECT: the MCP suite passes; `ep006 security gate: ok`.
+EXPECT: the MCP suite passes; `gate-security: ok`.
 
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-006 MILESTONE_PASS "M7 MCP least privilege and effect budgets: ok; agent loop capped and audited"`
 
@@ -1045,7 +1045,7 @@ READ: `SPEC-005` §8 (VG-AUTH-011…015), §10 (VG-AUTH-030); `SPEC-006` §7.1 r
 `DATA_EGRESS_MATRIX.md`; `src/domain/values.ts` (`EgressClass`,
 `DENY_BY_DEFAULT_EGRESS`); `src/domain/errors.ts` (`EgressDenied`).
 
-CHANGE: `scripts/secret-scan.sh`, `src/application/ports/secret-resolver.ts`,
+CHANGE: `scripts/secret-scan.sh`, `src/domain/ports/secret-resolver.ts`,
 `src/adapters/secrets/secret-resolver.ts`,
 `src/application/security/egress-gate.ts`, `tests/contract/secret-handling.test.ts`,
 `tests/contract/egress-and-redaction.test.ts`, `COMMANDS.md`,
@@ -1063,7 +1063,7 @@ CONTENT:
   `secret scan: ok` only on a clean tree. Its own self-test fixture (a deliberately seeded
   fake secret in a temp path) must be detected, proving the scanner discriminates
   (DOD-018).
-- `src/application/ports/secret-resolver.ts` + `src/adapters/secrets/secret-resolver.ts`
+- `src/domain/ports/secret-resolver.ts` + `src/adapters/secrets/secret-resolver.ts`
   — resolve by reference; short-lived workload identity with automatic rotation; static
   keys require a recorded time-bounded exception; every access is logged with the
   accessing workload identity (VG-AUTH-011…013). A resolution failure produces
@@ -1099,11 +1099,11 @@ RUN:
 sh scripts/secret-scan.sh
 node --test "tests/contract/secret-handling.test.ts"
 node --test "tests/contract/egress-and-redaction.test.ts"
-sh scripts/ep006-gate.sh
+sh scripts/gate-security.sh
 ```
 
 EXPECT: `secret scan: ok`; both suites pass with a zero-match canary result and a
-detected control leak; `ep006 security gate: ok`.
+detected control leak; `gate-security: ok`.
 
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-006 MILESTONE_PASS "M8 secret scan: ok; canary zero-match with detected control leak; egress deny-by-default: ok"`
 
@@ -1190,11 +1190,11 @@ RUN:
 node --test "tests/contract/ssrf-controls.test.ts"
 node --test "tests/contract/webhook-signature-replay.test.ts"
 sh -c 'sh scripts/probes/valkey_url.sh'; echo "probe exit: $?"
-sh scripts/ep006-gate.sh
+sh scripts/gate-security.sh
 ```
 
 EXPECT: both suites pass for the credential-free logic paths; the Valkey probe exits
-non-zero; `ep006 security gate: ok` with `VALKEY_URL: BLOCKED_CREDENTIALS` in its output.
+non-zero; `gate-security: ok` with `VALKEY_URL: BLOCKED_CREDENTIALS` in its output.
 
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-006 MILESTONE_PASS "M9 SSRF refusals with zero connection attempts; webhook signature and replay logic: ok; durable replay BLOCKED_CREDENTIALS VALKEY_URL"`
 
@@ -1271,14 +1271,14 @@ RUN:
 ```
 node --test "tests/security/negative-cases.test.ts"
 sh -c 'sh scripts/probes/database_url.sh'; echo "probe exit: $?"
-sh scripts/ep006-gate.sh
+sh scripts/gate-security.sh
 sh scripts/security-check.sh
 ```
 
 EXPECT: the credential-free negative-case suite passes, including the
 byte-identical-404 assertion and the zero-effect assertions; the database probe exits
 non-zero so the integration suites record `BLOCKED_CREDENTIALS` with the probe command
-and exit code and are **not** reported as passing; `ep006 security gate: ok`;
+and exit code and are **not** reported as passing; `gate-security: ok`;
 `security check: ok` with its blocked suites named in output.
 
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-006 MILESTONE_PASS "M10 negative cases: revoked grant halts writes; scope violation refused; cross-tenant service-layer denial; RLS half BLOCKED_CREDENTIALS DATABASE_URL"`
@@ -1302,7 +1302,7 @@ READ: `.agent/DONE_LAW.md` (DOD-025, DOD-026, DOD-029, DOD-032, DOD-039); `SPEC-
 §2, §3, §9, §13; `SPEC-006` §4.1; `SPEC-005` §11; `LEGAL_REVIEW_REQUIRED.md`;
 `.agent/verification/reports/RESIDUAL_RISK_AND_EXTERNAL_GATES.md`.
 
-CHANGE: `scripts/ep006-gate.sh` (final form), `.agent/evidence/EP-006/**`,
+CHANGE: `scripts/gate-security.sh` (final form), `.agent/evidence/EP-006/**`,
 `.agent/verification/state/TEST_LEDGER.jsonl`,
 `.agent/verification/state/NEXT_ACTION.md`, `.agent/state/LEDGER.md`, `COMMANDS.md`.
 
@@ -1346,21 +1346,21 @@ CONTENT:
 
 RUN:
 ```
-sh scripts/ep006-gate.sh
+sh scripts/gate-security.sh
 sh scripts/security-check.sh
 sh scripts/secret-scan.sh
-sh scripts/ledger.sh append <AGENT_ID> EP-006 NODE_DONE "EP-006 closed: ep006 security gate: ok; security check: ok; realm/RLS/KMS BLOCKED_CREDENTIALS; counsel and UAT EXTERNAL_REQUIRED"
+sh scripts/ledger.sh append <AGENT_ID> EP-006 NODE_DONE "EP-006 closed: gate-security: ok; security check: ok; realm/RLS/KMS BLOCKED_CREDENTIALS; counsel and UAT EXTERNAL_REQUIRED"
 sh scripts/ledger.sh status EP-006
 git tag green/EP-006
 git log --oneline -1
 sh scripts/graph-next.sh
 ```
 
-EXPECT: `ep006 security gate: ok`; `security check: ok`; `secret scan: ok`; `DONE` from
+EXPECT: `gate-security: ok`; `security check: ok`; `secret scan: ok`; `DONE` from
 `ledger.sh status EP-006`; tag `green/EP-006` created; `graph-next.sh` prints
 `NEXT EP-007`.
 
-EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-006 NODE_DONE "EP-006 closed: ep006 security gate: ok; security check: ok; KEYCLOAK_ISSUER/DATABASE_URL/VALKEY_URL/CLOUD_WORKLOAD_IDENTITY BLOCKED_CREDENTIALS; counsel + UAT EXTERNAL_REQUIRED"`
+EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-006 NODE_DONE "EP-006 closed: gate-security: ok; security check: ok; KEYCLOAK_ISSUER/DATABASE_URL/VALKEY_URL/CLOUD_WORKLOAD_IDENTITY BLOCKED_CREDENTIALS; counsel + UAT EXTERNAL_REQUIRED"`
 
 FALLBACK: none. If either gate fails, the node stays open — do not tag, and do not narrow
 a gate to make it pass.
@@ -1369,7 +1369,7 @@ COMMIT: `git add -A && git commit -m "[EP-006][M11] close auth/security node wit
 
 ## 9. Validation and Acceptance
 
-1. `sh scripts/ep006-gate.sh` prints `ep006 security gate: ok` and exits 0, and
+1. `sh scripts/gate-security.sh` prints `gate-security: ok` and exits 0, and
    `sh scripts/security-check.sh` prints `security check: ok` and exits 0.
 2. A token lacking `tenant_id` is rejected with `401 TOKEN_INVALID_CLAIMS` and no RLS
    session is opened (VG-AUTH-021).
@@ -1426,7 +1426,7 @@ fifteen mandated stages, including `preflight`, `format-check`, `dependency-audi
 loud-fail placeholders owned by other nodes or cannot pass before a production artefact
 exists (EP-009). Keeping the boilerplate would make this node permanently unclosable and
 would create pressure to fake a green. This plan narrows **this node's** verify to
-`sh scripts/ep006-gate.sh` / `ep006 security gate: ok`, which covers this node's
+`sh scripts/gate-security.sh` / `gate-security: ok`, which covers this node's
 deliverable and genuinely fails when the security suites fail. No stage is removed from
 `verify.sh`; M1 strengthens `scripts/security-check.sh` from a loud-fail placeholder into
 a real gate. Recorded in §13 D1, needs owner ratification.
@@ -1522,7 +1522,7 @@ Recovery properties:
 
 | # | Decision | Rationale | Status |
 |---|---|---|---|
-| D1 | Node verify narrowed from `sh scripts/verify.sh` to `sh scripts/ep006-gate.sh`. | The stub header was generic boilerplate; `verify.sh` cannot pass before a production artefact exists and while other nodes' stages are placeholders. Narrowing prevents pressure to fake a green and removes no stage from `verify.sh`. Follows the EP-000 D1 precedent. | PENDING OWNER RATIFICATION |
+| D1 | Node verify narrowed from `sh scripts/verify.sh` to `sh scripts/gate-security.sh`. | The stub header was generic boilerplate; `verify.sh` cannot pass before a production artefact exists and while other nodes' stages are placeholders. Narrowing prevents pressure to fake a green and removes no stage from `verify.sh`. Follows the EP-000 D1 precedent. | PENDING OWNER RATIFICATION |
 | D2 | `AuthorityGrant` kind vocabulary resolves to the SPEC-005 §3 set, with an explicit two-way mapping for the SPEC-003 §5.2.1 wire enum. | The two specifications name different sets. SPEC-005 is the authority-and-permissions specification and its §3 table is the evidenced-entity definition; an unmapped wire value must be refused rather than silently defaulted. | PENDING OWNER RATIFICATION |
 | D3 | Audience strings are a discovery blank filled from the realm/client registration, never an invented constant. | SPEC-003 §3.2 item 3 requires distinct audiences but names none. A hard-coded audience that the realm does not issue would be a false control. | ACCEPTED |
 | D4 | The node gate verifies credential-free security behaviour and names every dependency and human gate it does not verify. | A gate that silently skips realm, RLS, KMS, or human work is a masking defect (DOD-024); a gate that fails forever on an unprovisioned dependency blocks independent work (DOD-031). Naming the gap in the gate's own output is the honest third option. | ACCEPTED |

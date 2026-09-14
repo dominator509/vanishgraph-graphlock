@@ -2,8 +2,8 @@ NODE-META-BEGIN
 ID: EP-005
 DEPS: EP-004
 MAX_ATTEMPTS_PER_MILESTONE: 6
-VERIFY: sh scripts/ep005-gate.sh
-VERIFY_SENTINEL: ep005 ui gate: ok
+VERIFY: sh scripts/gate-ui.sh
+VERIFY_SENTINEL: gate-ui: ok
 GREEN_TAG: green/EP-005
 NODE-META-END
 
@@ -185,7 +185,7 @@ Existing code and scripts:
   tokens and their non-collapse facts — do **not** import them from the UI)
 - `package.json`, `tsconfig.json`, `tsconfig.build.json`
 - `scripts/verify.sh`, `scripts/test-e2e.sh`, `scripts/copy-lint-gate.sh` (if present),
-  `scripts/import-boundary.sh`, `scripts/ep004-gate.sh`, `scripts/lib/loud-fail.sh`
+  `scripts/import-boundary.sh`, `scripts/gate-api.sh`, `scripts/lib/loud-fail.sh`
 - `.agent/verification/EXPECTED_TEST_MANIFEST.txt`
 
 Project documents:
@@ -225,7 +225,7 @@ Created:
   `tests/contract/pii-url.test.ts`, `tests/contract/portal-surfaces.test.ts`,
   `tests/contract/surface-ownership.test.ts`, `tests/contract/auditor-readonly.test.ts`.
 - `tests/ui/**` — Playwright + axe-core suites (browser-runtime dependent).
-- `scripts/ep005-gate.sh` — this node's gate.
+- `scripts/gate-ui.sh` — this node's gate.
 - `playwright.config.ts`, `vite.config.ts`, `postcss.config.mjs`.
 - `.agent/evidence/EP-005/**`.
 
@@ -383,7 +383,7 @@ directions; and this node has a gate that genuinely fails when the UI contract s
 fail.
 
 READ: `ARCHITECTURE.md`, `package.json`, `tsconfig.json`, `scripts/verify.sh`,
-`scripts/test-e2e.sh`, `scripts/import-boundary.sh`, `scripts/ep004-gate.sh`,
+`scripts/test-e2e.sh`, `scripts/import-boundary.sh`, `scripts/gate-api.sh`,
 `COMMANDS.md`, `PREFLIGHT.md`, `SPEC-004` §0.1/§0.3/§1, `SPEC-003` §2.1,
 `.agent/DONE_LAW.md` DOD-007/DOD-024.
 
@@ -392,7 +392,7 @@ CHANGE: `package.json`, `package-lock.json`, `vite.config.ts`, `postcss.config.m
 `ui/src/routes/not-found.tsx`, `ui/src/routes/portal.tsx`,
 `ui/src/routes/console.queue.tsx`, `ui/src/routes/admin.tenant.tsx`,
 `ui/src/routes/auditor.claims.tsx`, `ui/src/route-manifest.json`,
-`tests/contract/route-manifest.test.ts`, `scripts/ep005-gate.sh`,
+`tests/contract/route-manifest.test.ts`, `scripts/gate-ui.sh`,
 `scripts/test-e2e.sh`, `scripts/import-boundary.sh`,
 `.agent/verification/EXPECTED_TEST_MANIFEST.txt`, `COMMANDS.md`, `ARCHITECTURE.md`,
 `ASSUMPTIONS.md`, `.agent/state/LEDGER.md`.
@@ -434,7 +434,7 @@ CONTENT:
    `end-to-end tests: ok` only after the suites actually ran and passed against the built
    artefact. It must never run against a dev server and call that acceptance
    (SPEC-008 VG-SHIP-021/022), and it must never skip a suite to go green.
-6. `scripts/ep005-gate.sh` — this node's gate. Real content:
+6. `scripts/gate-ui.sh` — this node's gate. Real content:
 
 ```sh
 #!/usr/bin/env sh
@@ -464,11 +464,11 @@ echo "  - browser-runtime suites (keyboard, screen-reader tree, reduced motion, 
 echo "  - manual assistive-technology validation (VG-UI-064, DOD-039): EXTERNAL_REQUIRED, human participants only; automation cannot satisfy or substitute for this gate"
 echo "  - real-data flows: BLOCKED_CREDENTIALS (DATABASE_URL, KEYCLOAK_ISSUER) and BLOCKED_PREREQUISITE (EP-003, EP-004)"
 
-echo "ep005 ui gate: ok"
+echo "gate-ui: ok"
 ```
 
-7. `COMMANDS.md` — add, each with its sentinel: `sh scripts/ep005-gate.sh`
-   (`ep005 ui gate: ok`); `npm run build:web`; `npm run test:ui`; `npm run test:a11y`;
+7. `COMMANDS.md` — add, each with its sentinel: `sh scripts/gate-ui.sh`
+   (`gate-ui: ok`); `npm run build:web`; `npm run test:ui`; `npm run test:a11y`;
    `sh scripts/test-e2e.sh` (`end-to-end tests: ok`);
    `node --test "tests/contract/**/*.test.ts"` (the credential-free UI contract suites,
    which is what the node gate runs); `npx playwright --version` and
@@ -489,17 +489,17 @@ npm install --no-audit --no-fund
 npm run build:web
 node --test "tests/contract/route-manifest.test.ts"
 npx playwright --version
-sh scripts/ep005-gate.sh
+sh scripts/gate-ui.sh
 git status --short
 ```
 
 EXPECT: `next build` succeeds and writes `ui/src/route-manifest.json`; the manifest
 suite passes; `playwright --version` prints a version (browser binaries are a separate
-question, probed in M4); the final line `ep005 ui gate: ok`; `git status --short` listing
+question, probed in M4); the final line `gate-ui: ok`; `git status --short` listing
 only files from §6. `verify.sh` does **not** print `verify: ok` at this node and must not
 be made to.
 
-EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-005 MILESTONE_PASS "M1 ep005 ui gate: ok; route manifest equals SPEC-004 route set"`
+EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-005 MILESTONE_PASS "M1 gate-ui: ok; route manifest equals SPEC-004 route set"`
 
 FALLBACK: if the TanStack Router's generated route tree proves awkward to introspect, generate the
 manifest from a single declarative route table that the app tree imports, and make the
@@ -618,11 +618,11 @@ RUN:
 node --test "tests/contract/truth-state-copy.test.ts"
 node --test "tests/contract/vocabulary-ui.test.ts"
 sh scripts/copy-lint-gate.sh
-sh scripts/ep005-gate.sh
+sh scripts/gate-ui.sh
 ```
 
 EXPECT: both contract suites pass and report the eleven-state matrix;
-`copy lint gate: ok`; `ep005 ui gate: ok`.
+`copy lint gate: ok`; `gate-ui: ok`.
 
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-005 MILESTONE_PASS "M2 truth-state copy equality and copy lint gate: ok"`
 
@@ -690,10 +690,10 @@ CONTENT:
 RUN:
 ```
 node --test "tests/contract/coverage-presentation.test.ts"
-sh scripts/ep005-gate.sh
+sh scripts/gate-ui.sh
 ```
 
-EXPECT: the coverage suite passes; `ep005 ui gate: ok`.
+EXPECT: the coverage suite passes; `gate-ui: ok`.
 
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-005 MILESTONE_PASS "M3 coverage honesty presentation: ok"`
 
@@ -786,14 +786,14 @@ npm run build:web
 sh scripts/test-e2e.sh
 npm run test:ui
 npm run test:a11y
-sh scripts/ep005-gate.sh
+sh scripts/gate-ui.sh
 ```
 
 EXPECT: the browser suites run and pass against the built application, or `test-e2e.sh`
 exits non-zero with `end-to-end tests: BLOCKED_ENVIRONMENT - …` and a recorded
 provisioning attempt if no browser runtime can be installed (that outcome is legitimate
 and must be recorded, not hidden); the accessibility report exists with per-criterion
-statuses including `EXTERNAL_REQUIRED`; `ep005 ui gate: ok`.
+statuses including `EXTERNAL_REQUIRED`; `gate-ui: ok`.
 
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-005 MILESTONE_PASS "M4 seven region states, keyboard, automated a11y; VG-UI-064 EXTERNAL_REQUIRED"`
 
@@ -872,10 +872,10 @@ RUN:
 ```
 node --test "tests/contract/portal-surfaces.test.ts"
 sh scripts/copy-lint-gate.sh
-sh scripts/ep005-gate.sh
+sh scripts/gate-ui.sh
 ```
 
-EXPECT: the portal inventory suite passes; `copy lint gate: ok`; `ep005 ui gate: ok`.
+EXPECT: the portal inventory suite passes; `copy lint gate: ok`; `gate-ui: ok`.
 
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-005 MILESTONE_PASS "M5 subject portal surfaces and control inventory: ok"`
 
@@ -945,10 +945,10 @@ RUN:
 node --test "tests/contract/surface-ownership.test.ts"
 node --test "tests/contract/auditor-readonly.test.ts"
 sh scripts/copy-lint-gate.sh
-sh scripts/ep005-gate.sh
+sh scripts/gate-ui.sh
 ```
 
-EXPECT: both suites pass; `copy lint gate: ok`; `ep005 ui gate: ok`.
+EXPECT: both suites pass; `copy lint gate: ok`; `gate-ui: ok`.
 
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-005 MILESTONE_PASS "M6 console, admin, auditor surfaces; auditor write methods 405"`
 
@@ -1024,10 +1024,10 @@ CONTENT:
 RUN:
 ```
 node --test "tests/contract/pii-url.test.ts"
-sh scripts/ep005-gate.sh
+sh scripts/gate-ui.sh
 ```
 
-EXPECT: the PII-pattern suite passes; `ep005 ui gate: ok`.
+EXPECT: the PII-pattern suite passes; `gate-ui: ok`.
 
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-005 MILESTONE_PASS "M7 browser privacy: no PII in URLs, audited reveal, no third-party trackers on PII routes"`
 
@@ -1050,7 +1050,7 @@ READ: `.agent/DONE_LAW.md` (DOD-025, DOD-026, DOD-029, DOD-032, DOD-039); `SPEC-
 §2, §3, §9, §13; `SPEC-006` §4.1; `SPEC-004` §16;
 `.agent/verification/reports/RESIDUAL_RISK_AND_EXTERNAL_GATES.md`.
 
-CHANGE: `scripts/ep005-gate.sh` (final form), `.agent/evidence/EP-005/**`,
+CHANGE: `scripts/gate-ui.sh` (final form), `.agent/evidence/EP-005/**`,
 `.agent/verification/state/TEST_LEDGER.jsonl`,
 `.agent/verification/state/NEXT_ACTION.md`, `.agent/state/LEDGER.md`, `COMMANDS.md`.
 
@@ -1087,19 +1087,19 @@ CONTENT:
 
 RUN:
 ```
-sh scripts/ep005-gate.sh
+sh scripts/gate-ui.sh
 node --test "tests/contract/**/*.test.ts"
-sh scripts/ledger.sh append <AGENT_ID> EP-005 NODE_DONE "EP-005 closed: ep005 ui gate: ok; VG-UI-064 EXTERNAL_REQUIRED; real-data flows BLOCKED_CREDENTIALS"
+sh scripts/ledger.sh append <AGENT_ID> EP-005 NODE_DONE "EP-005 closed: gate-ui: ok; VG-UI-064 EXTERNAL_REQUIRED; real-data flows BLOCKED_CREDENTIALS"
 sh scripts/ledger.sh status EP-005
 git tag green/EP-005
 git log --oneline -1
 sh scripts/graph-next.sh
 ```
 
-EXPECT: `ep005 ui gate: ok`; `DONE` from `ledger.sh status EP-005`; tag `green/EP-005`
+EXPECT: `gate-ui: ok`; `DONE` from `ledger.sh status EP-005`; tag `green/EP-005`
 created; `graph-next.sh` prints `NEXT EP-006`.
 
-EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-005 NODE_DONE "EP-005 closed: ep005 ui gate: ok; VG-UI-064 EXTERNAL_REQUIRED; DATABASE_URL/KEYCLOAK_ISSUER BLOCKED_CREDENTIALS"`
+EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-005 NODE_DONE "EP-005 closed: gate-ui: ok; VG-UI-064 EXTERNAL_REQUIRED; DATABASE_URL/KEYCLOAK_ISSUER BLOCKED_CREDENTIALS"`
 
 FALLBACK: none. If the gate fails, the node stays open — do not tag, and do not narrow
 the gate to make it pass.
@@ -1108,7 +1108,7 @@ COMMIT: `git add -A && git commit -m "[EP-005][M8] close UI/client node with ext
 
 ## 9. Validation and Acceptance
 
-1. `sh scripts/ep005-gate.sh` prints `ep005 ui gate: ok` and exits 0.
+1. `sh scripts/gate-ui.sh` prints `gate-ui: ok` and exits 0.
 2. `ui/src/route-manifest.json` equals the 24 SPEC-004 §1 routes as a set in both
    directions; an undeclared route renders the not-found state and appears in the
    manifest diff (VG-UI-004).
@@ -1152,7 +1152,7 @@ requires all fifteen mandated stages, including `preflight`, `format-check`,
 artifact-bound smoke/E2E/live-fire, which are loud-fail placeholders owned by other nodes
 or cannot pass before a production artefact exists (EP-009). Keeping the boilerplate would
 make this node permanently unclosable and would create pressure to fake a green. This
-plan narrows **this node's** verify to `sh scripts/ep005-gate.sh` / `ep005 ui gate: ok`,
+plan narrows **this node's** verify to `sh scripts/gate-ui.sh` / `gate-ui: ok`,
 which covers this node's deliverable and genuinely fails when the UI contract suites fail.
 No stage is removed from `verify.sh`; M1 and M4 strengthen `scripts/test-e2e.sh` from a
 loud-fail placeholder into a real runner. Recorded in §13 D1, needs owner ratification.
@@ -1229,7 +1229,7 @@ Recovery properties:
 
 | # | Decision | Rationale | Status |
 |---|---|---|---|
-| D1 | Node verify narrowed from `sh scripts/verify.sh` to `sh scripts/ep005-gate.sh`. | The stub header was generic boilerplate; `verify.sh` cannot pass before a production artefact exists and while other nodes' stages are placeholders. Narrowing prevents pressure to fake a green and removes no stage from `verify.sh`. Follows the EP-000 D1 precedent. | PENDING OWNER RATIFICATION |
+| D1 | Node verify narrowed from `sh scripts/verify.sh` to `sh scripts/gate-ui.sh`. | The stub header was generic boilerplate; `verify.sh` cannot pass before a production artefact exists and while other nodes' stages are placeholders. Narrowing prevents pressure to fake a green and removes no stage from `verify.sh`. Follows the EP-000 D1 precedent. | PENDING OWNER RATIFICATION |
 | D2 | The UI consumes a generated canonical token type rather than importing `src/domain/truth-state.ts`. | SPEC-004 §0.3 and the `ARCHITECTURE.md` code law forbid the UI importing domain internals; the tokens still exist once and are gated for equality against the specification. | ACCEPTED |
 | D3 | One copy-lint gate command (`sh scripts/copy-lint-gate.sh`) serves both the API vocabulary rule (SPEC-003 VG-API-067) and the UI copy rules (SPEC-004 VG-UI-080…083). | Two competing scanners would drift and let a hit pass one of them. One gate, one command, one allowlist with owner and reason per entry. | ACCEPTED |
 | D4 | The node gate verifies browser-runtime-independent behaviour and names the three things it does not verify. | A gate that silently skips browser or human work is a masking defect (DOD-024); a gate that fails forever on an unprovisioned runtime blocks independent work (DOD-031). Naming the gap in the gate's own output is the honest third option. | ACCEPTED |

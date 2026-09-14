@@ -17,4 +17,4 @@
 set -eu
 export CI=true GIT_TERMINAL_PROMPT=0 GIT_PAGER=cat PAGER=cat DEBIAN_FRONTEND=noninteractive
 . "$(dirname "$0")/lib/loud-fail.sh"
-vg_loud_fail 'integration tests' 'EP-002'
+vg_loud_fail 'integration tests' 'EP-003'

@@ -166,6 +166,39 @@ These must never succeed (each has a dedicated negative test — DOD-018):
 
 Interfaces only — the domain declares them; infrastructure satisfies them.
 
+### 5.1 Where a port lives (binding)
+
+A port lives in the layer that **owns the concept**. This rule exists because the
+ExecPlans originally disagreed: some placed ports under `src/domain/`, others under
+`src/application/`, with no stated principle, which would have produced an
+architecture that drifts as each node is executed.
+
+| Port | Location | Why that layer owns it |
+|---|---|---|
+| `Clock`, `IdGenerator` | `src/domain/ports/` | the domain needs time and identity to state its own rules |
+| `EvidenceStore` | `src/domain/ports/` | evidence integrity is a domain invariant (VG-EVIDENCE-001) |
+| `SourceReader`, `ChannelWriter` | `src/domain/ports/` | permission classes are domain rules (VG-CHANNEL-002) |
+| `IndependentObserver` | `src/domain/ports/` | independence is the rule that prevents removal theater (VG-VERIFY-001) |
+| `PolicyRepository` | `src/domain/ports/` | versioned jurisdiction policy carries the legal basis (VG-POLICY-001) |
+| `AuditSink` | `src/domain/ports/` | append-only audit is a domain invariant (VG-EVIDENCE-003) |
+| `EgressGate` | `src/domain/ports/` | egress classification is a domain rule (VG-EGRESS-001) |
+| `SecretResolver` | `src/domain/ports/` | the domain must demand a secret without a database (VG-SEC-002) |
+| `IdempotencyStore` | `src/domain/ports/` | at-most-once is a domain invariant (VG-ACTION-001) |
+| `AuthorityGrantRepository` | `src/domain/ports/` | authority is the core domain control (VG-AUTHZ-001) |
+| `JobQueue` | `src/application/ports/` | *when to run something later* is orchestration, not a domain concept |
+
+Rules:
+
+1. One file per port, inside a `ports/` **directory**, with `ports/index.ts` as the
+   barrel. Never a single `ports.ts` beside the directory.
+2. Declaring an interface needs nothing but the standard library, so the code law
+   (`ARCHITECTURE.md` §2) is unaffected by ports living in the domain.
+3. `JobQueue` is the only port the domain does not own. The domain declares *what must
+   happen*; the application decides *when*. This is why ADR-016 can swap the queue
+   implementation without touching a single domain rule.
+4. A port is declared once, in EP-002, and implemented by an adapter in a later node.
+   A later node must never re-declare a port that EP-002 already declares.
+
 | Port | Responsibility |
 |---|---|
 | `Clock` | injectable time; enables deterministic window tests |

@@ -39,7 +39,7 @@ In scope:
   executably true.
 - The entities of SPEC-001 §3 as immutable types with validating factories and the
   invariants from the spec's invariant column.
-- The domain ports of SPEC-001 §5 as **declarations only**.
+- The ports of SPEC-001 §5.1 as **declarations only**: the ten domain ports under `src/domain/ports/` and the `JobQueue` application port under `src/application/ports/`.
 - The eleven domain commands of SPEC-001 §6 and the twenty-two domain events of §7.
 - The state-machine invariants SM-1…SM-6 as executable assertions (SPEC-001 §4.3).
 - The import-boundary test proving `domain` imports only the standard library
@@ -56,7 +56,7 @@ deployment. Those are EP-003 onward. No port may acquire an implementation here.
 
 ## 3. Non-goals
 
-- No implementation of any port. `src/domain/ports.ts` declares interfaces; adapters
+- No implementation of any port. `src/domain/ports/index.ts` declares interfaces; adapters
   arrive in EP-004/EP-006/EP-008. A domain module that opens a socket, reads a file, or
   reads the clock directly is a defect this node exists to prevent.
 - No database, migration, or SQL work (EP-003).
@@ -97,7 +97,7 @@ deployment. Those are EP-003 onward. No port may acquire an implementation here.
   `Money`; runtime guards for `TruthState` / `PermissionClass` / `EgressClass`.
   `Confidence`, `IdempotencyKey`, `EvidenceDigest`, `ObservationWindow` already exist.
 - §3: all 27 entities (none exist as types or factories).
-- §5: the ten ports (none declared).
+- §5.1: the ten domain ports and the `JobQueue` application port (none declared). Declaring `JobQueue` here, not in EP-003, keeps port declaration in one node (SPEC-001 §5.1 rule 4).
 - §6: the eleven domain commands (none exist).
 - §7: the twenty-two domain events (none exist).
 - §4.3: SM-1…SM-6 are asserted inside `state-machine.test.ts` for a few cases; the full
@@ -173,7 +173,7 @@ Created:
 - `src/domain/identifiers.ts`
 - `src/domain/entities.ts`
 - `src/domain/events.ts`
-- `src/domain/ports.ts`
+- `src/domain/ports/index.ts`
 - `src/domain/invariants.ts`
 - `src/domain/commands.ts`
 - `tests/domain/identifiers.test.ts`
@@ -2985,14 +2985,20 @@ READ: `.agent/specs/SPEC-001-core-domain.md` §5 and §7, `ARCHITECTURE.md` (lay
 `src/domain/entities.ts`, `src/domain/values.ts`, `src/domain/identifiers.ts`,
 `.agent/DONE_LAW.md` (DOD-010).
 
-CHANGE: `src/domain/ports.ts` (create); `src/domain/events.ts` (create);
+CHANGE: `src/domain/ports/index.ts` (create); `src/application/ports/index.ts` and `src/application/ports/job-queue.ts` (create — the `JobQueue` port, SPEC-001 §5.1); `src/domain/events.ts` (create);
 `tests/domain/events.test.ts` (create);
 `.agent/verification/EXPECTED_TEST_MANIFEST.txt` (append the suite);
 `COMMANDS.md` (no new command).
 
 CONTENT:
 
-FILE: src/domain/ports.ts   (CREATE — declarations only, no implementation)
+FILE: src/domain/ports/index.ts   (CREATE — declarations only, no implementation)
+
+FILE: src/application/ports/job-queue.ts   (CREATE — declarations only)
+The single application-layer port. `enqueue(tx, job)` takes the CALLER'S transaction
+handle, never a fresh connection, so a job is enqueued by the same transaction that
+performed the state transition requiring it (ADR-016). Declaring it here rather than in
+EP-003 keeps port declaration in one node (SPEC-001 §5.1 rule 4).
 ```ts
 /**
  * Domain ports (SPEC-001 §5) — declarations only.
@@ -3246,7 +3252,7 @@ FILE: tests/domain/events.test.ts   (CREATE)
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 
-import * as ports from '../../src/domain/ports.ts';
+import * as ports from '../../src/domain/ports/index.ts';
 import {
   DOMAIN_EVENT_NAMES,
   domainEvent,
@@ -3404,7 +3410,7 @@ event.
 
 READ: `.agent/specs/SPEC-001-core-domain.md` §4.1, §4.2, §6, §7;
 `src/domain/state-machine.ts`, `src/domain/truth-state.ts`, `src/domain/entities.ts`,
-`src/domain/events.ts`, `src/domain/ports.ts`, `tests/domain/state-machine.test.ts`.
+`src/domain/events.ts`, `src/domain/ports/index.ts`, `tests/domain/state-machine.test.ts`.
 
 CHANGE: `src/domain/commands.ts` (create); `tests/domain/commands.test.ts` (create);
 `tests/domain/DOMAIN_TEST_MAP.csv` (append the command rows);
@@ -6235,7 +6241,7 @@ expected=$(printf '%s\n' \
   src/domain/events.ts \
   src/domain/identifiers.ts \
   src/domain/invariants.ts \
-  src/domain/ports.ts \
+  src/domain/ports/index.ts \
   src/domain/state-machine.ts \
   src/domain/truth-state.ts \
   src/domain/values.ts | sort)

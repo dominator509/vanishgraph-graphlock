@@ -2599,7 +2599,7 @@ CHANGE: `src/application/ports/job-queue.ts`, `src/adapters/queue/postgres-job-q
 `migrations/0008_job_queue.sql`, `tests/db/job-queue.test.ts`,
 `.agent/verification/EXPECTED_INTEGRATION_MANIFEST.txt`, `COMMANDS.md`.
 
-CONTENT: A `JobQueue` port declared in the application layer with exactly two operations —
+CONTENT: The `JobQueue` port **already declared by EP-002** at `src/application/ports/job-queue.ts` (SPEC-001 §5.1 rule 4: a port is declared once, in EP-002; this node implements the adapter). It has exactly two operations —
 `enqueue(tx, job)` and `cancel(tx, jobId)` — where `tx` is the **existing** transaction handle,
 never a fresh connection. This signature is the whole point: it makes it impossible to enqueue
 outside the transaction that caused the work, which is what removes the dual-write class of

@@ -11,7 +11,21 @@ command -v tar >/dev/null 2>&1 || { echo "atomic source library: FAIL - tar is r
 command -v sha256sum >/dev/null 2>&1 || { echo "atomic source library: FAIL - sha256sum is required" >&2; exit 1; }
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
-base64 -d "$B64" > "$tmp/sources.tar.gz"
+# Strip CR before decoding.
+#
+# DEFECT FIXED HERE: this archive was committed with CRLF line endings, so
+# `base64 -d "$B64"` failed with "base64: invalid input" on every platform (the
+# committed git blob itself carried CR, not merely a Windows checkout). The payload
+# was never corrupt: with CR stripped it decodes to a valid gzip stream and all three
+# SHA-256 sums below verify.
+#
+# Two independent guards now prevent a recurrence:
+#   1. `.gitattributes` marks *.b64 as binary (-text) so git never converts it, and
+#      the committed file has been normalised to LF.
+#   2. This `tr -d '\r'` makes the script correct even if a CRLF copy appears again
+#      (a zip download, a Windows editor, an aggressive checkout hook).
+# Keeping both is deliberate: the .gitattributes fixes the cause, this fixes the effect.
+tr -d '\r' < "$B64" | base64 -d > "$tmp/sources.tar.gz"
 tar -tzf "$tmp/sources.tar.gz" >/dev/null
 rm -rf "$tmp/unpacked"
 mkdir -p "$tmp/unpacked"

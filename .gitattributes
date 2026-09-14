@@ -1,0 +1,41 @@
+# Line-ending policy.
+#
+# This file exists because of a REAL defect, not as boilerplate.
+#
+# `.agent/verification/atomic-security-sources.tar.gz.b64` was committed with CRLF
+# line endings while the repository had no .gitattributes and core.autocrlf=true.
+# `base64 -d` then failed with "base64: invalid input" on every platform, because the
+# committed git blob itself carried CR. That silently blocked materialising the three
+# security source files and the 15 reconstructed Blockchain test bodies that
+# HARNESS_LAWS.md counts toward the 484-test accounting.
+#
+# The payload was never corrupt: with CR stripped it decodes to a valid gzip stream
+# and all three SHA-256 sums verify. The fix is to stop git from rewriting line
+# endings in the files where it matters.
+
+# Base64 payloads are binary blobs. Never convert them.
+*.b64 -text
+
+# Shell scripts MUST be LF. A CRLF shebang line breaks `sh`, and `set -eu\r` is not
+# `set -eu` — the gate would fail with a confusing error rather than running.
+*.sh text eol=lf
+
+# Source and data files are LF for the same reason: byte-stable hashing and
+# reproducible builds (DOD-002) depend on content that does not change per platform.
+*.ts    text eol=lf
+*.mjs   text eol=lf
+*.js    text eol=lf
+*.json  text eol=lf
+*.jsonl text eol=lf
+*.md    text eol=lf
+*.csv   text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.txt   text eol=lf
+
+# Archive and image formats are binary by definition.
+*.tar.gz binary
+*.tgz    binary
+*.png    binary
+*.jpg    binary
+*.webp   binary

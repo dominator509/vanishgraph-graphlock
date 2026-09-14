@@ -172,7 +172,7 @@ Created:
 - `scripts/coverage-gate.sh`
 - `scripts/regression-proof.sh`
 - `scripts/forced-failure.sh`
-- `scripts/mutation-gate.sh`
+- `scripts/mutation-gate.sh` (extends `scripts/mutation-check.sh` and `scripts/lib/mutations.ts`, which EP-002 created; it must IMPORT that mechanism, never reimplement it — two mutation systems would let the same guard be proven and unproven at once)
 - `scripts/flake-guard.sh`
 - `scripts/double-boundary-guard.sh`
 - `scripts/gate-test-hardening.sh`

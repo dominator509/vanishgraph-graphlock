@@ -1,0 +1,70 @@
+[FORGE] consistency review across all 11 execplans; fix 8 cross-node defects
+
+Reviewed dependency chain, node gates, audit lists, provisioning surface, port
+placement and test paths. Eight real defects found and fixed. Four were
+execution-breaking: executing the plans as written would have produced unsound
+software or an unrunnable harness.
+
+EXECUTION-BREAKING
+
+1. The atomic-sources payload was NOT corrupt. It was committed with CRLF line
+   endings — the git blob itself carried CR, so `base64 -d` failed on every platform,
+   not just Windows. With CR stripped it decodes to a valid gzip stream and all three
+   SHA-256 sums hard-coded in the script verify. Fixed three ways: .gitattributes marks
+   *.b64 as binary; the committed file is normalised to LF; the script strips CR before
+   decoding. `atomic source library: ok`. This unblocks the 15 reconstructed Blockchain
+   test bodies counted toward the 484 — a blocker previously recorded as permanent.
+   The earlier ASSUMPTIONS entry calling the payload corrupt was wrong and is corrected.
+
+2. test-collection-guard.sh hard-coded both the glob and the manifest, and overwrote
+   any incoming VG_EXPECTED_MANIFEST. EP-003 M5 could not have worked as written: the
+   integration suite would have been validated against the unit manifest and unit glob.
+   Parameterised on VG_TEST_GLOB and VG_EXPECTED_MANIFEST; EP-003's own verification
+   grep now returns 1, and a custom-glob run correctly fails on a missing manifest suite.
+
+3. test-unit.sh globbed tests/**/*.test.ts, sweeping in database, blackbox, e2e and
+   live-fire suites. The unit stage would have failed on a clean checkout, presenting a
+   harness limitation as a product failure — the confusion DOD-032 forbids. It now
+   excludes every service-dependent root; 94 tests still run and pass.
+
+4. test-integration.sh declared "unblocked by EP-002", but EP-002 is Core Domain with
+   no infrastructure. Corrected to EP-003.
+
+ARCHITECTURAL
+
+5. Ports were placed inconsistently: src/domain/ports.ts, src/domain/ports/, and
+   src/application/ports/ for domain-owned concepts (IdempotencyStore,
+   AuthorityGrantRepository, SecretResolver). Added a normative rule to SPEC-001 §5.1 —
+   a port lives in the layer that owns the concept. EP-002 now declares all ports once;
+   EP-003 implements rather than re-declares; EP-004/EP-006 paths corrected.
+
+6. JobQueue was declared nowhere in EP-002 and introduced mid-chain by EP-003, so the
+   queue contract would have been defined by its own implementer. EP-002 now declares
+   src/application/ports/job-queue.ts; EP-003 implements the adapter.
+
+7. EP-007 built a second mutation system without referencing EP-002's. The same guard
+   could have been proven and unproven simultaneously. EP-007 now imports EP-002's
+   mechanism; the rule is recorded in TESTING.md.
+
+COSMETIC BUT MISLEADING
+
+8. Node gates were named inconsistently — ep004-gate.sh / "ep004 api gate: ok" against
+   gate-<purpose>.sh / "gate-<purpose>: ok" everywhere else. Renamed to gate-api.sh,
+   gate-ui.sh, gate-security.sh with matching sentinels; all cross-node references
+   updated.
+
+ALSO: TESTING.md gains the binding suite-layout table that is the single definition of
+which stage runs which suites, so the split cannot drift again.
+
+VERIFIED CLEAN, NO CHANGE NEEDED: the dependency chain matches .agent/GRAPH.md for all
+11 nodes; every node lists COMMANDS.md in its audit list; `verify: ok` is disclaimed by
+every node and claimed exactly once inside EP-010's ship gate; all 11 have 14 sections
+with all nine milestone keywords matching their milestone count; 91 milestones; zero
+progress boxes checked; zero residual Temporal/Next.js references.
+
+NOT COVERED: the technical correctness of each plan's proposed implementation, and
+whether the specifications are internally consistent. This was a cross-node review.
+
+All gates pass: preflight, gate-toolchain, import-boundary, typecheck, lint, test-unit
+(94 tests), test-collection-guard, build, materialize-atomic-sources, pack validation,
+anti-gaming scan.

@@ -2,8 +2,8 @@ NODE-META-BEGIN
 ID: EP-004
 DEPS: EP-003
 MAX_ATTEMPTS_PER_MILESTONE: 6
-VERIFY: sh scripts/ep004-gate.sh
-VERIFY_SENTINEL: ep004 api gate: ok
+VERIFY: sh scripts/gate-api.sh
+VERIFY_SENTINEL: gate-api: ok
 GREEN_TAG: green/EP-004
 NODE-META-END
 
@@ -192,8 +192,11 @@ Created:
 
 - `src/application/**` — one module per SPEC-001 §6 command, query services, DTO and
   contract types (`src/application/contracts/**`).
-- `src/application/ports/**` — persistence and adapter port interfaces this node needs
-  (idempotency store, audit sink port binding, secret resolution, clock, ID generator).
+- `src/domain/ports/**` — the port interfaces this node binds: idempotency store, audit
+  sink, secret resolver, clock and ID generator. All of these are declared by EP-002
+  under SPEC-001 §5.1, because each expresses a domain rule (at-most-once, append-only
+  audit, secret handling, time, identity). This node implements their adapters; it must
+  not re-declare them.
 - `src/adapters/idempotency/**`, `src/adapters/audit/**`, `src/adapters/config/**` —
   adapters that do not depend on a credential.
 - `src/adapters/persistence/**`, `src/adapters/coordination/**` — PostgreSQL and Valkey
@@ -205,7 +208,7 @@ Created:
 - `tests/contract/**` — the route-registry, envelope, and mapping contract tests.
 - `tests/integration/**` — real-PostgreSQL and real-Valkey suites.
 - `tests/blackbox/**` — public-interface acceptance tests (DOD-011).
-- `scripts/ep004-gate.sh` — this node's gate (see §9 and §13 D1).
+- `scripts/gate-api.sh` — this node's gate (see §9 and §13 D1).
 - `tsconfig.service.json` — build configuration for the service layers.
 - `.agent/evidence/EP-004/**` — evidence index entries for this node.
 
@@ -334,7 +337,7 @@ CHANGE: `package.json`, `package-lock.json`, `tsconfig.service.json`,
 `src/http/server.ts`, `src/http/plugins/**.ts`, `src/http/routes/health.ts`,
 `src/http/openapi/registry.ts`, `src/infrastructure/config.ts`,
 `src/application/contracts/index.ts`, `tests/contract/route-registry.test.ts`,
-`scripts/ep004-gate.sh`, `scripts/import-boundary.sh`, `scripts/test-integration.sh`,
+`scripts/gate-api.sh`, `scripts/import-boundary.sh`, `scripts/test-integration.sh`,
 `.agent/verification/EXPECTED_TEST_MANIFEST.txt`, `COMMANDS.md`, `ARCHITECTURE.md`,
 `ASSUMPTIONS.md`, `.agent/state/LEDGER.md`.
 
@@ -385,7 +388,7 @@ CONTENT:
    and exit 1 when a required credential is absent. It prints
    `integration tests: ok` **only** when the suites actually ran and passed. Do not
    make it pass by skipping.
-9. `scripts/ep004-gate.sh` — this node's gate. Real content:
+9. `scripts/gate-api.sh` — this node's gate. Real content:
 
 ```sh
 #!/usr/bin/env sh
@@ -424,11 +427,11 @@ for pair in "DATABASE_URL:sh scripts/probes/database_url.sh" \
   fi
 done
 
-echo "ep004 api gate: ok"
+echo "gate-api: ok"
 ```
 
 10. `COMMANDS.md` — add, each with its sentinel, on the same line style as the existing
-    file: `sh scripts/ep004-gate.sh` (`ep004 api gate: ok`); `npm run test:contract`;
+    file: `sh scripts/gate-api.sh` (`gate-api: ok`); `npm run test:contract`;
     `npm run test:integration`; `npx tsc -p tsconfig.service.json` (build, `build: ok`
     via `scripts/build.sh` once this node extends it); `sh scripts/import-boundary.sh`
     (`import boundary: ok`); `sh scripts/test-integration.sh` (`integration tests: ok`);
@@ -458,18 +461,18 @@ node --test "tests/contract/**/*.test.ts"
 sh scripts/probes/database_url.sh; echo "probe exit: $?"
 sh scripts/probes/valkey_url.sh; echo "probe exit: $?"
 sh scripts/probes/keycloak.sh; echo "probe exit: $?"
-sh scripts/ep004-gate.sh
+sh scripts/gate-api.sh
 git status --short
 ```
 
 EXPECT: `import boundary: ok`; the contract suite passes; each probe prints
 `BLOCKED_CREDENTIALS`-bearing failure output with a non-zero exit code (none of
 `DATABASE_URL`, `VALKEY_URL`, `KEYCLOAK_ISSUER` is provisioned — this is the current
-true state, not a defect to work around); the final line `ep004 api gate: ok`; and
+true state, not a defect to work around); the final line `gate-api: ok`; and
 `git status --short` listing only files from §6. `verify.sh` does **not** print
 `verify: ok` at this node and must not be made to.
 
-EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-004 MILESTONE_PASS "M1 ep004 api gate: ok; import boundary: ok; DATABASE_URL/VALKEY_URL/KEYCLOAK_ISSUER BLOCKED_CREDENTIALS"`
+EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-004 MILESTONE_PASS "M1 gate-api: ok; import boundary: ok; DATABASE_URL/VALKEY_URL/KEYCLOAK_ISSUER BLOCKED_CREDENTIALS"`
 
 FALLBACK: if Fastify's JSON-schema type provider proves incompatible with
 `erasableSyntaxOnly`/`verbatimModuleSyntax`, drop the type provider and validate with
@@ -689,10 +692,10 @@ RUN:
 ```
 node --test "tests/contract/error-envelope.test.ts"
 node --test "tests/contract/error-mapping-parity.test.ts"
-sh scripts/ep004-gate.sh
+sh scripts/gate-api.sh
 ```
 
-EXPECT: both contract suites pass and report their test counts; `ep004 api gate: ok`.
+EXPECT: both contract suites pass and report their test counts; `gate-api: ok`.
 
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-004 MILESTONE_PASS "M2 error envelope and code registry parity: ok"`
 
@@ -768,11 +771,11 @@ RUN:
 node --test "tests/contract/token-validation.test.ts"
 node --test "tests/contract/tenant-resolution.test.ts"
 sh scripts/probes/keycloak.sh; echo "probe exit: $?"
-sh scripts/ep004-gate.sh
+sh scripts/gate-api.sh
 ```
 
 EXPECT: both suites pass; `keycloak.sh` exits non-zero (no realm provisioned);
-`ep004 api gate: ok`.
+`gate-api: ok`.
 
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-004 MILESTONE_PASS "M3 token validation and tenant resolution: ok; KEYCLOAK_ISSUER BLOCKED_CREDENTIALS"`
 
@@ -834,10 +837,10 @@ RUN:
 ```
 node --test "tests/contract/pagination.test.ts"
 node --test "tests/contract/filter-strictness.test.ts"
-sh scripts/ep004-gate.sh
+sh scripts/gate-api.sh
 ```
 
-EXPECT: both suites pass; `ep004 api gate: ok`.
+EXPECT: both suites pass; `gate-api: ok`.
 
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-004 MILESTONE_PASS "M4 cursor pagination and strict query parsing: ok"`
 
@@ -859,14 +862,14 @@ READ: `SPEC-003` §4.1–§4.5, §2.3, §5.8.2; `SPEC-006` §5.3 rows 10 and 11;
 `SPEC-001` §6 (`ExecuteAction`); `src/domain/values.ts` (`IdempotencyKey`),
 `src/domain/errors.ts` (`IdempotencyConflict`, `AmbiguousExternalEffect`).
 
-CHANGE: `src/application/ports/idempotency-store.ts`,
+CHANGE: `src/domain/ports/idempotency-store.ts`,
 `src/http/plugins/idempotency.ts`, `src/adapters/idempotency/postgres-store.ts`,
 `tests/contract/idempotency.test.ts`, `tests/integration/idempotency-store.test.ts`,
 `.agent/verification/EXPECTED_TEST_MANIFEST.txt`, `.agent/state/LEDGER.md`.
 
 CONTENT:
 
-- `src/application/ports/idempotency-store.ts` — port with
+- `src/domain/ports/idempotency-store.ts` — port with
   `begin(scopeKey) → {state: 'NEW'|'IN_FLIGHT'|'COMPLETED', record?}`,
   `complete(scopeKey, record)`, and `abandon(scopeKey)`. `scopeKey` is
   `(tenantId, method, routeTemplate, idempotencyKey)`. The port is declared in the
@@ -903,12 +906,12 @@ RUN:
 ```
 node --test "tests/contract/idempotency.test.ts"
 sh -c 'sh scripts/probes/database_url.sh' ; echo "probe exit: $?"
-sh scripts/ep004-gate.sh
+sh scripts/gate-api.sh
 ```
 
 EXPECT: the contract suite passes; `database_url.sh` exits non-zero
 (`DATABASE_URL` unprovisioned ⇒ the integration suite is `BLOCKED_CREDENTIALS`);
-`ep004 api gate: ok`.
+`gate-api: ok`.
 
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-004 MILESTONE_PASS "M5 idempotency semantics: ok; idempotency store integration BLOCKED_CREDENTIALS DATABASE_URL"`
 
@@ -985,10 +988,10 @@ RUN:
 ```
 node --test "tests/contract/**/*.test.ts"
 sh -c 'sh scripts/probes/database_url.sh'; echo "probe exit: $?"
-sh scripts/ep004-gate.sh
+sh scripts/gate-api.sh
 ```
 
-EXPECT: contract suites pass; `database_url.sh` exits non-zero; `ep004 api gate: ok`
+EXPECT: contract suites pass; `database_url.sh` exits non-zero; `gate-api: ok`
 with the `DATABASE_URL: BLOCKED_CREDENTIALS` line present in its output.
 
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-004 MILESTONE_PASS "M6 route catalogue wired; rls-isolation BLOCKED_CREDENTIALS DATABASE_URL + BLOCKED_PREREQUISITE EP-003"`
@@ -1062,10 +1065,10 @@ RUN:
 ```
 node --test "tests/contract/webhook-verification.test.ts"
 sh -c 'sh scripts/probes/valkey_url.sh'; echo "probe exit: $?"
-sh scripts/ep004-gate.sh
+sh scripts/gate-api.sh
 ```
 
-EXPECT: the contract suite passes; `valkey_url.sh` exits non-zero; `ep004 api gate: ok`
+EXPECT: the contract suite passes; `valkey_url.sh` exits non-zero; `gate-api: ok`
 with `VALKEY_URL: BLOCKED_CREDENTIALS` in its output.
 
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-004 MILESTONE_PASS "M7 webhook signature and taint handling: ok; webhook replay integration BLOCKED_CREDENTIALS VALKEY_URL"`
@@ -1146,12 +1149,12 @@ RUN:
 node --test "tests/blackbox/**/*.test.ts"
 node --test "tests/contract/vocabulary-gate.test.ts"
 sh scripts/copy-lint-gate.sh
-sh scripts/ep004-gate.sh
+sh scripts/gate-api.sh
 python3 scripts/anti-gaming-scan.py .
 ```
 
 EXPECT: the black-box suite passes; the vocabulary gate reports `copy lint gate: ok`;
-`ep004 api gate: ok`; `anti-gaming-scan.py` exits 0. Any hit is a defect to fix, never a
+`gate-api: ok`; `anti-gaming-scan.py` exits 0. Any hit is a defect to fix, never a
 baseline to accept (SPEC-006 §8 row 8).
 
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-004 MILESTONE_PASS "M8 black-box acceptance, canaries, vocabulary gate: ok"`
@@ -1173,7 +1176,7 @@ READ: `.agent/DONE_LAW.md` (DOD-025, DOD-026, DOD-029, DOD-032); `SPEC-008` §1,
 §9; `SPEC-006` §4.1 (`BLOCKED_CREDENTIALS`, `BLOCKED_PREREQUISITE`, `UNVERIFIED`);
 `.agent/verification/state/NEXT_ACTION.md`, `.agent/verification/state/TEST_LEDGER.jsonl`.
 
-CHANGE: `scripts/ep004-gate.sh` (final form), `.agent/evidence/EP-004/**`,
+CHANGE: `scripts/gate-api.sh` (final form), `.agent/evidence/EP-004/**`,
 `.agent/verification/state/TEST_LEDGER.jsonl`,
 `.agent/verification/state/NEXT_ACTION.md`, `.agent/state/LEDGER.md`, `COMMANDS.md`.
 
@@ -1204,20 +1207,20 @@ CONTENT:
 
 RUN:
 ```
-sh scripts/ep004-gate.sh
+sh scripts/gate-api.sh
 node --test "tests/contract/**/*.test.ts"
 node --test "tests/blackbox/**/*.test.ts"
-sh scripts/ledger.sh append <AGENT_ID> EP-004 NODE_DONE "EP-004 closed: ep004 api gate: ok; credential-dependent rows BLOCKED_CREDENTIALS"
+sh scripts/ledger.sh append <AGENT_ID> EP-004 NODE_DONE "EP-004 closed: gate-api: ok; credential-dependent rows BLOCKED_CREDENTIALS"
 sh scripts/ledger.sh status EP-004
 git tag green/EP-004
 git log --oneline -1
 sh scripts/graph-next.sh
 ```
 
-EXPECT: `ep004 api gate: ok`; `DONE` from `ledger.sh status EP-004`; tag `green/EP-004`
+EXPECT: `gate-api: ok`; `DONE` from `ledger.sh status EP-004`; tag `green/EP-004`
 created; `graph-next.sh` prints `NEXT EP-005`.
 
-EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-004 NODE_DONE "EP-004 closed: ep004 api gate: ok; DATABASE_URL/VALKEY_URL/KEYCLOAK_ISSUER BLOCKED_CREDENTIALS"`
+EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-004 NODE_DONE "EP-004 closed: gate-api: ok; DATABASE_URL/VALKEY_URL/KEYCLOAK_ISSUER BLOCKED_CREDENTIALS"`
 
 FALLBACK: none. If the gate fails, the node stays open — do not tag, and do not narrow
 the gate to make it pass.
@@ -1228,7 +1231,7 @@ COMMIT: `git add -A && git commit -m "[EP-004][M9] close API/service node with b
 
 Per-criterion acceptance, each tied to an ID and to executed evidence only:
 
-1. `sh scripts/ep004-gate.sh` prints `ep004 api gate: ok` and exits 0.
+1. `sh scripts/gate-api.sh` prints `gate-api: ok` and exits 0.
 2. Every `VG-API-*` row has at least one executed test with a recorded command, exit
    code, sentinel, artifact digest, and evidence path, or an explicit SPEC-006 §4.1
    non-`PASS` status with its blocking reference (SPEC-003 §12 items 1–5).
@@ -1269,7 +1272,7 @@ artifact-bound live-fire, none of which can pass before a production artifact ex
 `security-check`, which are still loud-fail placeholders owned by other nodes. Keeping
 the boilerplate would make this node permanently unclosable and would create pressure to
 fake a green. This plan therefore narrows **this node's** verify to
-`sh scripts/ep004-gate.sh` / `ep004 api gate: ok`, which covers this node's actual
+`sh scripts/gate-api.sh` / `gate-api: ok`, which covers this node's actual
 deliverable and genuinely fails when the contract suites fail. This is **not** a gate
 weakening: no stage is removed from `verify.sh`, the stage order is untouched, and the
 M1 milestone *strengthens* `scripts/test-integration.sh` from a loud-fail placeholder
@@ -1347,7 +1350,7 @@ Recovery properties:
 
 | # | Decision | Rationale | Status |
 |---|---|---|---|
-| D1 | Node verify narrowed from `sh scripts/verify.sh` to `sh scripts/ep004-gate.sh`. | The stub header was generic boilerplate; `verify.sh` cannot pass before an artifact exists (EP-009) and while other nodes' stages are placeholders. Narrowing prevents pressure to fake a green and removes no stage from `verify.sh`. Follows the EP-000 D1 precedent. | PENDING OWNER RATIFICATION |
+| D1 | Node verify narrowed from `sh scripts/verify.sh` to `sh scripts/gate-api.sh`. | The stub header was generic boilerplate; `verify.sh` cannot pass before an artifact exists (EP-009) and while other nodes' stages are placeholders. Narrowing prevents pressure to fake a green and removes no stage from `verify.sh`. Follows the EP-000 D1 precedent. | PENDING OWNER RATIFICATION |
 | D2 | The HTTP error code registry lives in `src/http/errors/code-registry.ts`, not in the domain. | SPEC-006 §1.1 forbids domain error classes from carrying an HTTP status or a human-facing message. The domain keeps `code`/`classification`/`retryable`; the HTTP layer owns status, message, and envelope. | ACCEPTED |
 | D3 | `src/application/**` is introduced as the only path from `src/http/**` to `src/domain/**`. | The `ARCHITECTURE.md` code law requires HTTP to call application contracts only. Enforcing it in `scripts/import-boundary.sh` turns a convention into a gate. | ACCEPTED |
 | D4 | The node gate verifies credential-free behaviour and prints an explicit `UNVERIFIED-BY-THIS-GATE` block naming each unprovisioned dependency. | A gate that silently skips credential-dependent work would be a masking defect (DOD-024); a gate that fails forever on unprovisioned credentials would block unrelated independent work (DOD-031). Naming the gap in the gate's own output is the honest third option. | ACCEPTED |
