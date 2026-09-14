@@ -26,3 +26,4 @@
 2026-09-14T07:15:16Z | forge | EP-002 | MILESTONE_PASS | M2 value objects complete; typecheck: ok; test-unit: ok (198 pass); two regex gaps found by failing tests and fixed
 2026-09-14T07:24:14Z | forge | EP-002 | MILESTONE_PASS | M3 entities complete (27 types, validating factories); typecheck: ok; test-unit: ok (226 pass); two mutations detected and restored
 2026-09-14T07:36:03Z | forge | EP-002 | MILESTONE_PASS | M4 ports declared with zero runtime exports; event catalogue complete (22 events); test-unit: ok (234 pass)
+2026-09-14T07:47:19Z | forge | EP-002 | MILESTONE_PASS | M5 eleven domain commands (one transition each, audited); typecheck: ok; test-unit: ok (258 pass)
