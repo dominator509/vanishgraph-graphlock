@@ -1,8 +1,8 @@
 {
   "status": "IN_PROGRESS",
-  "active_node": "EP-002",
-  "closed_nodes": ["EP-000", "EP-001"],
-  "candidate_sha": "a1d4827b131a0e1ac1ec475ffe6a505d963489c8",
+  "active_node": "EP-003",
+  "closed_nodes": ["EP-000", "EP-001", "EP-002"],
+  "candidate_sha": "ffb808f622add1ff2cfc2a5b7818f1a8714b5936",
   "epoch": "FORGE-SPEC-1",
-  "updated_at": "2026-09-14T06:44:45Z"
+  "updated_at": "2026-09-14T08:19:59Z"
 }
