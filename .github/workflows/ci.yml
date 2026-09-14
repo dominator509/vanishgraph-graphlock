@@ -1,0 +1,56 @@
+# Baseline CI (EP-001 scope, seeded in EP-000 so the toolchain is exercised).
+#
+# Every step is a real command that can fail. There is deliberately no
+# continue-on-error, no `|| true`, and no ignored exit code anywhere in this file:
+# DOD-024 forbids masking failures, and a CI file that cannot go red is a false
+# green (AGENTS.md: "Software that appears to work is a failure state").
+name: ci
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: vanishgraph/package-lock.json
+
+      - name: Install locked dependencies
+        working-directory: vanishgraph
+        run: npm ci
+
+      - name: Preflight
+        working-directory: vanishgraph
+        run: sh scripts/preflight.sh
+
+      - name: Lint (typecheck + domain import boundary)
+        working-directory: vanishgraph
+        run: sh scripts/lint.sh
+
+      - name: Unit tests
+        working-directory: vanishgraph
+        run: sh scripts/test-unit.sh
+
+      - name: Test collection guard (DOD-007)
+        working-directory: vanishgraph
+        run: sh scripts/test-collection-guard.sh
+
+      - name: Build
+        working-directory: vanishgraph
+        run: sh scripts/build.sh
+
+      - name: Toolchain gate
+        working-directory: vanishgraph
+        run: sh scripts/gate-toolchain.sh
+
+      - name: Pack validation
+        working-directory: vanishgraph
+        run: python3 scripts/validate-generated-pack.py .

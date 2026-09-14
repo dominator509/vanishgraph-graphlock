@@ -1,0 +1,10 @@
+# Expected test manifest (DOD-007).
+#
+# Each path listed here MUST contribute at least one test. The collection guard
+# (scripts/test-collection-guard.sh) fails when a listed suite produces no results,
+# which catches a suite silently failing to load, being renamed, or being skipped.
+#
+# Add a line whenever a new test suite is added. Removing a line to make the guard
+# pass is gate weakening and is prohibited (DOD-027).
+tests/domain/state-machine.test.ts
+tests/domain/values.test.ts

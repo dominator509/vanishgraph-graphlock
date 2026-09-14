@@ -1,0 +1,20 @@
+{
+  "name": "vanishgraph",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "VanishGraph Privacy Removal OS - evidence-first, multi-tenant privacy removal service. See PROJECT_BRIEF.md and .agent/specs/SPEC-000-product-scope.md.",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test:unit": "node --test tests/",
+    "test:collection-guard": "node --test --test-reporter=tap tests/ | node scripts/count-tests.mjs",
+    "lint": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "@types/node": "24.10.1"
+  }
+}

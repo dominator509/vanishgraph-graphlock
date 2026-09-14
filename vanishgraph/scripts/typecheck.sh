@@ -1,20 +1,20 @@
 #!/usr/bin/env sh
-# typecheck -- PRE-DISCOVERY LOUD-FAIL PLACEHOLDER.
+# Type check stage. Sentinel: `typecheck: ok`
 #
-# Implemented command (declared in COMMANDS.md): sh scripts/typecheck.sh
+# Real implementation (EP-000 M3). This script previously printed
+# "typecheck.sh: accounted" with no check of any kind.
 #
-# SPEC BASIS: 6Layer-MasterPrompt-v3.1-GRAPHLOCK-FAILURE-PROOF.md, Section 10
-# "Scripts", line 1357: placeholder scripts never pass silently. A script that
-# prints a success sentinel without running the real check is a fabrication
-# defect under DOD-024 (failure masking) and DOD-027 (fabricated success).
-#
-# ORIGINAL DEFECT (corrected here): this script previously printed a success
-# sentinel unconditionally, with no check of any kind. It is replaced by this
-# loud-fail guard so the gate can no longer report a false green.
-#
-# DO NOT replace this with an echo of the sentinel. The real implementation
-# binds to the toolchain chosen in EP-000 milestone M1.
+# tsconfig.json is strictly configured (strict, noUncheckedIndexedAccess,
+# exactOptionalPropertyTypes, noFallthroughCasesInSwitch, verbatimModuleSyntax,
+# erasableSyntaxOnly), so this gate is substantive rather than a formality: it also
+# rejects non-erasable TypeScript that Node's native type stripping cannot execute.
 set -eu
 export CI=true GIT_TERMINAL_PROMPT=0 GIT_PAGER=cat PAGER=cat DEBIAN_FRONTEND=noninteractive
-. "$(dirname "$0")/lib/loud-fail.sh"
-vg_loud_fail 'typecheck' 'EP-001'
+cd "$(dirname "$0")/.."
+
+[ -f tsconfig.json ] || { echo "typecheck: FAIL - tsconfig.json is missing" >&2; exit 1; }
+[ -d node_modules ] || { echo "typecheck: FAIL - dependencies not installed; run npm ci" >&2; exit 1; }
+
+npx --no-install tsc --noEmit
+
+echo "typecheck: ok"

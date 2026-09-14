@@ -1,20 +1,19 @@
 #!/usr/bin/env sh
-# unit tests -- PRE-DISCOVERY LOUD-FAIL PLACEHOLDER.
+# Unit test stage. Sentinel: `test-unit: ok`
 #
-# Implemented command (declared in COMMANDS.md): sh scripts/test-unit.sh
+# Real implementation (EP-000 M2). This script previously printed
+# "test-unit.sh: accounted" with no check of any kind.
 #
-# SPEC BASIS: 6Layer-MasterPrompt-v3.1-GRAPHLOCK-FAILURE-PROOF.md, Section 10
-# "Scripts", line 1357: placeholder scripts never pass silently. A script that
-# prints a success sentinel without running the real check is a fabrication
-# defect under DOD-024 (failure masking) and DOD-027 (fabricated success).
-#
-# ORIGINAL DEFECT (corrected here): this script previously printed a success
-# sentinel unconditionally, with no check of any kind. It is replaced by this
-# loud-fail guard so the gate can no longer report a false green.
-#
-# DO NOT replace this with an echo of the sentinel. The real implementation
-# binds to the toolchain chosen in EP-000 milestone M1.
+# Runs the domain unit suite with Node's built-in test runner directly against the
+# TypeScript sources (Node >= 24 strips types natively). That keeps the domain layer
+# free of runtime dependencies, which is what the ARCHITECTURE.md code law requires.
 set -eu
 export CI=true GIT_TERMINAL_PROMPT=0 GIT_PAGER=cat PAGER=cat DEBIAN_FRONTEND=noninteractive
-. "$(dirname "$0")/lib/loud-fail.sh"
-vg_loud_fail 'unit tests' 'EP-001'
+cd "$(dirname "$0")/.."
+
+command -v node >/dev/null 2>&1 || { echo "test-unit: FAIL - node is required but not found" >&2; exit 1; }
+[ -d tests ] || { echo "test-unit: FAIL - tests/ directory is missing" >&2; exit 1; }
+
+node --test "tests/**/*.test.ts"
+
+echo "test-unit: ok"

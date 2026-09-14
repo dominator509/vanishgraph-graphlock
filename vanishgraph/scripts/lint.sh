@@ -1,20 +1,19 @@
 #!/usr/bin/env sh
-# lint -- PRE-DISCOVERY LOUD-FAIL PLACEHOLDER.
+# Lint stage. Sentinel: `lint: ok`
 #
-# Implemented command (declared in COMMANDS.md): sh scripts/lint.sh
+# Real implementation (EP-000 M3). This script previously printed
+# "lint.sh: accounted" with no check of any kind.
 #
-# SPEC BASIS: 6Layer-MasterPrompt-v3.1-GRAPHLOCK-FAILURE-PROOF.md, Section 10
-# "Scripts", line 1357: placeholder scripts never pass silently. A script that
-# prints a success sentinel without running the real check is a fabrication
-# defect under DOD-024 (failure masking) and DOD-027 (fabricated success).
-#
-# ORIGINAL DEFECT (corrected here): this script previously printed a success
-# sentinel unconditionally, with no check of any kind. It is replaced by this
-# loud-fail guard so the gate can no longer report a false green.
-#
-# DO NOT replace this with an echo of the sentinel. The real implementation
-# binds to the toolchain chosen in EP-000 milestone M1.
+# Lint here is type checking plus the architectural import-boundary check. The pack
+# does not mandate a particular linter, and inventing a stylistic ruleset would add
+# churn without adding a safety property. What lint MUST do — and now does — is catch
+# the class of defect that actually matters for this product: a lower layer reaching
+# into a higher one, or the domain layer acquiring an infrastructure dependency.
 set -eu
 export CI=true GIT_TERMINAL_PROMPT=0 GIT_PAGER=cat PAGER=cat DEBIAN_FRONTEND=noninteractive
-. "$(dirname "$0")/lib/loud-fail.sh"
-vg_loud_fail 'lint' 'EP-001'
+cd "$(dirname "$0")/.."
+
+sh scripts/typecheck.sh
+sh scripts/import-boundary.sh
+
+echo "lint: ok"

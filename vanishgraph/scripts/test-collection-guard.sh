@@ -1,20 +1,26 @@
 #!/usr/bin/env sh
-# test collection guard -- PRE-DISCOVERY LOUD-FAIL PLACEHOLDER.
+# Test collection guard (DOD-007). Sentinel: `test collection guard: ok`
 #
-# Implemented command (declared in COMMANDS.md): sh scripts/test-collection-guard.sh
+# Real implementation (EP-000 M2). This script previously printed
+# "test-collection-guard.sh: accounted" with no check of any kind.
 #
-# SPEC BASIS: 6Layer-MasterPrompt-v3.1-GRAPHLOCK-FAILURE-PROOF.md, Section 10
-# "Scripts", line 1357: placeholder scripts never pass silently. A script that
-# prints a success sentinel without running the real check is a fabrication
-# defect under DOD-024 (failure masking) and DOD-027 (fabricated success).
+# Why this gate exists: many runners exit zero for an empty, misconfigured, or
+# partially discovered suite. A green suite that collected nothing is the most
+# dangerous result in the harness because it is indistinguishable from success.
 #
-# ORIGINAL DEFECT (corrected here): this script previously printed a success
-# sentinel unconditionally, with no check of any kind. It is replaced by this
-# loud-fail guard so the gate can no longer report a false green.
-#
-# DO NOT replace this with an echo of the sentinel. The real implementation
-# binds to the toolchain chosen in EP-000 milestone M1.
+# Fails when: the runner produced no parseable TAP summary; zero tests were
+# collected; a suite named in .agent/verification/EXPECTED_TEST_MANIFEST.txt
+# produced no results; or any collected test failed.
 set -eu
 export CI=true GIT_TERMINAL_PROMPT=0 GIT_PAGER=cat PAGER=cat DEBIAN_FRONTEND=noninteractive
-. "$(dirname "$0")/lib/loud-fail.sh"
-vg_loud_fail 'test collection guard' 'EP-001'
+cd "$(dirname "$0")/.."
+
+command -v node >/dev/null 2>&1 || { echo "test collection guard: FAIL - node is required but not found" >&2; exit 1; }
+
+MANIFEST=.agent/verification/EXPECTED_TEST_MANIFEST.txt
+[ -f "$MANIFEST" ] || { echo "test collection guard: FAIL - expected-test manifest $MANIFEST is missing" >&2; exit 1; }
+
+node --test --test-reporter=junit "tests/**/*.test.ts" \
+  | VG_EXPECTED_MANIFEST="$MANIFEST" node scripts/count-tests.mjs
+
+echo "test collection guard: ok"

@@ -29,17 +29,38 @@ required = [
 for rel in required:
     exists(rel)
 
+# Directories that are never pack content: dependencies, build output, VCS.
+SKIP_DIRS = {".git", "node_modules", ".venv", "venv", "target", "dist", "build", ".next", ".cache"}
+
+# Real generation residue is an unresolved template TOKEN, e.g. {{PROJECT_NAME}}.
+# The previous check was `if "{{" in text or "}}" in text`, which flagged balanced
+# JSON such as {"page": {...}} as placeholder residue. That produced false errors on
+# correct specification files (measured on SPEC-003 and EP-004). This pattern keeps
+# the true positive (an unresolved token) while dropping the false one.
+PLACEHOLDER_RX = re.compile(r"\{\{\s*[A-Za-z0-9_.\-]+\s*\}\}")
+
 # Placeholder residue.
 for p in root.rglob("*"):
-    if p.is_file() and p.name not in {"BLUEPRINT_PACK.md", "validate-generated-pack.py", "anti-gaming-scan.py"} and p.stat().st_size < 5_000_000 and any(part not in {".git", "node_modules", ".venv", "target", "dist", "build"} for part in p.parts):
-        try:
-            text = p.read_text("utf-8")
-        except UnicodeDecodeError:
-            continue
-        if "{{" in text or "}}" in text:
-            err(f"placeholder residue in {p.relative_to(root)}")
-        if re.search(r"\b(rest omitted|similar to above|and so on|TODO pass|not implemented|coming soon)\b", text, re.I):
-            warnings.append(f"possible incomplete prose/code in {p.relative_to(root)}")
+    if not p.is_file():
+        continue
+    rel = p.relative_to(root)
+    # Skip dependency/build/VCS trees. This must be `not any(part in ...)`; the
+    # previous `any(part not in ...)` was true for essentially every path, so
+    # node_modules was scanned and its contents reported as pack defects.
+    if any(part in SKIP_DIRS for part in rel.parts):
+        continue
+    if p.name in {"BLUEPRINT_PACK.md", "validate-generated-pack.py", "anti-gaming-scan.py"}:
+        continue
+    if p.stat().st_size >= 5_000_000:
+        continue
+    try:
+        text = p.read_text("utf-8")
+    except UnicodeDecodeError:
+        continue
+    if PLACEHOLDER_RX.search(text):
+        err(f"placeholder residue in {rel}")
+    if re.search(r"\b(rest omitted|similar to above|and so on|TODO pass|not implemented|coming soon)\b", text, re.I):
+        warnings.append(f"possible incomplete prose/code in {rel}")
 
 # Graph parse, cycles, and dependency sanity.
 graph = root/".agent/GRAPH.md"

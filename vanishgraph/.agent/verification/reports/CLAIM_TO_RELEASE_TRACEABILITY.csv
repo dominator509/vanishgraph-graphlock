@@ -1,1 +1,42 @@
 claim,requirement,test,evidence,status
+"Domain encodes the eleven product truth states with non-collapse rules",SPEC-000 section 5 / VG-IDENT-004,tests/domain/state-machine.test.ts,"sh scripts/test-unit.sh -> 94 tests, 94 pass, 0 fail; asserts only VERIFIED_REMOVED asserts removal and SEARCH_DELISTED never implies source deletion",VERIFIED_DOMAIN_SCOPE
+"Only VERIFIED_REMOVED asserts a verified removal",VG-VERIFY-001,tests/domain/state-machine.test.ts,"test 'ONLY VERIFIED_REMOVED asserts a verified removal' passes",VERIFIED_DOMAIN_SCOPE
+"Closed state machine T1-T21 exists; all 21 transitions fire when their guard is satisfied",SPEC-001 section 4.1,tests/domain/state-machine.test.ts,"21 per-transition tests pass; table length asserted exactly 21",VERIFIED_DOMAIN_SCOPE
+"Illegal and forbidden transitions are refused and name the specific danger",SPEC-001 section 4.2,tests/domain/state-machine.test.ts,"6 forbidden pairs each refused with a reason; full 11x11 pair matrix asserted",VERIFIED_DOMAIN_SCOPE
+"Removal theater is refused even when every other fact is satisfied",VG-VERIFY-004,tests/domain/state-machine.test.ts,"REQUEST_SUBMITTED to VERIFIED_REMOVED refused under happyPathFacts",VERIFIED_DOMAIN_SCOPE
+"An acting path cannot verify its own effect",VG-VERIFY-001,tests/domain/state-machine.test.ts,"ObservationNotIndependent raised when independence is the only missing fact",VERIFIED_DOMAIN_SCOPE
+"Observation window cannot be satisfied early",VG-VERIFY-002,tests/domain/values.test.ts,"hasElapsed(999,0) is false for a 1000ms window",VERIFIED_DOMAIN_SCOPE
+"A confidence score without a recorded basis is unrepresentable",VG-IDENT-003,tests/domain/values.test.ts,"Confidence constructor rejects empty and blank basis",VERIFIED_DOMAIN_SCOPE
+"An idempotency key cannot be empty, blank, untrimmed or over-long",VG-ACTION-001,tests/domain/values.test.ts,"IdempotencyKey constructor rejects all four cases",VERIFIED_DOMAIN_SCOPE
+"Evidence digests must be canonical SHA-256 hex",VG-EVIDENCE-001,tests/domain/values.test.ts,"EvidenceDigest rejects wrong length, uppercase and non-hex",VERIFIED_DOMAIN_SCOPE
+"An unclear source permission is treated exactly like a prohibition",VG-CHANNEL-002,tests/domain/values.test.ts,"permitsAutomatedWrite false for WRITE_UNCLEAR, PROHIBITED, READ_ONLY",VERIFIED_DOMAIN_SCOPE
+"Protected data classes are deny-by-default for egress",VG-EGRESS-001,tests/domain/values.test.ts,"DENY_BY_DEFAULT_EGRESS is exactly the four protected classes",VERIFIED_DOMAIN_SCOPE
+"The domain layer imports only the standard library",ARCHITECTURE.md code law,scripts/import-boundary.sh,"import boundary: ok; negative proof caught a temporary express import",VERIFIED_LOCAL
+"An emptied or missing test suite fails the harness rather than passing silently",DOD-007,scripts/test-collection-guard.sh,"94 tests parsed; four negative proofs passed: zero-collection, emptied file, emptied manifest suite, failing test",VERIFIED_LOCAL
+"No script can print a success sentinel without performing a check",DOD-024 / DOD-027,scripts/gate-toolchain.sh,"gate-toolchain: ok; scans every sentinel-printing script for hollow bodies",VERIFIED_LOCAL
+"Domain guards are discriminating (mutation sensitivity)",DOD-018,tests/domain/state-machine.test.ts,"Two mutations executed: weakening the T14 guard and removing a forbidden pair each produced a test failure; baseline restored to 94/94",VERIFIED_LOCAL
+"Type checking passes under a strict configuration",DOD-021,scripts/typecheck.sh,"typecheck: ok under strict, noUncheckedIndexedAccess, exactOptionalPropertyTypes, erasableSyntaxOnly",VERIFIED_LOCAL
+"Pack validation passes and detects real placeholder residue",DOD-019,scripts/validate-generated-pack.py,"generated pack validation: ok; a seeded unresolved template token in a temporary copy was correctly reported as ERROR, proving the check still fires",VERIFIED_LOCAL
+"The repository builds from a locked dependency set",DOD-002,scripts/build.sh,"package-lock.json committed; exact-pinned devDependencies; build: ok with SHA-256 artifact digest recorded",PARTIAL_CLEANROOM_NOT_RUN
+"HTTP API surface",VG-API-001..075,NOT_IMPLEMENTED,"No route exists. SPEC-003 authored as specification only.",NOT_IMPLEMENTED
+"UI surfaces and truth-state presentation",VG-UI-001..083,NOT_IMPLEMENTED,"No screen exists. SPEC-004 authored as specification only.",NOT_IMPLEMENTED
+"Identity, authority and permissions",VG-AUTH-001..032,NOT_IMPLEMENTED,"No auth path exists. SPEC-005 authored as specification only.",NOT_IMPLEMENTED
+"Database schema, RLS and migrations",VG-DATA-001..012,NOT_IMPLEMENTED,"No migration exists.",NOT_IMPLEMENTED
+"Error taxonomy and fail-closed behaviour",VG-ERR-001..076,NOT_IMPLEMENTED,"SPEC-006 authored as specification only.",NOT_IMPLEMENTED
+"Observability, DLP-safe telemetry and SLOs",VG-OBS-001..035 / VG-SLO-001..005,NOT_IMPLEMENTED,"No pipeline, metric, alert or dashboard exists.",NOT_IMPLEMENTED
+"Subject-bound discovery against real sources",LIVE-FIRE-PROOF-01,E2E-001,NOT_IMPLEMENTED,"Requires provisioned sources and credentials.",BLOCKED_CREDENTIALS
+"Broker removal closed loop with independent verification",LIVE-FIRE-PROOF-02,E2E-002,NOT_IMPLEMENTED,"Requires database, object store and a permitted write channel.",BLOCKED_CREDENTIALS
+"Multi-channel escalation including certified mail",LIVE-FIRE-PROOF-03,E2E-003,NOT_IMPLEMENTED,"Requires postal provider sandbox credentials.",BLOCKED_CREDENTIALS
+"Source and search separation end to end",LIVE-FIRE-PROOF-04,E2E-004,NOT_IMPLEMENTED,"Domain models the distinction; no integration exists.",BLOCKED_CREDENTIALS
+"Reappearance monitoring and re-removal",LIVE-FIRE-PROOF-05,E2E-005,NOT_IMPLEMENTED,"T17 and T18 modelled in the domain only.",BLOCKED_CREDENTIALS
+"Custom internet removal",LIVE-FIRE-PROOF-06,E2E-006,NOT_IMPLEMENTED,"Not started.",NOT_IMPLEMENTED
+"Privacy preservation and PII-aware model routing",LIVE-FIRE-PROOF-07,E2E-007,NOT_IMPLEMENTED,"Egress classes modelled in the domain; no runtime enforcement.",NOT_IMPLEMENTED
+"Provider transport through official surfaces",LIVE-FIRE-PROOF-08,E2E-008,NOT_IMPLEMENTED,"Requires provider entitlements; terms unverified.",BLOCKED_CREDENTIALS
+"Failure recovery and reconciliation",LIVE-FIRE-PROOF-09,E2E-009,NOT_IMPLEMENTED,"Not started.",NOT_IMPLEMENTED
+"Bug-to-PR repair loop",LIVE-FIRE-PROOF-10,E2E-010,NOT_IMPLEMENTED,"Not started.",NOT_IMPLEMENTED
+"Coverage honesty in reporting",LIVE-FIRE-PROOF-11,E2E-011,NOT_IMPLEMENTED,"SPEC-000 section 7 defines the rules; no report exists.",NOT_IMPLEMENTED
+"Enterprise authorization and multi-tenancy",LIVE-FIRE-PROOF-12,E2E-012,NOT_IMPLEMENTED,"RLS specified in SPEC-002; no database exists.",BLOCKED_CREDENTIALS
+"Human UAT of the golden path",DOD-039,HUMAN_GATE,NOT_IMPLEMENTED,"No named human participant.",EXTERNAL_REQUIRED
+"Manual assistive-technology validation to WCAG 2.2 AA",DOD-039 / VG-UI-064,MANUAL_AT_GATE,NOT_IMPLEMENTED,"No AT practitioner named; automated checks cannot prove conformance.",EXTERNAL_REQUIRED
+"Legal and compliance review of jurisdictions, agent evidence and claims",LEGAL_REVIEW_REQUIRED,HUMAN_GATE,NOT_IMPLEMENTED,"No counsel review recorded.",EXTERNAL_REQUIRED
+"Production deployment",VG-SCOPE-009,MANUAL_ONLY,NOT_IMPLEMENTED,"Explicitly unauthorised (ADR-005).",EXTERNAL_REQUIRED

@@ -1,7 +1,32 @@
-.env
+# Dependencies
 node_modules/
+
+# Build output (the artifact digest under .agent/evidence/ IS committed)
 dist/
 build/
 .next/
 coverage/
-.agent/evidence/
+
+# Local environment and secrets. Never commit credentials (VG-SEC-002).
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Logs and temp
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# NOTE: .agent/evidence/ is deliberately NOT ignored.
+#
+# It was ignored previously, which contradicted DOD-025 ("evidence ... preserved")
+# and VG-EVIDENCE-002 (every claim resolves to a stored artifact hash).
+# scripts/validate-generated-pack.py also reads
+# .agent/evidence/<NODE>/anti_gaming_review.json, so ignoring that path made the
+# pack validator unable to see evidence on a fresh clone.
+#
+# Evidence artifacts are hashes, command logs, and review records. They must not
+# contain PII (VG-EGRESS-002); that is enforced at write time, not by gitignore.
