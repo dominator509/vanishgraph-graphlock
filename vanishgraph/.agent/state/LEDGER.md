@@ -22,3 +22,4 @@
 2026-09-14T06:57:49Z | forge | EP-001 | LEDGER_STATUS_FIXED | closure made sticky; a later non-NODE_DONE event no longer reopens a closed node
 2026-09-14T06:58:11Z | operator | EP-001 | REOPEN | test of deliberate reopen
 2026-09-14T06:58:12Z | forge | EP-001 | NODE_DONE | EP-001 complete: gate-foundation: ok (re-closed after deliberate reopen test)
+2026-09-14T07:05:40Z | forge | EP-002 | MILESTONE_PASS | M1 baseline measured (177 pass / 0 fail); requirement-to-test map created (31 lines, 5 PASS)

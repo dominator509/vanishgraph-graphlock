@@ -1,0 +1,34 @@
+== files ==
+src/domain/errors.ts
+src/domain/state-machine.ts
+src/domain/truth-state.ts
+src/domain/values.ts
+tests/domain/state-machine.test.ts
+tests/domain/values.test.ts
+tests/harness/gate-scripts.test.ts
+== suite ==
+  ✔ scripts/import-boundary.sh prints import boundary: ok (174.4496ms)
+  ✔ scripts/typecheck.sh prints typecheck: ok (2585.8998ms)
+  ✔ scripts/gate-toolchain.sh prints gate-toolchain: ok (7759.2762ms)
+✔ gates that M4 depends on really pass (22253.1563ms)
+ℹ tests 177
+ℹ suites 20
+ℹ pass 177
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 27142.1619
+== lint ==
+typecheck: ok
+import boundary: ok
+lint: ok
+
+# --- MEASURED BASELINE, EP-002 M1 ---
+# suite: 177 pass / 0 fail / 0 skipped (the plan predicted 94 at authoring time)
+# the delta is EP-001 M4's harness self-test suite (83 tests), not a discrepancy
+# per-file: tests/domain/state-machine.test.ts 71
+#           tests/domain/values.test.ts        23
+#           tests/harness/gate-scripts.test.ts 83
+# domain total: 94 tests across 2 files; harness total: 83 across 1 file
+# lint: ok

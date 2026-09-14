@@ -1,0 +1,3 @@
+71 tests/domain/state-machine.test.ts
+23 tests/domain/values.test.ts
+83 tests/harness/gate-scripts.test.ts
