@@ -16,9 +16,22 @@ import {
   permitsAutomatedWrite,
   requiresExplicitPolicy,
   DENY_BY_DEFAULT_EGRESS,
+  ChannelPriority,
+  CHANNEL_NAMES,
+  priorityOf,
+  selectChannel,
+  rejectedChannels,
+  Jurisdiction,
+  LegalBasis,
+  Money,
+  assertTruthState,
+  assertPermissionClass,
+  assertEgressClass,
+  containsApparentPii,
   type PermissionClass,
   type EgressClass,
 } from '../../src/domain/values.ts';
+import { ALL_TRUTH_STATES } from '../../src/domain/truth-state.ts';
 import { InvalidValueObject } from '../../src/domain/errors.ts';
 
 describe('Confidence (VG-IDENT-003)', () => {
@@ -164,5 +177,170 @@ describe('EgressClass (VG-EGRESS-001, DATA_EGRESS_MATRIX)', () => {
   test('opaque ids and nothing-at-all do not require a policy decision', () => {
     assert.equal(requiresExplicitPolicy('OPAQUE_ID' satisfies EgressClass), false);
     assert.equal(requiresExplicitPolicy('NONE' satisfies EgressClass), false);
+  });
+});
+
+describe('ChannelPriority (VG-CHANNEL-001, SPEC-000 §8)', () => {
+  test('priorities are exactly 1..8', () => {
+    for (const bad of [0, 9, 1.5, Number.NaN, -1]) {
+      assert.throws(() => new ChannelPriority(bad), InvalidValueObject);
+    }
+    assert.equal(new ChannelPriority(1).value, 1);
+    assert.equal(new ChannelPriority(8).value, 8);
+  });
+
+  test('priority order matches SPEC-000 §8 exactly', () => {
+    assert.equal(CHANNEL_NAMES.length, 8);
+    assert.equal(new ChannelPriority(1).channelName(), 'OFFICIAL_SELF_SERVICE');
+    assert.equal(new ChannelPriority(5).channelName(), 'SEARCH_ENGINE_REMOVAL');
+    assert.equal(new ChannelPriority(8).channelName(), 'NOT_REMOVABLE_OUTCOME');
+    assert.equal(priorityOf('CERTIFIED_MAIL').value, 6);
+  });
+
+  test('the highest-priority lawful channel is selected', () => {
+    const options = [
+      { channel: 'CERTIFIED_MAIL' as const, unavailableKind: null, unavailableReason: null },
+      {
+        channel: 'OFFICIAL_SELF_SERVICE' as const,
+        unavailableKind: null,
+        unavailableReason: null,
+      },
+    ];
+    const selected = selectChannel(options);
+    assert.equal(selected.channel, 'OFFICIAL_SELF_SERVICE');
+    assert.deepEqual(rejectedChannels(options, selected), []);
+  });
+
+  test('a lower-priority choice requires every higher one recorded with a reason', () => {
+    assert.throws(
+      () =>
+        selectChannel([
+          {
+            channel: 'OFFICIAL_SELF_SERVICE',
+            unavailableKind: 'GATED',
+            unavailableReason: '   ',
+          },
+          { channel: 'CERTIFIED_MAIL', unavailableKind: null, unavailableReason: null },
+        ]),
+      InvalidValueObject,
+    );
+    const options = [
+      {
+        channel: 'OFFICIAL_SELF_SERVICE' as const,
+        unavailableKind: 'GATED' as const,
+        unavailableReason: 'HumanGate: identity verification required',
+      },
+      { channel: 'CERTIFIED_MAIL' as const, unavailableKind: null, unavailableReason: null },
+    ];
+    const selected = selectChannel(options);
+    assert.equal(selected.channel, 'CERTIFIED_MAIL');
+    assert.equal(rejectedChannels(options, selected).length, 1);
+  });
+
+  test('no available channel is a modelling error, not a forced write', () => {
+    assert.throws(
+      () =>
+        selectChannel([
+          {
+            channel: 'OFFICIAL_SELF_SERVICE',
+            unavailableKind: 'UNLAWFUL',
+            unavailableReason: 'exempt public record',
+          },
+        ]),
+      InvalidValueObject,
+    );
+  });
+});
+
+describe('Jurisdiction (SPEC-001 §2)', () => {
+  test('uppercase ISO 3166-2 codes are accepted', () => {
+    assert.equal(new Jurisdiction('US').country(), 'US');
+    assert.equal(new Jurisdiction('US-CA').value, 'US-CA');
+    assert.equal(new Jurisdiction('DE-BE').value, 'DE-BE');
+  });
+
+  test('lowercase, malformed, and empty codes are refused', () => {
+    for (const bad of ['us', 'usa', 'U', 'US-', '-CA', '', '12']) {
+      assert.throws(() => new Jurisdiction(bad), InvalidValueObject, `should refuse ${bad}`);
+    }
+  });
+});
+
+describe('LegalBasis (VG-POLICY-001)', () => {
+  test('a basis always carries its policy version', () => {
+    const basis = new LegalBasis('CCPA_DELETE', 7);
+    assert.equal(basis.code, 'CCPA_DELETE');
+    assert.equal(basis.policyVersion, 7);
+  });
+
+  test('free-text and unversioned bases are unrepresentable', () => {
+    for (const bad of ['ccpa delete', 'ccpa', 'delete request', '']) {
+      assert.throws(() => new LegalBasis(bad, 1), InvalidValueObject, `should refuse ${bad}`);
+    }
+    for (const badVersion of [0, -1, 1.5, Number.NaN]) {
+      assert.throws(() => new LegalBasis('CCPA_DELETE', badVersion), InvalidValueObject);
+    }
+  });
+});
+
+describe('Money (SPEC-001 §2 — no float arithmetic)', () => {
+  test('integer minor units are accepted and add exactly', () => {
+    const a = new Money(1250, 'USD');
+    assert.equal(a.add(new Money(750, 'USD')).minorUnits, 2000);
+    assert.equal(a.multiply(3).minorUnits, 3750);
+    assert.equal(a.isZero(), false);
+    assert.equal(new Money(0, 'USD').isZero(), true);
+  });
+
+  test('float amounts, bad currencies, and mixed currencies are refused', () => {
+    for (const bad of [12.5, Number.NaN, Number.POSITIVE_INFINITY, 0.1 + 0.2]) {
+      assert.throws(() => new Money(bad, 'USD'), InvalidValueObject, `should refuse ${bad}`);
+    }
+    for (const badCurrency of ['usd', 'US', 'USDD', '']) {
+      assert.throws(() => new Money(100, badCurrency), InvalidValueObject);
+    }
+    assert.throws(() => new Money(100, 'USD').add(new Money(100, 'EUR')), InvalidValueObject);
+    assert.throws(() => new Money(100, 'USD').multiply(1.5), InvalidValueObject);
+  });
+});
+
+describe('runtime membership guards (SPEC-001 §8.1)', () => {
+  test('assertTruthState accepts exactly the eleven canonical states', () => {
+    for (const state of ALL_TRUTH_STATES) {
+      assert.equal(assertTruthState(state), state);
+    }
+  });
+
+  test('assertTruthState refuses ad-hoc status vocabulary', () => {
+    for (const bad of ['DONE', 'COMPLETE', 'SUCCESS', 'REMOVED', 'done', '', 42, null]) {
+      assert.throws(
+        () => assertTruthState(bad),
+        InvalidValueObject,
+        `should refuse ${String(bad)}`,
+      );
+    }
+  });
+
+  test('assertPermissionClass and assertEgressClass refuse unknown members', () => {
+    assert.equal(assertPermissionClass('WRITE_UNCLEAR'), 'WRITE_UNCLEAR');
+    assert.equal(assertEgressClass('HIGH_RISK_PII'), 'HIGH_RISK_PII');
+    for (const bad of ['write_permitted', 'ALLOWED', '', undefined]) {
+      assert.throws(() => assertPermissionClass(bad), InvalidValueObject);
+      assert.throws(() => assertEgressClass(bad), InvalidValueObject);
+    }
+  });
+});
+
+describe('containsApparentPii (VG-SEC-002 guard)', () => {
+  test('apparent personal data is detected', () => {
+    assert.equal(containsApparentPii('jane.doe@example.com'), true);
+    assert.equal(containsApparentPii('call +1 415 555 0123'), true);
+    assert.equal(containsApparentPii('ssn 123-45-6789'), true);
+  });
+
+  test('opaque identifiers and ordinary text are not flagged', () => {
+    assert.equal(containsApparentPii('subject-0001'), false);
+    assert.equal(containsApparentPii('case-2026-000123'), false);
+    assert.equal(containsApparentPii('REQUEST_SUBMITTED'), false);
   });
 });
