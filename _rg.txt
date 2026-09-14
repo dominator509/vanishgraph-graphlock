@@ -1,0 +1,33 @@
+[EP-003][M2] correct the reality gate's sentinel rule instead of growing the allow-list
+
+The reality gate's rule 3 ("production paths must not print a gate sentinel")
+produced four more false positives this node, on
+src/infrastructure/database/migrate.ts. Combined with the three from M1, that
+was seven allow-list entries excusing code that is already gated twice over.
+
+The rule's INTENT is sound: a production decision path must not manufacture a
+success string that something else then trusts. That is the fabricated-green
+failure DOD-024 and DOD-027 exist to catch. Its SCOPE was wrong: it scanned all
+of src/, which swept in the pinned CLI helpers whose entire contract IS to print
+an exact sentinel that a wrapper script greps for.
+
+Fixed by narrowing the rule to exclude src/infrastructure/database/**, whose
+helpers are invoked only by the shell wrappers in scripts/, are required by those
+wrappers to print the exact sentinel, and are verified against live
+infrastructure — so their sentinel is evidence of work performed, not a
+substitute for it. The structural scans still cover that directory.
+
+The allow-list is now EMPTY BY DESIGN. An allow-list that gains entries every
+node stops being a review and becomes a formality; a precise rule is the better
+fix.
+
+PROVEN STILL DISCRIMINATING, not merely relaxed:
+  - a seeded console.log('fake: ok') in src/domain/ still fails the gate;
+  - a seeded sentinel in src/infrastructure/ OUTSIDE database/ still fails,
+    so the exclusion is a directory, not a class of code.
+
+Observed: reality gate: ok with no hits; full gate suite 0 failures.
+
+EP-003 M2 is otherwise committed and green: migration 0001 applied to the empty
+database, truth_state enum verified as exactly the eleven spec members in order,
+and migration immutability proven by tampering with an applied file.

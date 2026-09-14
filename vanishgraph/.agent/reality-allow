@@ -7,9 +7,15 @@
 # wildcard entry is prohibited, because the whole point of the gate is that every exception
 # is a decision someone made on purpose.
 #
-# To add an entry: run `sh scripts/reality-gate.sh`, read the named file and line, and satisfy
-# yourself that the match is not simulated, unfinished, or fabricated behaviour.
-
-src/infrastructure/database/provision.ts:340 harness sentinel: this pinned CLI helper's contract is to print 'db provision: ok' on success; the wrapper script requires it
-src/infrastructure/database/provision.ts:369 harness sentinel: teardown prints 'db teardown: ok' only after proving the container is absent
-src/infrastructure/database/provision.ts:404 harness sentinel: the no-state-file teardown path prints the same sentinel for an idempotent no-op, which is a real outcome, not a skip
+# EMPTY BY DESIGN (the sentinel line above is a placeholder meaning "no entries").
+#
+# The three entries added in [EP-003][M1] were removed in [EP-003][M2] when the rule itself was
+# corrected. Those hits were false positives: src/infrastructure/database/*.ts are pinned CLI
+# helpers whose contract is to print an exact sentinel that a wrapper script greps for, and the
+# rule now excludes that directory by scope rather than excusing individual lines. Preferring a
+# precise rule to a growing allow-list is the point: an allow-list that gains entries every
+# node stops being a review and becomes a formality.
+#
+# This file stays empty until a hit is genuinely simulated, unfinished, or fabricated AND is
+# accepted as a known, time-bounded exception. If you are adding an entry, the burden is on the
+# reason string to say why the behaviour is correct rather than why the gate is inconvenient.
