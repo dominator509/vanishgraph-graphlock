@@ -17,3 +17,4 @@
 2026-09-14T06:30:19Z | forge | EP-001 | MILESTONE_PASS | M5 reality gate: ok (negative proofs verified); dependency audit: ok (registry reachable; advisory scan clean; sbom sha256 e114f426bb4f562247f933231410aa5c0fc428e6e00fd9006e9740bbfe13096a)
 2026-09-14T06:35:31Z | forge | EP-001 | MILESTONE_PASS | M6 local gate sequence green (12 sentinels in order); ci.yml committed; workflow run NOT_EXECUTED_LOCALLY
 2026-09-14T06:39:51Z | forge | EP-001 | MILESTONE_PASS | M7 gate-foundation: ok
+2026-09-14T06:44:45Z | forge | EP-001 | NODE_DONE | EP-001 complete: gate-foundation: ok; candidate a1d4827b131a0e1ac1ec475ffe6a505d963489c8
