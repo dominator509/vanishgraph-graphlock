@@ -1332,6 +1332,54 @@ Recovery properties:
 
 ## 12. Surprises & Discoveries
 
+### 2026-09-14 — SPEC-006 §6.2 maps ONE wire code to TWO message templates
+
+`DEPENDENCY_UNAVAILABLE` is the wire spelling of four domain classes, and §6.2 gives two different
+templates for the same wire code (lines 660/661 vs 662/664):
+
+| Domain code | Wire code | HTTP | Message template |
+|---|---|---|---|
+| `AUDIT_UNAVAILABLE` | `DEPENDENCY_UNAVAILABLE` | 503 | `A required dependency is unavailable; the operation was not performed.` |
+| `STORAGE_UNAVAILABLE` | `DEPENDENCY_UNAVAILABLE` | 503 | `A required dependency is unavailable; the operation was not performed.` |
+| `DEPENDENCY_UNAVAILABLE` | `DEPENDENCY_UNAVAILABLE` | 503 | `A required dependency is unavailable.` |
+| `EXTERNAL_TIMEOUT` (read) | `DEPENDENCY_UNAVAILABLE` | 503 | `A required dependency is unavailable.` |
+
+This contradicts SPEC-006 **H-3**, which requires the message to be "a fixed, non-interpolated
+template string **per `code`**". A client receiving one code with two possible texts cannot depend
+on either, and a contract test comparing registry to spec would fail whichever text it chose.
+
+**Resolution:** the canonical template is the one from the row whose domain code EQUALS the wire
+code (`DEPENDENCY_UNAVAILABLE`), because that row defines the code rather than merely reaching it.
+Recorded in `KNOWN_MESSAGE_CONFLICTS`. The parity test asserts the conflict still has this shape and
+that both templates remain present in the spec, so the resolution cannot rot silently.
+
+**Owner ratification wanted:** SPEC-006 §6.2 should state one template for `DEPENDENCY_UNAVAILABLE`
+and let the domain code carry the "operation was not performed" nuance in audit, where it belongs.
+
+### 2026-09-14 — a message template in this node's own plan has NO specification source
+
+The EP-004 plan's registry table gives `SCHEMA_VALIDATION_FAILED` at 422 the template
+`The request is well formed but fails a semantic validation.` That string does not appear anywhere
+in SPEC-003 or SPEC-006 (verified by grep). SPEC-003 §8.2 does give the code two statuses with
+`(syntax)` and `(semantic)` parentheticals, so the DISTINCTION is specified — but only the syntactic
+template, `The request body is malformed.`, is actually stated.
+
+This is recorded rather than silently adopted as a spec quote. The registry uses the SPEC-006
+syntactic template as canonical for the code (lowest status wins), keeps the semantic spelling for
+the 422 case, and the parity test asserts that the chosen canonical text is the one SPEC-006 states.
+The plan's untraceable sentence is left in the plan, annotated here.
+
+### 2026-09-14 — one §5.3 class carries two wire codes with OPPOSITE retryability
+
+SPEC-006 §5.3 row 10 marks `IDEMPOTENCY_CONFLICT` as `Rty=N` and maps it to TWO wire codes:
+`IDEMPOTENCY_KEY_REUSE` and `IDEMPOTENCY_IN_FLIGHT`. The class is correctly not retryable — retrying
+a **reused** key is exactly how a duplicate external effect is submitted — but the **in-flight** case
+is different: the first request has not finished, so a delayed retry is correct client behaviour.
+
+The spec creates the distinction by naming both codes under one class, so the exception is the
+spec's rather than this node's. It is declared narrowly as `IDEMPOTENCY_IN_FLIGHT` only, and a test
+asserts `IDEMPOTENCY_KEY_REUSE` stays non-retryable so a later edit cannot widen it to the class.
+
 ### 2026-09-14 — SPEC-003 §8.2 and SPEC-006 §6.2 disagree on `INVALID_TRUTH_STATE` (400 vs 422)
 
 This is the divergence the plan's Surprises comment anticipated. Found by the contract test

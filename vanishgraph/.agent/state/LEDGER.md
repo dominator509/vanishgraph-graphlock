@@ -44,3 +44,4 @@
 2026-09-14T11:42:02Z | forge | EP-003 | MILESTONE_PASS | M8 backup drill: restore re-applies erasure, RLS and audit intact; 8/8 post-conditions; PITR BLOCKED_CREDENTIALS
 2026-09-14T12:25:01Z | forge | EP-003 | NODE_DONE | EP-003 complete: gate-data: ok; candidate c6ebacc7acd5f175407ea70c421a0734969674a7
 2026-09-14T12:25:01Z | forge | EP-003 | NODE_CLOSE_RECORD | EP-003 closed: 4 of 11 nodes; graph advances to EP-004
+2026-09-14T13:13:05Z | forge | EP-004 | MILESTONE_PASS | M1 gate-api: ok; import boundary: ok (3 rules); 333 unit tests 0 fail; DATABASE_URL/VALKEY_URL/KEYCLOAK_ISSUER BLOCKED_CREDENTIALS

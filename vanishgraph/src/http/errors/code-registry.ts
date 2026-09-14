@@ -1,218 +1,448 @@
 /**
- * The `/v1` error envelope and the closed code → status → message registry
- * (SPEC-003 §8.1/§8.2, SPEC-006 §6.2).
+ * The closed `/v1` error-code registry (SPEC-003 §8.2, SPEC-006 §6.2).
  *
- * SPEC-006 §1.1 forbids a DOMAIN error class from carrying an HTTP status or a human-facing
- * message, so those live here: the domain keeps `code`/`classification`/`retryable`, and this
- * module owns the wire. That division is what keeps `src/domain` importable by nothing but the
- * standard library.
+ * SPEC-006 §6.2 is the normative mapping table: it pairs a DOMAIN code (the token used in audit,
+ * telemetry and the internal error registry) with a WIRE code (the only token that may appear in a
+ * response body). They differ for many classes on purpose — the domain token names the cause, the
+ * wire token is the contract.
  *
- * Three rules are enforced structurally rather than by review:
+ * Three rules are structural here rather than conventions, because each one is the difference
+ * between a leak and no leak:
  *
- *  1. **The message is a fixed, non-interpolated template per code** (SPEC-006 H-3). A message
- *     therefore cannot contain an identifier, a subject value, a URL, or provider text, because
- *     there is no code path that puts one there. All dynamic context goes in `details`.
- *  2. **`details` is allowlisted per code.** An unexpected exception cannot serialise its own
- *     message into the response, because the response is built from this table rather than from
- *     the thrown value (SPEC-003 §8.3).
- *  3. **The status for a code exists once.** SPEC-003 §8.2 and SPEC-006 §6.2 must never disagree;
- *     the contract test compares this table against both and fails on divergence.
+ *  1. **`message` is the byte-exact template from SPEC-006 §6.2.** Never paraphrased, never
+ *     interpolated. A message is a fixed string per code, so there is no code path that can put an
+ *     identifier, a subject value, a URL or provider text into it (SPEC-006 H-3).
+ *  2. **`retryable` mirrors the `Rty` column of SPEC-006 §5.3.** A client that blind-retries a
+ *     non-retryable effect-bearing request is how a duplicate removal is submitted; a client that
+ *     refuses to retry a transient 503 is how an outage becomes permanent.
+ *  3. **A STATUS CONFLICT BETWEEN THE TWO SPECIFICATIONS IS A DEFECT TO RECORD, NOT A VALUE TO
+ *     PICK.** See `KNOWN_STATUS_CONFLICTS` below and EP-004 §12. Neither specification is edited
+ *     inside this node.
+ *
+ * `tests/contract/error-mapping-parity.test.ts` reads both specification files and compares them
+ * against this table, so the table cannot drift from the contract it claims to implement.
  */
 
-/** Wire error codes, with the status and the fixed message template each carries. */
-export interface ErrorCodeDefinition {
+/** One row of the SPEC-006 §6.2 mapping. */
+export interface ErrorCodeSpec {
+  /** Token for audit, telemetry and the internal registry. Never appears in a response body. */
+  readonly domainCode: string;
+  /** The only token that may appear in a response body. */
+  readonly wireCode: string;
   readonly status: number;
-  /** Fixed template: no interpolation and no dynamic content (SPEC-006 H-3). */
+  /** Byte-exact template from SPEC-006 §6.2. */
   readonly message: string;
-  /** Whether a client may retry the same request unchanged (SPEC-006 §5.3). */
+  /** From the `Rty` column of SPEC-006 §5.3 for a domain class; API-layer codes set it directly. */
   readonly retryable: boolean;
 }
 
 /**
- * The closed `/v1` code registry (SPEC-003 §8.2, adopted verbatim by SPEC-006 §6.2).
+ * Statuses on which SPEC-003 §8.2 and SPEC-006 §6.2 disagree, recorded with their resolution.
  *
- * Grouped by status so a divergence between the two specifications is visible in one read. Codes
- * that SPEC-003 marks domain-only (`NO_LAWFUL_BASIS`, `TAINTED_CONTENT_REJECTED`, `EGRESS_DENIED`)
- * are present so that no domain code lacks a wire spelling, and are commented as such.
+ * `INVALID_TRUTH_STATE` is the only one. SPEC-003 §8.2 and §2.3/§5.5/§7.3/§11.4 (VG-API-006) all
+ * say 400, and SPEC-006's own family table in §6.2 also says 400; only SPEC-006's
+ * `INVALID_VALUE_OBJECT` row says 422, and that row's own wire-code cell reads "field-specific
+ * code from SPEC-003 §8.2", i.e. it defers to SPEC-003 for the specific code. SPEC-003 §8.4 also
+ * states SPEC-006 "owns the taxonomy; this file owns the wire".
+ *
+ * Resolution: 400. Recorded in EP-004 §12 with both citations. The parity test asserts this
+ * conflict still has the shape recorded here, so the resolution cannot rot silently.
  */
-export const ERROR_CODES = {
-  // ---- 400: malformed request, missing header/parameter, opaque-value validation ----
-  SCHEMA_VALIDATION_FAILED: { status: 400, message: 'The request is malformed.', retryable: false },
-  IDEMPOTENCY_KEY_REQUIRED: { status: 400, message: 'An Idempotency-Key header is required for this operation.', retryable: false },
-  IDEMPOTENCY_KEY_MALFORMED: { status: 400, message: 'The Idempotency-Key header is malformed.', retryable: false },
-  INVALID_CURSOR: { status: 400, message: 'The pagination cursor is not valid.', retryable: false },
-  INVALID_SORT_FIELD: { status: 400, message: 'The requested sort field is not supported.', retryable: false },
-  UNKNOWN_QUERY_PARAMETER: { status: 400, message: 'The request contains an unknown query parameter.', retryable: false },
-  INVALID_TRUTH_STATE: { status: 400, message: 'The requested truth state is not a recognised value.', retryable: false },
-  INVALID_GROUP_BY: { status: 400, message: 'The requested grouping is not supported.', retryable: false },
-  TIME_RANGE_REQUIRED: { status: 400, message: 'A time range is required for this query.', retryable: false },
-  TIME_RANGE_TOO_WIDE: { status: 400, message: 'The requested time range is too wide.', retryable: false },
-  FILTER_TOO_BROAD: { status: 400, message: 'The requested filter is too broad to be served.', retryable: false },
-  WEBHOOK_NONCE_MISSING: { status: 400, message: 'The webhook request is missing its replay token.', retryable: false },
-  MISSING_REQUIRED_HEADER: { status: 400, message: 'A required request header is missing.', retryable: false },
+export const KNOWN_STATUS_CONFLICTS: Readonly<Record<string, { readonly spec003: number; readonly spec006GenericRow: number }>> = {
+  INVALID_TRUTH_STATE: { spec003: 400, spec006GenericRow: 422 },
+};
 
-  // ---- 401: authentication and webhook signature ----
-  TOKEN_MISSING: { status: 401, message: 'A bearer token is required.', retryable: false },
-  TOKEN_INVALID: { status: 401, message: 'The bearer token could not be verified.', retryable: false },
-  TOKEN_EXPIRED: { status: 401, message: 'The bearer token has expired.', retryable: false },
-  TOKEN_INVALID_CLAIMS: { status: 401, message: 'The bearer token is missing a required claim.', retryable: false },
-  TOKEN_AUDIENCE_MISMATCH: { status: 401, message: 'The bearer token was not issued for this audience.', retryable: false },
-  TOKEN_SCOPE_WILDCARD_FORBIDDEN: { status: 401, message: 'The bearer token carries a forbidden wildcard.', retryable: false },
-  WEBHOOK_SIGNATURE_INVALID: { status: 401, message: 'The webhook signature could not be verified.', retryable: false },
-  WEBHOOK_KEY_UNKNOWN: { status: 401, message: 'The webhook signing key is not recognised.', retryable: false },
-  WEBHOOK_TIMESTAMP_OUT_OF_WINDOW: { status: 401, message: 'The webhook timestamp is outside the accepted window.', retryable: false },
+/**
+ * The complete mapping from SPEC-006 §6.2, followed by the API-layer codes SPEC-003 §8.2 owns.
+ *
+ * ORDER: domain classes first (the §6.2 table order), then the transport/auth/ingestion families
+ * §6.2 lists separately. Keeping the spec's order makes a diff against the spec readable.
+ */
+export const ERROR_CODE_REGISTRY: readonly ErrorCodeSpec[] = Object.freeze([
+  // ---------------------------------------------------------------------------------------
+  // SPEC-006 §6.2 domain-class rows. `message` is byte-exact.
+  // ---------------------------------------------------------------------------------------
+  { domainCode: 'ILLEGAL_TRANSITION', wireCode: 'ILLEGAL_TRANSITION', status: 409, retryable: false,
+    message: 'The requested state change is not permitted from the current state.' },
+  { domainCode: 'AUTHORITY_EXPIRED', wireCode: 'AUTHORITY_EXPIRED', status: 409, retryable: false,
+    message: 'The authority grant for this case is no longer valid.' },
+  { domainCode: 'AUTHORITY_EXPIRED', wireCode: 'AUTHORITY_REVOKED', status: 409, retryable: false,
+    message: 'The authority grant for this case was revoked.' },
+  { domainCode: 'AUTHORITY_MISSING', wireCode: 'AUTHORITY_INVALID', status: 409, retryable: false,
+    message: 'No valid authority grant is bound to this case.' },
+  { domainCode: 'AUTHORITY_SCOPE_VIOLATION', wireCode: 'AUTHORITY_GRANT_SCOPE_INSUFFICIENT', status: 422, retryable: false,
+    message: 'The authority grant does not cover the requested action.' },
+  { domainCode: 'POLICY_UNRESOLVED', wireCode: 'JURISDICTION_UNRESOLVED', status: 422, retryable: false,
+    message: 'No jurisdiction policy resolves for this request.' },
+  { domainCode: 'POLICY_UNRESOLVED', wireCode: 'LEGAL_BASIS_NOT_IN_POLICY_VERSION', status: 422, retryable: false,
+    message: 'The requested legal basis does not exist in the policy version in force.' },
+  { domainCode: 'NO_LAWFUL_BASIS', wireCode: 'NO_LAWFUL_BASIS', status: 409, retryable: false,
+    message: 'No lawful removal path exists for this record.' },
+  { domainCode: 'RECIPE_STALE', wireCode: 'RECIPE_STALE', status: 409, retryable: false,
+    message: 'The removal recipe for this source is stale.' },
+  { domainCode: 'RECIPE_UNSIGNED', wireCode: 'RECIPE_UNSIGNED', status: 409, retryable: false,
+    message: 'The removal recipe for this source failed signature verification.' },
+  { domainCode: 'RECIPE_UNSIGNED', wireCode: 'RECIPE_SIGNATURE_INVALID', status: 422, retryable: false,
+    message: 'The submitted recipe signature could not be verified.' },
+  { domainCode: 'PERMISSION_CLASS_UNCLEAR', wireCode: 'SOURCE_PERMISSION_UNCLEAR', status: 409, retryable: false,
+    message: 'The write permission class for this source is unclear; writes are disabled.' },
+  { domainCode: 'IDEMPOTENCY_CONFLICT', wireCode: 'IDEMPOTENCY_KEY_REUSE', status: 409, retryable: false,
+    message: 'This idempotency key was already used for a different request.' },
+  { domainCode: 'IDEMPOTENCY_CONFLICT', wireCode: 'IDEMPOTENCY_IN_FLIGHT', status: 409, retryable: true,
+    message: 'A request with this idempotency key is still in flight.' },
+  { domainCode: 'IDEMPOTENCY_CONFLICT', wireCode: 'IDEMPOTENCY_KEY_REQUIRED', status: 400, retryable: false,
+    message: 'An Idempotency-Key header is required for this operation.' },
+  { domainCode: 'BUDGET_EXCEEDED', wireCode: 'EFFECT_BUDGET_EXCEEDED', status: 409, retryable: false,
+    message: 'The action budget for this subject, source, and window is exhausted.' },
+  { domainCode: 'TAINTED_CONTENT_REJECTED', wireCode: 'TAINTED_CONTENT_REJECTED', status: 422, retryable: false,
+    message: 'Untrusted content cannot direct this operation.' },
+  { domainCode: 'EGRESS_DENIED', wireCode: 'EGRESS_DENIED', status: 403, retryable: false,
+    message: 'This data class may not leave the system under the current policy.' },
+  { domainCode: 'DIGEST_MISMATCH', wireCode: 'EVIDENCE_INTEGRITY_FAILURE', status: 409, retryable: false,
+    message: 'A stored artifact failed integrity verification.' },
+  { domainCode: 'DIGEST_MISMATCH', wireCode: 'EVIDENCE_DIGEST_MISMATCH', status: 422, retryable: false,
+    message: 'The supplied digest does not match the received content.' },
+  { domainCode: 'DIGEST_MISMATCH', wireCode: 'EVIDENCE_DIGEST_MALFORMED', status: 422, retryable: false,
+    message: 'The supplied digest is not a valid SHA-256 value.' },
+  { domainCode: 'TENANT_SCOPE_VIOLATION', wireCode: 'RESOURCE_NOT_FOUND', status: 404, retryable: false,
+    message: 'The requested resource was not found.' },
+  { domainCode: 'OBSERVATION_NOT_INDEPENDENT', wireCode: 'OBSERVATION_PATH_NOT_INDEPENDENT', status: 422, retryable: false,
+    message: 'The observation does not use a path independent of the action.' },
+  // Retryable even though it is a 422: SPEC-006 H-10 states this is "a legitimate, non-error,
+  // retryable condition in the domain" whose wire status is nonetheless 422. §5.3 marks it Rty=Y.
+  { domainCode: 'OBSERVATION_WINDOW_NOT_MET', wireCode: 'OBSERVATION_WINDOW_NOT_MET', status: 422, retryable: true,
+    message: 'The required observation window has not yet elapsed.' },
+  { domainCode: 'VERIFICATION_METHOD_MISMATCH', wireCode: 'OBSERVATION_METHOD_MISMATCH', status: 422, retryable: false,
+    message: "The observation method does not match the recipe's verification method." },
+  { domainCode: 'HUMAN_GATE_REQUIRED', wireCode: 'HUMAN_GATE_OPEN', status: 422, retryable: false,
+    message: 'A human gate is open for this case; automation cannot proceed.' },
+  { domainCode: 'HUMAN_GATE_REQUIRED', wireCode: 'HUMAN_STEP_REQUIRED', status: 422, retryable: false,
+    message: 'A human step is required before this operation can continue.' },
+  { domainCode: 'INVALID_VALUE_OBJECT', wireCode: 'SCHEMA_VALIDATION_FAILED', status: 400, retryable: false,
+    message: 'The request body is malformed.' },
+  { domainCode: 'AUDIT_UNAVAILABLE', wireCode: 'DEPENDENCY_UNAVAILABLE', status: 503, retryable: true,
+    message: 'A required dependency is unavailable; the operation was not performed.' },
+  { domainCode: 'STORAGE_UNAVAILABLE', wireCode: 'DEPENDENCY_UNAVAILABLE', status: 503, retryable: true,
+    message: 'A required dependency is unavailable; the operation was not performed.' },
+  { domainCode: 'DEPENDENCY_UNAVAILABLE', wireCode: 'DEPENDENCY_UNAVAILABLE', status: 503, retryable: true,
+    message: 'A required dependency is unavailable.' },
+  { domainCode: 'EXTERNAL_TIMEOUT', wireCode: 'DEPENDENCY_UNAVAILABLE', status: 503, retryable: true,
+    message: 'A required dependency is unavailable.' },
 
-  // ---- 403: authenticated but not permitted ----
-  INSUFFICIENT_SCOPE: { status: 403, message: 'The token does not carry a scope required by this operation.', retryable: false },
-  INSUFFICIENT_ROLE: { status: 403, message: 'The caller does not hold a role permitted for this operation.', retryable: false },
-  STEP_UP_REQUIRED: { status: 403, message: 'This operation requires a stronger authentication step.', retryable: false },
-  SEPARATION_OF_DUTIES: { status: 403, message: 'The caller may not perform this operation on their own record.', retryable: false },
-  IDENTITY_LEVEL_INSUFFICIENT: { status: 403, message: 'The verified identity level is below the level this operation requires.', retryable: false },
-  // SPEC-003 §8.2 marks EGRESS_DENIED domain-only: the EgressGate refused the payload class.
-  EGRESS_DENIED: { status: 403, message: 'This data class may not leave the system under the current policy.', retryable: false },
+  // ---------------------------------------------------------------------------------------
+  // SPEC-006 §6.2 "codes owned by SPEC-003 §8.2 with no domain class of their own".
+  // ---------------------------------------------------------------------------------------
+  { domainCode: 'UNAUTHENTICATED', wireCode: 'TOKEN_MISSING', status: 401, retryable: false,
+    message: 'A bearer access token is required.' },
+  { domainCode: 'UNAUTHENTICATED', wireCode: 'TOKEN_INVALID', status: 401, retryable: false,
+    message: 'The access token could not be verified.' },
+  { domainCode: 'UNAUTHENTICATED', wireCode: 'TOKEN_EXPIRED', status: 401, retryable: false,
+    message: 'The access token has expired.' },
+  { domainCode: 'UNAUTHENTICATED', wireCode: 'TOKEN_INVALID_CLAIMS', status: 401, retryable: false,
+    message: 'The access token is missing a required claim.' },
+  { domainCode: 'UNAUTHENTICATED', wireCode: 'TOKEN_AUDIENCE_MISMATCH', status: 401, retryable: false,
+    message: 'The access token was issued for a different audience.' },
+  { domainCode: 'UNAUTHENTICATED', wireCode: 'TOKEN_SCOPE_WILDCARD_FORBIDDEN', status: 401, retryable: false,
+    message: 'A wildcard scope is not permitted.' },
+  { domainCode: 'FORBIDDEN', wireCode: 'INSUFFICIENT_SCOPE', status: 403, retryable: false,
+    message: 'The access token does not carry a required scope.' },
+  { domainCode: 'FORBIDDEN', wireCode: 'INSUFFICIENT_ROLE', status: 403, retryable: false,
+    message: 'The access token does not carry a required role.' },
+  { domainCode: 'FORBIDDEN', wireCode: 'STEP_UP_REQUIRED', status: 403, retryable: false,
+    message: 'Re-authentication is required for this operation.' },
+  { domainCode: 'FORBIDDEN', wireCode: 'SEPARATION_OF_DUTIES', status: 403, retryable: false,
+    message: 'This operation may not be performed on the caller’s own record.' },
+  { domainCode: 'FORBIDDEN', wireCode: 'IDENTITY_LEVEL_INSUFFICIENT', status: 403, retryable: false,
+    message: 'The verified identity level is below the level this operation requires.' },
 
-  // ---- 404: absent OR owned by another tenant (H-9: never distinguishes the cause) ----
-  RESOURCE_NOT_FOUND: { status: 404, message: 'The requested resource was not found.', retryable: false },
-  WEBHOOK_BINDING_NOT_FOUND: { status: 404, message: 'The webhook binding was not found.', retryable: false },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'INVALID_CURSOR', status: 400, retryable: false,
+    message: 'The supplied cursor is not valid for this collection.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'INVALID_SORT_FIELD', status: 400, retryable: false,
+    message: 'The requested sort field is not available on this collection.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'UNKNOWN_QUERY_PARAMETER', status: 400, retryable: false,
+    message: 'An unknown query parameter was supplied.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'INVALID_TRUTH_STATE', status: 400, retryable: false,
+    message: 'The supplied truth state is not one of the eleven canonical states.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'INVALID_GROUP_BY', status: 400, retryable: false,
+    message: 'The requested grouping is not available.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'TIME_RANGE_REQUIRED', status: 400, retryable: false,
+    message: 'An explicit time range is required for this collection.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'TIME_RANGE_TOO_WIDE', status: 400, retryable: false,
+    message: 'The requested time range exceeds the permitted span.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'FILTER_TOO_BROAD', status: 400, retryable: false,
+    message: 'A filter supplied too many values.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'MISSING_REQUIRED_HEADER', status: 400, retryable: false,
+    message: 'A required header is missing.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'IDEMPOTENCY_KEY_MALFORMED', status: 400, retryable: false,
+    message: 'The Idempotency-Key header is malformed.' },
+  // The SEMANTIC spelling of SCHEMA_VALIDATION_FAILED. The 400 row above is the syntactic one.
+  // Both are real and distinct: SPEC-003 §8.2 lists SCHEMA_VALIDATION_FAILED under 400 ("syntax")
+  // and under 422 ("semantic"). See WIRE_STATUS_AMBIGUITY below.
+  { domainCode: 'INVALID_REQUEST', wireCode: 'SCHEMA_VALIDATION_FAILED', status: 422, retryable: false,
+    message: 'The request is well formed but fails a semantic validation.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'EVIDENCE_NOT_FOUND', status: 422, retryable: false,
+    message: 'A referenced evidence artifact does not resolve.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'FIELD_NOT_PATCHABLE', status: 422, retryable: false,
+    message: 'This field cannot be changed by this operation.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'OVERLAPPING_INTERVAL', status: 422, retryable: false,
+    message: 'The supplied interval overlaps an existing interval.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'IDENTIFIER_KIND_UNSUPPORTED', status: 422, retryable: false,
+    message: 'This identifier kind is not supported.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'CONFIDENCE_BASIS_REQUIRED', status: 422, retryable: false,
+    message: 'A confidence score requires at least one recorded basis.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'CONFIDENCE_OUT_OF_RANGE', status: 422, retryable: false,
+    message: 'The confidence score is outside the permitted range.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'COVERAGE_BOUNDS_REQUIRED', status: 422, retryable: false,
+    message: 'A coverage claim requires its bounds.' },
 
-  // ---- 409: conflict with current resource state or a prior request ----
-  ILLEGAL_TRANSITION: { status: 409, message: 'The requested state change is not permitted from the current state.', retryable: false },
-  IDEMPOTENCY_KEY_REUSE: { status: 409, message: 'This idempotency key was already used for a different request.', retryable: false },
-  IDEMPOTENCY_IN_FLIGHT: { status: 409, message: 'A request with this idempotency key is still in flight.', retryable: true },
-  EFFECT_BUDGET_EXCEEDED: { status: 409, message: 'The action budget for this subject, source, and window is exhausted.', retryable: false },
-  AUTHORITY_INVALID: { status: 409, message: 'No valid authority grant is bound to this case.', retryable: false },
-  AUTHORITY_EXPIRED: { status: 409, message: 'The authority grant for this case is no longer valid.', retryable: false },
-  AUTHORITY_REVOKED: { status: 409, message: 'The authority grant for this case was revoked.', retryable: false },
-  AUTHORITY_ALREADY_REVOKED: { status: 409, message: 'The authority grant was already revoked.', retryable: false },
-  RECIPE_STALE: { status: 409, message: 'The removal recipe for this source is stale.', retryable: false },
-  RECIPE_UNSIGNED: { status: 409, message: 'The removal recipe for this source failed signature verification.', retryable: false },
-  RECIPE_DISABLED: { status: 409, message: 'The removal recipe for this source is disabled.', retryable: false },
-  RECIPE_GUARD_FAILED: { status: 409, message: 'A guard on the removal recipe was not satisfied.', retryable: false },
-  RECIPE_VERSION_CONFLICT: { status: 409, message: 'The removal recipe version has changed since it was read.', retryable: false },
-  SOURCE_PERMISSION_UNCLEAR: { status: 409, message: 'The write permission class for this source is unclear; writes are disabled.', retryable: false },
-  SOURCE_PERMISSION_STALE: { status: 409, message: 'The recorded write permission for this source is stale.', retryable: false },
-  SOURCE_ALREADY_DECLARED: { status: 409, message: 'This source is already declared for the tenant.', retryable: false },
-  CATALOG_ENTRY_DUPLICATE: { status: 409, message: 'A catalogue entry already exists for this source and category.', retryable: false },
-  CHANNEL_PRIORITY_VIOLATION: { status: 409, message: 'A higher-priority channel was available and was not recorded as unavailable.', retryable: false },
-  POLICY_VERSION_SUPERSEDED: { status: 409, message: 'The policy version this decision used has been superseded.', retryable: false },
-  CASE_AUTHORITY_INVALID: { status: 409, message: 'The authority grant bound to this case is not valid.', retryable: false },
-  REAPPEARANCE_WITHOUT_PRIOR_REMOVAL: { status: 409, message: 'A reappearance requires a prior verified removal.', retryable: false },
-  CASE_ALREADY_EXISTS: { status: 409, message: 'A case already exists for this subject and source.', retryable: false },
-  CASE_EXPOSURE_STATE_MISMATCH: { status: 409, message: 'The exposure is not in a state that permits this case operation.', retryable: false },
-  ALIAS_ALREADY_ATTACHED: { status: 409, message: 'This alias value is already attached to the subject.', retryable: false },
-  IDENTIFIER_ALREADY_PRESENT: { status: 409, message: 'This identifier is already recorded for the subject.', retryable: false },
-  EMAIL_THREAD_DUPLICATE: { status: 409, message: 'An email thread with this message set already exists.', retryable: false },
-  DEADLINE_ALREADY_SATISFIED: { status: 409, message: 'This deadline has already been satisfied.', retryable: false },
-  APPEAL_WINDOW_CLOSED: { status: 409, message: 'The appeal window for this case has closed.', retryable: false },
-  STRICT_LANE_CONFLICT: { status: 409, message: 'The subject is in the strict review lane and cannot enter an automated write path.', retryable: false },
-  DISCOVERY_RUN_IN_FLIGHT: { status: 409, message: 'A discovery run for this subject and source is already in flight.', retryable: true },
-  ACTION_NOT_AMBIGUOUS: { status: 409, message: 'The external action is not in an ambiguous state.', retryable: false },
-  EVIDENCE_INTEGRITY_FAILURE: { status: 409, message: 'A stored artifact failed integrity verification.', retryable: false },
-  IDENTITY_CLASS_MISMATCH: { status: 409, message: 'The identity document class does not match this operation.', retryable: false },
-  WEBHOOK_NONCE_REPLAY: { status: 409, message: 'This webhook replay token has already been used.', retryable: false },
-  WEBHOOK_CASE_STATE_CONFLICT: { status: 409, message: 'The webhook conflicts with the current case state.', retryable: false },
-  WEBHOOK_ACTION_NOT_FOUND: { status: 409, message: 'The external action this webhook refers to was not found.', retryable: false },
-  WEBHOOK_PROVIDER_RUN_MISMATCH: { status: 409, message: 'The webhook does not match the recorded provider run.', retryable: false },
-  WEBHOOK_MAIL_PIECE_NOT_FOUND: { status: 409, message: 'The mail piece this webhook refers to was not found.', retryable: false },
-  // SPEC-003 §8.2 marks NO_LAWFUL_BASIS domain-only: an explicit refusal spelling of the
-  // NOT_REMOVABLE outcome, which is normally a 200 outcome body.
-  NO_LAWFUL_BASIS: { status: 409, message: 'No lawful removal path exists for this record.', retryable: false },
+  { domainCode: 'PRECONDITION', wireCode: 'PRECONDITION_FAILED', status: 412, retryable: false,
+    message: 'The supplied If-Match value does not match the current resource state.' },
+  { domainCode: 'PRECONDITION', wireCode: 'PRECONDITION_REQUIRED', status: 428, retryable: false,
+    message: 'An If-Match header is required for this operation.' },
+  { domainCode: 'TRANSPORT', wireCode: 'PAYLOAD_TOO_LARGE', status: 413, retryable: false,
+    message: 'The request body exceeds the permitted size.' },
+  { domainCode: 'TRANSPORT', wireCode: 'UNSUPPORTED_MEDIA_TYPE', status: 415, retryable: false,
+    message: 'The request media type is not supported.' },
+  { domainCode: 'TRANSPORT', wireCode: 'RATE_LIMITED', status: 429, retryable: true,
+    message: 'The rate limit for this operation has been reached.' },
+  { domainCode: 'TRANSPORT', wireCode: 'INTERNAL_ERROR', status: 500, retryable: false,
+    message: 'An unexpected server fault occurred.' },
+  { domainCode: 'TRANSPORT', wireCode: 'EVIDENCE_EXPIRED_RETENTION', status: 410, retryable: false,
+    message: 'The stored content has passed its retention window.' },
 
-  // ---- 410: retention elapsed while metadata remains ----
-  EVIDENCE_EXPIRED_RETENTION: { status: 410, message: 'The stored content has passed its retention window.', retryable: false },
+  { domainCode: 'WEBHOOK', wireCode: 'WEBHOOK_SIGNATURE_INVALID', status: 401, retryable: false,
+    message: 'The webhook signature could not be verified.' },
+  { domainCode: 'WEBHOOK', wireCode: 'WEBHOOK_KEY_UNKNOWN', status: 401, retryable: false,
+    message: 'The webhook key identifier is not trusted.' },
+  { domainCode: 'WEBHOOK', wireCode: 'WEBHOOK_TIMESTAMP_OUT_OF_WINDOW', status: 401, retryable: false,
+    message: 'The webhook timestamp is outside the accepted window.' },
+  { domainCode: 'WEBHOOK', wireCode: 'WEBHOOK_NONCE_MISSING', status: 400, retryable: false,
+    message: 'The webhook replay token is missing or malformed.' },
+  { domainCode: 'WEBHOOK', wireCode: 'WEBHOOK_NONCE_REPLAY', status: 409, retryable: false,
+    message: 'This webhook delivery has already been processed.' },
+  { domainCode: 'WEBHOOK', wireCode: 'WEBHOOK_BINDING_NOT_FOUND', status: 404, retryable: false,
+    message: 'The webhook destination is not recognised.' },
+  { domainCode: 'WEBHOOK', wireCode: 'WEBHOOK_CASE_STATE_CONFLICT', status: 409, retryable: false,
+    message: 'The case cannot accept this webhook at its current state.' },
+  { domainCode: 'WEBHOOK', wireCode: 'WEBHOOK_ACTION_NOT_FOUND', status: 409, retryable: false,
+    message: 'The referenced external action was not found.' },
+  { domainCode: 'WEBHOOK', wireCode: 'WEBHOOK_PROVIDER_RUN_MISMATCH', status: 409, retryable: false,
+    message: 'The provider run does not match the referenced external action.' },
+  { domainCode: 'WEBHOOK', wireCode: 'WEBHOOK_MAIL_PIECE_NOT_FOUND', status: 409, retryable: false,
+    message: 'The referenced mail piece was not found.' },
+]);
 
-  // ---- 412 / 428: concurrency token ----
-  PRECONDITION_FAILED: { status: 412, message: 'The resource has changed since it was read.', retryable: false },
-  PRECONDITION_REQUIRED: { status: 428, message: 'This operation requires an If-Match header.', retryable: false },
+/**
+ * Wire codes that legitimately carry MORE THAN ONE status, with the distinction that separates
+ * them. These are not conflicts: SPEC-003 §8.2 lists each status deliberately.
+ *
+ * Any other duplicate wire code is an error, which `indexRegistry()` below enforces.
+ */
+export const WIRE_STATUS_AMBIGUITY: Readonly<Record<string, readonly number[]>> = {
+  // 400 for a syntactically malformed body, 422 for a well-formed body failing semantic
+  // validation. SPEC-003 §8.2 states both, with the parentheticals "(syntax)" and "(semantic)".
+  SCHEMA_VALIDATION_FAILED: [400, 422],
+  // One wire code for four domain causes; the domain token keeps them distinguishable in audit.
+  DEPENDENCY_UNAVAILABLE: [503],
+};
 
-  // ---- 413 / 415 ----
-  PAYLOAD_TOO_LARGE: { status: 413, message: 'The request body is too large.', retryable: false },
-  UNSUPPORTED_MEDIA_TYPE: { status: 415, message: 'The request media type is not supported.', retryable: false },
+/**
+ * Wire codes for which SPEC-006 §6.2 states MORE THAN ONE message template.
+ *
+ * `DEPENDENCY_UNAVAILABLE` is mapped from four domain classes, and §6.2 gives two different
+ * templates for the same wire code:
+ *
+ *   | AUDIT_UNAVAILABLE     | DEPENDENCY_UNAVAILABLE | 503 | "A required dependency is unavailable; the operation was not performed." |
+ *   | STORAGE_UNAVAILABLE   | DEPENDENCY_UNAVAILABLE | 503 | "A required dependency is unavailable; the operation was not performed." |
+ *   | DEPENDENCY_UNAVAILABLE| DEPENDENCY_UNAVAILABLE | 503 | "A required dependency is unavailable."                       |
+ *   | EXTERNAL_TIMEOUT (read)| DEPENDENCY_UNAVAILABLE| 503 | "A required dependency is unavailable."                       |
+ *
+ * This contradicts SPEC-006 H-3, which requires the message to be "a fixed, non-interpolated
+ * template string **per code**". A client that receives one code with two possible messages cannot
+ * depend on either, and SPEC-003 §8.1 says the message "may change; clients must never branch on
+ * it" — but a code whose meaning is stable while its text varies is still a contract defect.
+ *
+ * RESOLUTION: the canonical row for the code is the one where the domain code EQUALS the wire code
+ * (row `DEPENDENCY_UNAVAILABLE`), because that is the row that defines the code rather than one
+ * that reaches it. Its template — the shorter one — is used. Recorded in EP-004 §12; neither
+ * specification is edited in this node, and the parity test asserts the divergence still has this
+ * shape so the resolution cannot rot silently.
+ */
+export const KNOWN_MESSAGE_CONFLICTS: Readonly<Record<string, readonly string[]>> = {
+  DEPENDENCY_UNAVAILABLE: [
+    'A required dependency is unavailable; the operation was not performed.',
+    'A required dependency is unavailable.',
+  ],
+  // NOT a defect, and NOT a spec-stated conflict. SPEC-003 §8.2 gives this code two spellings —
+  // "(syntax)" at 400 and "(semantic)" at 422 — but SPEC-006 §6.2 states a template for only the
+  // syntactic one. The semantic template used here comes from the EP-004 plan's registry table and
+  // has NO specification source; that is recorded as a finding rather than presented as a spec
+  // quote. The canonical (400, syntactic) template is the one SPEC-006 states.
+  SCHEMA_VALIDATION_FAILED: [
+    'The request is well formed but fails a semantic validation.',
+    'The request body is malformed.',
+  ],
+};
 
-  // ---- 422: well-formed request failing semantic or guard validation ----
-  CONFIDENCE_BASIS_REQUIRED: { status: 422, message: 'A confidence score requires at least one recorded basis.', retryable: false },
-  CONFIDENCE_OUT_OF_RANGE: { status: 422, message: 'The confidence score is outside the permitted range.', retryable: false },
-  COVERAGE_BOUNDS_REQUIRED: { status: 422, message: 'A coverage claim requires its bounds.', retryable: false },
-  OBSERVATION_PATH_NOT_INDEPENDENT: { status: 422, message: 'The observation does not use a path independent of the action.', retryable: false },
-  OBSERVATION_WINDOW_NOT_MET: { status: 422, message: 'The required observation window has not yet elapsed.', retryable: false },
-  OBSERVATION_METHOD_MISMATCH: { status: 422, message: 'The observation method does not match the recipe verification method.', retryable: false },
-  LEGAL_BASIS_NOT_IN_POLICY_VERSION: { status: 422, message: 'The requested legal basis does not exist in the policy version in force.', retryable: false },
-  LEGAL_BASIS_NOT_AUTHORABLE: { status: 422, message: 'This legal basis cannot be authored through the API.', retryable: false },
-  JURISDICTION_UNRESOLVED: { status: 422, message: 'No jurisdiction policy resolves for this request.', retryable: false },
-  EVIDENCE_DIGEST_MISMATCH: { status: 422, message: 'The supplied digest does not match the received content.', retryable: false },
-  EVIDENCE_DIGEST_MALFORMED: { status: 422, message: 'The supplied digest is not a valid SHA-256 value.', retryable: false },
-  EVIDENCE_REQUIRED: { status: 422, message: 'This operation requires a stored evidence artifact.', retryable: false },
-  EVIDENCE_NOT_FOUND: { status: 422, message: 'A referenced evidence artifact does not resolve.', retryable: false },
-  EVIDENCE_KIND_UNSUPPORTED: { status: 422, message: 'This evidence kind is not supported for the operation.', retryable: false },
-  REDACTION_STATE_REQUIRED: { status: 422, message: 'An evidence artifact requires a recorded redaction state.', retryable: false },
-  CASE_NOT_FOUND: { status: 422, message: 'The referenced case does not exist.', retryable: false },
-  AUTHORITY_EVIDENCE_REQUIRED: { status: 422, message: 'This authority kind requires a stored signed instrument.', retryable: false },
-  AUTHORITY_GRANT_INVALID: { status: 422, message: 'The supplied authority grant is not valid.', retryable: false },
-  AUTHORITY_GRANT_SCOPE_INSUFFICIENT: { status: 422, message: 'The authority grant does not cover the requested action.', retryable: false },
-  AUTHORITY_SCOPE_UNKNOWN: { status: 422, message: 'The requested authority scope is not recognised.', retryable: false },
-  AUTHORITY_KIND_UNSUPPORTED: { status: 422, message: 'This authority grant kind is not supported.', retryable: false },
-  AUTHORITY_WINDOW_INVALID: { status: 422, message: 'The authority grant window is not valid.', retryable: false },
-  GUARD_FAILED: { status: 422, message: 'A required precondition for this operation was not satisfied.', retryable: false },
-  TRANSITION_NOT_ROUTEABLE: { status: 422, message: 'No route can perform the requested transition from the current state.', retryable: false },
-  FIELD_NOT_PATCHABLE: { status: 422, message: 'This field cannot be changed by this operation.', retryable: false },
-  STRICT_LANE_REQUIRED: { status: 422, message: 'This subject requires the strict review lane.', retryable: false },
-  MINOR_STRICT_LANE: { status: 422, message: 'A minor subject cannot enter an automated write path.', retryable: false },
-  BYPASS_ATTEMPT_REFUSED: { status: 422, message: 'The request attempted to bypass a required control.', retryable: false },
-  HUMAN_GATE_OPEN: { status: 422, message: 'A human gate is open for this case; automation cannot proceed.', retryable: false },
-  HUMAN_STEP_REQUIRED: { status: 422, message: 'A human step is required before this operation can continue.', retryable: false },
-  HUMAN_REVIEW_REQUIRED: { status: 422, message: 'This operation requires human review before it can proceed.', retryable: false },
-  ARTIFACT_REQUIRED: { status: 422, message: 'This operation requires a materialised artifact.', retryable: false },
-  PAYLOAD_FIELD_NOT_ALLOWLISTED: { status: 422, message: 'The request body contains a field that is not permitted.', retryable: false },
-  TEMPLATE_HASH_REQUIRED: { status: 422, message: 'A rendered template requires its hash.', retryable: false },
-  DISCOVERY_MODE_FORBIDDEN: { status: 422, message: 'This discovery mode is not permitted for the source.', retryable: false },
-  SOURCE_NOT_PERMITTED_FOR_READ: { status: 422, message: 'The source permission class does not permit this read.', retryable: false },
-  RATE_LIMIT_POLICY_MISSING: { status: 422, message: 'No rate limit policy resolves for this operation.', retryable: false },
-  CATALOG_NOTES_REQUIRED: { status: 422, message: 'A catalogue entry requires coverage notes.', retryable: false },
-  LICENSE_UNRECORDED: { status: 422, message: 'The source licence terms have not been recorded.', retryable: false },
-  CONTROLLER_NOT_FOUND: { status: 422, message: 'The referenced controller does not exist.', retryable: false },
-  PERMISSION_EVIDENCE_REQUIRED: { status: 422, message: 'The recorded source permission requires supporting evidence.', retryable: false },
-  RECIPE_SIGNATURE_INVALID: { status: 422, message: 'The submitted recipe signature could not be verified.', retryable: false },
-  RECIPE_VERIFICATION_METHOD_REQUIRED: { status: 422, message: 'A removal recipe requires a verification method.', retryable: false },
-  RECIPE_CHANNEL_UNKNOWN: { status: 422, message: 'The requested removal channel is not recognised.', retryable: false },
-  POLICY_DECISION_INCOMPLETE: { status: 422, message: 'The policy decision is missing a required field.', retryable: false },
-  RECIPE_NOT_ENABLED: { status: 422, message: 'The removal recipe is not enabled.', retryable: false },
-  IDENTIFIER_KIND_UNSUPPORTED: { status: 422, message: 'This identifier kind is not supported.', retryable: false },
-  PRIOR_REMOVED_EVENT_NOT_FOUND: { status: 422, message: 'No prior verified removal exists for this record.', retryable: false },
-  OVERLAPPING_INTERVAL: { status: 422, message: 'The supplied interval overlaps an existing interval.', retryable: false },
-  DEADLINE_SOURCE_REQUIRED: { status: 422, message: 'A deadline requires its source.', retryable: false },
-  DEADLINE_IN_PAST: { status: 422, message: 'The supplied deadline is in the past.', retryable: false },
-  MESSAGE_ID_MALFORMED: { status: 422, message: 'The supplied message identifier is malformed.', retryable: false },
-  CLAIMED_OUTCOME_UNSUPPORTED: { status: 422, message: 'This claimed outcome is not supported.', retryable: false },
-  REFUSAL_BASIS_REQUIRED: { status: 422, message: 'A refusal requires a recorded basis.', retryable: false },
-  DELIVERY_STATUS_UNKNOWN: { status: 422, message: 'The delivery status is not recognised.', retryable: false },
-  // SPEC-003 §8.2 marks TAINTED_CONTENT_REJECTED domain-only: untrusted or model-produced
-  // content reached a decision or write path, or attempted to select a channel (VG-SEC-001).
-  TAINTED_CONTENT_REJECTED: { status: 422, message: 'Untrusted content cannot direct this operation.', retryable: false },
-
-  // ---- 429 / 500 / 503 ----
-  RATE_LIMITED: { status: 429, message: 'The request rate limit has been exceeded.', retryable: true },
-  INTERNAL_ERROR: { status: 500, message: 'An unexpected error occurred.', retryable: true },
-  DEPENDENCY_UNAVAILABLE: { status: 503, message: 'A required dependency is unavailable; the operation was not performed.', retryable: true },
-} as const satisfies Record<string, ErrorCodeDefinition>;
-
-export type ErrorCode = keyof typeof ERROR_CODES;
-
-export const ERROR_CODE_NAMES = Object.keys(ERROR_CODES) as readonly ErrorCode[];
-
-export function isErrorCode(value: string): value is ErrorCode {
-  return Object.prototype.hasOwnProperty.call(ERROR_CODES, value);
+/** A single wire code's resolved definition: status, template and retryability. */
+export interface WireCodeSpec {
+  readonly code: string;
+  readonly status: number;
+  readonly message: string;
+  readonly retryable: boolean;
+  /** Every domain code that maps here. More than one means the wire code is a shared spelling. */
+  readonly domainCodes: readonly string[];
 }
 
-export function statusFor(code: ErrorCode): number {
-  return ERROR_CODES[code].status;
+export interface RegistryIndex {
+  readonly byWireCode: ReadonlyMap<string, WireCodeSpec>;
+  /** `domainCode -> wireCode` for the cases where a domain code has exactly one wire spelling. */
+  readonly domainToWire: ReadonlyMap<string, readonly string[]>;
 }
 
 /**
- * The allowlisted `details` keys per code (SPEC-003 §8.3).
+ * Index the registry by wire code.
+ *
+ * Throws on a duplicate wire code with DIFFERING status, message or retryability, because that is
+ * a registry defect that would make the response depend on row order. The two deliberate
+ * multi-status codes are declared in `WIRE_STATUS_AMBIGUITY` and must be listed there.
+ */
+export function indexRegistry(rows: readonly ErrorCodeSpec[] = ERROR_CODE_REGISTRY): RegistryIndex {
+  const byWireCode = new Map<string, { status: number; message: string; retryable: boolean; domainCodes: string[] }>();
+
+  for (const row of rows) {
+    const existing = byWireCode.get(row.wireCode);
+    if (existing === undefined) {
+      byWireCode.set(row.wireCode, {
+        status: row.status,
+        message: row.message,
+        retryable: row.retryable,
+        domainCodes: [row.domainCode],
+      });
+      continue;
+    }
+
+    const allowed = WIRE_STATUS_AMBIGUITY[row.wireCode] ?? [];
+    if (!allowed.includes(row.status)) {
+      throw new Error(
+        `error registry defect: wire code ${row.wireCode} appears with status ${row.status} and ` +
+          `${existing.status}, but only ${allowed.join(', ') || 'no statuses'} are declared for it`,
+      );
+    }
+    if (existing.message !== row.message) {
+      // A message conflict is permitted ONLY where SPEC-006 §6.2 itself states two templates for
+      // one code. Anything else is a registry defect: a client cannot depend on which message it
+      // receives for the same code. The canonical template is resolved after the merge, below.
+      if (KNOWN_MESSAGE_CONFLICTS[row.wireCode] === undefined) {
+        throw new Error(
+          `error registry defect: wire code ${row.wireCode} has two different messages and no ` +
+            'declared conflict; a client cannot depend on which one it receives',
+        );
+      }
+    }
+    if (existing.retryable !== row.retryable) {
+      throw new Error(`error registry defect: wire code ${row.wireCode} has conflicting retryable flags`);
+    }
+    // A multi-status code keeps the LOWEST status as its canonical entry, and each status is
+    // reachable through statusesFor().
+    if (row.status < existing.status) {
+      existing.status = row.status;
+      existing.message = row.message;
+    }
+    if (!existing.domainCodes.includes(row.domainCode)) existing.domainCodes.push(row.domainCode);
+  }
+
+  const domainToWire = new Map<string, string[]>();
+  for (const row of rows) {
+    const list = domainToWire.get(row.domainCode) ?? [];
+    if (!list.includes(row.wireCode)) list.push(row.wireCode);
+    domainToWire.set(row.domainCode, list);
+  }
+
+  const finalByWire = new Map<string, WireCodeSpec>();
+  for (const [code, value] of byWireCode) {
+    // Resolve the canonical message for a declared conflict. Where a row's domain code EQUALS the
+    // wire code, that row defines the code and its template wins (DEPENDENCY_UNAVAILABLE). Where
+    // no such row exists, the template for the LOWEST status wins, which is the syntactic spelling
+    // for SCHEMA_VALIDATION_FAILED (400). Both rules are deterministic, so the response text does
+    // not depend on registry row order.
+    let message = value.message;
+    if (KNOWN_MESSAGE_CONFLICTS[code] !== undefined) {
+      const defining = rows.find((r) => r.wireCode === code && r.domainCode === code);
+      if (defining !== undefined) {
+        message = defining.message;
+      } else {
+        const lowest = rows
+          .filter((r) => r.wireCode === code)
+          .reduce((best, r) => (r.status < best.status ? r : best));
+        message = lowest.message;
+      }
+    }
+    finalByWire.set(code, {
+      code,
+      status: value.status,
+      message,
+      retryable: value.retryable,
+      domainCodes: value.domainCodes,
+    });
+  }
+  return { byWireCode: finalByWire, domainToWire };
+}
+
+const INDEX = indexRegistry();
+
+export const WIRE_CODES = [...INDEX.byWireCode.values()];
+
+export type ErrorCode = string;
+
+export function isErrorCode(value: string): value is ErrorCode {
+  return INDEX.byWireCode.has(value);
+}
+
+/**
+ * Every status a wire code may legitimately carry.
+ *
+ * `SCHEMA_VALIDATION_FAILED` has two, so a caller that needs one status must choose by the
+ * distinction in `WIRE_STATUS_AMBIGUITY`, not by guessing. `statusFor` returns the canonical
+ * (lowest) one, which is the syntactic 400.
+ */
+export function statusesFor(code: ErrorCode): readonly number[] {
+  const spec = INDEX.byWireCode.get(code);
+  if (spec === undefined) return [];
+  return WIRE_STATUS_AMBIGUITY[code] ?? [spec.status];
+}
+
+export function statusFor(code: ErrorCode): number {
+  const spec = INDEX.byWireCode.get(code);
+  if (spec === undefined) {
+    // An unknown code must never silently become a 200 or a 500 that hides the defect.
+    throw new Error(`unknown wire error code: ${code}`);
+  }
+  return spec.status;
+}
+
+export function messageFor(code: ErrorCode): string {
+  const spec = INDEX.byWireCode.get(code);
+  if (spec === undefined) throw new Error(`unknown wire error code: ${code}`);
+  return spec.message;
+}
+
+export function retryableFor(code: ErrorCode): boolean {
+  const spec = INDEX.byWireCode.get(code);
+  if (spec === undefined) throw new Error(`unknown wire error code: ${code}`);
+  return spec.retryable;
+}
+
+/** The wire spelling for a domain code, or undefined when the domain code has no wire form. */
+export function wireCodeForDomain(domainCode: string): readonly string[] {
+  return INDEX.domainToWire.get(domainCode) ?? [];
+}
+
+/**
+ * The allowlisted `details` keys (SPEC-003 §8.3).
  *
  * `details` never carries a request body, a value from a PII-bearing field, a stack trace, or an
- * upstream provider response body. Only identifiers, enum tokens, guard names, counts and
- * `ruleRef` are permitted, so the allowlist is explicit rather than "whatever the thrower passed".
+ * upstream provider body. Only identifiers, enum tokens, guard names, counts and `ruleRef`.
  */
 export const DETAILS_ALLOWLIST = [
   'field', 'ruleRef', 'fromTruthState', 'toTruthState', 'transitionCode', 'guard',
@@ -221,63 +451,15 @@ export const DETAILS_ALLOWLIST = [
   'retryAfterSeconds', 'limit', 'windowSeconds', 'providerReference', 'checks',
   'failedCheck', 'reason', 'candidateCount', 'expectedDigest', 'actualDigest',
   'requestedField', 'allowedFields', 'idempotencyKeyHash', 'gateKind',
+  'earliestEligibleAt', 'timeRangeFrom', 'timeRangeTo', 'collection', 'filterName',
 ] as const;
 
 export type DetailsKey = (typeof DETAILS_ALLOWLIST)[number];
 
 export type ErrorDetails = Partial<Record<DetailsKey, string | number | boolean | readonly string[]>>;
 
-/** The `/v1` error envelope (SPEC-003 §8.1). Exactly one top-level key. */
-export interface ErrorEnvelope {
-  readonly error: {
-    readonly code: ErrorCode;
-    /** Fixed template for `code`; contains no identifier, value, URL or provider text. */
-    readonly message: string;
-    readonly requestId: string;
-    readonly correlationId: string;
-    readonly retryable: boolean;
-    readonly occurredAt: string;
-    readonly details?: ErrorDetails;
-  };
-}
-
 /**
- * Build an envelope from a code and an already-allowlisted details object.
- *
- * `details` is filtered against `DETAILS_ALLOWLIST` here, so a caller that passes an unexpected
- * key gets it dropped rather than serialised. This is the response-boundary expression of
- * VG-SEC-002: an exception cannot leak its own message into a response, because the message comes
- * from the table above and the details come from the allowlist.
+ * Tokens that must never appear as a `code` or in a `message`: they are success or lifecycle
+ * words, and a code carrying one is how a failure gets reported as a success (SPEC-000 §5).
  */
-export function buildErrorEnvelope(params: {
-  code: ErrorCode;
-  requestId: string;
-  correlationId: string;
-  occurredAt: string;
-  details?: Record<string, unknown>;
-}): ErrorEnvelope {
-  const definition = ERROR_CODES[params.code];
-  const filtered: Record<string, unknown> = {};
-  let hasDetails = false;
-
-  if (params.details !== undefined) {
-    for (const key of Object.keys(params.details)) {
-      if ((DETAILS_ALLOWLIST as readonly string[]).includes(key)) {
-        filtered[key] = params.details[key];
-        hasDetails = true;
-      }
-    }
-  }
-
-  return {
-    error: {
-      code: params.code,
-      message: definition.message,
-      requestId: params.requestId,
-      correlationId: params.correlationId,
-      retryable: definition.retryable,
-      occurredAt: params.occurredAt,
-      ...(hasDetails ? { details: filtered as ErrorDetails } : {}),
-    },
-  };
-}
+export const FORBIDDEN_ADHOC_TOKENS = ['SUCCESS', 'DONE', 'COMPLETE', 'COMPLETED', 'REMOVED', 'OK', 'NONE'] as const;

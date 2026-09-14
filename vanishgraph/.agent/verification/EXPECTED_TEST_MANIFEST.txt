@@ -17,3 +17,5 @@ tests/domain/invariants.test.ts
 tests/domain/illegal-transitions.test.ts
 tests/harness/gate-scripts.test.ts
 tests/contract/route-registry.test.ts
+tests/contract/error-envelope.test.ts
+tests/contract/error-mapping-parity.test.ts
