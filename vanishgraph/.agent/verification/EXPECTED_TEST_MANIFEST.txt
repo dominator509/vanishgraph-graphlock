@@ -10,4 +10,5 @@ tests/domain/state-machine.test.ts
 tests/domain/values.test.ts
 tests/domain/identifiers.test.ts
 tests/domain/entities.test.ts
+tests/domain/events.test.ts
 tests/harness/gate-scripts.test.ts
