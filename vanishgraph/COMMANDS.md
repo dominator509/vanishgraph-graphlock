@@ -96,3 +96,13 @@ provisioned database, a running API or a built artifact — so the entry point w
 fail on a clean checkout and present a harness limitation as a product failure
 (DOD-032). `scripts/test-unit.sh` excludes those roots; `TESTING.md` holds the
 binding suite table. One definition of "the unit tests" exists, in the script.
+
+## Gate commands and sentinels
+
+`sh scripts/preflight.sh` (preflight: ok); `sh scripts/typecheck.sh` (typecheck: ok);
+`sh scripts/import-boundary.sh` (import boundary: ok); `sh scripts/lint.sh` (lint: ok);
+`sh scripts/format-check.sh` (format-check: ok); `sh scripts/test-unit.sh`
+(test-unit: ok); `sh scripts/test-collection-guard.sh` (test collection guard: ok);
+`sh scripts/build.sh` (build: ok); `sh scripts/gate-toolchain.sh` (gate-toolchain: ok);
+`sh scripts/dependency-audit.sh` (dependency audit: ok); `sh scripts/reality-gate.sh`
+(reality gate: ok).
