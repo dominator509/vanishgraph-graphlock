@@ -237,6 +237,25 @@ condition under `set +e` and forwards the real status.
 The second control also retroactively demonstrates why §3.9 mattered: before the fix, that
 failure would have been printed as a pass.
 
+### 3.12 Two spec-named domain ports were never declared by the node that owns port declaration
+
+SPEC-001 §5.1 lists thirteen ports and their locations. Eleven were declared by EP-002, the node that
+owns port declaration (§5.1 rule 4). Two were not:
+
+| Port | Spec location | State |
+|---|---|---|
+| `IdempotencyStore` | `src/domain/ports/` | Declared by EP-004 M5, because at-most-once is a domain invariant (VG-ACTION-001) |
+| `AuthorityGrantRepository` | `src/domain/ports/` | **STILL UNDECLARED** |
+
+EP-002's execplan never mentions either name, so this was an omission rather than a deliberate
+deferral. `IdempotencyStore` is now declared once, in the node that first needed it, which is the
+best available outcome now that EP-002 is closed.
+
+**`AuthorityGrantRepository` remains an open gap.** No node has declared it and no code implements
+it. It is recorded here rather than silently left out, and the node that first needs a persisted
+authority grant — most likely EP-006, which owns the identity and authority surface — must declare it
+before implementing it, exactly as EP-004 M5 declared `IdempotencyStore`.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a
