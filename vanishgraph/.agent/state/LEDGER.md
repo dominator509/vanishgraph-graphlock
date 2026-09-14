@@ -42,3 +42,5 @@
 2026-09-14T10:48:43Z | forge | EP-003 | MILESTONE_PASS | M6 job queue: transactional enqueue, rollback leaves no job
 2026-09-14T11:17:14Z | forge | EP-003 | MILESTONE_PASS | M7 envelope encryption; retention from policy; crypto-shred verified; 4 pre-existing vacuous array CHECK constraints repaired in 0010
 2026-09-14T11:42:02Z | forge | EP-003 | MILESTONE_PASS | M8 backup drill: restore re-applies erasure, RLS and audit intact; 8/8 post-conditions; PITR BLOCKED_CREDENTIALS
+2026-09-14T12:25:01Z | forge | EP-003 | NODE_DONE | EP-003 complete: gate-data: ok; candidate c6ebacc7acd5f175407ea70c421a0734969674a7
+2026-09-14T12:25:01Z | forge | EP-003 | NODE_CLOSE_RECORD | EP-003 closed: 4 of 11 nodes; graph advances to EP-004
