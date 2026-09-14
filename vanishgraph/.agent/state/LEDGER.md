@@ -9,3 +9,4 @@
 2026-09-14T04:22:20Z | forge | EP-000 | M5 | preflight: ok; generated pack validation: ok
 2026-09-14T05:33:27Z | forge | EP-000 | FORGE_EXECPLANS_COMPLETE | all 11 execplans authored: 91 milestones, 14 sections each, all grammar keywords present, zero boxes checked
 2026-09-14T05:33:27Z | forge | EP-000 | STACK_FINALISED | ADR-014 Apache-2.0; ADR-016 Temporal removed for Postgres-native jobs; ADR-007 Vite+React replaces Next.js; TEMPORAL_ADDRESS removed from preflight surface
+2026-09-14T06:08:43Z | forge | EP-000 | NODE_DONE | EP-000 complete: gate-toolchain: ok; candidate 9d6406d5e083d2d1e11e00f7c44f2fae6f10978e

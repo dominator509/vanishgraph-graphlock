@@ -1,3 +1,8 @@
 {
-  "status": "PLANNED"
+  "status": "IN_PROGRESS",
+  "active_node": "EP-001",
+  "closed_nodes": ["EP-000"],
+  "candidate_sha": "9d6406d5e083d2d1e11e00f7c44f2fae6f10978e",
+  "epoch": "FORGE-SPEC-1",
+  "updated_at": "2026-09-14T06:08:43Z"
 }
