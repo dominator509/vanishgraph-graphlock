@@ -48,3 +48,4 @@
 2026-09-14T13:29:54Z | forge | EP-004 | MILESTONE_PASS | M2 error envelope and code registry parity: ok; 4 spec defects + 2 impl defects found and recorded; 40 contract tests, 351 unit tests
 2026-09-14T13:51:17Z | forge | EP-004 | MILESTONE_PASS | M3 token validation and tenant resolution: ok; KEYCLOAK_ISSUER BLOCKED_CREDENTIALS; 85 contract tests; stale camelCase plan text corrected against SPEC-003 R-1
 2026-09-14T14:02:14Z | forge | EP-004 | MILESTONE_PASS | M4 cursor pagination and strict query parsing: ok; 144 contract tests; id tiebreaker implemented per FALLBACK
+2026-09-14T14:47:17Z | forge | EP-004 | MILESTONE_PASS | M5 idempotency semantics: ok; idempotency store integration BLOCKED_CREDENTIALS DATABASE_URL; durable store proven against real PostgreSQL
