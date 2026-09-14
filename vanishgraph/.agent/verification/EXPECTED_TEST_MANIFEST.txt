@@ -21,3 +21,5 @@ tests/contract/error-envelope.test.ts
 tests/contract/error-mapping-parity.test.ts
 tests/contract/token-validation.test.ts
 tests/contract/tenant-resolution.test.ts
+tests/contract/pagination.test.ts
+tests/contract/filter-strictness.test.ts

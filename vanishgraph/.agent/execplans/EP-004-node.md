@@ -1332,6 +1332,36 @@ Recovery properties:
 
 ## 12. Surprises & Discoveries
 
+### 2026-09-14 — `src/http` needed the truth-state vocabulary but may not import the domain
+
+`src/http/query/strict.ts` must validate a `truthState` filter token against the ELEVEN canonical
+states. Reading them from `src/domain/truth-state.ts` directly is forbidden: ARCHITECTURE.md §2
+forbids `http` from importing the domain, and `scripts/import-boundary.sh` refused it.
+
+A second copy of the list in the HTTP layer would be worse than the violation it avoids — that is
+exactly how an API comes to accept a token the state machine rejects, and the divergence would be
+invisible until a caller received rows in a state the domain considers impossible.
+
+The fix is the `src/application/contracts/index.ts` barrel: it re-exports `ALL_TRUTH_STATES` (and the
+identity contract from M3), so the boundary depends on an application contract while the list keeps
+ONE definition. The barrel deliberately does NOT re-export `LEGAL_TRANSITIONS` or the guard
+implementations: a handler that could read the transition table would be a handler that decides a
+transition, which SPEC-001 SM-6 puts inside a guarded command.
+
+A related trap found while doing this: `ALL_TRUTH_STATES` is the export name, not `TRUTH_STATES`. The
+first import used the wrong name and failed to resolve, which the typechecker caught.
+
+### 2026-09-14 — the pagination walk terminates on the last row, with no trailing empty page
+
+An M4 assertion expected `rows.length + 1` pages for a `limit=1` walk, assuming a final empty page.
+MEASURED: 50 rows produce exactly 50 pages. The loop stops when a page returns a null `nextCursor`,
+and the final page has no lookahead row to mint one from, so the walk ends on the last row. The
+assertion was wrong about the implementation, not the other way round.
+
+The cursor keyset's **id tiebreaker** (the plan's stated FALLBACK) is implemented and tested with a
+seed whose 250 rows share only 5 distinct `createdAt` values — about 50 rows per tie group. A seed of
+250 unique timestamps would have passed while the repeat/skip bug sat undetected.
+
 ### 2026-09-14 — THIS NODE'S OWN M3 PLAN TEXT is stale: it specifies camelCase claims and invented role names
 
 The M3 CONTENT section says to require claims `sub`, `iss`, `aud`, `exp`, `tenantId`, `scopes`,
