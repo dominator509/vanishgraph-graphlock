@@ -1,0 +1,43 @@
+== 1. an audit INSERT without app.tenant_id is refused by RLS (WITH CHECK working) ==
+   refused, as it must be
+== 2. the same INSERT inside a tenant transaction is accepted ==
+              set_config              
+--------------------------------------
+ 11111111-1111-1111-1111-111111111111
+(1 row)
+
+== 3. UPDATE is a no-op (VG-EVIDENCE-003 / VG-DATA-004) ==
+              set_config              
+--------------------------------------
+ 11111111-1111-1111-1111-111111111111
+(1 row)
+
+   actor value now:
+ actor 
+-------
+(0 rows)
+
+== 4. DELETE is a no-op ==
+              set_config              
+--------------------------------------
+ 11111111-1111-1111-1111-111111111111
+(1 row)
+
+     ?column?      
+-------------------
+ rows remaining: 0
+(1 row)
+
+== 5. TRUNCATE is refused by the append-only trigger ==
+psql:C:/tmp/vg-psql-4ys0mg/statement.sql:1: ERROR:  audit_event is append-only: TRUNCATE is refused (VG-EVIDENCE-003)
+== 6. cross-tenant read returns zero rows (RLS reads) ==
+              set_config              
+--------------------------------------
+ 22222222-2222-2222-2222-222222222222
+(1 row)
+
+          ?column?          
+----------------------------
+ tenant B sees 0 audit rows
+(1 row)
+

@@ -36,3 +36,4 @@
 2026-09-14T08:45:06Z | forge | EP-003 | MILESTONE_PASS | M1 db provision: ok (Docker postgres:16, 2 roles NOBYPASSRLS, 4 databases); db teardown: ok with proof
 2026-09-14T09:16:16Z | forge | EP-003 | MILESTONE_PASS | M2 isolation list (26 tables), RLS generator, migration runner; 0001 applied to empty DB; migrate: ok; checksum immutability proven
 2026-09-14T09:29:08Z | forge | EP-003 | MILESTONE_PASS | M2 reality-gate rule 3 scope corrected (7 false positives resolved by narrowing the rule, allow-list empty by design); full gate suite 0 failures
+2026-09-14T09:44:48Z | forge | EP-003 | MILESTONE_PASS | M3 schema 0002-0005; rls generation: ok (26 tables, drift 0); rls coverage: ok (26 enabled+forced+policied); append-only audit proven
