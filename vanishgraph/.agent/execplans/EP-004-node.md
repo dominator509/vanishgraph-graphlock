@@ -1332,6 +1332,42 @@ Recovery properties:
 
 ## 12. Surprises & Discoveries
 
+### 2026-09-14 — EP-003 never built a repository layer, and M6's CHANGE list assumes one
+
+M6's CHANGE list names `src/adapters/persistence/**` as though it existed. It does not. EP-003's own
+scope section lists "the service layer, HTTP/API, authorization middleware (EP-004/EP-006)" as OUT of
+scope, and its non-goals say "No touching of the domain layer". EP-003 delivered schema, migrations,
+RLS and gates — no repositories.
+
+So M6 is effectively TWO deliverables: the persistence layer EP-003 deliberately left, and the route
+catalogue. That is legitimate work for this node, but it means M6 is the largest milestone in the
+graph and should be executed incrementally rather than in one pass.
+
+### 2026-09-14 — THREE negative controls silently did nothing, because of a PowerShell `$1` expansion
+
+The `SET` versus `SET LOCAL` trap is the most dangerous mistake available in the tenant runner: with
+session-scoped `SET`, a pooled connection keeps the previous request's tenant. I sabotaged the runner
+three times to prove the test caught it, and **all three times the suite still passed**.
+
+The reason was NOT a weak test. It was that my PowerShell replacement string contained `$1`, which
+PowerShell expanded to an empty string, so the replacement silently matched nothing and the runner was
+never actually modified. The control verified the unmodified code.
+
+MEASURED once the replacement was made literal-safe: the sabotaged runner leaks
+`11111111-1111-4111-8111-111111111111` into a released pooled connection, and the test fails with
+`a pooled connection still carries a tenant (...); the setting is not LOCAL`, then passes 16/16 once
+restored.
+
+**The lesson recorded here is about verification hygiene, not about TypeScript:** a negative control
+that passes is evidence of nothing until the sabotage itself is confirmed applied. Every later control
+in this node prints whether the edit landed before running the suite.
+
+A second, narrower problem was also found while chasing this: the first version of the test used a
+SEPARATE pool and inspected a connection the runner had never touched, so it could not have detected a
+leak in any case. It now acquires from the runner's own pool through
+`observeReleasedConnectionSetting()`, whose only purpose is to make that observable without exposing a
+general unscoped-query method.
+
 ### 2026-09-14 — the domain refused an `IdempotencyKey` the HTTP contract REQUIRES it to accept
 
 `src/domain/values.ts` capped `IdempotencyKey` at **200 characters**, but SPEC-003 §4.2 fixes the
