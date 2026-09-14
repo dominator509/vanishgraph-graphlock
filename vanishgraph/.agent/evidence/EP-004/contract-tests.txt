@@ -1,0 +1,36 @@
+▶ the route registry matches SPEC-003 §5 (VG-API-001)
+  ✔ the catalogue has 78 routes across 17 groups (0.9944ms)
+  ✔ every route id, method, path and group matches the spec table row (0.9006ms)
+  ✔ the scope vocabulary is closed: every used scope appears in SPEC-003 §3.3 (0.9871ms)
+  ✔ no route requires a webhook scope (0.2487ms)
+  ✔ health, readiness, liveness and startup are the only unscoped routes (0.2923ms)
+  ✔ no request-facing route accepts a truth state as input (SM-6) (0.6996ms)
+  ✔ the effect-bearing set is exactly the routes SPEC-003 §4.1 makes idempotent (0.2144ms)
+  ✔ findRoute resolves a real route and refuses an unknown one (0.212ms)
+  ✔ webhook routes are held separately and are not in the §5 registry (0.2097ms)
+  ✔ the §5.9.1 scope is recorded despite the spec line being unparseable (0.4342ms)
+✔ the route registry matches SPEC-003 §5 (VG-API-001) (6.6465ms)
+▶ the error registry matches SPEC-003 §8.2 and never diverges from SPEC-006 §6.2
+  ✔ every implemented code exists in §8.2 with the same status (1.2414ms)
+  ✔ SPEC-006 §6.2 agrees with SPEC-003 §8.2 on every shared code (1.051ms)
+  ✔ the one known SPEC-003/SPEC-006 status conflict is the only one (0.6411ms)
+  ✔ every message is a fixed template with no interpolation (0.5609ms)
+  ✔ statuses come only from the SPEC-003 §8.2 status set (0.2182ms)
+  ✔ retryable agrees with the guidance a client needs (0.1098ms)
+✔ the error registry matches SPEC-003 §8.2 and never diverges from SPEC-006 §6.2 (4.0765ms)
+▶ the error envelope never leaks what it must not (SPEC-003 §8.1, §8.3)
+  ✔ an envelope has exactly one top-level key and the required fields (0.2657ms)
+  ✔ details are filtered against the allowlist, so an unexpected key is dropped (0.1807ms)
+  ✔ no message carries an identifier, URL, or provider text (0.9037ms)
+  ✔ the allowlist itself contains no PII-bearing key (0.2007ms)
+  ✔ isErrorCode accepts real codes and refuses lookalikes (0.083ms)
+  ✔ a code undefined at compile time cannot be forced in at runtime (0.0793ms)
+✔ the error envelope never leaks what it must not (SPEC-003 §8.1, §8.3) (1.9191ms)
+ℹ tests 22
+ℹ suites 3
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 196.9256

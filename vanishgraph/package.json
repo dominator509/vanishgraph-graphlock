@@ -18,7 +18,13 @@
     "reality-gate": "sh scripts/reality-gate.sh",
     "dependency-audit": "sh scripts/dependency-audit.sh",
     "gate:foundation": "sh scripts/gate-foundation.sh",
-    "verify": "sh scripts/verify.sh"
+    "verify": "sh scripts/verify.sh",
+    "serve": "node src/infrastructure/main.ts",
+    "test:contract": "node --test \"tests/contract/**/*.test.ts\"",
+    "test:integration": "sh scripts/test-integration.sh",
+    "scan:truth-state": "node scripts/scan-truth-state-input.ts",
+    "gate:api": "sh scripts/gate-api.sh",
+    "gate:data": "sh scripts/gate-data.sh"
   },
   "devDependencies": {
     "@types/node": "24.10.1",

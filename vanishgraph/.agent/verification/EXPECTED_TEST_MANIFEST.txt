@@ -16,3 +16,4 @@ tests/domain/commands.test.ts
 tests/domain/invariants.test.ts
 tests/domain/illegal-transitions.test.ts
 tests/harness/gate-scripts.test.ts
+tests/contract/route-registry.test.ts

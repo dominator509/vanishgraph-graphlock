@@ -1,0 +1,1 @@
+scan-truth-state-input: 6 http file(s) scanned, 1 input-schema block(s), 0 violations

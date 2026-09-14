@@ -113,12 +113,41 @@ binding suite table. One definition of "the unit tests" exists, in the script.
 `sh scripts/gate-toolchain.sh` (gate-toolchain: ok, node EP-000);
 `sh scripts/gate-foundation.sh` (gate-foundation: ok, node EP-001);
 `sh scripts/gate-domain.sh` (gate-domain: ok, node EP-002);
-`sh scripts/gate-data.sh` (gate-data: ok, node EP-003). Later nodes add
-`gate-api: ok` (EP-004) the same way. `gate-data` provisions, migrates, asserts the live
+`sh scripts/gate-data.sh` (gate-data: ok, node EP-003);
+`sh scripts/gate-api.sh` (gate-api: ok, node EP-004). Later nodes add their own
+`gate-<purpose>.sh` the same way. `gate-data` provisions, migrates, asserts the live
 RLS inventory against `db/tenant-scoped-tables.txt`, proves cross-tenant read AND write
 refusal as `vg_app`, proves `audit_event` is append-only, runs the database suites and
 the mutation check, proves `verify.sh` now advances past `integration`, and tears the
 container down with proof.
+
+`gate-api` type-checks the service, enforces the three-rule layer import boundary, scans
+the HTTP layer for a route that accepts a truth state as input (SM-6), runs the contract
+suite that compares the route and error registries against SPEC-003 and SPEC-006, and
+prints a `UNVERIFIED-BY-THIS-GATE` block naming each credential-dependent path it did not
+exercise. It reports those as `BLOCKED_CREDENTIALS`; it never reports them as passing and
+never substitutes a stub for one (EP-004 decision D4).
+
+### The service
+
+`node src/infrastructure/main.ts` (serve, `npm run serve`) starts the `/v1` listener. It lives in
+`src/infrastructure/` because it is the composition root: it reads configuration and constructs
+the HTTP layer, and ARCHITECTURE.md §2 permits `infrastructure` to import everything while
+forbidding `http` from importing infrastructure. Configuration is read from the
+environment by `src/infrastructure/config.ts`, which fails closed: an absent required
+variable aborts bootstrap with `dependency unavailable: <NAME> is unset; see PREFLIGHT.md
+and .env.example`, naming the variable and never its value. `PORT=0` binds an ephemeral
+port and prints the real one.
+
+`node scripts/scan-truth-state-input.ts` (scan-truth-state-input) is the handler scan:
+no request schema may declare `truthState` and no route path may name a truth state.
+Exits non-zero with the offending file and line. `gate-api` runs it.
+
+`sh scripts/import-boundary.sh` (import boundary: ok) enforces three rules: `src/domain`
+imports only `node:*` and relative paths; `src/application` may additionally reach
+`src/domain`; `src/http` must not reach `src/domain` internals, `src/adapters` or
+`src/infrastructure` (its own framework is permitted — ARCHITECTURE.md §2 forbids
+frameworks for `domain` only).
 
 ## Evidence
 
