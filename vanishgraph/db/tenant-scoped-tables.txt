@@ -14,6 +14,7 @@ controller
 controller_response
 deadline
 email_thread
+erasure_tombstone
 evidence_artifact
 exposure
 external_action
@@ -32,6 +33,7 @@ request_case
 source
 source_catalog_entry
 source_record
+tenant_key
 verification_observation
 
 # EXCLUDED from tenant-scoped isolation, each with a reason (RLS-2 requires the reason):

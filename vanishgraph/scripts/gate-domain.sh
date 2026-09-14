@@ -83,6 +83,11 @@ done < .agent/verification/EXPECTED_TEST_MANIFEST.txt
 
 # The domain file set is exactly the audited set. A new domain module must be added here
 # deliberately, with its spec basis, rather than appearing silently.
+#
+# `src/domain/ports/key-provider.ts` was added by EP-003 M7: key management is a domain port
+# because *what must be encrypted and when key material must be destroyed* is a domain rule
+# (SPEC-002 §4, RET-2, VG-SEC-002), placed under ports/ per SPEC-001 §5.1 rule 1 rather than at
+# the `src/domain/key-provider.ts` path the execplan named.
 expected=$(printf '%s\n' \
   src/domain/commands.ts \
   src/domain/entities.ts \
@@ -91,6 +96,7 @@ expected=$(printf '%s\n' \
   src/domain/identifiers.ts \
   src/domain/invariants.ts \
   src/domain/ports/index.ts \
+  src/domain/ports/key-provider.ts \
   src/domain/state-machine.ts \
   src/domain/truth-state.ts \
   src/domain/values.ts | sort)

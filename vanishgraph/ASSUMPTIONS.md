@@ -135,6 +135,68 @@ Also measured during M6: the queue insert was initially refused with
 the table owner too and the transaction had no `app.tenant_id`. That refusal is correct
 behaviour; `runTransaction` now sets the tenant transaction-locally as the first statement.
 
+### 3.6 Four CHECK constraints were vacuously satisfied on an empty array (a real defect)
+
+Found while executing EP-003 M7, and it affects **already-committed** migrations 0002, 0004
+and 0005.
+
+Four constraints were written as `array_length(col, 1) >= 1`. Measured in this repository's
+own PostgreSQL:
+
+```sql
+SELECT array_length(ARRAY[]::integer[], 1);        -- NULL, not 0
+SELECT array_length(ARRAY[]::integer[], 1) >= 1;   -- NULL, not false
+```
+
+A CHECK constraint **passes** when its expression is NULL. So each of these constraints
+accepted an empty array — the exact case it existed to forbid. Proven by inserting into the
+live database: `jurisdiction_policy.rules = ARRAY[]` and `authority_grant.scope = ARRAY[]`
+were both **accepted**, so `VG-POLICY-001` and `VG-AUTHZ-001` were not actually enforced at
+the database layer.
+
+- `jurisdiction_policy.rules` (0004) — a policy with no legal basis was representable
+- `authority_grant.scope` (0002) — a grant authorising nothing was representable
+- `email_thread.message_ids` (0005)
+- `erasure_tombstone.shredded_key_versions` (0009, fixed there before it was committed)
+
+`cardinality()` returns 0 for an empty array and is the correct function. Repaired additively
+in migration `0010_repair_vacuous_array_checks.sql`, because 0002/0004/0005 are committed and
+checksummed and editing them in place would make every existing database report drift (MIG-5).
+Migration 0010 verifies its own repair against `pg_constraint` and proves the repaired
+constraint refuses an empty array before it commits.
+
+**NOT affected, verified rather than assumed:** `exposure.exposure_confidence_basis_check`
+uses `jsonb_array_length`, which returns 0 for `[]`, so `> 0` genuinely fires. "Fixing" it
+would have been a pointless change to a correct constraint.
+
+### 3.7 Two test-design defects that made suites pass only once (both fixed)
+
+Both were found by running the suites repeatedly, not by reading them.
+
+1. **Fixed subject ids and a counter-based jurisdiction made the retention suite
+   non-repeatable.** Tombstones are append-only and unique per `(tenant, subject)`, and
+   `jurisdiction_policy` is unique per `(tenant, jurisdiction, version)`, while a module-level
+   counter resets on every `node --test` invocation. The second run therefore failed with
+   unique-constraint violations.
+2. **The first fix was itself wrong, and measurably so.** It derived ids from
+   `Date.now().toString(36)` truncated to 7 characters. Base36 timestamps vary in their **last**
+   characters, so runs minutes apart produced ids differing in only the final 2–3 digits: three
+   consecutive runs failed 3, then 4, then 0 tests. Real entropy (`randomUUID()`) was required.
+   Verified by four consecutive runs: 14/14 pass each time.
+
+A third design point worth recording: the shred test asserts unrecoverability while the
+ciphertext row is **still physically present**, which is what distinguishes crypto-shredding
+from row deletion. It passes because the DEK is gone, not because the data is gone.
+
+### 3.8 M7's honest scope limit: no production KMS exists
+
+ADR-006 (cloud/KMS selection) is **OPEN**, so `src/adapters/crypto/managed-kms-key-provider.ts`
+is `BLOCKED_CREDENTIALS` and throws on every operation. The local file-backed provider holds its
+KEK on the same filesystem as the data it protects; it exists so the encryption, rotation and
+shred **mechanics** can be exercised against real PostgreSQL, and it must never be selected in
+production (VG-SCOPE-020). Its class name says so, and a test asserts the managed adapter refuses
+rather than pretending. No test in this node is evidence about a production KMS.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

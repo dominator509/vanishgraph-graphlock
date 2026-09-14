@@ -174,3 +174,18 @@ VG_TEST_GLOB="tests/db/**/*.test.ts" \
 a rolled-back transition leaves no job row. Each asserts against the real database because
 RLS, FORCE RLS and constraint behaviour are exactly what an in-memory substitute would
 change.
+
+### Encryption and retention
+
+`tests/db/encryption.test.ts` exercises envelope encryption (SPEC-002 §4): ciphertext
+differs from plaintext, a wrong key fails closed rather than returning garbage, rotation
+leaves old rows readable via `key_version`, and cross-tenant decryption is impossible.
+`tests/db/retention.test.ts` exercises RET-1…RET-3: windows are resolved from
+`jurisdiction_policy` rows so a policy change alters them with no code change, an unstated
+window resolves to `UNRESOLVED` rather than an invented default, and a shredded subject's
+PII becomes unrecoverable while its audit events remain.
+
+Both run against the local file-backed provider in `src/adapters/crypto/`, which is
+**tests only** (VG-SCOPE-020). The managed-KMS adapter is `BLOCKED_CREDENTIALS` while
+ADR-006 is open and throws on every operation rather than faking success. No command in
+this file configures a production KMS, because none exists yet.

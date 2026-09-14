@@ -185,6 +185,7 @@ architecture that drifts as each node is executed.
 | `SecretResolver` | `src/domain/ports/` | the domain must demand a secret without a database (VG-SEC-002) |
 | `IdempotencyStore` | `src/domain/ports/` | at-most-once is a domain invariant (VG-ACTION-001) |
 | `AuthorityGrantRepository` | `src/domain/ports/` | authority is the core domain control (VG-AUTHZ-001) |
+| `KeyProvider`, `ValueHasher` | `src/domain/ports/` | what must be encrypted, and when key material must be destroyed, is a domain rule (SPEC-002 §4, RET-2, VG-SEC-002) |
 | `JobQueue` | `src/application/ports/` | *when to run something later* is orchestration, not a domain concept |
 
 Rules:

@@ -125,3 +125,13 @@ export interface EgressGate {
 export interface SecretResolver {
   resolve(name: string): Promise<string>;
 }
+
+/**
+ * Key management and value hashing (SPEC-002 §4).
+ *
+ * Re-exported rather than redeclared: SPEC-001 §5.1 rule 1 wants one FILE per port, so the
+ * declarations live in `./key-provider.ts` and the barrel exists so callers import from
+ * `ports/index.ts` as they do for every other port. Declaring them again here would create two
+ * sources of truth for the same interface.
+ */
+export type { KeyProvider, ValueHasher, WrappedKey } from './key-provider.ts';
