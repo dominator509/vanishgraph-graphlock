@@ -31,13 +31,23 @@ exactly the confusion DOD-032 forbids.
 
 | Root | Depends on | Run by | Stage sentinel |
 |---|---|---|---|
-| `tests/domain/`, `tests/architecture/`, `tests/harness/`, `tests/application/`, `tests/adapters/`, `tests/contract/`, `tests/ui/`, `tests/observability/`, `tests/doubles/`, `tests/fixtures/` | nothing (pure) | `sh scripts/test-unit.sh` | `test-unit: ok` |
+| `tests/domain/`, `tests/architecture/`, `tests/harness/`, `tests/application/`, `tests/adapters/`, `tests/contract/`, `tests/observability/`, `tests/doubles/`, `tests/fixtures/` | nothing (pure) | `sh scripts/test-unit.sh` | `test-unit: ok` |
+| `tests/ui/` (Playwright `*.spec.ts`) | a browser runtime and the built UI | `sh scripts/test-e2e.sh` and `npm run test:ui` | `test-e2e: ok` |
 | `tests/integration/` | provisioned PostgreSQL / Valkey / object store | `sh scripts/test-integration.sh` | `test-integration: ok` |
 | `tests/db/` | provisioned PostgreSQL | `sh scripts/test-integration.sh` | `test-integration: ok` |
 | `tests/blackbox/`, `tests/api/` | a running API | `sh scripts/test-integration.sh` | `test-integration: ok` |
 | `tests/e2e/` | a running app through the real entry point | `sh scripts/test-e2e.sh` | `test-e2e: ok` |
 | `tests/live-fire/` | the exact built artifact | `sh scripts/live-fire.sh` | `live-fire: ok` |
 | `tests/release/` | the exact built artifact | `sh scripts/gate-release.sh` | `gate-release: ok` |
+
+**`tests/ui/` is browser-dependent, not pure.** EP-005 puts its Playwright suites there
+(`states.spec.ts`, `keyboard.spec.ts`, `a11y.spec.ts`, `reduced-motion.spec.ts`,
+`privacy.spec.ts`) and they require a provisioned browser runtime plus the built
+application. They are named `*.spec.ts`, not `*.test.ts`, so the unit stage's
+`find -name '*.test.ts'` does not pick them up — but the distinction must not be relied
+on by accident: a browser-dependent suite added as `tests/ui/*.test.ts` would be swept
+into the unit stage and fail on a clean checkout. Put browser work in `*.spec.ts` under
+`tests/ui/`, or in `tests/e2e/`.
 
 Rules:
 

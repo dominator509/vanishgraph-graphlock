@@ -50,7 +50,7 @@ finished by an agent and are not written as if they can:
    (VG-UI-064 negative case).
 2. **Real-data E2E is `BLOCKED_CREDENTIALS`/`BLOCKED_PREREQUISITE`.** `DATABASE_URL`
    (EP-003, unstarted) and `KEYCLOAK_ISSUER` are `REQUIRED` in `PREFLIGHT.md` and
-   unprovisioned. Surfaces can be built, server-rendered, and tested against typed
+   unprovisioned. Surfaces can be built, rendered to static markup, and tested against typed
    fixtures and against the real `/v1` boundary in-process; the "golden path on a real
    database with a real session" proof is recorded as blocked, not simulated.
 
@@ -58,7 +58,7 @@ finished by an agent and are not written as if they can:
 
 In scope:
 
-- The Vite + React application shell, its build, and its route manifest for the 24
+- The Vite + React application shell, its build, and its route manifest for the 25
   declared routes of SPEC-004 §1.
 - The canonical eleven-token truth-state module and `TruthStateBadge` /
   `StateQualifier` / `TruthTimeline` components with the §2.3 colour tokens, glyphs,
@@ -125,7 +125,7 @@ In scope:
 
 **Cross-cutting reality that shapes the milestones.**
 
-- SPEC-004 §1 declares **24 routes** across four surfaces. The route manifest is
+- SPEC-004 §1 declares **25 routes** across four surfaces. The route manifest is
   asserted as a **set equality in both directions** (VG-UI-004): an undeclared route
   must fail the manifest check, and a declared route that does not exist must fail too.
 - SPEC-004 enumerates **83 requirements** (`VG-UI-001`…`VG-UI-083`), including four
@@ -159,7 +159,7 @@ Governance and law:
 
 Specifications:
 
-- `.agent/specs/SPEC-004-ui-ux.md` — **the whole of it**: §1 surfaces and the 24 routes,
+- `.agent/specs/SPEC-004-ui-ux.md` — **the whole of it**: §1 surfaces and the 25 routes,
   §2 truth-state presentation (2.2 copy table, 2.3 tokens, 2.4 component contract), §3
   coverage honesty, §4–§8 surface flows, §9 state handling, §10 accessibility, §11 trust
   and anti-dark-pattern, §12 browser privacy, §13 requirement index, §14 gate lists,
@@ -203,7 +203,7 @@ Project documents:
 
 Created:
 
-- `ui/src/routes/**` — the TanStack Router route tree for the 24 declared routes.
+- `ui/src/routes/**` — the TanStack Router route tree for the 25 declared routes.
 - `ui/src/components/truth/**` — `TruthStateBadge.tsx`, `StateQualifier.tsx`,
   `TruthTimeline.tsx`.
 - `ui/src/components/coverage/**` — `CoveragePanel.tsx`, `CoverageSummaryInline.tsx`,
@@ -225,18 +225,19 @@ Created:
   `tests/contract/pii-url.test.ts`, `tests/contract/portal-surfaces.test.ts`,
   `tests/contract/surface-ownership.test.ts`, `tests/contract/auditor-readonly.test.ts`.
 - `tests/ui/**` — Playwright + axe-core suites (browser-runtime dependent).
-- `scripts/gate-ui.sh` — this node's gate.
+- `tsconfig.ui.json` — JSX settings; keep every strict flag from the root `tsconfig.json`.
 - `playwright.config.ts`, `vite.config.ts`, `postcss.config.mjs`.
 - `.agent/evidence/EP-005/**`.
 
 Modified:
 
-- `package.json`, `package-lock.json` — pinned `next`, `react`, `react-dom`,
-  `@playwright/test`, `axe-core`, `@axe-core/playwright`.
+- `package.json`, `package-lock.json` — pinned runtime dependencies `react`, `react-dom`,
+  `@tanstack/react-router`, `@tanstack/react-query`, `zod`; devDependencies `vite`,
+  `@vitejs/plugin-react`, `@playwright/test`, `axe-core`, `@axe-core/playwright`,
+  `@types/react`, `@types/react-dom`, `jsdom`.
 - `COMMANDS.md` — every command this node introduces, with its sentinel.
 - `scripts/test-e2e.sh` — real implementation replacing the loud-fail placeholder.
 - `scripts/import-boundary.sh` — add the `ui/src/**` rule.
-- `tsconfig.ui.json` (created) — JSX settings; keep the strict flags.
 - `ARCHITECTURE.md`, `ASSUMPTIONS.md`, `TESTING.md`.
 - `.agent/verification/EXPECTED_TEST_MANIFEST.txt`.
 - `.agent/state/LEDGER.md`.
@@ -336,8 +337,7 @@ dashboard, covered by a copy-equality test:
 > for anyone who is not a verified subject or an authorized dependent.
 
 **Gate contract (SPEC-004 VG-UI-080/081/082/083).** The copy-lint/vocabulary gate runs
-over the **built browser bundle**, the server-rendered HTML for every declared route, the
-route manifest, and every message template reachable from the UI. It exits non-zero on
+over the **built browser bundle** (which carries every route's copy), the built static HTML shell `ui/dist/index.html`, the`r`nroute manifest, and every message template reachable from the UI. It exits non-zero on
 any unallowlisted hit and names file, line, and token. It fails on a zero-file scan, and
 its allowlist self-test fails on an entry with no owner or reason. The permanent-claim
 list is case-insensitive and includes at minimum: `removed from the internet`,
@@ -378,7 +378,7 @@ conformance claim may be made without the manual gate of VG-UI-064.**
 ### M1: UI foundation, route manifest, and this node's gate
 
 GOAL: A Vite + React application builds from a pinned, locked dependency set; its route
-tree emits a manifest that equals the 24 declared SPEC-004 §1 routes as a set in both
+tree emits a manifest that equals the 25 declared SPEC-004 §1 routes as a set in both
 directions; and this node has a gate that genuinely fails when the UI contract suites
 fail.
 
@@ -400,17 +400,22 @@ CHANGE: `package.json`, `package-lock.json`, `vite.config.ts`, `postcss.config.m
 CONTENT:
 
 1. `package.json` — add runtime dependencies pinned to exact versions (no `^`/`~`):
-   `next`, `react`, `react-dom`; devDependencies `@playwright/test`, `axe-core`,
-   `@axe-core/playwright`. Add scripts `build:web` (`next build`), `test:ui`
-   (`playwright test`), `test:a11y` (the axe-only Playwright project). Record the
-   resolved versions in `ARCHITECTURE.md` with the reason each is present.
+   `react`, `react-dom`, `@tanstack/react-router`, `@tanstack/react-query`, and `zod`
+   (shared with the API contract types so UI and API cannot drift). devDependencies:
+   `vite`, `@vitejs/plugin-react`, `@playwright/test`, `axe-core`, `@axe-core/playwright`,
+   `@types/react`, `@types/react-dom`, `jsdom`. There is **no** `next` dependency: the UI
+   is a Vite single-page application (ADR-007), so there is no server rendering, no route
+   handlers, and no framework server runtime. Add scripts `build:web` (`vite build`),
+   `dev:web` (`vite`), `test:ui` (`playwright test`), `test:a11y` (the axe-only Playwright
+   project). Record the resolved versions in `ARCHITECTURE.md` with the reason each is
+   present.
 2. `ui/src/routes/not-found.tsx` — the not-found state for an undeclared route
    (VG-UI-004 negative case). It must not disclose whether a route exists.
 3. `ui/src/route-manifest.json` — written by a post-build script that walks
    `ui/src/routes/**` and derives the declared path. The manifest is compared, as a
-   set in both directions, against the 24 rows of SPEC-004 §1, which the test parses from
+   set in both directions, against the 25 rows of SPEC-004 §1, which the test parses from
    the specification file (do not hand-copy the list into the test; a hand-copied list
-   drifts and stops being a check). The 24 declared routes are:
+   drifts and stops being a check). The 25 declared routes are:
    `/portal`, `/portal/authority`, `/portal/onboarding`, `/portal/exposures`,
    `/portal/cases/[caseId]`, `/portal/cases/[caseId]/evidence/[evidenceId]`,
    `/portal/alerts`, `/portal/requests`, `/portal/limitations`,
@@ -420,13 +425,20 @@ CONTENT:
    `/admin/users`, `/admin/metrics`,
    `/auditor/claims`, `/auditor/cases/[caseId]`, `/auditor/evidence/[evidenceId]`,
    `/auditor/exports`.
-4. `scripts/import-boundary.sh` — add rule (c): `ui/src/**` may import only `node:*`,
+   **Route notation.** SPEC-004 §1 declares dynamic segments in bracket form
+   (`/portal/cases/[caseId]`). TanStack Router''s file convention is `$caseId`
+   (`ui/src/routes/portal.cases.$caseId.tsx`) and its generated path pattern is
+   `/portal/cases/$caseId`. The manifest emitter MUST normalise `$param` to `[param]`
+   before comparison, so the emitted manifest equals the SPEC-004 table byte-for-byte.
+   A mismatch here is the single most likely way this equality test fails for a reason
+   that has nothing to do with a missing route, so the normalisation is asserted by its
+   own unit test in `tests/contract/route-manifest.test.ts`.: `ui/src/**` may import only `node:*`,
    relative paths, the generated application-contract types the UI consumes, and the UI's
    own modules. It may **not** import `src/domain/**`, `src/adapters/**`, `src/http/**`,
    or `src/infrastructure/**`. Print `import boundary: ok` only when all four rules hold
    (the three from EP-004 M1 plus this one).
 5. `scripts/test-e2e.sh` — replace the loud-fail body with a real runner that
-   (a) requires a completed `next build` output, (b) checks the browser runtime,
+   (a) requires a completed `vite build` output, (b) checks the browser runtime,
    (c) runs `playwright test` against the **built** application, and (d) fails closed
    with `end-to-end tests: BLOCKED_ENVIRONMENT - <missing property>` and exit 1 when the
    browser runtime cannot be provisioned after a real attempt, or
@@ -451,15 +463,15 @@ set -eu
 export CI=true GIT_TERMINAL_PROMPT=0 GIT_PAGER=cat PAGER=cat DEBIAN_FRONTEND=noninteractive
 cd "$(dirname "$0")/.."
 
-[ -f ui/src/copy/truth-state.ts ] || { echo "ep005 ui gate: FAIL - canonical truth-state mapping is missing" >&2; exit 1; }
-[ -f ui/src/route-manifest.json ] || { echo "ep005 ui gate: FAIL - route manifest is missing; run npm run build:web" >&2; exit 1; }
+[ -f ui/src/copy/truth-state.ts ] || { echo "gate-ui: FAIL - canonical truth-state mapping is missing" >&2; exit 1; }
+[ -f ui/src/route-manifest.json ] || { echo "gate-ui: FAIL - route manifest is missing; run npm run build:web" >&2; exit 1; }
 
-npx --no-install tsc -p tsconfig.ui.json --noEmit || { echo "ep005 ui gate: FAIL - UI typecheck failed" >&2; exit 1; }
-sh scripts/import-boundary.sh || { echo "ep005 ui gate: FAIL - layer import boundary violated" >&2; exit 1; }
+npx --no-install tsc -p tsconfig.ui.json --noEmit || { echo "gate-ui: FAIL - UI typecheck failed" >&2; exit 1; }
+sh scripts/import-boundary.sh || { echo "gate-ui: FAIL - layer import boundary violated" >&2; exit 1; }
 
-node --test "tests/contract/**/*.test.ts" || { echo "ep005 ui gate: FAIL - UI contract suites failed" >&2; exit 1; }
+node --test "tests/contract/**/*.test.ts" || { echo "gate-ui: FAIL - UI contract suites failed" >&2; exit 1; }
 
-echo "ep005 ui gate: UNVERIFIED-BY-THIS-GATE:"
+echo "gate-ui: UNVERIFIED-BY-THIS-GATE:"
 echo "  - browser-runtime suites (keyboard, screen-reader tree, reduced motion, zoom/reflow): run 'npm run test:ui'; BLOCKED_ENVIRONMENT until a browser runtime is provisioned"
 echo "  - manual assistive-technology validation (VG-UI-064, DOD-039): EXTERNAL_REQUIRED, human participants only; automation cannot satisfy or substitute for this gate"
 echo "  - real-data flows: BLOCKED_CREDENTIALS (DATABASE_URL, KEYCLOAK_ISSUER) and BLOCKED_PREREQUISITE (EP-003, EP-004)"
@@ -493,7 +505,7 @@ sh scripts/gate-ui.sh
 git status --short
 ```
 
-EXPECT: `next build` succeeds and writes `ui/src/route-manifest.json`; the manifest
+EXPECT: `vite build` succeeds and writes `ui/src/route-manifest.json`; the manifest
 suite passes; `playwright --version` prints a version (browser binaries are a separate
 question, probed in M4); the final line `gate-ui: ok`; `git status --short` listing
 only files from §6. `verify.sh` does **not** print `verify: ok` at this node and must not
@@ -589,7 +601,7 @@ export const TRUTH_STATE_COPY: Readonly<Record<TruthStateToken, TruthStateCopy>>
   by `/portal/limitations`, the `/portal` footer, `/admin/metrics`, and the dashboard
   header. One constant, four consumers, one equality test.
 - `scripts/copy-lint-gate.sh` — **if EP-004 M8 already created it, do not duplicate it**:
-  read it, and if it already scans the built browser bundle and the server-rendered HTML,
+  read it, and if it already scans the built browser bundle and the built static HTML shell,
   extend it in this milestone only with the UI-specific allowlist entries (the two §0.3
   allowlists, each with an owner and a reason) rather than writing a second scanner. If
   it does not exist (EP-004 incomplete), create it here with the full VG-UI-080…083
@@ -677,8 +689,7 @@ CONTENT:
   the ordering exposed, and live updates announced once through a polite live region
   (VG-UI-034, VG-UI-036, VG-UI-061). It offers no edit, delete, or reorder affordance
   (VG-UI-035).
-- `tests/contract/coverage-presentation.test.ts` — DOM-scan assertions over
-  server-rendered fixtures: (a) zero `%` text nodes outside a `MetricFigure` carrying a
+- `tests/contract/coverage-presentation.test.ts` — DOM-scan assertions over render-to-static-markup fixtures produced by `react-dom/server` under JSDOM: (a) zero `%` text nodes outside a `MetricFigure` carrying a
   numeric denominator and a denominator label; (b) a `0 / 0 — not computable` fixture
   renders no `0%` and no `NaN`; (c) a `VERIFIED_NOT_PRESENT` fixture's region accessible
   text includes the attempted/total figures and at least the skipped count; (d) with
@@ -697,8 +708,7 @@ EXPECT: the coverage suite passes; `gate-ui: ok`.
 
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-005 MILESTONE_PASS "M3 coverage honesty presentation: ok"`
 
-FALLBACK: if a component's rendered output is not available for server-render assertion
-at this point in the build, assert the same properties against the component's rendered
+FALLBACK: if a component's rendered output is not available to a render harness at this point in the build, assert the same properties against the component's rendered
 output in a Node-based render harness rather than weakening the assertion to a
 source-text grep. A source grep is not an oracle (SPEC-004 §0.2).
 
@@ -798,7 +808,7 @@ statuses including `EXTERNAL_REQUIRED`; `gate-ui: ok`.
 EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-005 MILESTONE_PASS "M4 seven region states, keyboard, automated a11y; VG-UI-064 EXTERNAL_REQUIRED"`
 
 FALLBACK: if a browser runtime cannot be provisioned on this machine, run the
-DOM/accessibility-tree assertions through a server-render + JSDOM harness for the
+DOM/accessibility-tree assertions through a JSDOM + render-to-static-markup harness for the
 properties JSDOM can actually establish (DOM order, roles, accessible names, `aria-*`
 state, list semantics) and record every property JSDOM **cannot** establish (computed
 style, contrast measurement, focus visibility rendering, reduced-motion computed
@@ -860,8 +870,7 @@ CONTENT:
   §5.14.1).
 - Limitations (`/portal/limitations`): renders the VG-UI-070 statement verbatim plus the
   truth-state legend built from `TRUTH_STATE_COPY` (not a second copy table).
-- `tests/contract/portal-surfaces.test.ts` — a route-and-control inventory over the
-  server-rendered `/portal` tree asserting (a) every `/portal` route resolves, (b) each
+- `tests/contract/portal-surfaces.test.ts` — a route-and-control inventory over the rendered `/portal` tree asserting (a) every `/portal` route resolves, (b) each
   route's owning surface against the declared manifest, and (c) **zero** rendered controls
   bound to a truth-state transition handler outside the domain-command path. Required
   negative case: injecting a "Mark as removed" control on a case route must fail the
@@ -971,7 +980,7 @@ READ: `SPEC-004` §12 (VG-UI-073…079), §14 (VG-UI-083), `SPEC-000` VG-EGRESS-
 
 CHANGE: `ui/src/lib/url.ts`, `ui/src/lib/telemetry.ts`,
 `ui/src/components/evidence/PiiRedactor.tsx`,
-`ui/src/components/evidence/DigestDisplay.tsx`, `ui/src/middleware.ts`,
+`ui/src/components/evidence/DigestDisplay.tsx`,
 `tests/contract/pii-url.test.ts`, `tests/ui/privacy.spec.ts`, `COMMANDS.md`,
 `.agent/verification/EXPECTED_TEST_MANIFEST.txt`, `.agent/state/LEDGER.md`.
 
@@ -983,15 +992,23 @@ CONTENT:
   case-folding and diacritic folding, and `Identifier` values matched by **digest
   comparison** against the encrypted store rather than plaintext scan). A match **throws
   in development and refuses in production** — a match is a defect, not a warning.
-- `ui/src/middleware.ts` — server-side refusal of a non-allowlisted filter value in a
-  path or query before rendering (VG-UI-005, VG-UI-073). Required negative case: a
-  request to `/portal/cases?email=<value>` is refused server-side with the
-  invalid-parameter response and renders no case (VG-UI-005).
+- **There is no `ui/src/middleware.ts`.** A Vite SPA has no server runtime, so a
+  "server-side refusal before rendering" cannot live in the UI. The authoritative
+  refusal of a PII-bearing path or query is the **API's** (SPEC-004 VG-UI-005 puts it
+  server-side; SPEC-003 §7.1 is where it is implemented, in EP-004). This node''s
+  contribution is the client-side guarantee that such a URL is never *constructed*
+  (`ui/src/lib/url.ts` below) plus a contract test that proves it. The cross-node
+  dependency on EP-004 is recorded in §12 alongside the copy-lint gate, and the
+  server-side half of VG-UI-005 is recorded as `BLOCKED_PREREQUISITE` (EP-004) rather
+  than claimed here. Required negative case: a request to `/portal/cases?email=<value>`
+  must be refused by the API with the invalid-parameter response and must render no
+  case; if EP-004 has not implemented that refusal, this row is `BLOCKED_PREREQUISITE`,
+  never `PASS`.
 - `PiiRedactor` — renders identifiers masked by last-four with the remainder replaced and
   documents hidden entirely; reveals only after an explicit user action, which is
   recorded as an audit event (actor, artefact, field, timestamp). Before reveal, no
   unmasked PII exists in text nodes, accessible names, `title`, `alt`, `aria-label`,
-  `data-*`, or serialized props — including in the server payload (VG-UI-074).
+  `data-*`, or serialized props — including in the API response payload (VG-UI-074).
 - `ui/src/lib/telemetry.ts` — a closed event catalogue. Event names come from the
   catalogue; free-form strings are never emitted; only allowlisted opaque ID classes are
   attached; every emitted value passes the DLP scrub class for its egress class
@@ -1033,8 +1050,7 @@ EVIDENCE: `sh scripts/ledger.sh append <AGENT_ID> EP-005 MILESTONE_PASS "M7 brow
 
 FALLBACK: if digest-comparison matching for `Identifier` values cannot be implemented in
 the browser without shipping the encrypted store to the client, move that class of the
-check to the **server** boundary (the middleware refuses the value before it can reach a
-URL) and record the client-side class as server-enforced in the pattern-set self-test.
+check to the **API** boundary (EP-004 refuses the value before any route can render) and record the client-side class as server-enforced in the pattern-set self-test.
 Never ship the encrypted identifier store to the browser to make a client check possible.
 
 COMMIT: `git add -A && git commit -m "[EP-005][M7] browser privacy: URL guard, redaction, tracker and CSP controls"`
@@ -1109,7 +1125,7 @@ COMMIT: `git add -A && git commit -m "[EP-005][M8] close UI/client node with ext
 ## 9. Validation and Acceptance
 
 1. `sh scripts/gate-ui.sh` prints `gate-ui: ok` and exits 0.
-2. `ui/src/route-manifest.json` equals the 24 SPEC-004 §1 routes as a set in both
+2. `ui/src/route-manifest.json` equals the 25 SPEC-004 §1 routes as a set in both
    directions; an undeclared route renders the not-found state and appears in the
    manifest diff (VG-UI-004).
 3. All eleven states render the §2.2 label and qualifier byte-for-byte, with the §2.3
@@ -1181,10 +1197,10 @@ To re-enter this node cold:
 
 Recovery properties:
 
-- No milestone is destructive. `rm -rf .next ui/src/route-manifest.json` regenerates the
+- No milestone is destructive. `rm -rf ui/dist ui/src/route-manifest.json` regenerates the
   build output.
-- If `.next` or the Playwright browser cache is suspect:
-  `rm -rf .next node_modules && npm ci`, then re-provision browsers and record the
+- If `ui/dist` or the Playwright browser cache is suspect:
+  `rm -rf ui/dist node_modules && npm ci`, then re-provision browsers and record the
   provisioning log.
 - A dependency change is a new candidate epoch: prior evidence is invalidated, not reused
   (VG-REL-004, DOD-040).
