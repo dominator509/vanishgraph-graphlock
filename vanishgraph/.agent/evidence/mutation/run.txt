@@ -1,0 +1,9 @@
+mutations: MUT-1 DETECTED - Confidence range check replaced by a tautology (tests/domain/values.test.ts exit 1)
+mutations: MUT-2 DETECTED - Confidence basis requirement removed (tests/domain/values.test.ts exit 1)
+mutations: MUT-3 DETECTED - T14 independence guard weakened to always satisfied (tests/domain/state-machine.test.ts exit 1)
+mutations: MUT-4 DETECTED - forbidden-pair check disabled (tests/domain/state-machine.test.ts exit 1)
+mutations: MUT-5 DETECTED - self-verification check removed from VerificationObservation (tests/domain/entities.test.ts exit 1)
+mutations: MUT-6 DETECTED - idempotency-key replay check disabled (tests/domain/commands.test.ts exit 1)
+mutations: MUT-7 DETECTED - observation-window check removed (tests/domain/invariants.test.ts exit 1)
+mutations: all detected
+restore: verified

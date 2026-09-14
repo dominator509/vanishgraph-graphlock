@@ -105,7 +105,8 @@ binding suite table. One definition of "the unit tests" exists, in the script.
 (test-unit: ok); `sh scripts/test-collection-guard.sh` (test collection guard: ok);
 `sh scripts/build.sh` (build: ok); `sh scripts/gate-toolchain.sh` (gate-toolchain: ok);
 `sh scripts/dependency-audit.sh` (dependency audit: ok); `sh scripts/reality-gate.sh`
-(reality gate: ok); `sh scripts/validate-env.sh` (env validation: ok).
+(reality gate: ok); `sh scripts/validate-env.sh` (env validation: ok);
+`sh scripts/mutation-check.sh` (mutation check: ok).
 
 ## Node gates
 
