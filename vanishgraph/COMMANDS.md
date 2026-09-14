@@ -189,3 +189,23 @@ Both run against the local file-backed provider in `src/adapters/crypto/`, which
 **tests only** (VG-SCOPE-020). The managed-KMS adapter is `BLOCKED_CREDENTIALS` while
 ADR-006 is open and throws on every operation rather than faking success. No command in
 this file configures a production KMS, because none exists yet.
+
+### Backup and restore drill
+
+`sh scripts/backup-drill.sh` (backup drill: ok) is a **destructive** drill (DOD-036). It
+seeds a disposable database, crypto-shreds one subject, dumps the database, destroys it,
+restores it from the dump alone, and then reports eight post-conditions individually: the
+erased subject's PII is unrecoverable, its tombstone is present and names it, RLS is
+enabled and forced on every tenant-scoped table, a cross-tenant read as `vg_app` returns
+nothing while the tenant's own rows stay visible, the audit chain and its append-only rules
+are intact, every evidence digest verifies, and the restore did **not** resurrect erased
+PII. The last is a severity-1 assertion, not a warning.
+
+It operates only on the disposable container from `db-provision.sh` and refuses to run
+against anything else. Evidence goes to `.agent/evidence/EP-003/restore-drill/`; the dump
+itself is identified by digest and is not committed.
+
+**PITR is not exercised.** Point-in-time recovery needs WAL archiving to object storage
+that is not provisioned, so it is recorded `BLOCKED_CREDENTIALS` in
+`.agent/evidence/EP-003/restore-drill/pitr-status.txt`. No RPO, RTO or MTTR figure is
+claimed anywhere, and no command in this file produces one.

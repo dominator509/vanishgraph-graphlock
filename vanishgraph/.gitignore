@@ -30,3 +30,8 @@ Thumbs.db
 #
 # Evidence artifacts are hashes, command logs, and review records. They must not
 # contain PII (VG-EGRESS-002); that is enforced at write time, not by gitignore.
+
+# Restore-drill scratch dumps: run artefacts, not evidence. The DIGEST is committed
+# (.agent/evidence/EP-003/restore-drill/dump-digest.txt) because the dump's bytes are specific
+# to one container and one run, so they cannot be a durable identity (DOD-029).
+.agent/evidence/**/restore-drill/*.dump

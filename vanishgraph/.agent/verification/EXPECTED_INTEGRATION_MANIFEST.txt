@@ -5,5 +5,6 @@
 # Removing a line to make the guard pass is gate weakening (DOD-027).
 tests/db/encryption.test.ts
 tests/db/job-queue.test.ts
+tests/db/restore-drill.test.ts
 tests/db/retention.test.ts
 tests/db/rls.test.ts

@@ -39,6 +39,12 @@
 # rule keeps them that way instead of relying on each contributor's core.autocrlf.
 *.sql   text eol=lf
 
+# Git's own config files. These are matched by pattern, and a CRLF rewrite of .gitignore does
+# not merely cosmetically change the file: a pattern line ending in CR no longer matches, so an
+# ignore rule silently stops ignoring.
+.gitignore     text eol=lf
+.gitattributes text eol=lf
+
 # Archive and image formats are binary by definition.
 *.tar.gz binary
 *.tgz    binary

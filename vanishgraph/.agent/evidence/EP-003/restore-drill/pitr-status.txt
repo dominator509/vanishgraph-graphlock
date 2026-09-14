@@ -1,0 +1,7 @@
+PITR: BLOCKED_CREDENTIALS
+Reason: point-in-time recovery requires WAL archiving to object storage, and no S3/SeaweedFS
+endpoint is provisioned in this environment (EP-003 M8 FALLBACK).
+What WAS exercised: a logical pg_dump/pg_restore of a destroyed disposable database, verified
+against five post-conditions plus the severity-1 resurrection check.
+What is NOT claimed: any RPO, RTO or MTTR figure, and any PITR capability. Those remain
+unverified and must not be reported as passing.

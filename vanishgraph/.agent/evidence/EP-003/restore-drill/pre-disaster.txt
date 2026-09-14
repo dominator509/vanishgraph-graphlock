@@ -1,0 +1,6 @@
+pre-disaster state
+tombstones=1
+audit_events=4
+identifier_rows=2
+evidence_digest=cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+rls_tables=29

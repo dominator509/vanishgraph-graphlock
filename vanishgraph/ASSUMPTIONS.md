@@ -197,6 +197,46 @@ shred **mechanics** can be exercised against real PostgreSQL, and it must never 
 production (VG-SCOPE-020). Its class name says so, and a test asserts the managed adapter refuses
 rather than pretending. No test in this node is evidence about a production KMS.
 
+### 3.9 The backup drill's own pass/fail logic was inverted (caught by running it)
+
+The M8 drill reported its post-conditions through a `check` helper that tested for `"1"` as
+success. POSIX exit statuses are the opposite: **zero means success**. So every genuinely
+passing check printed `FAIL` and — far worse — a genuine failure would have printed `PASS`.
+
+This was not a cosmetic bug. It was caught only because the drill printed `FAIL` next to
+values that were obviously healthy (`tombstones=1 (pre-disaster=1)`, `0 unprotected`), which
+prompted a direct test of the helper rather than a re-read of it. A drill whose verdict is
+inverted is worse than no drill, because it converts a severity-1 finding into a green line.
+
+A second defect in the same helper: `check "name" "$?" "detail"` looks correct but is not.
+With `set -e` active, a **failing** `[ ... ]` — exactly the case the drill exists to report —
+aborts the script before `check` runs. The drill printed four `PASS` lines and exited silently
+instead of reporting a failure. Both are now handled by an `expect` helper that evaluates the
+condition under `set +e` and forwards the real status.
+
+### 3.10 Two drill probes measured the wrong thing
+
+1. **The cross-tenant probe ran as the superuser.** A superuser bypasses row-level security by
+   definition, so it returned 1 where `vg_app` returned 0 — it measured the prober's privilege,
+   not the isolation under test. Had this been reported without checking, it would have
+   manufactured a cross-tenant leak finding out of nothing. The probe now runs as `vg_app`, and
+   asserts both halves: cross-tenant rows are 0 **and** the tenant's own rows are still visible,
+   because a probe that can see nothing would also "prove" isolation.
+2. **The "erased PII unrecoverable" check was vacuous.** The drill shredded a key row that had
+   never been created, so it reported `shredded=0 recoverable=0` — which reads as a pass on the
+   recoverable half while proving nothing about the shred. The seed now creates real wrapped key
+   material first, and the check reports `shredded=1 recoverable=0`.
+
+### 3.11 The drill was shown to have teeth (negative controls)
+
+| Sabotage | Result |
+|---|---|
+| Erasure marks the key SHREDDED but does not empty the wrapped bytes | Refused by the M7 `tenant_key_shredded_is_empty` constraint before the drill could proceed — a second layer of defence working |
+| Erasure never shreds at all (key stays ACTIVE) | `FAIL restore did NOT resurrect erased PII: rows with recoverable key material=1`, exit 1, with the severity-1 message |
+
+The second control also retroactively demonstrates why §3.9 mattered: before the fix, that
+failure would have been printed as a pass.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a
