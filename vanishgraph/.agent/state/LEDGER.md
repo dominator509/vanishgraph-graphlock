@@ -35,3 +35,4 @@
 2026-09-14T08:19:59Z | forge | EP-002 | NODE_CLOSE_RECORD | EP-002 closed: 3 of 11 nodes; graph advances to EP-003
 2026-09-14T08:45:06Z | forge | EP-003 | MILESTONE_PASS | M1 db provision: ok (Docker postgres:16, 2 roles NOBYPASSRLS, 4 databases); db teardown: ok with proof
 2026-09-14T09:16:16Z | forge | EP-003 | MILESTONE_PASS | M2 isolation list (26 tables), RLS generator, migration runner; 0001 applied to empty DB; migrate: ok; checksum immutability proven
+2026-09-14T09:29:08Z | forge | EP-003 | MILESTONE_PASS | M2 reality-gate rule 3 scope corrected (7 false positives resolved by narrowing the rule, allow-list empty by design); full gate suite 0 failures
