@@ -29,3 +29,4 @@
 2026-09-14T07:47:19Z | forge | EP-002 | MILESTONE_PASS | M5 eleven domain commands (one transition each, audited); typecheck: ok; test-unit: ok (258 pass)
 2026-09-14T07:58:26Z | forge | EP-002 | MILESTONE_PASS | M6 invariants SM-1..SM-6 and all documented illegal transitions; typecheck: ok; test-unit: ok (287 pass)
 2026-09-14T08:03:50Z | forge | EP-002 | MILESTONE_PASS | M7 import-boundary test with negative case; automated DOD-018 mutation gate (7/7 detected, restore verified); test-unit: ok (292 pass)
+2026-09-14T08:14:29Z | forge | EP-002 | MILESTONE_PASS | M8 gate-domain: ok (294 tests, 0 skipped, 57 traceability rows, mutation check, verify.sh progression)

@@ -1,41 +1,58 @@
 requirement_id,spec_section,test_id,test_file,test_name,command,status
-VG-IDENT-003,SPEC-001 2,T-VG-IDENT-003-01,tests/domain/values.test.ts,a score with NO basis is unrepresentable,node --test "tests/**/*.test.ts",PASS
-VG-IDENT-004,SPEC-001 4.2,T-VG-IDENT-004-01,tests/domain/illegal-transitions.test.ts,DISCOVERED_CANDIDATE cannot jump to REQUEST_READY,node --test "tests/**/*.test.ts",PLANNED
-VG-AUTHZ-001,SPEC-001 3.1,T-VG-AUTHZ-001-01,tests/domain/invariants.test.ts,an expired grant is refused at execution time,node --test "tests/**/*.test.ts",PLANNED
-VG-POLICY-002,SPEC-001 3.3,T-VG-POLICY-002-01,tests/domain/invariants.test.ts,an incomplete PolicyDecision cannot reach REQUEST_READY,node --test "tests/**/*.test.ts",PLANNED
-VG-POLICY-004,SPEC-001 3.1,T-VG-POLICY-004-01,tests/domain/invariants.test.ts,a minor subject cannot enter an automated write lane,node --test "tests/**/*.test.ts",PLANNED
-VG-CHANNEL-001,SPEC-001 8,T-VG-CHANNEL-001-01,tests/domain/values.test.ts,a lower-priority channel needs every higher one recorded unavailable,node --test "tests/**/*.test.ts",PLANNED
-VG-CHANNEL-002,SPEC-001 3.2,T-VG-CHANNEL-002-01,tests/domain/invariants.test.ts,WRITE_UNCLEAR forbids writes exactly like PROHIBITED,node --test "tests/**/*.test.ts",PLANNED
-VG-CHANNEL-003,SPEC-001 3.2,T-VG-CHANNEL-003-01,tests/domain/invariants.test.ts,a stale or unsigned recipe cannot write,node --test "tests/**/*.test.ts",PLANNED
-VG-ACTION-001,SPEC-001 3.4,T-VG-ACTION-001-01,tests/domain/commands.test.ts,one idempotency key yields one external effect,node --test "tests/**/*.test.ts",PLANNED
-VG-ACTION-002,SPEC-001 3.4,T-VG-ACTION-002-01,tests/domain/commands.test.ts,an ambiguous effect reconciles instead of retrying,node --test "tests/**/*.test.ts",PLANNED
-VG-ACTION-005,SPEC-001 3.4,T-VG-ACTION-005-01,tests/domain/invariants.test.ts,an exhausted effect budget refuses the action,node --test "tests/**/*.test.ts",PLANNED
-VG-VERIFY-001,SPEC-001 4.2,T-VG-VERIFY-001-01,tests/domain/invariants.test.ts,an observation from the acting path is refused,node --test "tests/**/*.test.ts",PLANNED
-VG-VERIFY-002,SPEC-001 4.1,T-VG-VERIFY-002-01,tests/domain/values.test.ts,the observation window must genuinely elapse,node --test "tests/**/*.test.ts",PASS
-VG-VERIFY-003,SPEC-001 3.4,T-VG-VERIFY-003-01,tests/domain/invariants.test.ts,a method mismatch invalidates the observation,node --test "tests/**/*.test.ts",PLANNED
-VG-VERIFY-004,SPEC-001 4.2,T-VG-VERIFY-004-01,tests/domain/state-machine.test.ts,removal theater is refused even when every other fact is satisfied,node --test "tests/**/*.test.ts",PASS
-VG-EVIDENCE-001,SPEC-001 3.5,T-VG-EVIDENCE-001-01,tests/domain/values.test.ts,malformed digests are refused,node --test "tests/**/*.test.ts",PASS
-VG-EGRESS-001,SPEC-001 2,T-VG-EGRESS-001-01,tests/domain/values.test.ts,the four protected classes are deny-by-default,node --test "tests/**/*.test.ts",PASS
-VG-REL-004,SPEC-001 1,T-VG-REL-004-01,tests/architecture/import-boundary.test.ts,the domain layer imports only the standard library,node --test "tests/**/*.test.ts",PLANNED
-SPEC-001-4.2-all,SPEC-001 4.2,T-SPEC-001-4.2-all,tests/domain/illegal-transitions.test.ts,every documented illegal transition is refused with a typed error,node --test "tests/**/*.test.ts",PLANNED
-SPEC-001-4.3-SM,SPEC-001 4.3,T-SPEC-001-4.3-SM,tests/domain/invariants.test.ts,SM-1 through SM-6 hold as executable assertions,node --test "tests/**/*.test.ts",PLANNED
-SPEC-001-6-cmd,SPEC-001 6,T-SPEC-001-6-cmd,tests/domain/commands.test.ts,all eleven commands apply exactly one transition and audit it,node --test "tests/**/*.test.ts",PLANNED
-SPEC-001-7-evt,SPEC-001 7,T-SPEC-001-7-evt,tests/domain/events.test.ts,all twenty-two events exist with correlationId and tenantId,node --test "tests/**/*.test.ts",PLANNED
-SPEC-001-8.6,SPEC-001 8.6,T-SPEC-001-8.6,tests/domain/DOMAIN_TEST_MAP.csv,a mutated guard makes a test fail (DOD-018),sh scripts/mutation-check.sh,PLANNED
-VG-IDENT-001,SPEC-001 3.1,T-VG-IDENT-001-01,tests/domain/entities.test.ts,a subject requires a matching valid AuthorityGrant,node --test "tests/**/*.test.ts",PASS
+VG-IDENT-001,SPEC-001 3.1,T-VG-IDENT-001-01,tests/domain/entities.test.ts,a subject requires a matching, valid AuthorityGrant,node --test "tests/**/*.test.ts",PASS
+VG-IDENT-001,SPEC-001 4.3,T-VG-IDENT-001-02,tests/domain/invariants.test.ts,VG-IDENT-001: a subject with no usable grant is refused,node --test "tests/**/*.test.ts",PASS
 VG-IDENT-002,SPEC-001 3.1,T-VG-IDENT-002-01,tests/domain/entities.test.ts,quarantine is exactly the absence of a subject link,node --test "tests/**/*.test.ts",PASS
-VG-AUTHZ-001,SPEC-001 3.1,T-VG-AUTHZ-001-01,tests/domain/entities.test.ts,a revoked or expired grant is refused at use,node --test "tests/**/*.test.ts",PASS
+VG-IDENT-003,SPEC-001 2,T-VG-IDENT-003-01,tests/domain/values.test.ts,a score with NO basis is unrepresentable,node --test "tests/**/*.test.ts",PASS
+VG-IDENT-003,SPEC-001 3.1,T-VG-IDENT-003-02,tests/domain/entities.test.ts,an exposure always carries a confidence with a basis,node --test "tests/**/*.test.ts",PASS
+VG-IDENT-004,SPEC-001 4.2,T-VG-IDENT-004-01,tests/domain/illegal-transitions.test.ts,${from} -> ${to} is refused (${why}) and leaves state unchanged,node --test "tests/**/*.test.ts",PASS
+VG-AUTHZ-001,SPEC-001 3.1,T-VG-AUTHZ-001-01,tests/domain/entities.test.ts,a revoked grant is refused even before it expires,node --test "tests/**/*.test.ts",PASS
+VG-AUTHZ-001,SPEC-001 4.2,T-VG-AUTHZ-001-02,tests/domain/illegal-transitions.test.ts,no transition is permitted while authority is expired or revoked (VG-AUTHZ-001),node --test "tests/**/*.test.ts",PASS
 VG-AUTHZ-002,SPEC-001 3.1,T-VG-AUTHZ-002-01,tests/domain/entities.test.ts,an AGENT grant requires a signed instrument and evidence,node --test "tests/**/*.test.ts",PASS
-VG-POLICY-001,SPEC-001 3.3,T-VG-POLICY-001-01,tests/domain/entities.test.ts,model output cannot author a jurisdiction policy,node --test "tests/**/*.test.ts",PASS
-VG-POLICY-002,SPEC-001 3.3,T-VG-POLICY-002-01,tests/domain/entities.test.ts,a PolicyDecision requires all four fields,node --test "tests/**/*.test.ts",PASS
-VG-POLICY-004,SPEC-001 3.1,T-VG-POLICY-004-01,tests/domain/entities.test.ts,a minor subject cannot enter an automated write lane,node --test "tests/**/*.test.ts",PASS
-VG-CHANNEL-002,SPEC-001 3.2,T-VG-CHANNEL-002-01,tests/domain/entities.test.ts,WRITE_UNCLEAR forbids writes exactly like PROHIBITED,node --test "tests/**/*.test.ts",PASS
-VG-CHANNEL-003,SPEC-001 3.2,T-VG-CHANNEL-003-01,tests/domain/entities.test.ts,a stale or disabled recipe cannot write,node --test "tests/**/*.test.ts",PASS
-VG-SEC-001,SPEC-001 3.2,T-VG-SEC-001-01,tests/domain/entities.test.ts,tainted remote content cannot direct an action,node --test "tests/**/*.test.ts",PASS
-VG-SEC-002,SPEC-001 3.5,T-VG-SEC-002-01,tests/domain/entities.test.ts,an audit payload carrying apparent PII is refused,node --test "tests/**/*.test.ts",PASS
+VG-POLICY-001,SPEC-001 3.3,T-VG-POLICY-001-01,tests/domain/entities.test.ts,a jurisdiction policy cannot be authored by model output (VG-POLICY-001),node --test "tests/**/*.test.ts",PASS
+VG-POLICY-002,SPEC-001 3.3,T-VG-POLICY-002-01,tests/domain/entities.test.ts,a PolicyDecision requires all four fields and a matching policy version,node --test "tests/**/*.test.ts",PASS
+VG-POLICY-002,SPEC-001 4.3,T-VG-POLICY-002-02,tests/domain/invariants.test.ts,VG-POLICY-002: an incomplete decision is refused,node --test "tests/**/*.test.ts",PASS
+VG-POLICY-004,SPEC-001 3.1,T-VG-POLICY-004-01,tests/domain/entities.test.ts,a minor subject cannot enter an automated write lane (VG-POLICY-004),node --test "tests/**/*.test.ts",PASS
+VG-POLICY-004,SPEC-001 4.3,T-VG-POLICY-004-02,tests/domain/invariants.test.ts,VG-POLICY-004: a minor subject is routed to review,node --test "tests/**/*.test.ts",PASS
+VG-CHANNEL-001,SPEC-001 8,T-VG-CHANNEL-001-01,tests/domain/values.test.ts,a lower-priority choice requires every higher one recorded with a reason,node --test "tests/**/*.test.ts",PASS
+VG-CHANNEL-001,SPEC-001 8,T-VG-CHANNEL-001-02,tests/domain/values.test.ts,no available channel is a modelling error, not a forced write,node --test "tests/**/*.test.ts",PASS
+VG-CHANNEL-002,SPEC-001 3.2,T-VG-CHANNEL-002-01,tests/domain/values.test.ts,only WRITE_PERMITTED allows an automated write,node --test "tests/**/*.test.ts",PASS
+VG-CHANNEL-002,SPEC-001 3.2,T-VG-CHANNEL-002-02,tests/domain/entities.test.ts,WRITE_UNCLEAR and PROHIBITED both forbid writes,node --test "tests/**/*.test.ts",PASS
+VG-CHANNEL-002,SPEC-001 4.3,T-VG-CHANNEL-002-03,tests/domain/invariants.test.ts,VG-CHANNEL-002/003: unclear permission or stale recipe cannot write,node --test "tests/**/*.test.ts",PASS
+VG-CHANNEL-003,SPEC-001 3.2,T-VG-CHANNEL-003-01,tests/domain/entities.test.ts,a stale or disabled recipe cannot write (VG-CHANNEL-003),node --test "tests/**/*.test.ts",PASS
+VG-CHANNEL-003,SPEC-001 4.2,T-VG-CHANNEL-003-02,tests/domain/illegal-transitions.test.ts,no write transition while the recipe is stale or unsigned (VG-CHANNEL-003),node --test "tests/**/*.test.ts",PASS
 VG-ACTION-001,SPEC-001 3.4,T-VG-ACTION-001-01,tests/domain/entities.test.ts,an ExternalAction always names exactly one idempotency key,node --test "tests/**/*.test.ts",PASS
+VG-ACTION-001,SPEC-001 3.4,T-VG-ACTION-001-02,tests/domain/commands.test.ts,a replayed key is refused, so one key yields one effect,node --test "tests/**/*.test.ts",PASS
+VG-ACTION-001,SPEC-001 4.3,T-VG-ACTION-001-03,tests/domain/invariants.test.ts,VG-ACTION-005 and VG-ACTION-001: budget and key rules,node --test "tests/**/*.test.ts",PASS
 VG-ACTION-002,SPEC-001 3.4,T-VG-ACTION-002-01,tests/domain/entities.test.ts,an ambiguous status forces reconciliation,node --test "tests/**/*.test.ts",PASS
-VG-ACTION-004,SPEC-001 3.4,T-VG-ACTION-004-01,tests/domain/entities.test.ts,mail without tracking cannot reach ACKNOWLEDGED,node --test "tests/**/*.test.ts",PASS
-VG-REAPPEAR-001,SPEC-001 3.4,T-VG-REAPPEAR-001-01,tests/domain/entities.test.ts,Reappearance requires a prior VERIFIED_REMOVED,node --test "tests/**/*.test.ts",PASS
-VG-EGRESS-002,SPEC-001 3.5,T-VG-EGRESS-002-01,tests/domain/entities.test.ts,a repair capsule refuses apparent PII before egress,node --test "tests/**/*.test.ts",PASS
+VG-ACTION-002,SPEC-001 3.4,T-VG-ACTION-002-02,tests/domain/commands.test.ts,an ambiguous outcome reconciles instead of silently retrying,node --test "tests/**/*.test.ts",PASS
+VG-ACTION-004,SPEC-001 3.4,T-VG-ACTION-004-01,tests/domain/entities.test.ts,mail without tracking cannot reach ACKNOWLEDGED (VG-ACTION-004),node --test "tests/**/*.test.ts",PASS
+VG-ACTION-005,SPEC-001 4.3,T-VG-ACTION-005-01,tests/domain/invariants.test.ts,VG-ACTION-005 and VG-ACTION-001: budget and key rules,node --test "tests/**/*.test.ts",PASS
+VG-ACTION-005,SPEC-001 3.4,T-VG-ACTION-005-02,tests/domain/commands.test.ts,an exhausted budget refuses the write and emits BudgetExceeded,node --test "tests/**/*.test.ts",PASS
+VG-VERIFY-001,SPEC-001 3.4,T-VG-VERIFY-001-01,tests/domain/entities.test.ts,the acting path cannot verify itself (VG-VERIFY-001),node --test "tests/**/*.test.ts",PASS
+VG-VERIFY-001,SPEC-001 4.2,T-VG-VERIFY-001-02,tests/domain/illegal-transitions.test.ts,the acting path cannot verify its own effect (VG-VERIFY-001),node --test "tests/**/*.test.ts",PASS
+VG-VERIFY-001,SPEC-001 4.3,T-VG-VERIFY-001-03,tests/domain/invariants.test.ts,VG-VERIFY-001/002/003: independence, window and method are all required,node --test "tests/**/*.test.ts",PASS
+VG-VERIFY-002,SPEC-001 2,T-VG-VERIFY-002-01,tests/domain/values.test.ts,elapsed time is evaluated against the start, not assumed,node --test "tests/**/*.test.ts",PASS
+VG-VERIFY-003,SPEC-001 3.4,T-VG-VERIFY-003-01,tests/domain/invariants.test.ts,VG-VERIFY-001/002/003: independence, window and method are all required,node --test "tests/**/*.test.ts",PASS
+VG-VERIFY-004,SPEC-001 4.2,T-VG-VERIFY-004-01,tests/domain/state-machine.test.ts,removal theater is refused even when every other fact is satisfied,node --test "tests/**/*.test.ts",PASS
+VG-VERIFY-004,SPEC-001 4.3,T-VG-VERIFY-004-02,tests/domain/invariants.test.ts,VG-VERIFY-004: a controller claim is not an observation,node --test "tests/**/*.test.ts",PASS
+VG-REAPPEAR-001,SPEC-001 3.4,T-VG-REAPPEAR-001-01,tests/domain/entities.test.ts,Reappearance requires a prior VERIFIED_REMOVED (VG-REAPPEAR-001),node --test "tests/**/*.test.ts",PASS
+VG-EVIDENCE-001,SPEC-001 3.5,T-VG-EVIDENCE-001-01,tests/domain/values.test.ts,malformed digests are refused,node --test "tests/**/*.test.ts",PASS
+VG-EVIDENCE-001,SPEC-001 3.5,T-VG-EVIDENCE-001-02,tests/domain/entities.test.ts,an evidence artifact is content-addressed,node --test "tests/**/*.test.ts",PASS
+VG-SEC-001,SPEC-001 3.2,T-VG-SEC-001-01,tests/domain/entities.test.ts,tainted remote content cannot direct an action (VG-SEC-001),node --test "tests/**/*.test.ts",PASS
+VG-SEC-001,SPEC-001 4.3,T-VG-SEC-001-02,tests/domain/invariants.test.ts,VG-SEC-001: tainted content cannot direct an action,node --test "tests/**/*.test.ts",PASS
+VG-SEC-002,SPEC-001 3.5,T-VG-SEC-002-01,tests/domain/entities.test.ts,an audit payload carrying apparent PII is refused (VG-SEC-002),node --test "tests/**/*.test.ts",PASS
+VG-SEC-002,SPEC-001 2,T-VG-SEC-002-02,tests/domain/values.test.ts,apparent personal data is detected,node --test "tests/**/*.test.ts",PASS
+VG-EGRESS-001,SPEC-001 2,T-VG-EGRESS-001-01,tests/domain/values.test.ts,the four protected classes are deny-by-default,node --test "tests/**/*.test.ts",PASS
+VG-EGRESS-001,SPEC-001 4.3,T-VG-EGRESS-001-02,tests/domain/invariants.test.ts,VG-EGRESS-001: protected classes are denied without an explicit policy,node --test "tests/**/*.test.ts",PASS
+VG-EGRESS-002,SPEC-001 3.5,T-VG-EGRESS-002-01,tests/domain/entities.test.ts,a repair capsule refuses apparent PII before egress (VG-EGRESS-002),node --test "tests/**/*.test.ts",PASS
+VG-REL-004,SPEC-001 1,T-VG-REL-004-01,tests/architecture/import-boundary.test.ts,the domain layer imports only the standard library,node --test "tests/**/*.test.ts",PASS
+VG-REL-004,SPEC-001 1,T-VG-REL-004-02,tests/architecture/import-boundary.test.ts,the checker detects a real violation (negative case),node --test "tests/**/*.test.ts",PASS
 ADR-004-transport,SPEC-001 3.5,T-ADR-004-transport,tests/domain/entities.test.ts,only official transports are representable,node --test "tests/**/*.test.ts",PASS
+SPEC-001-4.1-table,SPEC-001 4.1,T-SPEC-001-4.1-table,tests/domain/state-machine.test.ts,the table contains exactly 21 transitions,node --test "tests/**/*.test.ts",PASS
+SPEC-001-4.2-all,SPEC-001 4.2,T-SPEC-001-4.2-all,tests/domain/illegal-transitions.test.ts,every forbidden pair is in the documented forbidden table,node --test "tests/**/*.test.ts",PASS
+SPEC-001-4.3-SM,SPEC-001 4.3,T-SPEC-001-4.3-SM,tests/domain/invariants.test.ts,SM-6: only a domain command may change state,node --test "tests/**/*.test.ts",PASS
+SPEC-001-6-cmd,SPEC-001 6,T-SPEC-001-6-cmd,tests/domain/commands.test.ts,the command→event map is a subset of the canonical event catalogue,node --test "tests/**/*.test.ts",PASS
+SPEC-001-7-evt,SPEC-001 7,T-SPEC-001-7-evt,tests/domain/events.test.ts,exactly the twenty-two documented events exist,node --test "tests/**/*.test.ts",PASS
+SPEC-001-7-evt,SPEC-001 7,T-SPEC-001-7-evt-02,tests/domain/events.test.ts,an event carries correlationId, tenantId and a timestamp,node --test "tests/**/*.test.ts",PASS
+SPEC-001-5-ports,SPEC-001 5,T-SPEC-001-5-ports,tests/domain/events.test.ts,importing ports yields no runtime exports,node --test "tests/**/*.test.ts",PASS
+SPEC-001-8.6,SPEC-001 8.6,T-SPEC-001-8.6,tests/domain/DOMAIN_TEST_MAP.csv,a mutated guard makes a test fail (DOD-018),sh scripts/mutation-check.sh,PASS

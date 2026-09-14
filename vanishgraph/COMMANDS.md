@@ -111,8 +111,9 @@ binding suite table. One definition of "the unit tests" exists, in the script.
 ## Node gates
 
 `sh scripts/gate-toolchain.sh` (gate-toolchain: ok, node EP-000);
-`sh scripts/gate-foundation.sh` (gate-foundation: ok, node EP-001). Later nodes add
-`gate-domain: ok` (EP-002) and `gate-data: ok` (EP-003) the same way.
+`sh scripts/gate-foundation.sh` (gate-foundation: ok, node EP-001);
+`sh scripts/gate-domain.sh` (gate-domain: ok, node EP-002). Later nodes add
+`gate-api: ok` (EP-004) and `gate-data: ok` (EP-003) the same way.
 
 ## Evidence
 
