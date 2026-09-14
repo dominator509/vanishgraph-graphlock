@@ -124,11 +124,19 @@ grep -q 'format-check: ok' "$progression"                  || fail "format-check
 grep -q 'typecheck: ok' "$progression"                     || fail "typecheck sentinel missing from the verify transcript"
 grep -q 'test-unit: ok' "$progression"                     || fail "test-unit sentinel missing from the verify transcript"
 grep -q 'verify: running stage integration' "$progression" || fail "verify.sh did not reach the integration stage"
-grep -q 'ERROR: integration tests is an unimplemented placeholder' "$progression" \
+# EP-003 implemented the integration stage, so this gate no longer asserts that integration
+# loud-fails. That assertion was correct while the stage was unimplemented and is now obsolete;
+# keeping it would fail this gate for real progress, and deleting it without replacement would
+# silently drop the property it protected. The property is kept, restated against the stage that
+# IS still unimplemented: the run must stop at the FIRST unimplemented stage with the mandated
+# loud-fail signature, and must still never print `verify: ok`.
+grep -q 'verify: running stage security-check' "$progression" \
+  || fail "verify.sh did not advance past integration to the first unimplemented stage"
+grep -qE '^ERROR: .* is an unimplemented placeholder' "$progression" \
   || fail "the first unimplemented stage did not fail loudly with the mandated signature"
 if grep -qx 'verify: ok' "$progression"; then
   fail "verify.sh printed its success sentinel while stages are unimplemented (DOD-024)"
 fi
-echo "gate-foundation: verify.sh progression ok (5 stages green, integration loud-fails, no verify: ok)"
+echo "gate-foundation: verify.sh progression ok (6 stages green, first unimplemented stage loud-fails, no verify: ok)"
 
 echo "gate-foundation: ok"

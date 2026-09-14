@@ -1,0 +1,7 @@
+upgrade matrix: UNPROVEN
+scripts/test-migrations.sh does not exist. db/UPGRADE_MATRIX.md names it as the producer of
+the from-empty, from-prior and failed-migration evidence rows, so those rows are NOT
+claimed as verified by this stage.
+What IS exercised here: migrations applied to a provisioned database, RLS coverage on the
+live schema, and the failed-migration retry path recorded by EP-003 M7 (migration 0010
+failed, rolled back to a known version 9, then applied on retry).

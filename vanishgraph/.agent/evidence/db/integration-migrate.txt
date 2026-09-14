@@ -1,0 +1,3 @@
+migrate: applied 0 migration(s); at version 10
+migrate: ok
+migrate: ok

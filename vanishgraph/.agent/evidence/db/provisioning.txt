@@ -1,8 +1,8 @@
 mode: docker
-container: 771d15ee169d
+container: edcb68f33ba4
 image: postgres:16
 host: 127.0.0.1
-port: 65331
+port: 53589
 databases: vanishgraph_main, vanishgraph_empty, vanishgraph_prior, vanishgraph_failure
 roles: vg_owner (owner/migrator), vg_app (runtime, no BYPASSRLS)
 passwords: recorded only in the state file outside the repository

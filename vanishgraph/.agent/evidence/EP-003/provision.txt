@@ -1,10 +1,11 @@
-db provision: reusing running container vanishgraph-ep003-postgres on port 53589
+db provision: reusing running container vanishgraph-ep003-postgres on port 52795
 db provision: server ready after 1 probe(s)
 db provision: roles vg_owner and vg_app present (no BYPASSRLS)
 db provision: database vanishgraph_main already exists
 db provision: database vanishgraph_empty already exists
 db provision: database vanishgraph_prior already exists
 db provision: database vanishgraph_failure already exists
-db provision: state file written to C:\\tmp\\vanishgraph-db.env (mode 0600, outside the repository)
+db provision: state file written to C:\tmp\vanishgraph-db.env (mode 0600, outside the repository)
 db provision: databases: vanishgraph_main, vanishgraph_empty, vanishgraph_prior, vanishgraph_failure
+db provision: ok
 db provision: ok

@@ -41,3 +41,4 @@
 2026-09-14T10:28:24Z | forge | EP-003 | MILESTONE_PASS | M5 cross-tenant negative tests pass against real PostgreSQL (VG-DATA-001..003); 7/7 db tests, unit guard green with no database, 2 sabotage controls caught
 2026-09-14T10:48:43Z | forge | EP-003 | MILESTONE_PASS | M6 job queue: transactional enqueue, rollback leaves no job
 2026-09-14T11:17:14Z | forge | EP-003 | MILESTONE_PASS | M7 envelope encryption; retention from policy; crypto-shred verified; 4 pre-existing vacuous array CHECK constraints repaired in 0010
+2026-09-14T11:42:02Z | forge | EP-003 | MILESTONE_PASS | M8 backup drill: restore re-applies erasure, RLS and audit intact; 8/8 post-conditions; PITR BLOCKED_CREDENTIALS

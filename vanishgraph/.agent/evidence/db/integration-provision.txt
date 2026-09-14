@@ -8,3 +8,4 @@ db provision: database vanishgraph_failure already exists
 db provision: state file written to C:\\tmp\\vanishgraph-db.env (mode 0600, outside the repository)
 db provision: databases: vanishgraph_main, vanishgraph_empty, vanishgraph_prior, vanishgraph_failure
 db provision: ok
+db provision: ok

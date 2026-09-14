@@ -9,8 +9,8 @@
 #   * the requirement→test map has no PLANNED rows left (DOD-001);
 #   * the mutation check actually detects controlled defects (DOD-018).
 #
-# `verify.sh` keeps its full fifteen-stage order (master prompt §10, line 1357). After this
-# node it still stops at `integration`, which EP-003 implements; nothing here removes,
+# `verify.sh` keeps its full fifteen-stage order (master prompt §10, line 1357). EP-003 has since
+# implemented the `integration` stage, so the run no longer stops there; nothing here removes,
 # reorders, or exempts a stage.
 set -eu
 export CI=true GIT_TERMINAL_PROMPT=0 GIT_PAGER=cat PAGER=cat DEBIAN_FRONTEND=noninteractive
@@ -118,18 +118,24 @@ printf 'gate-domain: traceability rows: %s\n' "$(($(wc -l < tests/domain/DOMAIN_
 
 require_sentinel 'mutation check: ok' sh scripts/mutation-check.sh
 
-# verify.sh progression: the five implemented stages pass, integration still fails loudly,
-# and `verify: ok` never appears.
+# verify.sh progression: every implemented stage passes, the FIRST UNIMPLEMENTED stage still
+# fails loudly, and `verify: ok` never appears.
+#
+# EP-003 implemented the integration stage, so the assertion that integration loud-fails was
+# updated rather than deleted: the property it protected (stop at the first unimplemented stage
+# with the mandated signature) still holds, now restated against security-check, which EP-006
+# implements.
 progression=.agent/evidence/EP-002/verify-progression.txt
 if sh scripts/verify.sh >"$progression" 2>&1; then
   fail "verify.sh exited 0 although artifact-bound stages are unimplemented; that is a fabrication (DOD-027)"
 fi
 grep -q 'test-unit: ok' "$progression" || fail "verify.sh did not pass the unit stage"
-grep -q 'ERROR: integration tests is an unimplemented placeholder' "$progression" \
-  || fail "the integration stage must still fail loudly; see $progression"
+grep -q 'test-integration: ok' "$progression" || fail "verify.sh did not pass the integration stage (EP-003)"
+grep -qE '^ERROR: .* is an unimplemented placeholder' "$progression" \
+  || fail "the first unimplemented stage must still fail loudly; see $progression"
 if grep -qx 'verify: ok' "$progression"; then
   fail "verify.sh printed verify: ok while stages are unimplemented (DOD-024)"
 fi
-echo "gate-domain: verify.sh progression ok (unit green, integration loud-fails, no verify: ok)"
+echo "gate-domain: verify.sh progression ok (unit and integration green, first unimplemented stage loud-fails, no verify: ok)"
 
 echo "gate-domain: ok"

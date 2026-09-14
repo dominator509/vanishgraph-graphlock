@@ -112,8 +112,13 @@ binding suite table. One definition of "the unit tests" exists, in the script.
 
 `sh scripts/gate-toolchain.sh` (gate-toolchain: ok, node EP-000);
 `sh scripts/gate-foundation.sh` (gate-foundation: ok, node EP-001);
-`sh scripts/gate-domain.sh` (gate-domain: ok, node EP-002). Later nodes add
-`gate-api: ok` (EP-004) and `gate-data: ok` (EP-003) the same way.
+`sh scripts/gate-domain.sh` (gate-domain: ok, node EP-002);
+`sh scripts/gate-data.sh` (gate-data: ok, node EP-003). Later nodes add
+`gate-api: ok` (EP-004) the same way. `gate-data` provisions, migrates, asserts the live
+RLS inventory against `db/tenant-scoped-tables.txt`, proves cross-tenant read AND write
+refusal as `vg_app`, proves `audit_event` is append-only, runs the database suites and
+the mutation check, proves `verify.sh` now advances past `integration`, and tears the
+container down with proof.
 
 ## Evidence
 
