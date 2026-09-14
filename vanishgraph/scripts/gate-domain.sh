@@ -48,7 +48,20 @@ require_sentinel 'test collection guard: ok' sh scripts/test-collection-guard.sh
 
 # Zero-skip assertion (DOD-006). The collection guard reports skips as a note; a domain
 # node must not close with any.
-if ! node --test --test-reporter=junit "tests/**/*.test.ts" >"$tmp/domain-junit.xml" 2>"$tmp/domain-junit.err"; then
+#
+# SCOPE (EP-003 M5 fix). This glob used to be `tests/**/*.test.ts`, which was correct only
+# while every suite under tests/ was pure. Once EP-003 added the service-dependent
+# tests/db/** suite, the broad glob collected it here, its harness failed on the unset DSN
+# (this gate never exports one), and the whole gate failed with "the domain suite failed"
+# on every machine including a fully provisioned one. The gate's own words say "the domain
+# suite"; the glob now matches that claim by naming the pure roots, the same set
+# scripts/test-unit.sh runs. The database suite is asserted by gate-* for its own node, where
+# a provisioned PostgreSQL is a precondition rather than an accident.
+DOMAIN_GLOB="tests/domain/**/*.test.ts tests/harness/**/*.test.ts tests/architecture/**/*.test.ts"
+# Unquoted expansion is deliberate: several space-separated patterns must reach node as
+# separate arguments.
+# shellcheck disable=SC2086
+if ! node --test --test-reporter=junit $DOMAIN_GLOB >"$tmp/domain-junit.xml" 2>"$tmp/domain-junit.err"; then
   echo "gate-domain: FAIL - the domain suite failed" >&2
   tail -n 40 "$tmp/domain-junit.err" >&2
   exit 1

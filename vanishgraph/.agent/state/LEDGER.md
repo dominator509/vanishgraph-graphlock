@@ -38,3 +38,4 @@
 2026-09-14T09:29:08Z | forge | EP-003 | MILESTONE_PASS | M2 reality-gate rule 3 scope corrected (7 false positives resolved by narrowing the rule, allow-list empty by design); full gate suite 0 failures
 2026-09-14T09:44:48Z | forge | EP-003 | MILESTONE_PASS | M3 schema 0002-0005; rls generation: ok (26 tables, drift 0); rls coverage: ok (26 enabled+forced+policied); append-only audit proven
 2026-09-14T10:17:29Z | forge | EP-003 | MILESTONE_PASS | M4 0006/0007 applied; rls coverage: ok; checksum drift detected and cleared; multi-tenant deferred-trigger defect found and fixed
+2026-09-14T10:28:24Z | forge | EP-003 | MILESTONE_PASS | M5 cross-tenant negative tests pass against real PostgreSQL (VG-DATA-001..003); 7/7 db tests, unit guard green with no database, 2 sabotage controls caught

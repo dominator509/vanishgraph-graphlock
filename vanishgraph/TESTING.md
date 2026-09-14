@@ -62,10 +62,19 @@ Rules:
    `BLOCKED_ENVIRONMENT` is recorded when the service cannot be provisioned
    (DOD-032, DOD-033), never as a silent skip.
 4. **The collection guard is parameterised.** `scripts/test-collection-guard.sh`
-   honours `VG_TEST_GLOB` (default `tests/**/*.test.ts`) and `VG_EXPECTED_MANIFEST`
-   (default `.agent/verification/EXPECTED_TEST_MANIFEST.txt`), so one guard serves
+   honours `VG_TEST_GLOB` (default: the pure suite roots `tests/domain/**`,
+   `tests/harness/**` and `tests/architecture/**`, matching `scripts/test-unit.sh`)
+   and `VG_EXPECTED_MANIFEST` (default
+   `.agent/verification/EXPECTED_TEST_MANIFEST.txt`), so one guard serves
    every suite. Each suite has its own manifest, and a manifest suite that produces
    no results fails the guard.
+
+   The default is deliberately **not** `tests/**/*.test.ts`. EP-003 added the
+   service-dependent `tests/db/**` suite, and under the broad default the unit guard
+   collected it and failed with seven errors on a checkout with no PostgreSQL —
+   rule 1 above, violated by the guard that was supposed to enforce it. The guard and
+   the stage it guards now name the same roots, so they cannot disagree about what
+   "the unit suite" means.
 5. **Expected manifests are per suite.** `EXPECTED_TEST_MANIFEST.txt` for the unit
    stage and `EXPECTED_INTEGRATION_MANIFEST.txt` for the integration stage. Removing a
    line to make a guard pass is gate weakening (DOD-027).
