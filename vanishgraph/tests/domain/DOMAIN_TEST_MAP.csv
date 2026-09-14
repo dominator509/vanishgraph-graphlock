@@ -13,7 +13,7 @@ VG-ACTION-005,SPEC-001 3.4,T-VG-ACTION-005-01,tests/domain/invariants.test.ts,an
 VG-VERIFY-001,SPEC-001 4.2,T-VG-VERIFY-001-01,tests/domain/invariants.test.ts,an observation from the acting path is refused,node --test "tests/**/*.test.ts",PLANNED
 VG-VERIFY-002,SPEC-001 4.1,T-VG-VERIFY-002-01,tests/domain/values.test.ts,the observation window must genuinely elapse,node --test "tests/**/*.test.ts",PASS
 VG-VERIFY-003,SPEC-001 3.4,T-VG-VERIFY-003-01,tests/domain/invariants.test.ts,a method mismatch invalidates the observation,node --test "tests/**/*.test.ts",PLANNED
-VG-VERIFY-004,SPEC-001 4.2,T-VG-VERIFY-004-01,tests/domain/illegal-transitions.test.ts,REQUEST_SUBMITTED cannot become VERIFIED_REMOVED,node --test "tests/**/*.test.ts",PASS
+VG-VERIFY-004,SPEC-001 4.2,T-VG-VERIFY-004-01,tests/domain/state-machine.test.ts,removal theater is refused even when every other fact is satisfied,node --test "tests/**/*.test.ts",PASS
 VG-EVIDENCE-001,SPEC-001 3.5,T-VG-EVIDENCE-001-01,tests/domain/values.test.ts,malformed digests are refused,node --test "tests/**/*.test.ts",PASS
 VG-EGRESS-001,SPEC-001 2,T-VG-EGRESS-001-01,tests/domain/values.test.ts,the four protected classes are deny-by-default,node --test "tests/**/*.test.ts",PASS
 VG-REL-004,SPEC-001 1,T-VG-REL-004-01,tests/architecture/import-boundary.test.ts,the domain layer imports only the standard library,node --test "tests/**/*.test.ts",PLANNED
