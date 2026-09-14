@@ -112,3 +112,12 @@ binding suite table. One definition of "the unit tests" exists, in the script.
 `sh scripts/gate-toolchain.sh` (gate-toolchain: ok, node EP-000);
 `sh scripts/gate-foundation.sh` (gate-foundation: ok, node EP-001). Later nodes add
 `gate-domain: ok` (EP-002) and `gate-data: ok` (EP-003) the same way.
+
+## Evidence
+
+`sh scripts/evidence-index.sh` (evidence index: ok) rebuilds
+`.agent/evidence/EP-001/INDEX.txt`, classifying each artifact as `STABLE` (digest is a
+durable identity, safe to bind evidence to under DOD-029) or `VOLATILE` (the file embeds
+a timestamp, UUID or measurement, so no digest is recorded for it). A single
+indiscriminate hash of every evidence file is wrong by construction, because run
+transcripts legitimately differ on every run.

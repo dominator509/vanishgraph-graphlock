@@ -18,3 +18,4 @@
 2026-09-14T06:35:31Z | forge | EP-001 | MILESTONE_PASS | M6 local gate sequence green (12 sentinels in order); ci.yml committed; workflow run NOT_EXECUTED_LOCALLY
 2026-09-14T06:39:51Z | forge | EP-001 | MILESTONE_PASS | M7 gate-foundation: ok
 2026-09-14T06:44:45Z | forge | EP-001 | NODE_DONE | EP-001 complete: gate-foundation: ok; candidate a1d4827b131a0e1ac1ec475ffe6a505d963489c8
+2026-09-14T06:51:45Z | forge | EP-001 | EVIDENCE_INDEX_FIXED | M8 index reclassified: 5 stable digests verified durable across a rebuild; 4 run transcripts marked volatile instead of being falsely hashed
