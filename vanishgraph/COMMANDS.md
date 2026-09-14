@@ -63,3 +63,36 @@ a milestone that needs a new one must add it here in the same change.
   stages never pass silently** — that is a deliberate, load-bearing property.
 - `scripts/count-tests.mjs` is an implementation detail of
   `scripts/test-collection-guard.sh` and is not intended to be run directly.
+
+## Toolchain entry points
+
+Toolchain (Node >= 24, npm, from the project root): `npm ci`; `npm run test:unit`;
+`npm run gate:foundation`. These are the only package-manager entry points; the gates
+themselves are the `sh scripts/*.sh` commands above.
+
+`npm run` scripts are thin delegations to the shell gates, so there is exactly one
+implementation of each check. They exist so a contributor or CI job can use the
+conventional npm entry points without a second, divergent definition of "the tests":
+
+| npm script | Delegates to |
+|---|---|
+| `npm ci` | installs the committed lockfile exactly (DOD-002) |
+| `npm run typecheck` | `sh scripts/typecheck.sh` |
+| `npm run lint` | `sh scripts/lint.sh` |
+| `npm run format-check` | `sh scripts/format-check.sh` |
+| `npm run build` | `sh scripts/build.sh` |
+| `npm run test:unit` | `sh scripts/test-unit.sh` |
+| `npm run test:collection-guard` | `sh scripts/test-collection-guard.sh` |
+| `npm run reality-gate` | `sh scripts/reality-gate.sh` |
+| `npm run dependency-audit` | `sh scripts/dependency-audit.sh` |
+| `npm run gate:foundation` | `sh scripts/gate-foundation.sh` |
+| `npm run verify` | `sh scripts/verify.sh` |
+
+**`npm run test:unit` delegates to `scripts/test-unit.sh`, deliberately.** The
+EP-001 ExecPlan originally prescribed `node --test "tests/**/*.test.ts"` here. That
+glob sweeps in suites under `tests/integration/`, `tests/db/`, `tests/blackbox/`,
+`tests/api/`, `tests/e2e/`, `tests/live-fire/` and `tests/release/`, which require a
+provisioned database, a running API or a built artifact — so the entry point would
+fail on a clean checkout and present a harness limitation as a product failure
+(DOD-032). `scripts/test-unit.sh` excludes those roots; `TESTING.md` holds the
+binding suite table. One definition of "the unit tests" exists, in the script.

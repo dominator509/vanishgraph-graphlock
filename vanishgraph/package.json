@@ -7,11 +7,18 @@
   "engines": {
     "node": ">=24.0.0"
   },
+  "packageManager": "npm@11.11.0",
   "scripts": {
-    "typecheck": "tsc --noEmit",
-    "test:unit": "node --test tests/",
-    "test:collection-guard": "node --test --test-reporter=tap tests/ | node scripts/count-tests.mjs",
-    "lint": "tsc --noEmit"
+    "typecheck": "sh scripts/typecheck.sh",
+    "lint": "sh scripts/lint.sh",
+    "format-check": "sh scripts/format-check.sh",
+    "build": "sh scripts/build.sh",
+    "test:unit": "sh scripts/test-unit.sh",
+    "test:collection-guard": "sh scripts/test-collection-guard.sh",
+    "reality-gate": "sh scripts/reality-gate.sh",
+    "dependency-audit": "sh scripts/dependency-audit.sh",
+    "gate:foundation": "sh scripts/gate-foundation.sh",
+    "verify": "sh scripts/verify.sh"
   },
   "devDependencies": {
     "typescript": "5.9.3",
