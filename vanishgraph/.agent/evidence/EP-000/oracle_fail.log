@@ -1,0 +1,3 @@
+EP-000 Oracle FAILED: Missing required discovery deliverables: ['rust-toolchain.toml', 'package.json', '.python-version', 'TOOLCHAIN_PINS.md', 'INTEGRATION_MATRIX.md']
+Running EP-000 Discovery Oracle...
+EXCODE=1
