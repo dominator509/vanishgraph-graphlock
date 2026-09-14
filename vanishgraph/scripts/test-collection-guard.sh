@@ -15,8 +15,16 @@
 # PARAMETERISED (EP-000 M2 fix). The suit glob and the manifest are overridable so
 # that this one guard serves every suite rather than only the unit suite:
 #
-#   VG_TEST_GLOB          glob passed to `node --test`   (default tests/**/*.test.ts)
+#   VG_TEST_GLOB          glob passed to `node --test`   (default: the pure suites)
 #   VG_EXPECTED_MANIFEST  manifest path                  (default EXPECTED_TEST_MANIFEST.txt)
+#
+# The default glob lists the pure suite roots explicitly rather than using
+# `tests/**/*.test.ts`. MEASURED: once EP-003 added tests/db/**, the broad glob swept the
+# service-dependent database suite into the unit guard, and the guard failed with 7 failures on a
+# checkout with no provisioned PostgreSQL. That is the error DOD-032 forbids — a harness
+# limitation reported as a product failure — and it also made the unit gate unrunnable on a clean
+# checkout. The explicit roots below are the same set `scripts/test-unit.sh` runs, so the guard
+# and the stage it guards can no longer disagree about what "the unit suite" means.
 #
 # This matters because EP-003 runs the database suite through the same guard with
 # `VG_TEST_GLOB="tests/db/**/*.test.ts"` and
@@ -31,12 +39,16 @@ cd "$(dirname "$0")/.."
 
 command -v node >/dev/null 2>&1 || { echo "test collection guard: FAIL - node is required but not found" >&2; exit 1; }
 
-GLOB="${VG_TEST_GLOB:-tests/**/*.test.ts}"
+GLOB="${VG_TEST_GLOB:-tests/domain/**/*.test.ts tests/harness/**/*.test.ts tests/architecture/**/*.test.ts}"
 MANIFEST="${VG_EXPECTED_MANIFEST:-.agent/verification/EXPECTED_TEST_MANIFEST.txt}"
 
 [ -f "$MANIFEST" ] || { echo "test collection guard: FAIL - expected-test manifest $MANIFEST is missing" >&2; exit 1; }
 
-node --test --test-reporter=junit "$GLOB" \
+# Unquoted expansion is deliberate: VG_TEST_GLOB may hold several space-separated patterns, which
+# must be passed as separate arguments. Quoting would pass them as a single literal pattern that
+# matches nothing, and the guard would then report "zero tests collected" for the unit suite.
+# shellcheck disable=SC2086
+node --test --test-reporter=junit $GLOB \
   | VG_EXPECTED_MANIFEST="$MANIFEST" node scripts/count-tests.mjs
 
 echo "test collection guard: ok"

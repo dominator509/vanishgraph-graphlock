@@ -1,0 +1,6 @@
+# Expected integration test manifest (DOD-007 for the database suite).
+#
+# Every path listed here MUST contribute at least one test when `sh scripts/test-integration.sh`
+# runs. The collection guard is invoked with this manifest and VG_TEST_GLOB="tests/db/**/*.test.ts".
+# Removing a line to make the guard pass is gate weakening (DOD-027).
+tests/db/rls.test.ts

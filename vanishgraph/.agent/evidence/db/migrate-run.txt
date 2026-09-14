@@ -1,2 +1,9 @@
-migrate: verified 7 applied migration(s), no drift
+migrate: applying 0001_enums_and_tenant.sql
+migrate: applying 0002_identity.sql
+migrate: applying 0003_source.sql
+migrate: applying 0004_policy_and_action.sql
+migrate: applying 0005_evidence_audit_and_ops.sql
+migrate: applying 0006_updated_at_triggers.sql
+migrate: applying 0007_rls_invariant_assert.sql
+migrate: applied 7 migration(s); at version 7
 migrate: ok

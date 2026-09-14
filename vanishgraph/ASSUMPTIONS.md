@@ -51,6 +51,52 @@ matching digests. **This unblocks the 15 reconstructed Blockchain test bodies th
 `HARNESS_LAWS.md` counts toward the 484-test accounting** — a blocker that had been
 recorded as permanent was in fact a line-ending defect.
 
+### 3.2 Two defects found while executing EP-003 M5, both fixed
+
+**A. `withTenantSql` leaks its `set_config` echo as a result row.** Measured, not
+theorised: `withTenantSql` opens with `SELECT set_config('app.tenant_id', ...)`, and in
+an unaligned tuples-only psql session that statement emits its own return value as the
+**first** result row. Five of the seven isolation tests initially failed with
+`actual: '11111111-1111-4111-8111-111111111111', expected: '1'` — every caller's real
+rows were shifted by one. The fix is in `tests/db/harness.ts`: `asTenant` drops the
+echo row **only when it exactly equals the tenant id just set**, because a blanket
+"drop the first row" would silently swallow a genuine first row.
+
+**B. The collection guard's default glob swept in the service-dependent suite.** Once
+EP-003 M5 added `tests/db/**`, the guard's default `tests/**/*.test.ts` collected the
+database suite into the **unit** guard. Measured with the DSNs unset, simulating a clean
+checkout: `test collection guard: FAIL - 7 test(s) failed`. That is precisely the error
+DOD-032 forbids — a harness limitation reported as a product failure — and it made the
+unit gate unrunnable without PostgreSQL. The default glob is now the same explicit pure
+suite roots that `scripts/test-unit.sh` runs, so the guard and the stage it guards cannot
+disagree about what "the unit suite" means. Verified: with no database the unit guard
+reports `{"tests":302,"fail":0,...,"verdict":"OK"}`.
+
+**C. The execplan's boolean comparison would have passed vacuously.** EP-003 M5's code
+compared `relrowsecurity::text` against `'t'`, but libpq renders a boolean selected in a
+tuples-only session as `true`/`false`. Measured against the real database, every one of
+the 26 tables reported `true`. The suite now accepts either rendering and treats any
+unrecognised value as **not** true, so an unexpected rendering fails the test rather than
+passing it.
+
+Both defects were found by running the tests, not by reading them. Neither was present in
+`main` before this milestone.
+
+### 3.3 The isolation tests were shown to have teeth (negative controls)
+
+A passing isolation test that would also pass against an unprotected database is worse
+than no test, so two negative controls were run against the **throwaway**
+`vanishgraph_failure` database — never the main fixture:
+
+| Sabotage | Result |
+|---|---|
+| `ALTER TABLE protected_subject NO FORCE ROW LEVEL SECURITY` | FAIL, `unprotected tables: [["protected_subject","true","false","1"]]` |
+| `DROP POLICY …; CREATE POLICY … USING (true) WITH CHECK (true)` | FAIL, `unprotected tables: [["protected_subject","true","false","1"]]` and `FORCE RLS applies to the owner too` |
+
+The main fixture was verified un-sabotaged afterwards
+(`protected_subject | relrowsecurity=true | relforcerowsecurity=true`) and the suite is
+green against it (7/7).
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a
