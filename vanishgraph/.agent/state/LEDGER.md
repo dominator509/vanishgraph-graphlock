@@ -12,3 +12,4 @@
 2026-09-14T06:08:43Z | forge | EP-000 | NODE_DONE | EP-000 complete: gate-toolchain: ok; candidate 9d6406d5e083d2d1e11e00f7c44f2fae6f10978e
 2026-09-14T06:10:55Z | forge | EP-001 | MILESTONE_PASS | M1 lockfile tracked; test-unit: ok; test collection guard: ok
 2026-09-14T06:12:27Z | forge | EP-001 | MILESTONE_PASS | M2 format-check: ok; CRLF normalized to LF
+2026-09-14T06:15:32Z | forge | EP-001 | MILESTONE_PASS | M3 env validation: ok; REQUIRED credentials unprovisioned => BLOCKED_CREDENTIALS
