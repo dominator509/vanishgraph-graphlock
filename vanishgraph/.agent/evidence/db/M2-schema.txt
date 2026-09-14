@@ -1,0 +1,36 @@
+== truth_state members, in spec order ==
+      enumlabel       
+----------------------
+ DISCOVERED_CANDIDATE
+ MATCH_CONFIRMED
+ REQUEST_READY
+ REQUEST_SUBMITTED
+ ACKNOWLEDGED
+ VERIFIED_REMOVED
+ SEARCH_DELISTED
+ VERIFIED_NOT_PRESENT
+ NOT_REMOVABLE
+ HUMAN_REQUIRED
+ REAPPEARED
+(11 rows)
+
+== enum types created by 0001 ==
+     typname      
+------------------
+ authority_kind
+ egress_class
+ permission_class
+ truth_state
+(4 rows)
+
+== tables created by 0001 ==
+    tablename     
+------------------
+ schema_migration
+ tenant
+(2 rows)
+
+== apply idempotency: a second up applies nothing ==
+migrate: applied 0 migration(s); at version 1
+migrate: ok
+migrate: ok
