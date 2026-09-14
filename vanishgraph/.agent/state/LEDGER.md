@@ -49,3 +49,4 @@
 2026-09-14T13:51:17Z | forge | EP-004 | MILESTONE_PASS | M3 token validation and tenant resolution: ok; KEYCLOAK_ISSUER BLOCKED_CREDENTIALS; 85 contract tests; stale camelCase plan text corrected against SPEC-003 R-1
 2026-09-14T14:02:14Z | forge | EP-004 | MILESTONE_PASS | M4 cursor pagination and strict query parsing: ok; 144 contract tests; id tiebreaker implemented per FALLBACK
 2026-09-14T14:47:17Z | forge | EP-004 | MILESTONE_PASS | M5 idempotency semantics: ok; idempotency store integration BLOCKED_CREDENTIALS DATABASE_URL; durable store proven against real PostgreSQL
+2026-09-14T15:16:13Z | forge | EP-004 | MILESTONE_NOTE | M6 in progress: tenant runner + real readiness probe land; /v1/ready 200 ready with a real query (44ms) and 503 not_ready with no leak when the database is down; 78 route handlers NOT yet done
