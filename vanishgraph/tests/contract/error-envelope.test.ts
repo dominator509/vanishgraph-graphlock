@@ -16,7 +16,8 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { buildServer, type ServerDependencies } from '../../src/http/server.ts';
+import { buildServer, type ServerDependencies, type VgFastify } from '../../src/http/server.ts';
+import { testIdentity, testTenancy, TEST_TOKEN } from './server-support.ts';
 import { apiError } from '../../src/http/plugins/error-handler.ts';
 import {
   ERROR_CODE_REGISTRY,
@@ -26,10 +27,14 @@ import {
 } from './envelope-support.ts';
 
 function testServer(overrides: Partial<ServerDependencies> = {}) {
+  // Identity and tenancy are REQUIRED by ServerDependencies (EP-004 M3): an optional authentication
+  // plugin would be a configuration in which every route is unauthenticated.
   return buildServer({
     version: '0.0.0-test',
     commit: 'test',
     logLevel: 'silent',
+    identity: testIdentity(),
+    tenancy: testTenancy().runner,
     health: {
       startedAt: new Date(),
       now: () => new Date(),
@@ -55,6 +60,30 @@ function parseEnvelope(body: string): Envelope {
   const parsed = JSON.parse(body) as unknown;
   assert.ok(typeof parsed === 'object' && parsed !== null, 'the body must be a JSON object');
   return parsed as Envelope;
+}
+
+/**
+ * Inject a request carrying a valid test token by default.
+ *
+ * Identity runs as an `onRequest` hook, so every route below it needs a token. Wrapping `inject`
+ * here means a test cannot accidentally assert against a 401 caused by a forgotten header — which is
+ * exactly what happened when identity was first wired in: the whole envelope suite went red for
+ * authentication reasons rather than envelope reasons.
+ */
+async function injectAs(
+  app: VgFastify,
+  options: { method: 'GET' | 'POST' | 'DELETE'; url: string; headers?: Record<string, string>; payload?: string },
+): Promise<{ statusCode: number; body: string; headers: Record<string, unknown> }> {
+  const { headers, ...rest } = options;
+  const response = await app.inject({
+    ...rest,
+    headers: { authorization: `Bearer ${TEST_TOKEN}`, ...(headers ?? {}) },
+  });
+  return {
+    statusCode: response.statusCode,
+    body: response.body,
+    headers: response.headers as Record<string, unknown>,
+  };
 }
 
 describe('every wire code produces a valid envelope over real HTTP', () => {
@@ -83,10 +112,7 @@ describe('every wire code produces a valid envelope over real HTTP', () => {
       assert.ok(entry !== undefined, `${code} must have a registry row`);
       const statuses = WIRE_STATUS_AMBIGUITY[code] ?? [entry.status];
       for (const status of statuses) {
-        const res = await app.inject({
-          method: 'GET',
-          url: `/__test/raise/${code}?status=${status}`,
-        });
+        const res = await injectAs(app, { method: 'GET', url: `/__test/raise/${code}?status=${status}` });
 
         const envelope = parseEnvelope(res.body);
         assert.deepEqual(
@@ -128,8 +154,8 @@ describe('every wire code produces a valid envelope over real HTTP', () => {
       const status = Number((request.params as { status: string }).status);
       throw apiError('SCHEMA_VALIDATION_FAILED', undefined, status);
     });
-    const syntactic = parseEnvelope((await app.inject({ method: 'GET', url: '/__test/multi/400' })).body);
-    const semantic = parseEnvelope((await app.inject({ method: 'GET', url: '/__test/multi/422' })).body);
+    const syntactic = parseEnvelope((await injectAs(app, { method: 'GET', url: '/__test/multi/400' })).body);
+    const semantic = parseEnvelope((await injectAs(app, { method: 'GET', url: '/__test/multi/422' })).body);
     assert.equal(syntactic.error.message, 'The request body is malformed.');
     assert.equal(semantic.error.message, 'The request is well formed but fails a semantic validation.');
     assert.notEqual(syntactic.error.message, semantic.error.message);
@@ -143,7 +169,7 @@ describe('every wire code produces a valid envelope over real HTTP', () => {
     app.get('/__test/override', async () => {
       throw apiError('AUTHORITY_EXPIRED', undefined, 409);
     });
-    const res = await app.inject({ method: 'GET', url: '/__test/override' });
+    const res = await injectAs(app, { method: 'GET', url: '/__test/override' });
     assert.equal(res.statusCode, 409, 'the declared status wins');
     const envelope = parseEnvelope(res.body);
     assert.deepEqual(Object.keys(envelope), ['error'], 'the envelope must still be the only shape');
@@ -157,7 +183,7 @@ describe('every wire code produces a valid envelope over real HTTP', () => {
       // The thrown message says something entirely different and contains a fake subject value.
       throw apiError('ILLEGAL_TRANSITION');
     });
-    const res = await app.inject({ method: 'GET', url: '/__test/message' });
+    const res = await injectAs(app, { method: 'GET', url: '/__test/message' });
     const envelope = parseEnvelope(res.body);
     assert.equal(
       envelope.error.message,
@@ -178,7 +204,7 @@ describe('the 500 path leaks nothing (SPEC-003 §8.3, SPEC-006 H-8)', () => {
       throw new Error(`failed to load ${CANARY} using ${DSN_CANARY}`);
     });
 
-    const res = await app.inject({ method: 'GET', url: '/__test/boom' });
+    const res = await injectAs(app, { method: 'GET', url: '/__test/boom' });
     assert.equal(res.statusCode, 500);
     const envelope = parseEnvelope(res.body);
     assert.equal(envelope.error.code, 'INTERNAL_ERROR');
@@ -203,7 +229,7 @@ describe('the 500 path leaks nothing (SPEC-003 §8.3, SPEC-006 H-8)', () => {
         statusCode: 418,
       };
     });
-    const res = await app.inject({ method: 'GET', url: '/__test/hostile' });
+    const res = await injectAs(app, { method: 'GET', url: '/__test/hostile' });
     const envelope = parseEnvelope(res.body);
     assert.equal(res.body.includes('<script>'), false, 'a hostile toString reached the body');
     // 418 is not a declared status, so it must not be echoed; the code is not in the registry.
@@ -226,7 +252,7 @@ describe('the 500 path leaks nothing (SPEC-003 §8.3, SPEC-006 H-8)', () => {
         password: 'hunter2',
       } as never);
     });
-    const res = await app.inject({ method: 'GET', url: '/__test/details' });
+    const res = await injectAs(app, { method: 'GET', url: '/__test/details' });
     const envelope = parseEnvelope(res.body);
     assert.deepEqual(
       Object.keys(envelope.error.details ?? {}).sort(),
@@ -244,7 +270,7 @@ describe('the 500 path leaks nothing (SPEC-003 §8.3, SPEC-006 H-8)', () => {
       // A nested object is the shape through which a request body would reach the wire.
       throw apiError('ILLEGAL_TRANSITION', { field: { nested: 'secret-value' } } as never);
     });
-    const res = await app.inject({ method: 'GET', url: '/__test/nested' });
+    const res = await injectAs(app, { method: 'GET', url: '/__test/nested' });
     assert.equal(res.body.includes('secret-value'), false, 'a nested details value reached the body');
     const envelope = parseEnvelope(res.body);
     assert.equal(envelope.error.details, undefined, 'an empty details object must be absent');
@@ -255,7 +281,7 @@ describe('the 500 path leaks nothing (SPEC-003 §8.3, SPEC-006 H-8)', () => {
 describe('the boundary always produces the envelope (SPEC-006 H-1)', () => {
   test('an unknown path returns the envelope, not Fastify default output', async () => {
     const app = testServer();
-    const res = await app.inject({ method: 'GET', url: '/v1/does-not-exist' });
+    const res = await injectAs(app, { method: 'GET', url: '/v1/does-not-exist' });
     assert.equal(res.statusCode, 404);
     const envelope = parseEnvelope(res.body);
     assert.deepEqual(Object.keys(envelope), ['error']);
@@ -270,7 +296,7 @@ describe('the boundary always produces the envelope (SPEC-006 H-1)', () => {
 
   test('a method mismatch returns the envelope too', async () => {
     const app = testServer();
-    const res = await app.inject({ method: 'DELETE', url: '/v1/health' });
+    const res = await injectAs(app, { method: 'DELETE', url: '/v1/health' });
     assert.ok(res.statusCode >= 400, `expected a 4xx, got ${res.statusCode}`);
     const envelope = parseEnvelope(res.body);
     assert.deepEqual(Object.keys(envelope), ['error']);
@@ -281,12 +307,7 @@ describe('the boundary always produces the envelope (SPEC-006 H-1)', () => {
   test('an unparseable JSON body returns the envelope with the syntactic 400 spelling', async () => {
     const app = testServer();
     app.post('/__test/echo', async (request) => request.body);
-    const res = await app.inject({
-      method: 'POST',
-      url: '/__test/echo',
-      headers: { 'content-type': 'application/json' },
-      payload: '{ this is not json',
-    });
+    const res = await injectAs(app, { method: 'POST', url: '/__test/echo', headers: { 'content-type': 'application/json' }, payload: '{ this is not json' });
     assert.equal(res.statusCode, 400);
     const envelope = parseEnvelope(res.body);
     assert.equal(envelope.error.code, 'SCHEMA_VALIDATION_FAILED');
@@ -297,12 +318,7 @@ describe('the boundary always produces the envelope (SPEC-006 H-1)', () => {
   test('an unsupported media type returns UNSUPPORTED_MEDIA_TYPE', async () => {
     const app = testServer();
     app.post('/__test/echo', async (request) => request.body);
-    const res = await app.inject({
-      method: 'POST',
-      url: '/__test/echo',
-      headers: { 'content-type': 'application/xml' },
-      payload: '<x/>',
-    });
+    const res = await injectAs(app, { method: 'POST', url: '/__test/echo', headers: { 'content-type': 'application/xml' }, payload: '<x/>' });
     assert.equal(res.statusCode, 415);
     const envelope = parseEnvelope(res.body);
     assert.equal(envelope.error.code, 'UNSUPPORTED_MEDIA_TYPE');
@@ -314,11 +330,7 @@ describe('correlation is present on every response, including failures', () => {
   test('an error response echoes a caller-supplied correlation id', async () => {
     const app = testServer();
     const id = 'abc123def456abc123def456abc123de';
-    const res = await app.inject({
-      method: 'GET',
-      url: '/v1/does-not-exist',
-      headers: { 'x-correlation-id': id },
-    });
+    const res = await injectAs(app, { method: 'GET', url: '/v1/does-not-exist', headers: { 'x-correlation-id': id } });
     assert.equal(res.headers['x-correlation-id'], id);
     assert.equal(parseEnvelope(res.body).error.correlationId, id);
     await app.close();
@@ -327,11 +339,7 @@ describe('correlation is present on every response, including failures', () => {
   test('a hostile correlation id is replaced rather than reflected', async () => {
     const app = testServer();
     const hostile = '<script>alert(1)</script>';
-    const res = await app.inject({
-      method: 'GET',
-      url: '/v1/does-not-exist',
-      headers: { 'x-correlation-id': hostile },
-    });
+    const res = await injectAs(app, { method: 'GET', url: '/v1/does-not-exist', headers: { 'x-correlation-id': hostile } });
     assert.notEqual(res.headers['x-correlation-id'], hostile);
     assert.equal(res.body.includes(hostile), false, 'the hostile header was reflected');
     assert.match(String(res.headers['x-correlation-id']), /^[0-9a-f]{32}$/);

@@ -1332,6 +1332,52 @@ Recovery properties:
 
 ## 12. Surprises & Discoveries
 
+### 2026-09-14 — THIS NODE'S OWN M3 PLAN TEXT is stale: it specifies camelCase claims and invented role names
+
+The M3 CONTENT section says to require claims `sub`, `iss`, `aud`, `exp`, `tenantId`, `scopes`,
+`authTime`, `acr`, and to declare five role bundles (`vg_analyst`, `vg_operator`, `vg_reviewer`,
+`vg_auditor`, `vg_tenant_admin`).
+
+**Neither is correct.** SPEC-003 §14 R-1 records that this file originally invented exactly those
+names and that they were corrected:
+
+> "This file originally invented camelCase claims (`tenantId`, `scopes`, `authTime`, `acr`) and role
+> names (`vg_analyst`, `vg_operator`, `vg_reviewer`, `vg_auditor`, `vg_tenant_admin`) that did not
+> exist in SPEC-005. → **Corrected in this file.** §3.2 now reads SPEC-005 IDP-4's claims
+> (`tenant_id`, `roles`, `subject_ref`, `auth_level`) and §3.3 names SPEC-005 §2's roles."
+
+SPEC-003 §3.2 item 2 is explicit that the API "reads `tenant_id`, `roles`, `subject_ref`, and
+`auth_level` and does not invent parallel camelCase claims". SPEC-005 §2 lists **seven** roles:
+`SUBJECT_USER`, `GUARDIAN`, `OPERATOR`, `TENANT_ADMIN`, `AUDITOR`, `SUPPORT`, `COUNSEL_REVIEWER`.
+
+**Implemented to the SPECIFICATION, not to the stale plan text.** A token carrying only `tenantId` is
+missing `tenant_id` and is refused `TOKEN_INVALID_CLAIMS`; a test asserts that specific case so the
+camelCase names cannot creep back in. The five `vg_*` bundles appear nowhere in the code — a token
+carrying one would grant nothing and a route checking for one would deny every legitimate caller.
+
+This is the same class of defect as the SPEC-003 §5.9.1 scope line recorded below: a plan transcribed
+from a draft the specification later corrected. **The plan's M3 CONTENT paragraph should be amended.**
+
+### 2026-09-14 — `src/http` cannot import the OIDC adapter, so the identity contract moved to `application`
+
+`src/http/plugins/identity.ts` initially imported `bearerFrom` and the result type directly from
+`src/adapters/oidc/verify.ts`. `scripts/import-boundary.sh` refused it, correctly: ARCHITECTURE.md §2
+forbids `http` from importing adapters, and the reason is concrete — the identity plugin would have
+been welded to one verifier, so EP-006 could not replace it without editing a route.
+
+The refusal and the fix: `bearerFrom`, `IdentityClaims`, `IdentityRefusal`, `IdentityResult` and the
+`VerifyIdentity` port now live in `src/application/contracts/identity.ts`. The adapter IMPLEMENTS that
+contract, the plugin DEPENDS on it, and the composition root wires them. The boundary gate passing is
+the evidence.
+
+### 2026-09-14 — identity and tenancy became REQUIRED dependencies in `buildServer`
+
+M1 declared `identity?` and `tenancy?` optional, with "the fail-closed default" as the rationale. That
+was the wrong shape: an optional authentication plugin is a configuration in which **every route is
+unauthenticated**, and a fail-closed default that depends on a caller remembering to pass an argument
+is not fail-closed. Both are now required properties, so the unauthenticated configuration does not
+type-check. Weakening this would be a security regression, not a convenience.
+
 ### 2026-09-14 — SPEC-006 §6.2 maps ONE wire code to TWO message templates
 
 `DEPENDENCY_UNAVAILABLE` is the wire spelling of four domain classes, and §6.2 gives two different

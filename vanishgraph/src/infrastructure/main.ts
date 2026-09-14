@@ -21,6 +21,9 @@
 import { loadConfig, ConfigurationError, missingVariables } from './config.ts';
 import { buildServer, listen } from '../http/server.ts';
 import type { ProbeResult } from '../http/routes/health.ts';
+import { AUDIENCES, verifyToken } from '../adapters/oidc/verify.ts';
+import { JwksCache, httpsJwksFetcher } from '../adapters/oidc/jwks.ts';
+import type { TenantTransactionRunner } from '../http/plugins/tenancy.ts';
 
 /** Build identity. Read from the environment so CI can stamp a real commit. */
 const VERSION = process.env.npm_package_version ?? '0.1.0';
@@ -55,6 +58,28 @@ function configuredProbe(name: string, envName: string): () => Promise<ProbeResu
   };
 }
 
+/**
+ * The tenant transaction runner for a build with no database pool yet.
+ *
+ * IT REFUSES. IT DOES NOT PRETEND. EP-004 M6 wires the PostgreSQL pool that opens a real transaction
+ * and issues `SET LOCAL app.tenant_id`; until then there is no correct way to answer a data query, so
+ * this runner throws and the boundary maps the throw to `503 DEPENDENCY_UNAVAILABLE`.
+ *
+ * The alternative would be an in-memory object that returns empty rows, which is the worst possible
+ * substitute here: a route that reads no rows looks exactly like a tenant with no data, so isolation
+ * failures and empty results would be indistinguishable. `tests/contract/server-support.ts` contains
+ * exactly such a recorder, and it is confined to tests for that reason.
+ */
+function unavailableTransactionRunner(): TenantTransactionRunner {
+  return {
+    withTenantTransaction: async () => {
+      throw new Error(
+        'the tenant transaction runner is not wired: the PostgreSQL pool arrives in EP-004 M6',
+      );
+    },
+  };
+}
+
 async function main(): Promise<number> {
   let config;
   try {
@@ -73,10 +98,30 @@ async function main(): Promise<number> {
     throw error;
   }
 
+  // Identity is constructed from configuration. The JWKS fetch goes through the injected port so the
+  // HTTP layer never owns a network client, and a fetch failure becomes DEPENDENCY_UNAVAILABLE at
+  // verification time rather than an "accept unverified" fallback (see adapters/oidc/jwks.ts).
+  const jwks = new JwksCache({ fetchJwks: httpsJwksFetcher(), now: () => Date.now() });
+
   const app = buildServer({
     version: VERSION,
     commit: COMMIT,
     logLevel: config.logLevel,
+    identity: {
+      verify: (token) =>
+        verifyToken(token, {
+          jwks,
+          issuer: config.keycloakIssuer,
+          // The portal audience is the default here because this process serves the portal's own
+          // routes. A route set with a different audience (service, MCP) is EP-006's surface and
+          // must construct its own verifier with that audience rather than reusing this one.
+          expectedAudience: AUDIENCES.PORTAL,
+          now: () => Date.now(),
+        }),
+    },
+    tenancy: {
+      runner: unavailableTransactionRunner(),
+    },
     health: {
       startedAt: new Date(),
       now: () => new Date(),

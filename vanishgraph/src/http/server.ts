@@ -22,6 +22,8 @@ import type { JsonSchemaToTsProvider } from '@fastify/type-provider-json-schema-
 import { healthRoutes, type HealthDependencies } from './routes/health.ts';
 import { installCorrelation } from './plugins/correlation.ts';
 import { installErrorHandler } from './plugins/error-handler.ts';
+import { installIdentity, type IdentityPluginOptions } from './plugins/identity.ts';
+import { installTenancy, type TenancyPluginOptions } from './plugins/tenancy.ts';
 
 /**
  * The concrete Fastify type every route in this service is registered against.
@@ -46,47 +48,22 @@ export interface ServerDependencies {
   readonly version: string;
   readonly commit: string;
   /**
-   * Identity resolution (SPEC-003 §3, SPEC-005). Absent means the identity plugin is not
-   * registered, and every route except §5.17 refuses with 401 — the fail-closed default. EP-004
-   * M3 supplies the real implementation; until then a server built without it cannot serve data
-   * routes, which is the honest state rather than a bypass.
+   * Identity resolution (SPEC-003 §3, SPEC-005 IDP-1…IDP-6).
+   *
+   * REQUIRED, not optional. EP-004 M1 declared it optional and a server built without it could not
+   * serve data routes; M3 made it mandatory because an optional authentication plugin is a
+   * configuration in which every route is unauthenticated, and a fail-closed default that depends on
+   * remembering to pass an argument is not fail-closed.
    */
-  readonly identity?: IdentityResolver;
+  readonly identity: IdentityPluginOptions;
   /**
-   * Tenancy (SPEC-003 §2.4, VG-TENANT-001). Absent has the same fail-closed meaning as above.
+   * Tenancy (SPEC-003 §2.4, VG-TENANT-001). Required for the same reason: a request with no tenant
+   * binding must be unrepresentable rather than merely refused by convention.
    */
-  readonly tenancy?: TenancyResolver;
+  readonly tenancy: TenancyPluginOptions;
   readonly logLevel?: string;
 }
 
-/**
- * Resolve a caller from a bearer token.
- *
- * Returns the tenant id and scopes. A resolver that cannot verify the token returns undefined
- * rather than a partial identity: a half-resolved caller is how a request reaches a handler it
- * should not.
- */
-export interface IdentityResolver {
-  resolve(input: {
-    readonly authorization: string | undefined;
-    readonly correlationId: string;
-  }): Promise<
-    | {
-        readonly ok: true;
-        readonly tenantId: string;
-        readonly subject: string;
-        readonly scopes: readonly string[];
-        readonly roles: readonly string[];
-      }
-    | { readonly ok: false; readonly code: string }
-  >;
-}
-
-/** Bind a resolved identity to a tenant-scoped session (SPEC-003 §2.4). */
-export interface TenancyResolver {
-  /** Run `fn` with `app.tenant_id` set for the tenant, inside one transaction. */
-  withTenant<T>(tenantId: string, fn: () => Promise<T>): Promise<T>;
-}
 
 /**
  * Build the application.
@@ -125,6 +102,11 @@ export function buildServer(deps: ServerDependencies): VgFastify {
   // `x-correlation-id` header, and bypassed the error envelope entirely for sibling routes.
   installCorrelation(app);
   installErrorHandler(app);
+  // Identity runs BEFORE tenancy: a tenant is derived FROM the validated token, so tenancy has
+  // nothing to bind until identity has succeeded. Both run before routes so no handler can execute
+  // without a context.
+  installIdentity(app, deps.identity);
+  installTenancy(app, deps.tenancy);
 
   app.register(healthRoutes, {
     deps: deps.health,
