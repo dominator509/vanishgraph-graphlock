@@ -8,3 +8,4 @@
 # pass is gate weakening and is prohibited (DOD-027).
 tests/domain/state-machine.test.ts
 tests/domain/values.test.ts
+tests/harness/gate-scripts.test.ts

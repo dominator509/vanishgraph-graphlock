@@ -13,3 +13,4 @@
 2026-09-14T06:10:55Z | forge | EP-001 | MILESTONE_PASS | M1 lockfile tracked; test-unit: ok; test collection guard: ok
 2026-09-14T06:12:27Z | forge | EP-001 | MILESTONE_PASS | M2 format-check: ok; CRLF normalized to LF
 2026-09-14T06:15:32Z | forge | EP-001 | MILESTONE_PASS | M3 env validation: ok; REQUIRED credentials unprovisioned => BLOCKED_CREDENTIALS
+2026-09-14T06:26:08Z | forge | EP-001 | MILESTONE_PASS | M4 harness self-tests green (173 tests); zero-collection proof automated in gate-foundation per FALLBACK
