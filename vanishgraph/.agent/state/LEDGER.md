@@ -19,3 +19,6 @@
 2026-09-14T06:39:51Z | forge | EP-001 | MILESTONE_PASS | M7 gate-foundation: ok
 2026-09-14T06:44:45Z | forge | EP-001 | NODE_DONE | EP-001 complete: gate-foundation: ok; candidate a1d4827b131a0e1ac1ec475ffe6a505d963489c8
 2026-09-14T06:51:45Z | forge | EP-001 | EVIDENCE_INDEX_FIXED | M8 index reclassified: 5 stable digests verified durable across a rebuild; 4 run transcripts marked volatile instead of being falsely hashed
+2026-09-14T06:57:49Z | forge | EP-001 | LEDGER_STATUS_FIXED | closure made sticky; a later non-NODE_DONE event no longer reopens a closed node
+2026-09-14T06:58:11Z | operator | EP-001 | REOPEN | test of deliberate reopen
+2026-09-14T06:58:12Z | forge | EP-001 | NODE_DONE | EP-001 complete: gate-foundation: ok (re-closed after deliberate reopen test)
