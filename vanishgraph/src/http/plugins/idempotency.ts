@@ -45,8 +45,22 @@ export const IDEMPOTENCY_KEY_ECHO_HEADER = 'idempotency-key-echo';
 /** How long a completed record is retained (SPEC-003 §4.2). */
 export const IDEMPOTENCY_RETENTION_MS = 24 * 60 * 60 * 1000;
 
-/** `Required`, `Required-if-effect`, or `Optional` (SPEC-003 §4.1). */
-export type IdempotencyRequirement = 'required' | 'required-if-effect' | 'optional';
+/**
+ * `Required`, `Required-if-effect`, or `Optional` (SPEC-003 §4.1).
+ *
+ * `'none'` IS NOT A §4.1 TOKEN, and it is here because the route registry uses it. SPEC-003 §4.1 names
+ * three requirements, and none of them means "this route does not participate in idempotency at all" —
+ * `optional` is the closest, but `optional` ECHOES a supplied key, which on the four public health
+ * routes would advertise a mechanism that does nothing there. The registry's fourth token says what
+ * those routes mean, so the plugin has to understand it rather than fall through.
+ *
+ * MEASURED DEFECT this type prevents: the two modules declared DIFFERENT `IdempotencyRequirement`
+ * unions, so wiring `requirementFor` to the registry did not typecheck. Had it been cast instead, a
+ * `'none'` route would have fallen through every branch and been treated as `required` — the public
+ * health routes would have answered `400 IDEMPOTENCY_KEY_REQUIRED`, taking liveness and readiness down
+ * for every caller that presented no key. Recorded in EP-004 §12.
+ */
+export type IdempotencyRequirement = 'required' | 'required-if-effect' | 'optional' | 'none';
 
 /**
  * The key shape of SPEC-003 §4.2: 16–255 characters from `[A-Za-z0-9._:-]`.
@@ -141,6 +155,15 @@ declare module 'fastify' {
     /** Set by a handler's response hook so the plugin can store the outcome. */
     routeTemplate: string;
   }
+  interface FastifyInstance {
+    /**
+     * The one `IdempotencyPluginOptions` this instance was installed with.
+     *
+     * Exposed so `withIdempotency`'s call sites use the SAME `store` and `requirementFor` the hooks
+     * used. See the decoration in `installIdempotency` for why a second copy is unsafe.
+     */
+    vgIdempotency: IdempotencyPluginOptions;
+  }
 }
 
 /**
@@ -163,6 +186,13 @@ export async function withIdempotency<T>(
   // A route where the key adds no protection: echoed for diagnosis only, and the handler runs
   // normally (SPEC-003 §4.3 last row). The echo is deliberately NOT the key itself in a log line;
   // here it is a response header the caller already knows.
+  //
+  // `'none'` returns BEFORE the echo. See the type's comment: a route that does not participate in
+  // idempotency must not tell the caller that it did.
+  if (requirement === 'none') {
+    const result = await work();
+    return sendResult(reply, result) as T | undefined;
+  }
   if (requirement === 'optional' || requirement === undefined) {
     if (rawKey !== undefined) reply.header(IDEMPOTENCY_KEY_ECHO_HEADER, rawKey);
     const result = await work();
@@ -245,6 +275,11 @@ function headerValue(request: FastifyRequest, name: string): string | undefined 
 export function installIdempotency(app: FastifyInstance, options: IdempotencyPluginOptions): void {
   app.decorateRequest('vgIdempotency', undefined);
   app.decorateRequest('routeTemplate', '');
+  // The options are attached to the INSTANCE so a route can call `withIdempotency` without holding a
+  // second copy of them. A route that built its own options object would be able to pass a different
+  // `requirementFor` than the one the hooks used, and the claim would then be keyed differently from
+  // the replay — the failure mode where a duplicate effect looks like a fresh request.
+  app.decorate('vgIdempotency', options);
 
   /**
    * Claim the key BEFORE the handler runs.
@@ -256,7 +291,10 @@ export function installIdempotency(app: FastifyInstance, options: IdempotencyPlu
   app.addHook('onRequest', async (request) => {
     request.routeTemplate = normalizeRouteTemplate(request);
     const requirement = options.requirementFor(request.method, request.routeTemplate);
-    if (requirement === 'optional' || requirement === undefined) return;
+    // `'none'` returns with `optional`: a route that does not participate in idempotency claims no key.
+    // The two differ in `withIdempotency`, which echoes a supplied key for an `optional` route and not
+    // for a `'none'` one.
+    if (requirement === 'none' || requirement === 'optional' || requirement === undefined) return;
 
     const rawKey = headerValue(request, IDEMPOTENCY_KEY_HEADER);
     if (rawKey === undefined) {
@@ -303,7 +341,10 @@ export function installIdempotency(app: FastifyInstance, options: IdempotencyPlu
     const context = request.vgIdempotency;
     if (context === undefined) return;
     const requirement = options.requirementFor(request.method, request.routeTemplate);
-    if (requirement === 'optional' || requirement === undefined) return;
+    // `'none'` returns with `optional`: a route that does not participate in idempotency claims no key.
+    // The two differ in `withIdempotency`, which echoes a supplied key for an `optional` route and not
+    // for a `'none'` one.
+    if (requirement === 'none' || requirement === 'optional' || requirement === undefined) return;
 
     const fingerprint = fingerprintOf(request.body ?? null);
     const outcome = await options.store.begin(context.scope, fingerprint);

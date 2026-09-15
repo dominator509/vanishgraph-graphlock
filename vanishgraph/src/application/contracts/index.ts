@@ -48,6 +48,29 @@ export { bearerFrom } from './identity.ts';
 export { ALL_TRUTH_STATES, type TruthState } from '../../domain/truth-state.ts';
 
 /**
+ * The permission-class vocabulary and the channel catalogue (SPEC-003 §5.3, VG-CHANNEL-001/002).
+ *
+ * Re-exported for the same reason as the truth-state vocabulary: `src/http/**` may not import
+ * `src/domain/**` directly (ARCHITECTURE.md §2), and the §5.3 routes must validate a submitted
+ * `permissionClass` and `channel` against their single definitions.
+ *
+ * THE ROUTE MUST VALIDATE THESE ITSELF rather than let PostgreSQL do it. `permission_class` is a
+ * database enum, so an unknown value arrives as `22P02 invalid input value for enum` — which the
+ * error handler can only map to a generic failure. Refusing at the boundary is what turns "the write
+ * was rejected somehow" into "this is not a permission class", and it makes the refusal testable
+ * without a database.
+ */
+export {
+  CHANNEL_NAMES,
+  PERMISSION_CLASSES,
+  assertPermissionClass,
+  isPermissionClass,
+  permitsAutomatedWrite,
+  type ChannelName,
+  type PermissionClass,
+} from '../../domain/values.ts';
+
+/**
  * The at-most-once port (SPEC-001 §5.1, VG-ACTION-001).
  *
  * Re-exported for the same reason as the truth-state vocabulary: `src/http/**` may not import

@@ -61,6 +61,24 @@ const app = buildServer({
       candidateSubjectIds: [],
     }),
   },
+  // The §5.3 port. Empty/not-found answers, because this probe only enumerates routes and must not
+  // appear to have read anything. The write methods refuse rather than fabricate a created row.
+  sourceQueries: {
+    listSources: async () => [],
+    getSourceDetail: async () => undefined,
+    sourceExists: async () => false,
+    declareSource: async () => ({ ok: false, reason: 'CONTROLLER_NOT_FOUND' }),
+    setPermissionClass: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+    listCatalogEntries: async () => [],
+    appendCatalogEntry: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+    createRecipe: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+    listRecipes: async () => [],
+    getRecipe: async () => undefined,
+    setRecipeEnablement: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+  },
+  // No recipe verification key. This probe never submits a recipe, and an empty map is the honest
+  // state of a deployment with no key (ADR-006 OPEN).
+  recipeVerificationKeys: { publicKeysByRef: new Map<string, string>() },
   health: {
     startedAt: new Date(),
     now: () => new Date(),

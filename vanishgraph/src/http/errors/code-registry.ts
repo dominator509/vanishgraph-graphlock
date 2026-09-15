@@ -130,6 +130,44 @@ export const ERROR_CODE_REGISTRY: readonly ErrorCodeSpec[] = Object.freeze([
     message: 'A required dependency is unavailable.' },
 
   // ---------------------------------------------------------------------------------------
+  // The SPEC-003 §5.3 declaration and recipe-authoring guards.
+  //
+  // These codes are enumerated in SPEC-003 §8.2 (409 and 422 rows) and named by §5.3's own error
+  // lists, but SPEC-006 §6.2 gives them NO domain class and NO message template — its §6.2 tables
+  // cover the §5.3 write path (the case lifecycle) and not the §5.3 catalogue path. The templates
+  // below therefore have no SPEC-006 source. They are non-interpolated, state the condition, and
+  // claim no success (H-3, H-12); their provenance is recorded in EP-004 §12 as a finding rather
+  // than presented as a spec quote. `domainCode` equals `wireCode` for the same reason: there is no
+  // separate domain token to keep distinguishable in audit, and inventing one would imply a domain
+  // class that no specification declares.
+  //
+  // CONSEQUENCE WORTH STATING: `wireCodeForDomain()` is what tells audit which domain cause raised
+  // a wire code. For these ten codes it maps one-to-one, so a telemetry consumer sees the same token
+  // the client does. That is weaker than the shared-cause codes above (four domain causes collapse
+  // onto DEPENDENCY_UNAVAILABLE) but it is not wrong, and it is preferable to a fabricated class.
+  // ---------------------------------------------------------------------------------------
+  { domainCode: 'SOURCE_ALREADY_DECLARED', wireCode: 'SOURCE_ALREADY_DECLARED', status: 409, retryable: false,
+    message: 'A source with this name is already declared for this tenant.' },
+  { domainCode: 'CONTROLLER_NOT_FOUND', wireCode: 'CONTROLLER_NOT_FOUND', status: 422, retryable: false,
+    message: 'The referenced controller does not exist.' },
+  { domainCode: 'PERMISSION_EVIDENCE_REQUIRED', wireCode: 'PERMISSION_EVIDENCE_REQUIRED', status: 422, retryable: false,
+    message: 'A write-permitted declaration requires current official-permission evidence.' },
+  { domainCode: 'CATALOG_NOTES_REQUIRED', wireCode: 'CATALOG_NOTES_REQUIRED', status: 422, retryable: false,
+    message: 'A catalogue entry requires non-empty coverage notes.' },
+  { domainCode: 'CATALOG_ENTRY_DUPLICATE', wireCode: 'CATALOG_ENTRY_DUPLICATE', status: 409, retryable: false,
+    message: 'This source already has a catalogue entry for that category.' },
+  { domainCode: 'LICENSE_UNRECORDED', wireCode: 'LICENSE_UNRECORDED', status: 422, retryable: false,
+    message: 'A catalogue entry requires a recorded licence.' },
+  { domainCode: 'RECIPE_VERIFICATION_METHOD_REQUIRED', wireCode: 'RECIPE_VERIFICATION_METHOD_REQUIRED', status: 422, retryable: false,
+    message: 'A recipe version requires a declared verification method.' },
+  { domainCode: 'RECIPE_CHANNEL_UNKNOWN', wireCode: 'RECIPE_CHANNEL_UNKNOWN', status: 422, retryable: false,
+    message: 'The requested channel is not one of the declared channels.' },
+  { domainCode: 'RECIPE_VERSION_CONFLICT', wireCode: 'RECIPE_VERSION_CONFLICT', status: 409, retryable: false,
+    message: 'Another recipe version was created concurrently; retry with the current version.' },
+  { domainCode: 'RECIPE_GUARD_FAILED', wireCode: 'RECIPE_GUARD_FAILED', status: 409, retryable: false,
+    message: 'A recipe enablement guard failed; the recipe remains disabled.' },
+
+  // ---------------------------------------------------------------------------------------
   // SPEC-006 §6.2 "codes owned by SPEC-003 §8.2 with no domain class of their own".
   // ---------------------------------------------------------------------------------------
   { domainCode: 'UNAUTHENTICATED', wireCode: 'TOKEN_MISSING', status: 401, retryable: false,
@@ -455,6 +493,12 @@ export const DETAILS_ALLOWLIST = [
   // SPEC-003 §4.3 names originalResourceId in the IDEMPOTENCY_KEY_REUSE conflict body. It is an
   // identifier in the caller's OWN tenant, never a request body value.
   'originalResourceId',
+  // SPEC-003 §2.7: "a stale value is 412 PRECONDITION_FAILED with the current ETag in the body".
+  // The current ETag is a concurrency TOKEN, not a resource value, and echoing it is what lets the
+  // loser of a race re-read and re-issue instead of blind-retrying — which VG-ACTION-002 forbids.
+  // The value is the same string the response's own `ETag` header carries, so this discloses nothing
+  // the caller could not already read from the header.
+  'currentEtag',
 ] as const;
 
 export type DetailsKey = (typeof DETAILS_ALLOWLIST)[number];

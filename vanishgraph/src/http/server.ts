@@ -21,7 +21,9 @@ import type { JsonSchemaToTsProvider } from '@fastify/type-provider-json-schema-
 
 import { healthRoutes, type HealthDependencies } from './routes/health.ts';
 import { subjectRoutes } from './routes/subjects.ts';
+import { sourceRoutes } from './routes/sources.ts';
 import type { SubjectQueries } from '../application/contracts/subject-queries.ts';
+import type { RecipeVerificationKeys, SourceQueries } from '../application/contracts/source-queries.ts';
 import { installCorrelation } from './plugins/correlation.ts';
 import { installErrorHandler } from './plugins/error-handler.ts';
 import { installIdentity, type IdentityPluginOptions } from './plugins/identity.ts';
@@ -83,6 +85,21 @@ export interface ServerDependencies {
    * adapter; the composition root supplies the PostgreSQL implementation.
    */
   readonly subjectQueries: SubjectQueries;
+  /**
+   * The source catalogue and recipe read/write model (SPEC-003 §5.3). Injected as a port for the same
+   * reason as `subjectQueries`.
+   */
+  readonly sourceQueries: SourceQueries;
+  /**
+   * The trusted recipe signing keys (SPEC-003 §5.3.7, VG-CHANNEL-003).
+   *
+   * REQUIRED, and legitimately EMPTY. An empty map is not a degraded mode: it means no key is
+   * configured, so `POST /v1/sources/{sourceId}/recipes` refuses with `503 DEPENDENCY_UNAVAILABLE`
+   * rather than storing a recipe whose signature nobody checked. ADR-006 (KMS selection) is OPEN, so
+   * this is the current state of every deployment — and it must be visible as a refusal, not as a
+   * silently accepted unverified recipe.
+   */
+  readonly recipeVerificationKeys: RecipeVerificationKeys;
   readonly logLevel?: string;
 }
 
@@ -137,6 +154,13 @@ export function buildServer(deps: ServerDependencies): VgFastify {
   // matched pattern back to the registry's `{param}` form, because the registry equals the
   // specification and the specification uses brace notation.
   app.register(subjectRoutes, { sessionSecret: deps.sessionSecret, queries: deps.subjectQueries });
+
+  // The SPEC-003 §5.3 group. Same registration convention as §5.1.
+  app.register(sourceRoutes, {
+    sessionSecret: deps.sessionSecret,
+    queries: deps.sourceQueries,
+    verificationKeys: deps.recipeVerificationKeys,
+  });
 
   app.register(healthRoutes, {
     deps: deps.health,

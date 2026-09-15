@@ -26,7 +26,59 @@ import { JwksCache, httpsJwksFetcher } from '../adapters/oidc/jwks.ts';
 import { PostgresIdempotencyStore } from '../adapters/idempotency/postgres-store.ts';
 import { PostgresTenantRunner, postgresReadinessProbe } from '../adapters/persistence/postgres-runner.ts';
 import { PostgresSubjectQueries } from '../adapters/persistence/subjects.ts';
+import { PostgresSourceQueries, verificationKeysFrom } from '../adapters/persistence/sources.ts';
+import { findRoute } from '../http/openapi/registry.ts';
 import { parseDsn } from '../adapters/../infrastructure/database/psql.ts';
+
+/**
+ * The trusted recipe signing keys, read from the environment.
+ *
+ * The variable is a JSON object mapping `signingKeyRef` to an SPKI PEM public key:
+ *
+ *     RECIPE_VERIFICATION_KEYS={"kms:recipe-1":"-----BEGIN PUBLIC KEY-----\n…"}
+ *
+ * WHY JSON RATHER THAN ONE VARIABLE PER KEY: the reference is caller-supplied data (§5.3.7's
+ * `signingKeyRef`), so the set of keys is open-ended and a fixed variable name per key would require
+ * a deployment change to add one.
+ *
+ * A MALFORMED DOCUMENT IS A BOOTSTRAP FAILURE, not an empty map. Silently treating a typo as "no keys
+ * configured" would turn every recipe submission into a 503 whose cause is invisible, and the operator
+ * would look for a missing key rather than a broken one. An ABSENT variable is not malformed: it is the
+ * documented state of a deployment with no key yet, and it yields an empty map.
+ *
+ * An individual key that fails to parse is dropped by `verificationKeysFrom`, with its reference
+ * reported, so one bad entry does not take reads down with it.
+ */
+function recipeVerificationKeysFromEnvironment(): ReturnType<typeof verificationKeysFrom>['keys'] {
+  const raw = process.env['RECIPE_VERIFICATION_KEYS'];
+  if (raw === undefined || raw.trim().length === 0) return verificationKeysFrom({}).keys;
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    // The VALUE is never printed — it is key material in the PEM case (VG-SEC-002). The variable name
+    // is enough for an operator to find the problem.
+    throw new ConfigurationError('dependency unavailable: RECIPE_VERIFICATION_KEYS is not valid JSON', 'RECIPE_VERIFICATION_KEYS');
+  }
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    throw new ConfigurationError('dependency unavailable: RECIPE_VERIFICATION_KEYS must be a JSON object', 'RECIPE_VERIFICATION_KEYS');
+  }
+
+  const entries: Record<string, string> = {};
+  for (const [ref, pem] of Object.entries(parsed as Record<string, unknown>)) {
+    if (typeof pem !== 'string') {
+      throw new ConfigurationError('dependency unavailable: RECIPE_VERIFICATION_KEYS values must be PEM strings', 'RECIPE_VERIFICATION_KEYS');
+    }
+    entries[ref] = pem;
+  }
+  const { keys, rejected } = verificationKeysFrom(entries);
+  if (rejected.length > 0) {
+    // Only the REFERENCES are named. A rejected key's bytes are never logged.
+    console.error(`serve: RECIPE_VERIFICATION_KEYS entries rejected (unparseable public key): ${rejected.join(', ')}`);
+  }
+  return keys;
+}
 
 /** Build identity. Read from the environment so CI can stamp a real commit. */
 const VERSION = process.env.npm_package_version ?? '0.1.0';
@@ -116,13 +168,23 @@ async function main(): Promise<number> {
     // The read model is constructed HERE, in the composition root, because this is the only layer
     // allowed to know that a PostgreSQL adapter exists.
     subjectQueries: new PostgresSubjectQueries(),
+    // The §5.3 model, constructed here for the same reason.
+    sourceQueries: new PostgresSourceQueries(),
+    // Recipe signature verification keys, from the environment. An EMPTY map is a real state rather
+    // than a fallback: every recipe submission is then refused with `503 DEPENDENCY_UNAVAILABLE`,
+    // because VG-CHANNEL-003 forbids storing a recipe the system cannot verify. ADR-006 (KMS
+    // selection) is OPEN, so no production key exists yet — and that refusal is what makes the gap
+    // visible instead of silently accepting unverified recipes.
+    recipeVerificationKeys: recipeVerificationKeysFromEnvironment(),
     idempotency: {
       // The durable store is PostgreSQL (SPEC-003 §4.2): the effect must survive a process restart,
       // so an in-memory store would defeat the mechanism it implements.
       store: new PostgresIdempotencyStore({ dsn: parseDsn(config.databaseUrl) }),
-      // Every route's requirement comes from the registry; until the handlers exist (M6) no route is
-      // registered, so every lookup resolves to optional and no key is claimed.
-      requirementFor: () => undefined,
+      // The requirement comes from the REGISTRY, which is the contract (SPEC-003 §4.1). MEASURED
+      // DEFECT this corrects: the function returned `undefined` unconditionally, so no route ever
+      // claimed a key and every effect-bearing route ran with idempotency OFF while its registry entry
+      // said `required` — the same defect `beginHandler` had already fixed for step-up.
+      requirementFor: (method, routeTemplate) => findRoute(method, routeTemplate)?.idempotency,
     },
     health: {
       startedAt: new Date(),

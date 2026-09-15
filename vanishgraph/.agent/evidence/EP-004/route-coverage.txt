@@ -1,0 +1,15 @@
+route coverage: 27 of 78 registry routes have a handler
+route coverage: 51 registry route(s) not yet implemented:
+  §5.4: 5 route(s)
+  §5.5: 5 route(s)
+  §5.6: 4 route(s)
+  §5.7: 6 route(s)
+  §5.8: 6 route(s)
+  §5.9: 3 route(s)
+  §5.10: 3 route(s)
+  §5.11: 3 route(s)
+  §5.12: 5 route(s)
+  §5.13: 3 route(s)
+  §5.14: 3 route(s)
+  §5.15: 2 route(s)
+  §5.16: 3 route(s)

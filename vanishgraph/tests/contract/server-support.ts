@@ -22,6 +22,10 @@ import type { TenancyPluginOptions, TenantTransaction } from '../../src/http/plu
 import type { VerifyResult } from '../../src/adapters/oidc/verify.ts';
 import type { IdempotencyPluginOptions } from '../../src/http/plugins/idempotency.ts';
 import type { SubjectQueries } from '../../src/application/contracts/subject-queries.ts';
+import type {
+  RecipeVerificationKeys,
+  SourceQueries,
+} from '../../src/application/contracts/source-queries.ts';
 
 /**
  * The cursor signing secret used by tests.
@@ -175,4 +179,44 @@ export function testSubjectQueries(): SubjectQueries {
       candidateSubjectIds: [],
     }),
   };
+}
+
+/**
+ * A source/recipe model for tests that do not exercise §5.3.
+ *
+ * EMPTY and NOT-FOUND are the honest answers for a stub: they are exactly what a tenant with no
+ * declared sources looks like, and a stub that fabricated a source would make a route test assert
+ * against data the database never held. It is NOT evidence about persistence — the suites that assert
+ * §5.3 behaviour run the real adapter against real PostgreSQL in `tests/db/`.
+ *
+ * The WRITE methods refuse rather than fabricate. A stub that returned a created id would let a route
+ * test pass while the real adapter wrote nothing, which is the failure mode `scripts/reality-gate.sh`
+ * exists to catch.
+ */
+export function testSourceQueries(): SourceQueries {
+  return {
+    listSources: async () => [],
+    getSourceDetail: async () => undefined,
+    sourceExists: async () => false,
+    declareSource: async () => ({ ok: false, reason: 'CONTROLLER_NOT_FOUND' }),
+    setPermissionClass: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+    listCatalogEntries: async () => [],
+    appendCatalogEntry: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+    createRecipe: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+    listRecipes: async () => [],
+    getRecipe: async () => undefined,
+    setRecipeEnablement: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+  };
+}
+
+/**
+ * No recipe verification keys.
+ *
+ * The EMPTY map is the honest default for a test: it is the state of every deployment while ADR-006 is
+ * open, and it makes `POST /v1/sources/{sourceId}/recipes` refuse with `503 DEPENDENCY_UNAVAILABLE`
+ * rather than accept a recipe no test can verify. A suite that wants the accepting path supplies its own
+ * key pair through `tests/db/`, where a real signature can be produced.
+ */
+export function testRecipeVerificationKeys(): RecipeVerificationKeys {
+  return { publicKeysByRef: new Map<string, string>() };
 }

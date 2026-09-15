@@ -130,4 +130,41 @@ export const REAPPEARANCES_QUERY: QuerySchema = {
 };
 
 /** The default page size, re-exported so a route does not restate it. */
+/** `GET /v1/sources` (SPEC-003 §5.3.1). */
+export const SOURCES_QUERY: QuerySchema = {
+  paginated: true,
+  parameters: {
+    ...PAGINATION,
+    class: { type: 'string' },
+    jurisdiction: { type: 'string' },
+    permissionClass: {
+      type: 'enum',
+      values: ['READ_ONLY', 'WRITE_PERMITTED', 'WRITE_UNCLEAR', 'PROHIBITED'],
+    },
+  },
+  sortFields: ['name', 'freshnessAt'],
+  defaultSort: 'name:asc',
+  timeFilterable: false,
+  truthStateFilterable: false,
+};
+
+/**
+ * `GET /v1/sources/{sourceId}/recipes` (SPEC-003 §5.3.8).
+ *
+ * NOT paginated, and that is the specification's choice rather than an omission: the route declares
+ * no `limit`/`cursor` and a source's recipe versions are bounded by how many times its terms changed.
+ * Declaring pagination here would accept parameters the spec does not offer.
+ */
+export const RECIPES_QUERY: QuerySchema = {
+  paginated: false,
+  parameters: {
+    enabled: { type: 'boolean' },
+    fresh: { type: 'boolean' },
+  },
+  sortFields: ['version', 'freshnessAt'],
+  defaultSort: 'version:desc',
+  timeFilterable: false,
+  truthStateFilterable: false,
+};
+
 export { DEFAULT_LIMIT };

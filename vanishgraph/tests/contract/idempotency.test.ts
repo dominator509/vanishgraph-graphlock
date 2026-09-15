@@ -26,6 +26,8 @@ import { canonicalise, fingerprintOf, validateIdempotencyKey } from '../../src/h
 import {
   testIdentity,
   testSubjectQueries,
+  testSourceQueries,
+  testRecipeVerificationKeys,
   testTenancy,
   TEST_SESSION_SECRET,
   TEST_TOKEN,
@@ -62,6 +64,8 @@ function effectServer(options: {
     },
     sessionSecret: TEST_SESSION_SECRET,
     subjectQueries: testSubjectQueries(),
+    sourceQueries: testSourceQueries(),
+    recipeVerificationKeys: testRecipeVerificationKeys(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),
@@ -444,6 +448,8 @@ describe('a pre-effect failure releases the key so the caller can retry', () => 
       },
       sessionSecret: TEST_SESSION_SECRET,
       subjectQueries: testSubjectQueries(),
+    sourceQueries: testSourceQueries(),
+    recipeVerificationKeys: testRecipeVerificationKeys(),
       health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 's', ok: true })] },
     });
     const { withIdempotency } = await import('../../src/http/plugins/idempotency.ts');

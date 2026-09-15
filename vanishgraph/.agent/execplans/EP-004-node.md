@@ -1376,7 +1376,70 @@ removed, and a contract test reads §3.2 item 7's own route list and fails if an
 source's permission class can be SET at creation, so §5.3.2 arguably changes a source in the sense §6
 means. That is a counsel/spec-owner question.
 
-### 2026-09-14 — EP-003 never built a repository layer, and M6's CHANGE list assumes one
+### 2026-09-15 — SPEC-003 §5.3 is a contract over fields SPEC-002 §2 has no column for
+
+Executing the §5.3 group found that the contract names request and response fields with nowhere to
+live, and one error condition (`409 SOURCE_ALREADY_DECLARED`) that is undecidable without a natural key
+SPEC-002 does not declare. The full table of columns and their citations is in `ASSUMPTIONS.md` §3.13;
+the short version is nine column additions across `source` and `removal_recipe`, two unique indexes,
+and one withdrawn CHECK, delivered as migrations **0012, 0013 and 0014**.
+
+**This deviates from M6's own instruction**, which says: "Do not invent a schema in this node; that is
+EP-003's audit list and this node's diff would violate §6." Read in context, that sentence sits in
+M6's "Blocked work, stated honestly" section and addresses EP-003 being **unstarted**: "EP-003 is
+largely unstarted, so no schema, migration, or RLS policy exists." That condition does not hold —
+EP-003 is DONE (tag `green/EP-003`, 11 migrations, FORCE RLS on 30 tables). What is present is a
+spec-vs-spec coverage gap, and M6's remedy ("stop at `NODE_BLOCKED` … do not invent a schema") would
+have left ten routes silently discarding seven contractual fields — the failure state AGENTS.md calls
+"software that appears to work".
+
+Every column added is NAMED BY A SPECIFICATION SENTENCE; none was invented. All are nullable or
+defaulted, so no existing row is rewritten and nothing SPEC-002 §2 states is contradicted. The two
+natural keys are choices (SPEC-002 declares none), recorded as such.
+
+**Owner decision wanted:** either SPEC-002 §2 should carry these columns, or SPEC-003 §5.3 should stop
+requiring them. As it stands the two specifications cannot both be satisfied by one schema.
+
+### 2026-09-15 — `disabled_reason` carries two provenances, so its CHECK rejected the spec's own example
+
+Migration 0012 constrained `removal_recipe.disabled_reason` to a six-token vocabulary. That column
+holds **two** kinds of value: a SYSTEM reason computed by VG-CHANNEL-002's auto-disable, and an
+OPERATOR reason taken from §5.3.10's request body. §5.3.10's own example is `PERMISSION_REFRESHED`,
+which the CHECK did not contain — so the constraint would have rejected the specification's example
+with SQLSTATE `23514`, surfacing as a 500 on a legitimate request. Migration 0014 withdraws the CHECK;
+the closed half moved to a TypeScript union in the adapter where those values are produced. Widening
+the list was not available: the operator tokens are unbounded caller input.
+
+### 2026-09-15 — the recipe signature's signed payload is specified nowhere
+
+SPEC-003 §5.3.7 requires verification (VG-CHANNEL-003, VG-API-028) and never says what is signed. A
+verifier must define the bytes. The construction chosen is recorded in `ASSUMPTIONS.md` §3.14 and
+exported as `canonicalRecipePayload` so the rule has one definition and a test can produce a valid
+signature. **It is wire-visible and an integrator cannot sign without it**, which makes it a
+specification gap rather than an implementation detail.
+
+### 2026-09-15 — two `IdempotencyRequirement` unions that disagreed, and a route set that claimed no keys
+
+`src/http/openapi/registry.ts` declared `required | optional | none`; `src/http/plugins/idempotency.ts`
+declared `required | required-if-effect | optional`. Wiring the composition root's `requirementFor` to
+the registry therefore did not typecheck. A cast would have made each `'none'` route — the four public
+health routes — fall through to the required branch and answer `400 IDEMPOTENCY_KEY_REQUIRED`, taking
+liveness and readiness down for every caller presenting no key.
+
+Found in the same place: `src/infrastructure/main.ts` passed `requirementFor: () => undefined`, so **no
+route ever claimed an idempotency key**. Every effect-bearing route ran with idempotency OFF while its
+registry entry said `required`. This is the identical defect `beginHandler` had already fixed for
+step-up one milestone earlier, in the same shape: a control declared in the registry and not enforced
+from it. Both are now registry-driven and asserted by `tests/contract/source-routes.test.ts`.
+
+### 2026-09-15 — `DETAILS_ALLOWLIST` had no key for the ETag §2.7 requires in a 412 body
+
+SPEC-003 §2.7 requires a stale `If-Match` to return the CURRENT ETag in the body, and SPEC-006 H-13
+restricts `details` keys to the allowlist in `src/http/errors/code-registry.ts`, which had no entry for
+it. `currentEtag` was added with the §2.7 citation. The allowlist is a closed set, so this is a
+contract change and is recorded rather than made quietly.
+
+### 2026-09-15 — EP-003 never built a repository layer, and M6's CHANGE list assumes one
 
 M6's CHANGE list names `src/adapters/persistence/**` as though it existed. It does not. EP-003's own
 scope section lists "the service layer, HTTP/API, authorization middleware (EP-004/EP-006)" as OUT of

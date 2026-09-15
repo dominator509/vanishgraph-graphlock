@@ -256,6 +256,110 @@ it. It is recorded here rather than silently left out, and the node that first n
 authority grant — most likely EP-006, which owns the identity and authority surface — must declare it
 before implementing it, exactly as EP-004 M5 declared `IdempotencyStore`.
 
+### 3.13 SPEC-003 §5.3 requires fields that SPEC-002 §2's schema has no column for (three migrations added)
+
+Executing EP-004 M6's §5.3 group (sources, catalogue entries, removal recipes) found that the contract
+names request and response fields with nowhere to live. Each is traceable to a specification sentence;
+what was missing was the storage those sentences presuppose. All three migrations are ADDITIVE and
+NULLABLE, so no statement in SPEC-002 §2 is contradicted — SPEC-002 declared a subset of what the
+contract needs.
+
+| Field / rule | Required by | Column added | Migration |
+|---|---|---|---|
+| `controllerId` on the source DTO, and `422 CONTROLLER_NOT_FOUND` | SPEC-003 §5.3.1, §5.3.2 | `source.controller_id uuid REFERENCES controller(id)` | 0012 |
+| `permissionEvidenceUrl`, `422 PERMISSION_EVIDENCE_REQUIRED` | SPEC-003 §5.3.2, §5.3.4 | `source.permission_evidence_url text` | 0012 |
+| `freshnessState` / `permissionFresh`, defined against a **source-declared** window | SPEC-006 §5.3 row 7 | `source.permission_window_seconds integer` | 0012 |
+| `409 SOURCE_ALREADY_DECLARED` | SPEC-003 §5.3.2 | `UNIQUE INDEX source_tenant_name_uniq (tenant_id, name)` | 0012 |
+| `signingKeyRef`, `maxAttemptsPerWindow`, `windowSeconds` | SPEC-003 §5.3.7; VG-ACTION-005 | `removal_recipe.signing_key_ref`, `.max_attempts_per_window`, `.window_seconds` | 0012 |
+| `disabledReason`, `enabledAt` | SPEC-003 §5.3.8, §5.3.10 | `removal_recipe.disabled_reason`, `.enabled_at` | 0012 |
+| `If-Match` / ETag concurrency token on both write routes | SPEC-003 §2.7, §5.3.4, §5.3.10 | `source.row_version`, `removal_recipe.row_version` (NOT NULL DEFAULT 1) | 0012 |
+| `409 CATALOG_ENTRY_DUPLICATE` | SPEC-003 §5.3.6 | `UNIQUE INDEX source_catalog_entry_source_category_uniq (source_id, category)` | 0013 |
+| `disabled_reason` holding BOTH a system token and an operator's own reason | SPEC-003 §5.3.8, §5.3.10 | 0012's vocabulary CHECK **withdrawn** | 0014 |
+
+Two decisions inside this are choices rather than quotes, and are recorded as such:
+
+* **`(tenant_id, name)` is the natural key for a source.** SPEC-002 declares no natural key, so
+  `SOURCE_ALREADY_DECLARED` was undecidable without one: a check-then-insert lets two concurrent
+  declarations both succeed. The key is the one §5.3.2's request body supplies.
+* **`(source_id, category)` is the natural key for a catalogue entry**, for the same reason and with the
+  same consequence if omitted.
+
+**Deviation from EP-004 M6's instruction, stated explicitly.** M6 says: "Do not invent a schema in this
+node; that is EP-003's audit list and this node's diff would violate §6." That instruction is in M6's
+"Blocked work, stated honestly" section and addresses the case where EP-003 is *unstarted* — "EP-003 is
+largely unstarted, so no schema, migration, or RLS policy exists". That condition does not hold: EP-003
+is DONE (tag `green/EP-003`) and delivered 11 migrations and FORCE RLS on 30 tables. What is present is
+a **spec-vs-spec coverage gap** (SPEC-003 §5.3's contract vs SPEC-002 §2's DDL), which is a different
+problem needing a different remedy. The alternative was to implement ten routes that silently discard
+seven contractual fields, which is the "software that appears to work" failure state AGENTS.md names.
+The columns were therefore added, additively, in EP-004 — and every one of them is cited above.
+
+Migration 0014 withdraws 0012's `disabled_reason` CHECK rather than widening it: the column carries a
+closed SYSTEM vocabulary (VG-CHANNEL-002's auto-disable) **and** an operator's own reason from §5.3.10,
+whose documented example (`PERMISSION_REFRESHED`) the CHECK would have rejected with `23514` — a 500 on
+a legitimate request. The closed half moved to a TypeScript union in the adapter, where those values are
+produced; the open half is bounded at the route.
+
+`db/tenant-scoped-tables.txt` is unchanged: no table was added, and `check-rls-coverage.sh` still
+reports 30 tenant-scoped tables enabled, forced and policied.
+
+### 3.14 The recipe signature's signed payload is not specified anywhere (a construction was chosen)
+
+SPEC-003 §5.3.7 requires the API to "verify the signature before accepting the row" (VG-CHANNEL-003,
+VG-API-028) and never states **what is signed**. A verifier must define the bytes, or it cannot verify
+anything. The construction in `src/adapters/persistence/sources.ts#canonicalRecipePayload` is:
+
+* a JSON object with a **fixed, alphabetical field order** and no whitespace, so a signature cannot
+  verify against a differently-ordered but semantically identical body;
+* `signature` excluded (a signature cannot cover itself); `sourceId` **included** so a signature cannot
+  be replayed onto another source's version; `version` **excluded** because the server assigns it under
+  a lock after verification, which would make the payload uncomputable by a caller who guessed wrong;
+* the algorithm read from the KEY, never from the request, because a caller-supplied `alg` is how
+  `alg: none` and algorithm-confusion attacks arrive.
+
+**This is an assumption, not a specification requirement**, and it is a wire-visible one: an integrator
+cannot produce a valid signature without it. It is exported (`canonicalRecipePayload`) and used by the
+persistence suite, so the rule has exactly one definition. The specification should state the payload;
+until it does, this is the recorded choice.
+
+Relatedly: **no production recipe signing key exists.** ADR-006 (KMS selection) is OPEN, so
+`RECIPE_VERIFICATION_KEYS` is unset in every deployment and `POST /v1/sources/{sourceId}/recipes`
+refuses with `503 DEPENDENCY_UNAVAILABLE` naming the unconfigured reference. That is deliberate and
+fail-closed: a recipe the system cannot verify is never stored. It is **not** a claim that signature
+verification works in production — the persistence suite proves it works against a locally generated
+Ed25519 key pair, and nothing more.
+
+### 3.15 Two modules declared different `IdempotencyRequirement` unions, and one route was not claiming keys
+
+Found while wiring `requirementFor` to the registry in EP-004 M6:
+
+| Defect | Consequence if it had shipped |
+|---|---|
+| `src/http/openapi/registry.ts` declared `required \| optional \| none`; `src/http/plugins/idempotency.ts` declared `required \| required-if-effect \| optional` | The two types do not overlap on `'none'`. Wiring the registry to the plugin did not typecheck. A cast would have made every `'none'` route (the four public health routes) fall through to the **required** branch, so `/v1/health`, `/v1/ready`, `/v1/live` and `/v1/startup` would have answered `400 IDEMPOTENCY_KEY_REQUIRED` — taking liveness and readiness down for every caller presenting no key. |
+| `src/infrastructure/main.ts` passed `requirementFor: () => undefined` | No route ever claimed a key. Every effect-bearing route ran with idempotency effectively **OFF** while its registry entry said `required`, and the handler looked correct. This is the same defect `beginHandler` had already fixed for step-up, in the same file, one milestone earlier. |
+
+`'none'` is **not** a SPEC-003 §4.1 token — §4.1 names Required, Required-if-effect and Optional. It is
+the registry's way of saying "this route does not participate in idempotency at all", which is the truth
+for the health routes; `optional` would have echoed a supplied key and advertised a mechanism that does
+nothing there. The plugin now understands it.
+
+### 3.16 `DETAILS_ALLOWLIST` had no key for the ETag §2.7 requires in a 412 body
+
+SPEC-003 §2.7: "a stale value is `412 PRECONDITION_FAILED` with the current ETag in the body". The
+`details` allowlist in `src/http/errors/code-registry.ts` had no entry for it, and SPEC-006 H-13
+restricts `details` keys to that allowlist. `currentEtag` was added, citing §2.7, and its value is the
+same string the response's own `ETag` header carries — so it discloses nothing a caller could not
+already read. Recorded because the allowlist is a closed set and adding to it is a contract change.
+
+### 3.17 `COMMANDS.md` names the wrong interpreter for the RLS generator
+
+`COMMANDS.md` line 184 declares `sh scripts/generate-rls.ts --write|--check`. `scripts/generate-rls.ts`
+is TypeScript run by Node's native type stripping; `sh` interprets it as shell, and because the file
+begins with `/**` the shell expands `/*` as a glob and then executes the matched path — observed as
+`/LICENSE.txt: line 2: syntax error`. The gates call it correctly (`node scripts/generate-rls.ts
+--check`, in `gate-data.sh`), so nothing is broken; the documentation is. **Not fixed in this node**,
+because `COMMANDS.md` is a binding declaration and correcting it is a separate deliberate change.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a
@@ -293,6 +397,8 @@ provisioning surface, port placement and test paths. Findings and fixes:
 | 6 | EP-007 created a second mutation system (`mutation-gate.sh`) without referencing EP-002's (`mutation-check.sh`, `lib/mutations.ts`). | The same guard could be proven and unproven at once by two mechanisms. | EP-007 now imports EP-002's mechanism; rule recorded in `TESTING.md`. |
 | 7 | Node gates were named inconsistently: `ep004-gate.sh` / `ep004 api gate: ok` against `gate-<purpose>.sh` / `gate-<purpose>: ok` everywhere else. | Cross-node references pointed at names that did not follow the convention, and sentinels contained spaces. | Renamed to `gate-api.sh`, `gate-ui.sh`, `gate-security.sh` with matching sentinels; all cross-references updated. |
 | 8 | The atomic-sources payload was recorded as permanently corrupt. | 15 test bodies and part of the 484 accounting would have been written off as unobtainable. | Root cause found (CRLF), fixed, and verified — see §3.1. |
+| 9 | A §5.3 handler read the current ETag with a token holding only `vg.sources.write`. The `GET` was refused `403`, `headers['etag']` was `undefined`, and `If-Match: undefined` was correctly rejected `412`. | A real concurrency refusal appearing two steps from its cause; the test looked like a bug in the precondition logic. | A `currentEtag()` helper that ASSERTS the read returned `200` with a well-formed token, so a scope mistake fails at the read — see §3.13's suite. |
+| 10 | Two modules declared different `IdempotencyRequirement` unions, and the composition root passed `requirementFor: () => undefined`. | Every effect-bearing route ran with idempotency OFF while the registry said `required`; wiring it through would have made the public health routes demand a key. | Recorded in §3.15; the plugin now understands the registry's `'none'` and the composition root reads the registry. |
 
 Verified clean and requiring no change: the dependency chain matches `.agent/GRAPH.md`
 for all 11 nodes; every node lists `COMMANDS.md` in its audit list; `verify: ok` is

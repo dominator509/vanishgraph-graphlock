@@ -21,6 +21,7 @@ import { buildServer, type VgFastify } from '../../src/http/server.ts';
 import { testIdempotency, testIdentity, TEST_SESSION_SECRET, TEST_TOKEN } from '../contract/server-support.ts';
 import { PostgresTenantRunner } from '../../src/adapters/persistence/postgres-runner.ts';
 import { PostgresSubjectQueries } from '../../src/adapters/persistence/subjects.ts';
+import { PostgresSourceQueries } from '../../src/adapters/persistence/sources.ts';
 import { parseDsn } from '../../src/infrastructure/database/psql.ts';
 
 const TENANT_A = '11111111-1111-4111-8111-111111111111';
@@ -68,8 +69,13 @@ function serverFor(
     tenancy: { runner },
     idempotency: testIdempotency(),
     sessionSecret: TEST_SESSION_SECRET,
-    // The REAL read model: this suite asserts persistence behaviour, so a stub would prove nothing.
+    // The REAL read models: this suite asserts persistence behaviour, so a stub would prove nothing.
     subjectQueries: new PostgresSubjectQueries(),
+    sourceQueries: new PostgresSourceQueries(),
+    // EMPTY, and deliberately so: no signing key is configured, which makes the recipe route refuse
+    // with DEPENDENCY_UNAVAILABLE. That refusal is asserted; a key planted here would make this suite
+    // claim signature verification works while nothing verified anything.
+    recipeVerificationKeys: { publicKeysByRef: new Map<string, string>() },
     health: {
       startedAt: new Date(),
       now: () => new Date(),
