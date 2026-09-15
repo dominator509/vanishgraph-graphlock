@@ -1439,6 +1439,32 @@ restricts `details` keys to the allowlist in `src/http/errors/code-registry.ts`,
 it. `currentEtag` was added with the §2.7 citation. The allowlist is a closed set, so this is a
 contract change and is recorded rather than made quietly.
 
+### 2026-09-15 — §5.4 is BLOCKED_PREREQUISITE: `DiscoveryRun` is defined by no specification
+
+SPEC-003 §5.4 declares five routes over a `DiscoveryRun` aggregate. Searching for where that aggregate
+would be defined found nothing:
+
+| Where it would be defined | Result |
+|---|---|
+| SPEC-001 (core domain) — entity catalogue §3, ports §5.1 | no occurrence of `Discovery` or `DiscoveryRun` |
+| SPEC-002 (data model) §2 DDL, §3 RLS inventory | no occurrence of `discovery` or `candidate` as a table, column or aggregate |
+| `db/migrations/*.sql`, enumerated from `information_schema` (33 tables) | no `discovery_run` table |
+| `db/tenant-scoped-tables.txt` | not listed |
+
+The only definition of the aggregate — its lifecycle `ACCEPTED`/`RUNNING`/`COMPLETED`/
+`COMPLETED_PARTIAL`/`FAILED`/`HUMAN_REQUIRED`, its declared-surface and budget shapes, and a coverage
+report naming every skipped source and reason — is SPEC-003 §5.4's own prose and example bodies.
+
+**So these five routes are NOT implemented, and §5.4 is recorded `BLOCKED_PREREQUISITE` (specification).**
+This is the condition M6 names: "stop at `NODE_BLOCKED` for this milestone with the two blocking
+references named, and record the exact prerequisite." Building it would mean designing a persistence
+model and a run lifecycle that no specification owns — every choice an invention presented as an
+implementation. That is the distinction between this and §5.3, where SPEC-002 named the tables and the
+specifications named each column, so materialising them cited names rather than creating them.
+
+Prerequisite: a SPEC-001 entity and SPEC-002 table definition for `DiscoveryRun` plus its per-source
+outcome rows, or a SPEC-003 amendment that delegates the model explicitly.
+
 ### 2026-09-15 — EP-003 never built a repository layer, and M6's CHANGE list assumes one
 
 M6's CHANGE list names `src/adapters/persistence/**` as though it existed. It does not. EP-003's own

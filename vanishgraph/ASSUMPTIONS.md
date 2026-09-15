@@ -351,7 +351,40 @@ restricts `details` keys to that allowlist. `currentEtag` was added, citing §2.
 same string the response's own `ETag` header carries — so it discloses nothing a caller could not
 already read. Recorded because the allowlist is a closed set and adding to it is a contract change.
 
-### 3.17 `COMMANDS.md` names the wrong interpreter for the RLS generator
+### 3.17 `DiscoveryRun` is defined by NO specification, so SPEC-003 §5.4 cannot be built without inventing a data model
+
+SPEC-003 §5.4 declares five routes over a `DiscoveryRun` aggregate — its lifecycle `ACCEPTED`, `RUNNING`,
+`COMPLETED`, `COMPLETED_PARTIAL`, `FAILED`, `HUMAN_REQUIRED`, its declared-surface and budget shapes, and
+a coverage report naming each skipped source and why. Searched:
+
+| Where an aggregate would be defined | Result |
+|---|---|
+| SPEC-001 (core domain) — entity catalogue §3, port table §5.1 | **No occurrence of `Discovery` or `DiscoveryRun` at all.** No entity, no value object, no port, no lifecycle. |
+| SPEC-002 (data model) §2 DDL and §3 RLS inventory | **No occurrence of `discovery` or `candidate`** as a table, column or aggregate. The only match is the word `DISCOVERED_CANDIDATE` inside an enum list. |
+| `db/migrations/*.sql` (the delivered schema, 14 migrations) | **No `discovery_run` table.** 33 live tables, enumerated from `information_schema`, and none of them is a discovery run. |
+| `db/tenant-scoped-tables.txt` | Not listed. |
+
+So the ONLY definition of this aggregate is SPEC-003 §5.4's own prose and example response bodies. That
+is materially different from §5.3, and the difference decides the action:
+
+* **§5.3** — SPEC-002 named the tables (`source`, `source_catalog_entry`, `removal_recipe`) and most of
+  their columns; SPEC-003 §5.3 named the additional fields. Materialising those columns adds storage for
+  names the specifications already use. Done, in migrations 0012/0013/0014.
+* **§5.4** — nothing names a table, a column, a lifecycle or a port. Building it means DESIGNING a
+  persistence model and a run lifecycle: how a run's progress is recorded, what a "skipped source with
+  reason" row is, whether coverage is stored or derived, how the same-subject×source in-flight conflict
+  is detected. Every one of those would be this node's invention presented as an implementation of a
+  specification that does not exist.
+
+**Recorded as `BLOCKED_PREREQUISITE` (specification, not environment).** The prerequisite is a SPEC-001
+entity + SPEC-002 table definition for `DiscoveryRun` (and its per-source outcome rows), or a SPEC-003
+amendment that delegates the model explicitly. This is the condition EP-004 M6 anticipates when it says
+to "stop at `NODE_BLOCKED` for this milestone with the two blocking references named, and record the
+exact prerequisite" — and unlike §5.3, here there is no specification sentence to cite for each choice,
+so the fail-closed reading is the correct one. **These five routes are not implemented**, and this
+record is why.
+
+### 3.18 `COMMANDS.md` names the wrong interpreter for the RLS generator
 
 `COMMANDS.md` line 184 declares `sh scripts/generate-rls.ts --write|--check`. `scripts/generate-rls.ts`
 is TypeScript run by Node's native type stripping; `sh` interprets it as shell, and because the file
