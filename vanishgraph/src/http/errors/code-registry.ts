@@ -168,6 +168,24 @@ export const ERROR_CODE_REGISTRY: readonly ErrorCodeSpec[] = Object.freeze([
     message: 'A recipe enablement guard failed; the recipe remains disabled.' },
 
   // ---------------------------------------------------------------------------------------
+  // The SPEC-003 §5.14 appeal and counsel-review guards.
+  //
+  // Enumerated in SPEC-003 §8.2 (`APPEAL_WINDOW_CLOSED` under 409; the other three under 422) and named
+  // by §5.14.1's own error list, but — as with the §5.3 block above — SPEC-006 §6.2 gives them no domain
+  // class and no message template, so these templates have no SPEC-006 source and are recorded as a
+  // finding in EP-004 §12 rather than presented as a spec quote. `domainCode` equals `wireCode` for the
+  // same reason as the §5.3 block: there is no separate domain token to keep distinguishable in audit.
+  // ---------------------------------------------------------------------------------------
+  { domainCode: 'HUMAN_REVIEW_REQUIRED', wireCode: 'HUMAN_REVIEW_REQUIRED', status: 422, retryable: false,
+    message: 'This operation requires human review and cannot be recorded as exempt from it.' },
+  { domainCode: 'ARTIFACT_REQUIRED', wireCode: 'ARTIFACT_REQUIRED', status: 422, retryable: false,
+    message: 'At least one evidence artifact is required for this operation.' },
+  { domainCode: 'TEMPLATE_HASH_REQUIRED', wireCode: 'TEMPLATE_HASH_REQUIRED', status: 422, retryable: false,
+    message: 'A template hash is required so the reviewed wording is pinned.' },
+  { domainCode: 'APPEAL_WINDOW_CLOSED', wireCode: 'APPEAL_WINDOW_CLOSED', status: 409, retryable: false,
+    message: 'The appeal window for this case has closed.' },
+
+  // ---------------------------------------------------------------------------------------
   // SPEC-006 §6.2 "codes owned by SPEC-003 §8.2 with no domain class of their own".
   // ---------------------------------------------------------------------------------------
   { domainCode: 'UNAUTHENTICATED', wireCode: 'TOKEN_MISSING', status: 401, retryable: false,

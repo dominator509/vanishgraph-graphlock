@@ -13,3 +13,4 @@ tests/db/postgres-runner.test.ts
 tests/db/route-catalogue.test.ts
 tests/db/source-catalogue.test.ts
 tests/db/audit-sink.test.ts
+tests/db/appeal-escalations.test.ts

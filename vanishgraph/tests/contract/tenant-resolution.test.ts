@@ -31,6 +31,7 @@ import {
   testSubjectQueries,
   testSourceQueries,
   testRecipeVerificationKeys,
+  testAppealQueries,
   TEST_SESSION_SECRET,
   TEST_TOKEN,
 } from './server-support.ts';
@@ -55,6 +56,7 @@ function serverWith(options: {
     subjectQueries: testSubjectQueries(),
     sourceQueries: testSourceQueries(),
     recipeVerificationKeys: testRecipeVerificationKeys(),
+    appealQueries: testAppealQueries(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),
@@ -234,6 +236,7 @@ describe('tenancy is required by the server type, so it cannot be forgotten', ()
       subjectQueries: testSubjectQueries(),
     sourceQueries: testSourceQueries(),
     recipeVerificationKeys: testRecipeVerificationKeys(),
+    appealQueries: testAppealQueries(),
     };
     assert.ok(deps.identity !== undefined);
     assert.ok(deps.tenancy !== undefined);

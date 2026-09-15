@@ -27,6 +27,7 @@ import { PostgresIdempotencyStore } from '../adapters/idempotency/postgres-store
 import { PostgresTenantRunner, postgresReadinessProbe } from '../adapters/persistence/postgres-runner.ts';
 import { PostgresSubjectQueries } from '../adapters/persistence/subjects.ts';
 import { PostgresSourceQueries, verificationKeysFrom } from '../adapters/persistence/sources.ts';
+import { PostgresAppealQueries } from '../adapters/persistence/appeals.ts';
 import { findRoute } from '../http/openapi/registry.ts';
 import { parseDsn } from '../adapters/../infrastructure/database/psql.ts';
 
@@ -176,6 +177,8 @@ async function main(): Promise<number> {
     // selection) is OPEN, so no production key exists yet — and that refusal is what makes the gap
     // visible instead of silently accepting unverified recipes.
     recipeVerificationKeys: recipeVerificationKeysFromEnvironment(),
+    // The §5.14 model, constructed here for the same reason as the others.
+    appealQueries: new PostgresAppealQueries(),
     idempotency: {
       // The durable store is PostgreSQL (SPEC-003 §4.2): the effect must survive a process restart,
       // so an in-memory store would defeat the mechanism it implements.

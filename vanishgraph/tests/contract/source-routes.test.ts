@@ -22,7 +22,13 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { buildServer, type VgFastify } from '../../src/http/server.ts';
-import { testIdentity, testTenancy, TEST_SESSION_SECRET, TEST_TOKEN } from './server-support.ts';
+import {
+  testAppealQueries,
+  testIdentity,
+  testTenancy,
+  TEST_SESSION_SECRET,
+  TEST_TOKEN,
+} from './server-support.ts';
 import { ROUTES, findRoute } from '../../src/http/openapi/registry.ts';
 import { isErrorCode } from '../../src/http/errors/code-registry.ts';
 import { SOURCE_ROUTE_TEMPLATES, RECIPE_GUARD_NAMES, ACCEPTED_PERMISSION_CLASSES } from '../../src/http/routes/sources.ts';
@@ -132,6 +138,7 @@ function serverWith(options: {
     sessionSecret: TEST_SESSION_SECRET,
     sourceQueries: options.port ?? recorded.port,
     recipeVerificationKeys: NO_KEYS,
+    appealQueries: testAppealQueries(),
     subjectQueries: {
       listSubjects: async () => [],
       getSubjectDetail: async () => undefined,

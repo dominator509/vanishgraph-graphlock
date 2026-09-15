@@ -656,6 +656,41 @@ not the parent summary.
 
 Verified by three consecutive full runs of `tests/db/**`: **147 tests, 147 pass, 0 fail**, exit 0 each time.
 
+### 3.22 The §5.14 suite failed as a whole while passing alone: three defects in one new test file
+
+`tests/db/appeal-escalations.test.ts` passed 12/12 on its own and made `test-integration` fail **8 tests**.
+Three separate causes, all in the new file, and the third is the one that explains the confusing symptom.
+
+**1. `IDEMPOTENCY_KEY_REUSE`: the suite passed exactly once.** Keys were built from a counter
+(`appeal-db-key-000001`, …) that restarts at 1 in every process, while `http_idempotency` retains a
+completed key for 24 hours. The second run presented keys the first run had used — with a DIFFERENT body,
+because the helper mints a fresh `artifactIds` UUID per call — and the store refused them exactly as
+SPEC-003 §4.3 requires. **This is `ASSUMPTIONS.md` §3.7's defect class repeated**, and it explains the
+symptom precisely: `test-integration` runs the suite TWICE per invocation (once through the collection
+guard, once directly), so the guard's run failed and the run after it passed on identical code. Fixed with
+a per-run random suffix. Verified: three consecutive standalone runs at 12/12.
+
+**2. A cleanup whose result was ignored left state behind, making the suite order-dependent.** The
+`APPEAL_WINDOW` tests inserted a `deadline` row and deleted it with an `exec` whose return value nobody
+checked. Two such rows survived across runs, and a third test asserted "the fixture must have no appeal
+window, or this test proves nothing" — so it failed because of a previous run, not because of the code
+under test. Fixed by clearing at the START of each window test, running as the OWNER, and ASSERTING both
+the delete and the resulting count. The tests now assert their own premise instead of inheriting it.
+
+**3. `column "artifact_ids" is of type uuid[] but expression is of type text[]` — a 500 that silent
+logging hid.** `appeal_escalation.artifact_ids` is `uuid[]`, not `text[]`. The route reported
+`INTERNAL_ERROR` because a query error class the handler does not map becomes a 500, and the test suite's
+`logLevel: 'silent'` meant the cause had to be recovered by calling the adapter directly. Two lessons:
+**`information_schema.columns.data_type` reports only `ARRAY` for any array** — the element type is in
+`udt_name`, so the earlier column inventory could not have caught this; and a new route's first
+integration failure is worth isolating through the adapter, because the envelope is deliberately opaque.
+
+**A methodological note on the order I found these.** I diagnosed 3 first (by calling the adapter
+directly), fixed it, and the suite went to 12/12 — so I nearly concluded the integration failure was
+caused by the deadline leftovers alone. Running the suite TWICE, which is what `test-integration` actually
+does, is what exposed cause 1. A suite that passes when run once after a fix has not been shown to pass
+twice, and this project's database suites are invoked twice per gate invocation.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

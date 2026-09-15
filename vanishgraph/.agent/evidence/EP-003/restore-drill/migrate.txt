@@ -12,6 +12,7 @@ migrate: applying 0011_http_idempotency.sql
 migrate: applying 0012_api_contract_columns.sql
 migrate: applying 0013_catalog_entry_key.sql
 migrate: applying 0014_disabled_reason_vocabulary.sql
-migrate: applied 14 migration(s); at version 14
+migrate: applying 0015_appeal_review_state.sql
+migrate: applied 15 migration(s); at version 15
 migrate: ok
 migrate: ok

@@ -39,6 +39,7 @@ import {
 } from '../contract/server-support.ts';
 import { PostgresTenantRunner } from '../../src/adapters/persistence/postgres-runner.ts';
 import { PostgresSourceQueries, canonicalRecipePayload } from '../../src/adapters/persistence/sources.ts';
+import { PostgresAppealQueries } from '../../src/adapters/persistence/appeals.ts';
 import { PostgresIdempotencyStore } from '../../src/adapters/idempotency/postgres-store.ts';
 import { findRoute } from '../../src/http/openapi/registry.ts';
 import { appDsn, asTenant, exec } from './harness.ts';
@@ -95,6 +96,8 @@ function serverFor(tenantId: string, scopes: readonly string[], authTimeAgeSecon
     sessionSecret: TEST_SESSION_SECRET,
     sourceQueries: new PostgresSourceQueries(),
     recipeVerificationKeys: { publicKeysByRef: new Map([[KEY_REF, PUBLIC_PEM]]) },
+    // The REAL model, like the others: this suite asserts persistence behaviour, so a stub proves nothing.
+    appealQueries: new PostgresAppealQueries(),
     subjectQueries: { ...testSubjectQueriesStub },
     health: {
       startedAt: new Date(),

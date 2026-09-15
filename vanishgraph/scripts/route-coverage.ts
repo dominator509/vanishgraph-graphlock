@@ -79,6 +79,15 @@ const app = buildServer({
   // No recipe verification key. This probe never submits a recipe, and an empty map is the honest
   // state of a deployment with no key (ADR-006 OPEN).
   recipeVerificationKeys: { publicKeysByRef: new Map<string, string>() },
+  // The §5.14 port. Not-found answers, because this probe only enumerates routes and must not appear to
+  // have read or written anything.
+  appealQueries: {
+    casePrecondition: async () => undefined,
+    appealWindowClosed: async () => false,
+    listAppealEscalations: async () => [],
+    getAppealEscalation: async () => undefined,
+    createAppealEscalation: async () => ({ ok: false, reason: 'CASE_NOT_FOUND' }),
+  },
   health: {
     startedAt: new Date(),
     now: () => new Date(),

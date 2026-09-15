@@ -26,6 +26,7 @@ import type {
   RecipeVerificationKeys,
   SourceQueries,
 } from '../../src/application/contracts/source-queries.ts';
+import type { AppealQueries } from '../../src/application/contracts/appeal-queries.ts';
 
 /**
  * The cursor signing secret used by tests.
@@ -219,4 +220,24 @@ export function testSourceQueries(): SourceQueries {
  */
 export function testRecipeVerificationKeys(): RecipeVerificationKeys {
   return { publicKeysByRef: new Map<string, string>() };
+}
+
+/**
+ * An appeal-escalation model for tests that do not exercise §5.14.
+ *
+ * The READ methods return empty and the write refuses, for the same reason as the §5.3 stub: they are the
+ * honest answers for a tenant with no escalations, and a stub that FABRICATED a created id would let a
+ * route test pass while the real adapter wrote nothing — the failure mode `scripts/reality-gate.sh`
+ * exists to catch. The behaviour that matters for §5.14 (which refusals happen before the port, and that
+ * `requiresHumanReview: false` is refused) is asserted in `tests/contract/appeal-routes.test.ts` without
+ * needing a database at all, because those rules are boundary rules.
+ */
+export function testAppealQueries(): AppealQueries {
+  return {
+    casePrecondition: async () => undefined,
+    appealWindowClosed: async () => false,
+    listAppealEscalations: async () => [],
+    getAppealEscalation: async () => undefined,
+    createAppealEscalation: async () => ({ ok: false, reason: 'CASE_NOT_FOUND' }),
+  };
 }

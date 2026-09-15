@@ -25,3 +25,4 @@ tests/contract/pagination.test.ts
 tests/contract/filter-strictness.test.ts
 tests/contract/idempotency.test.ts
 tests/contract/source-routes.test.ts
+tests/contract/appeal-routes.test.ts
