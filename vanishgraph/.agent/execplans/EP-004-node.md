@@ -1890,6 +1890,33 @@ the contract test asserts the vocabulary is closed either way.
      `DATABASE_URL` variable the probe reads. Those are different facts and must not be
      reported as though the database did not exist. -->
 
+### 2026-09-15 — the transition spine is COLUMNS ON `audit_event`, and five defects came out with it
+
+The three-way conflict recorded in §12 (SPEC-001:96's seven-field `AuditEvent`, SPEC-002:26-27's ban on `jsonb`
+for values needing integrity, SPEC-003 §5.5.5's requirement to read a transition back) is resolved by migration
+`0019`, which adds `transition_code`, `from_truth_state`, `to_truth_state`, `evidence_artifact_ids` and
+`case_id` to `audit_event` — typed columns, the existing `truth_state` enum, `jsonb` untouched. No second
+aggregate is invented: EP-003's decision that the audit row IS the transition record stands, and the append-only
+rules and FORCE RLS apply to the new columns because they apply to the row. `case_id` is separate from
+`target_id` because a T8's target is an external action and a case's history must not lose it.
+
+Five defects surfaced while making §5.5 work, all fixed, all in `ASSUMPTIONS.md` §3.27 with their evidence:
+
+  1. The audit sink refused the service's OWN correlation ids (a dash-less 32-hex trace id against a `uuid`
+     column), so the first write route to append an audit row answered `500`.
+  2. The seeded `confidence_basis` was an array of bare strings where §5.5.1 renders `{feature, weight}`;
+     schema-valid and contract-unrenderable, and the §5.5.1 list answered `500` for anything holding it.
+  3. Migration `0020`'s backfill updated no rows, because `exposure` carries FORCE RLS and the migrator is a
+     subject of it too.
+  4. Migration `0020` then forbade the project's own seed by adding NOT NULL columns with no DEFAULT (`0021`).
+  5. The db state file had grown to 2 MB, breaking every gate that sourced it with `Argument list too long`.
+
+**And the coverage instrument was overstating the work.** `scripts/route-coverage.ts` counted REGISTERED
+handlers; five of them (§5.1.1, §5.1.4, §5.1.7, §5.2.1, §5.2.3) refuse every request with an unconditional
+`503 DEPENDENCY_UNAVAILABLE`. The script now prints registered, WORKING, and the refusals by name, so the
+figure this node reports is **44 registered / 39 working of 78**, and earlier statements that §5.1 and §5.2 were
+"implemented and verified" are corrected: they were true of the routes that do work, and false as coverage.
+
 ## 13. Decision Log
 
 | # | Decision | Rationale | Status |
