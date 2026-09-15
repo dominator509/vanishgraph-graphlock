@@ -25,6 +25,7 @@ import { PostgresSourceQueries } from '../../src/adapters/persistence/sources.ts
 import { PostgresAppealQueries } from '../../src/adapters/persistence/appeals.ts';
 import { PostgresDeadlineQueries } from '../../src/adapters/persistence/deadlines.ts';
 import { PostgresAuditQueries } from '../../src/adapters/persistence/audit-queries.ts';
+import { PostgresObservationQueries } from '../../src/adapters/persistence/observations.ts';
 import { parseDsn } from '../../src/infrastructure/database/psql.ts';
 
 const TENANT_A = '11111111-1111-4111-8111-111111111111';
@@ -83,6 +84,7 @@ function serverFor(
     appealQueries: new PostgresAppealQueries(),
     deadlineQueries: new PostgresDeadlineQueries(),
     auditQueries: new PostgresAuditQueries(),
+    observationQueries: new PostgresObservationQueries(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),

@@ -122,8 +122,20 @@ export class PostgresSubjectQueries implements SubjectQueries {
       // Keyset with the id tiebreaker: two subjects created in the same millisecond share a sort
       // value, and without the id a page boundary between them repeats or skips one — silently
       // dropping a subject from a report about whether their data was removed.
+      //
+      // MEASURED DEFECT this also fixes, found in the reappearance list (`observations.ts`) and present here
+      // for the same reason: `pg` returns a `timestamptz` as a JS `Date` with MILLISECOND precision while
+      // PostgreSQL stores MICROSECONDS. A cursor minted from a row at `…:00.123456` carried `…:00.123Z`, and
+      // `created_at > '…:00.123'` was TRUE for the row that minted it — so the row came back TWICE, and at a
+      // different boundary the same mismatch would SKIP one. It went unnoticed because the pagination suites
+      // drive the cursor HELPERS over synthetic rows rather than walking a real collection.
+      //
+      // `created_at` and `updated_at` are `now()`-derived and DO carry microseconds; `display_ref` is text and
+      // is unaffected, but the expression is applied to whichever column the sort names so that ordering and
+      // pagination always truncate together — if they disagreed, a row could be ordered into one page and
+      // filtered out of the next.
       where.push(
-        `(s.${sortColumn}, s.id::text) ${comparison} (${bind(params.after.sortValue)}::timestamptz, ${bind(params.after.id)})`,
+        `(date_trunc('milliseconds', s.${sortColumn}), s.id::text) ${comparison} (${bind(params.after.sortValue)}::timestamptz, ${bind(params.after.id)})`,
       );
     }
 
@@ -132,7 +144,7 @@ export class PostgresSubjectQueries implements SubjectQueries {
       `SELECT ${SUBJECT_PROJECTION}
          FROM protected_subject s
          ${where.length > 0 ? `WHERE ${where.join(' AND ')}` : ''}
-        ORDER BY s.${sortColumn} ${order}, s.id ${order}
+        ORDER BY date_trunc('milliseconds', s.${sortColumn}) ${order}, s.id ${order}
         LIMIT ${limitParam}`,
       values,
     );

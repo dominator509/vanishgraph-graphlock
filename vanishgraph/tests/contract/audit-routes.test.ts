@@ -22,7 +22,14 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { buildServer, type VgFastify } from '../../src/http/server.ts';
-import { testAuditQueries, testIdentity, testTenancy, TEST_SESSION_SECRET, TEST_TOKEN } from './server-support.ts';
+import {
+  testAuditQueries,
+  testIdentity,
+  testObservationQueries,
+  testTenancy,
+  TEST_SESSION_SECRET,
+  TEST_TOKEN,
+} from './server-support.ts';
 import { ROUTES, findRoute } from '../../src/http/openapi/registry.ts';
 import { isErrorCode } from '../../src/http/errors/code-registry.ts';
 import { AUDIT_ROUTE_TEMPLATES } from '../../src/http/routes/audit.ts';
@@ -56,6 +63,7 @@ function serverWith(options: { scopes?: readonly string[]; queries?: AuditQuerie
     appealQueries: testAppealQueries(),
     deadlineQueries: testDeadlineQueries(),
     auditQueries: options.queries ?? testAuditQueries(),
+    observationQueries: testObservationQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
   });
 }

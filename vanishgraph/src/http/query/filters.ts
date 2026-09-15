@@ -121,16 +121,29 @@ export const DISCOVERY_RUNS_QUERY: QuerySchema = {
 };
 
 /** `GET /v1/reappearances` (SPEC-003 §5.11.2). */
+/**
+ * `GET /v1/reappearances` (SPEC-003 §5.11.2).
+ *
+ * CORRECTED TO THE SPECIFICATION, which is worth recording. This declaration existed BEFORE its route did,
+ * and disagreed with §5.11.2 on three of its six parts: it declared `exposureId` where the spec says
+ * `subjectId`, declared `sort ∈ detectedAt|createdAt` where the spec says `observedAt`, and had
+ * `timeFilterable: false` although the spec gives `from`/`to`. A declaration nothing enforces drifts, and
+ * this one had: the filter surface of a route nobody had implemented was wrong in a way no test could see,
+ * because no test drove the route. The `sortFields` names matter most — `detectedAt` and `createdAt` are not
+ * columns of `reappearance`, so a client following this declaration would have received
+ * `INVALID_SORT_FIELD` for every documented field and `FILTER_TOO_BROAD`-free silence for the rest.
+ */
 export const REAPPEARANCES_QUERY: QuerySchema = {
   paginated: true,
   parameters: {
     ...PAGINATION,
-    exposureId: { type: 'string' },
+    subjectId: { type: 'string' },
     sourceId: { type: 'string' },
+    reEntryState: { type: 'enum', values: ['PENDING_REENTRY', 'REENTERED', 'NOT_REMOVABLE'] },
   },
-  sortFields: ['detectedAt', 'createdAt'],
-  defaultSort: 'detectedAt:desc',
-  timeFilterable: false,
+  sortFields: ['observedAt'],
+  defaultSort: 'observedAt:desc',
+  timeFilterable: true,
   truthStateFilterable: false,
 };
 

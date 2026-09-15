@@ -572,7 +572,11 @@ record, a coverage-report record, a webhook-binding table, and the actor-kind/ou
 on `audit_event`. Alternatively SPEC-003 §5.4–§5.16 should be reduced to the surface the domain model can
 actually express. **Neither is a code change in this repository, which is why this node cannot make it.**
 
-### 3.19 `COMMANDS.md` names the wrong interpreter for the RLS generator
+### 3.19-bis `COMMANDS.md` names the wrong interpreter for the RLS generator
+
+*(Numbering collision, recorded rather than silently renumbered: this heading was also written `3.19`, and
+both it and the §3.19 above are referenced by no other document, so the earlier one keeps its number and
+the later one is suffixed. See §3.26.)*
 
 `COMMANDS.md` line 184 declares `sh scripts/generate-rls.ts --write|--check`. `scripts/generate-rls.ts`
 is TypeScript run by Node's native type stripping; `sh` interprets it as shell, and because the file
@@ -795,6 +799,62 @@ including a per-file import insertion. The right fix is a single `testServerDepe
 `tests/contract/server-support.ts` so a new port costs ONE edit. It is not done here because migrating ten
 call sites late in a round would be a large diff in tests this round cannot fully re-verify; it is recorded so
 the next round does it deliberately rather than discovering the churn again.
+
+### 3.26 §5.10/§5.11's four read routes, and a keyset defect that made a paginated walk return a row twice
+
+Four routes implemented from SPEC-003 §5.10.2, §5.10.3, §5.11.2, §5.11.3, taking coverage from **35 to 39
+of 78**. Migration `0018_observation_paths.sql` is additive for the same reason as `0012`–`0017`: SPEC-003's
+bodies name fields SPEC-002 §2's schema has no column for. Five findings, each measured.
+
+**1. `finding`'s column vocabulary and its API vocabulary are DIFFERENT, and nothing mapped between them.**
+`verification_observation.finding` is `CHECK (finding IN ('PRESENT','ABSENT','INCONCLUSIVE'))`; §5.10.2's
+wire DTO reports `RECORD_PRESENT | RECORD_ABSENT | INDETERMINATE`. My first fixtures wrote the API tokens
+into the column and the insert was refused by the constraint — which is how the mismatch was found. The
+mapping is now a declared, frozen `FINDING_TO_API` table with a `toApiFinding()` that THROWS on an unmapped
+value. It throws deliberately: the shape `?? 'INDETERMINATE'` would have converted a future schema drift
+into a plausible wire answer, and "no record" is exactly the answer an operator must not receive by
+accident.
+
+**2. `REAPPEARANCES_QUERY` had drifted from §5.11.2 before the route existed.** The filter schema declared
+fields §5.11.2 does not accept, and `sortFields` did not include `observedAt`. Found by diffing the
+declaration against the spec body rather than by a failing test — no test could fail, because the route had
+no handler. Corrected to §5.11.2's own list: `subjectId`, `sourceId`, `reEntryState`,
+`sortFields: ['observedAt']`, `defaultSort: 'observedAt:desc'`, `timeFilterable: true`.
+
+**3. A KEYSET CURSOR REPEATED THE ROW THAT MINTED IT — a driver-precision defect, not a query defect.**
+`pg` returns a `timestamptz` as a JS `Date`, which has MILLISECOND precision, while PostgreSQL stores
+MICROSECONDS. A cursor minted from a row at `…:00.123456` therefore carried `…:00.123Z`, and page 2's
+predicate `observed_at > '…:00.123'` was **TRUE for that very row** — it came back on the next page. At a
+different boundary the same mismatch SKIPS a row instead of repeating it. Fixed by applying
+`date_trunc('milliseconds', …)` to BOTH the comparison and the `ORDER BY`, so the ordering key is exactly
+what a cursor can carry and ordering and pagination cannot disagree; rows inside one millisecond are
+separated by the `id` tiebreaker, which is what it is for.
+
+It was found by the §5.11.2 HTTP walk in `tests/db/observation-reads.test.ts`, and it survived every
+earlier suite for a structural reason worth recording: the existing pagination tests drive the cursor
+HELPERS over synthetic rows whose timestamps are already millisecond-aligned, so the truncation was a
+no-op in every one of them. The test now asserts that each row is seen **exactly once** across the walk,
+not merely that each page is non-empty. **The identical defect was present in `subjects.ts`** (the §5.1
+location-history collection) and is fixed the same way in the same commit.
+
+Two adapters were checked and deliberately NOT changed, with the reason recorded rather than assumed:
+`audit-queries.ts` orders on `audit_event.at`, which the append path writes from an integer millisecond
+value, so the stored value is ms-exact today; and `sources.ts` orders on `name` (text) with
+`permission_checked_at` written from a caller-supplied ms value. Neither is lossless BY CONSTRUCTION the way
+the fixed pair is, so if a future node writes either with sub-millisecond precision the defect returns. This
+is recorded as an open hazard, not as a proof of correctness.
+
+**4. The coverage number has a measured instrument, and I quoted it loosely before using it.** The count in
+this section comes from running the declared `node scripts/route-coverage.ts`, which asks the built server
+what paths it registered and diffs that against the registry: `39 of 78`, with the 39 missing grouped by §5
+group. An ad-hoc recount I ran first — a regex over each module's `*_ROUTE_TEMPLATES` array — reported 26 and
+was wrong, because `audit.ts` declares its array on a single line and the regex counted 0 of its 2 entries.
+The lesson is the same shape as §3.12's: **an instrument that silently undercounts produces a number that
+reads as a measurement.** Use the declared script; if a count is quoted, say what produced it.
+
+**5. `ASSUMPTIONS.md` itself carried a duplicate section number.** Two headings were both `3.19`. Nothing
+references either, so the earlier one keeps its number and the later is now `3.19-bis` with the collision
+stated in place. A record whose section numbers collide cannot be cited reliably.
 
 ## 4. Known limitations recorded honestly (not resolved)
 

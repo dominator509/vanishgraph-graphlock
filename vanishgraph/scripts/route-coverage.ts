@@ -102,6 +102,15 @@ const app = buildServer({
     listAuditEvents: async () => [],
     getAuditEvent: async () => undefined,
   },
+  // The §5.10/§5.11 read model. Empty: this probe only enumerates routes.
+  observationQueries: {
+    caseExists: async () => false,
+    listVerificationObservations: async () => [],
+    getVerificationObservation: async () => undefined,
+    exposureExists: async () => false,
+    listReappearances: async () => [],
+    listReappearancesForExposure: async () => [],
+  },
   health: {
     startedAt: new Date(),
     now: () => new Date(),

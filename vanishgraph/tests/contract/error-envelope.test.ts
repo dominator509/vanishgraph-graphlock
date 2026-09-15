@@ -27,6 +27,7 @@ import {
   testAppealQueries,
   testDeadlineQueries,
   testAuditQueries,
+  testObservationQueries,
   TEST_SESSION_SECRET,
   TEST_TOKEN,
 } from './server-support.ts';
@@ -55,6 +56,7 @@ function testServer(overrides: Partial<ServerDependencies> = {}) {
     appealQueries: testAppealQueries(),
     deadlineQueries: testDeadlineQueries(),
     auditQueries: testAuditQueries(),
+    observationQueries: testObservationQueries(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),

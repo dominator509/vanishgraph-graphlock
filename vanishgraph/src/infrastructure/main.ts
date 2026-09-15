@@ -30,6 +30,7 @@ import { PostgresSourceQueries, verificationKeysFrom } from '../adapters/persist
 import { PostgresAppealQueries } from '../adapters/persistence/appeals.ts';
 import { PostgresDeadlineQueries } from '../adapters/persistence/deadlines.ts';
 import { PostgresAuditQueries } from '../adapters/persistence/audit-queries.ts';
+import { PostgresObservationQueries } from '../adapters/persistence/observations.ts';
 import { findRoute } from '../http/openapi/registry.ts';
 import { parseDsn } from '../adapters/../infrastructure/database/psql.ts';
 
@@ -185,6 +186,8 @@ async function main(): Promise<number> {
     deadlineQueries: new PostgresDeadlineQueries(),
     // The §5.15 read model. READ-ONLY: the only writer of udit_event is the audit sink.
     auditQueries: new PostgresAuditQueries(),
+    // The 5.10/5.11 read model.
+    observationQueries: new PostgresObservationQueries(),
     idempotency: {
       // The durable store is PostgreSQL (SPEC-003 §4.2): the effect must survive a process restart,
       // so an in-memory store would defeat the mechanism it implements.

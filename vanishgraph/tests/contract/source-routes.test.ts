@@ -26,6 +26,7 @@ import {
   testAppealQueries,
   testDeadlineQueries,
   testAuditQueries,
+  testObservationQueries,
   testIdentity,
   testTenancy,
   TEST_SESSION_SECRET,
@@ -143,6 +144,7 @@ function serverWith(options: {
     appealQueries: testAppealQueries(),
     deadlineQueries: testDeadlineQueries(),
     auditQueries: testAuditQueries(),
+    observationQueries: testObservationQueries(),
     subjectQueries: {
       listSubjects: async () => [],
       getSubjectDetail: async () => undefined,

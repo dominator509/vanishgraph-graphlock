@@ -29,6 +29,7 @@ import type {
 import type { AppealQueries } from '../../src/application/contracts/appeal-queries.ts';
 import type { DeadlineQueries } from '../../src/application/contracts/deadline-queries.ts';
 import type { AuditQueries } from '../../src/application/contracts/audit-queries.ts';
+import type { ObservationQueries } from '../../src/application/contracts/observation-queries.ts';
 
 /**
  * The cursor signing secret used by tests.
@@ -280,5 +281,23 @@ export function testAuditQueries(): AuditQueries {
   return {
     listAuditEvents: async () => [],
     getAuditEvent: async () => undefined,
+  };
+}
+
+/**
+ * An observation/reappearance read model for tests that do not exercise §5.10/§5.11.
+ *
+ * Empty and not-found results, for the same reason as the other stubs. `REENTRY_RULES` is NOT stubbed: it is a
+ * frozen constant of the contract (SPEC-001 T18's guards), so reproducing it here would create a second
+ * definition of the re-entry rules that could drift from the one the routes report.
+ */
+export function testObservationQueries(): ObservationQueries {
+  return {
+    caseExists: async () => false,
+    listVerificationObservations: async () => [],
+    getVerificationObservation: async () => undefined,
+    exposureExists: async () => false,
+    listReappearances: async () => [],
+    listReappearancesForExposure: async () => [],
   };
 }

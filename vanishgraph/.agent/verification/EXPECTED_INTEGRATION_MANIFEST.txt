@@ -16,3 +16,4 @@ tests/db/audit-sink.test.ts
 tests/db/appeal-escalations.test.ts
 tests/db/deadline-provenance.test.ts
 tests/db/audit-stream.test.ts
+tests/db/observation-reads.test.ts
