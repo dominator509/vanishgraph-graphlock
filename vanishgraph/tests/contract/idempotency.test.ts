@@ -29,6 +29,7 @@ import {
   testSourceQueries,
   testRecipeVerificationKeys,
   testAppealQueries,
+  testDeadlineQueries,
   testTenancy,
   TEST_SESSION_SECRET,
   TEST_TOKEN,
@@ -68,6 +69,7 @@ function effectServer(options: {
     sourceQueries: testSourceQueries(),
     recipeVerificationKeys: testRecipeVerificationKeys(),
     appealQueries: testAppealQueries(),
+    deadlineQueries: testDeadlineQueries(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),
@@ -453,6 +455,7 @@ describe('a pre-effect failure releases the key so the caller can retry', () => 
     sourceQueries: testSourceQueries(),
     recipeVerificationKeys: testRecipeVerificationKeys(),
     appealQueries: testAppealQueries(),
+    deadlineQueries: testDeadlineQueries(),
       health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 's', ok: true })] },
     });
     const { withIdempotency } = await import('../../src/http/plugins/idempotency.ts');

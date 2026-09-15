@@ -34,6 +34,7 @@ import { buildServer, type VgFastify } from '../../src/http/server.ts';
 import { testIdentity, TEST_SESSION_SECRET, TEST_TOKEN } from '../contract/server-support.ts';
 import { PostgresTenantRunner } from '../../src/adapters/persistence/postgres-runner.ts';
 import { PostgresAppealQueries } from '../../src/adapters/persistence/appeals.ts';
+import { PostgresDeadlineQueries } from '../../src/adapters/persistence/deadlines.ts';
 import { PostgresIdempotencyStore } from '../../src/adapters/idempotency/postgres-store.ts';
 import { PostgresSubjectQueries } from '../../src/adapters/persistence/subjects.ts';
 import { PostgresSourceQueries } from '../../src/adapters/persistence/sources.ts';
@@ -74,6 +75,7 @@ function serverFor(tenantId: string, scopes: readonly string[], authTimeAgeSecon
     sourceQueries: new PostgresSourceQueries(),
     recipeVerificationKeys: { publicKeysByRef: new Map<string, string>() },
     appealQueries: new PostgresAppealQueries(),
+    deadlineQueries: new PostgresDeadlineQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
   });
 }
@@ -370,6 +372,15 @@ describe('§5.14.2/§5.14.3 read the escalations back', () => {
  * state is cleared and the clearing is verified BEFORE the test's own premise is asserted. It runs as the
  * OWNER because deleting a fixture row is not something the runtime role should be assumed able to do, and
  * a cleanup that silently lacks the privilege is how the rows survived in the first place.
+ *
+ * WHY THE DELETE IS NOW SCOPED TO `derivation_ref = 'policy:test'` — A SECOND, SEPARATE DEFECT. An unscoped
+ * `DELETE ... WHERE case_id = … AND kind = 'APPEAL_WINDOW'` looked correct in isolation and was not:
+ * `deadline-provenance.test.ts` creates deadlines for this same seeded case, `node --test` runs the two
+ * files in PARALLEL, and this cleanup therefore deleted THAT suite's rows mid-test — three of its §5.13.3
+ * tests failed with a lookup that returned nothing, reproducibly. Only rows carrying this suite's own
+ * `derivation_ref` marker are removed now, so the cleanup cannot reach data another file owns while still
+ * clearing leftovers from earlier runs of this one. A suite that mutates a SHARED table must scope its
+ * cleanup to the rows it can identify as its own.
  */
 function clearAppealWindows(): void {
   const cleared = exec(
@@ -377,7 +388,8 @@ function clearAppealWindows(): void {
     [
       'BEGIN;',
       `SELECT set_config('app.tenant_id', '${TENANT_A}', true);`,
-      `DELETE FROM deadline WHERE case_id = '${CASE_A}' AND kind = 'APPEAL_WINDOW';`,
+      `DELETE FROM deadline
+        WHERE case_id = '${CASE_A}' AND kind = 'APPEAL_WINDOW' AND derivation_ref = 'policy:test';`,
       'COMMIT;',
     ].join('\n'),
   );
@@ -385,13 +397,37 @@ function clearAppealWindows(): void {
   const remaining = asTenant(
     ownerDsn(),
     TENANT_A,
-    `SELECT count(*)::text FROM deadline WHERE case_id = '${CASE_A}' AND kind = 'APPEAL_WINDOW';`,
+    `SELECT count(*)::text FROM deadline
+      WHERE case_id = '${CASE_A}' AND kind = 'APPEAL_WINDOW' AND derivation_ref = 'policy:test';`,
   );
   assert.equal(remaining[0], '0', 'the cleanup must be verified, not assumed');
 }
 
+/**
+ * Whether the shared table currently holds ANY appeal window that would refuse an escalation.
+ *
+ * This answers a DIFFERENT question from the cleanup: the cleanup owns this suite's rows, while this reports
+ * whether a window exists at all — which is the premise the "no deadline is not refused" test needs. Kept
+ * separate so a future file that legitimately adds an `APPEAL_WINDOW` makes that test say so, rather than
+ * having its premise inferred from a delete that no longer covers everything.
+ */
+function anyAppealWindows(): number {
+  const rows = asTenant(
+    ownerDsn(),
+    TENANT_A,
+    `SELECT count(*)::text FROM deadline WHERE case_id = '${CASE_A}' AND kind = 'APPEAL_WINDOW';`,
+  );
+  return Number(rows[0] ?? '0');
+}
+
 /** Add an `APPEAL_WINDOW` deadline at the given offset from now, and verify it landed. */
 function addAppealWindow(interval: string): void {
+  // The count is taken BEFORE the insert and asserted as a DELTA. An absolute `=== 1` was the assertion that
+  // failed here: a single leftover `APPEAL_WINDOW` row from an earlier run of another file made it read 2, and
+  // the message ("the fixture must carry exactly the window this test added") was true but unhelpful about
+  // which row the extra one was. A delta asserts the thing this helper is responsible for — that ITS insert
+  // landed — and is indifferent to rows other tests legitimately own.
+  const before = anyAppealWindows();
   const inserted = exec(
     ownerDsn(),
     [
@@ -403,12 +439,7 @@ function addAppealWindow(interval: string): void {
     ].join('\n'),
   );
   assert.equal(inserted.status, 0, `could not add the appeal window:\n${inserted.output}`);
-  const present = asTenant(
-    ownerDsn(),
-    TENANT_A,
-    `SELECT count(*)::text FROM deadline WHERE case_id = '${CASE_A}' AND kind = 'APPEAL_WINDOW';`,
-  );
-  assert.equal(present[0], '1', 'the fixture must carry exactly the window this test added');
+  assert.equal(anyAppealWindows(), before + 1, 'exactly one appeal window must have been added by this helper');
 }
 
 describe('§5.14.1 APPEAL_WINDOW_CLOSED', () => {
@@ -442,6 +473,10 @@ describe('§5.14.1 APPEAL_WINDOW_CLOSED', () => {
     // The cleanup runs FIRST, so this test asserts its own premise rather than inheriting it from whichever
     // test happened to run before — which is what made the suite order-dependent.
     clearAppealWindows();
+    // And the premise is stated explicitly, from the WHOLE table rather than from this suite's rows: the test
+    // is about "no window exists", so a window another file created must make this fail loudly with that
+    // reason rather than surface as an unexplained APPEAL_WINDOW_CLOSED.
+    assert.equal(anyAppealWindows(), 0, 'the case must have no appeal window for this test to mean anything');
 
     const app = serverFor(TENANT_A, [...WRITE, ...READ]);
     // The opposite reading — "no deadline means the window is closed" — would refuse every escalation on a

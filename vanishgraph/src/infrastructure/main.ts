@@ -28,6 +28,7 @@ import { PostgresTenantRunner, postgresReadinessProbe } from '../adapters/persis
 import { PostgresSubjectQueries } from '../adapters/persistence/subjects.ts';
 import { PostgresSourceQueries, verificationKeysFrom } from '../adapters/persistence/sources.ts';
 import { PostgresAppealQueries } from '../adapters/persistence/appeals.ts';
+import { PostgresDeadlineQueries } from '../adapters/persistence/deadlines.ts';
 import { findRoute } from '../http/openapi/registry.ts';
 import { parseDsn } from '../adapters/../infrastructure/database/psql.ts';
 
@@ -179,6 +180,8 @@ async function main(): Promise<number> {
     recipeVerificationKeys: recipeVerificationKeysFromEnvironment(),
     // The §5.14 model, constructed here for the same reason as the others.
     appealQueries: new PostgresAppealQueries(),
+    // The §5.13 model, constructed here for the same reason as the others.
+    deadlineQueries: new PostgresDeadlineQueries(),
     idempotency: {
       // The durable store is PostgreSQL (SPEC-003 §4.2): the effect must survive a process restart,
       // so an in-memory store would defeat the mechanism it implements.

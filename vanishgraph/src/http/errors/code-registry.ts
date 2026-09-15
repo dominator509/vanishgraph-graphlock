@@ -186,6 +186,22 @@ export const ERROR_CODE_REGISTRY: readonly ErrorCodeSpec[] = Object.freeze([
     message: 'The appeal window for this case has closed.' },
 
   // ---------------------------------------------------------------------------------------
+  // The SPEC-003 §5.13 deadline guards.
+  //
+  // Enumerated in SPEC-003 §8.2 (`DEADLINE_ALREADY_SATISFIED` under 409; `DEADLINE_SOURCE_REQUIRED` and
+  // `DEADLINE_IN_PAST` under 422) and named by §5.13.2/§5.13.3's own error lists, but — as with the §5.3
+  // and §5.14 blocks above — SPEC-006 §6.2 gives them no domain class and no message template, so these
+  // templates have no SPEC-006 source and are recorded as a finding in EP-004 §12 rather than presented as
+  // a spec quote.
+  // ---------------------------------------------------------------------------------------
+  { domainCode: 'DEADLINE_SOURCE_REQUIRED', wireCode: 'DEADLINE_SOURCE_REQUIRED', status: 422, retryable: false,
+    message: 'A deadline recorded out of band must name the source its date came from.' },
+  { domainCode: 'DEADLINE_IN_PAST', wireCode: 'DEADLINE_IN_PAST', status: 422, retryable: false,
+    message: 'A deadline must fall in the future when it is recorded.' },
+  { domainCode: 'DEADLINE_ALREADY_SATISFIED', wireCode: 'DEADLINE_ALREADY_SATISFIED', status: 409, retryable: false,
+    message: 'This deadline has already been satisfied.' },
+
+  // ---------------------------------------------------------------------------------------
   // SPEC-006 §6.2 "codes owned by SPEC-003 §8.2 with no domain class of their own".
   // ---------------------------------------------------------------------------------------
   { domainCode: 'UNAUTHENTICATED', wireCode: 'TOKEN_MISSING', status: 401, retryable: false,

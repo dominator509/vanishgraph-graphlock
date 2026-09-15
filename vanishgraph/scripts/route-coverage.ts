@@ -88,6 +88,15 @@ const app = buildServer({
     getAppealEscalation: async () => undefined,
     createAppealEscalation: async () => ({ ok: false, reason: 'CASE_NOT_FOUND' }),
   },
+  // The §5.13 port. Not-found answers: this probe only enumerates routes.
+  deadlineQueries: {
+    caseDeadlineContext: async () => undefined,
+    evidenceExists: async () => false,
+    listDeadlines: async () => [],
+    createDeadline: async () => ({ ok: false, reason: 'CASE_NOT_FOUND' }),
+    satisfyDeadline: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+    deriveState: (s, d, n) => (s !== null ? 'SATISFIED' : d < n ? 'BREACHED' : 'OPEN'),
+  },
   health: {
     startedAt: new Date(),
     now: () => new Date(),

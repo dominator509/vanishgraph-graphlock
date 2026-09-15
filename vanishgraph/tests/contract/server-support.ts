@@ -27,6 +27,7 @@ import type {
   SourceQueries,
 } from '../../src/application/contracts/source-queries.ts';
 import type { AppealQueries } from '../../src/application/contracts/appeal-queries.ts';
+import type { DeadlineQueries } from '../../src/application/contracts/deadline-queries.ts';
 
 /**
  * The cursor signing secret used by tests.
@@ -239,5 +240,28 @@ export function testAppealQueries(): AppealQueries {
     listAppealEscalations: async () => [],
     getAppealEscalation: async () => undefined,
     createAppealEscalation: async () => ({ ok: false, reason: 'CASE_NOT_FOUND' }),
+  };
+}
+
+/**
+ * A deadline model for tests that do not exercise §5.13.
+ *
+ * The reads return empty and the writes refuse, for the same reason as the other stubs. `deriveState` is
+ * the REAL derivation rather than a stub: it is a pure function of three numbers, so reproducing it in a
+ * stub would create a second definition of when a deadline is BREACHED — and the two would drift. The
+ * adapter's version delegates to the same logic, and `tests/contract/deadline-routes.test.ts` asserts the
+ * reachable values.
+ */
+export function testDeadlineQueries(): DeadlineQueries {
+  return {
+    caseDeadlineContext: async () => undefined,
+    evidenceExists: async () => false,
+    listDeadlines: async () => [],
+    createDeadline: async () => ({ ok: false, reason: 'CASE_NOT_FOUND' }),
+    satisfyDeadline: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+    deriveState: (satisfiedAtMs, dueAtMs, nowMs) => {
+      if (satisfiedAtMs !== null) return 'SATISFIED';
+      return dueAtMs < nowMs ? 'BREACHED' : 'OPEN';
+    },
   };
 }

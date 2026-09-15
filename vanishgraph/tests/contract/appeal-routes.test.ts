@@ -21,7 +21,14 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { buildServer, type VgFastify } from '../../src/http/server.ts';
-import { testAppealQueries, testIdentity, testTenancy, TEST_SESSION_SECRET, TEST_TOKEN } from './server-support.ts';
+import {
+  testAppealQueries,
+  testDeadlineQueries,
+  testIdentity,
+  testTenancy,
+  TEST_SESSION_SECRET,
+  TEST_TOKEN,
+} from './server-support.ts';
 import { ROUTES, findRoute } from '../../src/http/openapi/registry.ts';
 import { isErrorCode } from '../../src/http/errors/code-registry.ts';
 import { APPEAL_ROUTE_TEMPLATES } from '../../src/http/routes/appeals.ts';
@@ -121,6 +128,7 @@ function serverWith(
     },
     recipeVerificationKeys: { publicKeysByRef: new Map<string, string>() },
     appealQueries: options.scopes === undefined ? recorded.port : recorded.port,
+    deadlineQueries: testDeadlineQueries(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),
@@ -336,6 +344,7 @@ describe('§5.14 follows §4.1 for idempotency and §3.2 for step-up, from the r
         sourceQueries: testAppealQueriesSourceStub(),
         recipeVerificationKeys: { publicKeysByRef: new Map<string, string>() },
         appealQueries: testAppealQueries(),
+        deadlineQueries: testDeadlineQueries(),
         health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 's', ok: true })] },
       });
       const response = await app.inject({ method, url, headers: { authorization: `Bearer ${TEST_TOKEN}` } });

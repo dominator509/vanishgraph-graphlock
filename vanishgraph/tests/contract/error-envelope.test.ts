@@ -25,6 +25,7 @@ import {
   testSourceQueries,
   testRecipeVerificationKeys,
   testAppealQueries,
+  testDeadlineQueries,
   TEST_SESSION_SECRET,
   TEST_TOKEN,
 } from './server-support.ts';
@@ -51,6 +52,7 @@ function testServer(overrides: Partial<ServerDependencies> = {}) {
     sourceQueries: testSourceQueries(),
     recipeVerificationKeys: testRecipeVerificationKeys(),
     appealQueries: testAppealQueries(),
+    deadlineQueries: testDeadlineQueries(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),

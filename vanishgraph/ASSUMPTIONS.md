@@ -691,6 +691,65 @@ caused by the deadline leftovers alone. Running the suite TWICE, which is what `
 does, is what exposed cause 1. A suite that passes when run once after a fix has not been shown to pass
 twice, and this project's database suites are invoked twice per gate invocation.
 
+### 3.23 §5.13's deadlines: three specification readings chosen, and one output-format discrepancy
+
+Implementing §5.13 (migration 0016, 3 routes) required three readings the specification does not settle. Each
+is recorded here as a CHOICE with its reasoning, not presented as a specification requirement.
+
+| Question SPEC-003 leaves open | Reading taken | Why |
+|---|---|---|
+| §5.13.1 requires "every deadline names the policy version and rule code it was derived from", but never says which record supplies them | the case's own `PolicyDecision`: `policyVersion` ← `policy_version`, `ruleCode` ← `legal_basis` | It is the only source of versioned policy data already bound to the case, it needs no new column, and a second policy lookup could disagree with the decision the case was actually authorised under. VG-POLICY-001's rules ARE legal-basis tokens — the seeded policy's `rules` array is `['CCPA_DELETE']`. A test mutates the decision and asserts `derivedFrom` follows, so the value is proven to come from data rather than hard-coded |
+| §5.13.1's `state` admits `WAIVED`, and no route waives a deadline | `state` is DERIVED on every read, and `WAIVED` is unreachable | Three of the four values change with the clock, so a stored copy would go wrong without anyone writing to it. Producing `WAIVED` needs a waiver fact no specification defines; the derivation is asserted never to return it across a grid of inputs, so an invented waiver would fail a test rather than appear silently |
+| §5.13.2's `source` versus SPEC-001 §3.4's `Deadline.source` | a NEW column `derivation_input`, while `derivation_ref` keeps its `policy:%` meaning | EP-003's mapping table (`.agent/execplans/EP-003-node.md:130`) already spends the word `source` on "the policy version this deadline derives from". §5.13.2's `source` is a different fact — the out-of-band INPUT the date came from — so one word does not get two meanings in one table, and neither delivered constraint needed relaxing |
+
+**The output-format discrepancy, recorded rather than smoothed over.** SPEC-003's examples show
+`policyVersion: "2026-01-15"` in §5.6.4, §5.13.1 and elsewhere, while `jurisdiction_policy.version` and
+`policy_decision.policy_version` are **`integer`** (migration 0004) and no specification states the version's
+type or format — SPEC-001 §3.3 gives `JurisdictionPolicy` a bare `version` field. §5.13 only REPORTS the
+version, so rendering the stored number as a string (`"1"`) satisfies the field's type and contradicts nothing;
+a caller comparing against the example's date shape will see `"1"` and should know why. **§5.6 is different
+and remains blocked**: §5.6.1 takes `policyVersion` as an INPUT that must be matched against the stored
+version, and `"2026-01-15"` cannot be matched to `1` without either changing the API or adding a second
+version concept to the schema.
+
+**§5.13.2's `DEADLINE_SOURCE_REQUIRED` uses a closed set of ONE** (`CONTROLLER_STATED_DATE`), because it is
+the only token any specification names. The alternative — accepting any string — would store a source token
+the response then reports and no specification defines. Same reasoning as 0015's review-state CHECK.
+
+### 3.24 Two of my own test files collided on one fixture table, in three distinct ways
+
+`tests/db/deadline-provenance.test.ts` and `tests/db/appeal-escalations.test.ts` both operate on the seeded
+case's `deadline` rows, and `node --test` runs the files in PARALLEL. Three separate defects, each fixed, and
+the third is the one that took longest to see:
+
+1. **The deadline suite created `APPEAL_WINDOW` rows that the appeal suite deletes.** The appeal suite scopes
+   its fixture surgery to `kind = 'APPEAL_WINDOW'` on the seeded case — it must be able to assert "this case has
+   no appeal window" for its `APPEAL_WINDOW_CLOSED` tests — and the deadline suite's default created exactly
+   that kind. Fixed by giving the deadline suite a default kind (`MAIL_RESPONSE`) that the other file never
+   touches: a suite that needs a shared table must pick the part of it nobody else owns.
+
+2. **An unscoped `DELETE` in the appeal suite reached another file's data.** `DELETE … WHERE case_id = … AND
+   kind = 'APPEAL_WINDOW'` looked correct in isolation and deleted the deadline suite's rows mid-test. Now
+   scoped to the `derivation_ref = 'policy:test'` marker this suite writes, so leftovers from its OWN earlier
+   runs are still cleared while rows belonging to another file are not.
+
+3. **An absolute-count assertion reported the collision as an unexplained `2 !== 1`.** `addAppealWindow`
+   asserted the table held exactly one appeal window, which a single leftover row from an earlier run made
+   false — and the failure message was true but silent about which row the extra one was. It now asserts a
+   DELTA: the count before the insert plus one. A helper is responsible for its own insert landing, not for
+   the total contents of a shared table.
+
+**What worked as designed:** the appeal suite's premise assertion
+(`anyAppealWindows() === 0`, "the case must have no appeal window for this test to mean anything") failed
+LOUDLY with `1 !== 0` when a leftover row existed, instead of letting the test pass for a reason it did not
+control or surface as a confusing `APPEAL_WINDOW_CLOSED`. That assertion was added one round earlier for
+exactly this, and it is what identified defect 3's cause. This is the same shared-fixture class as §3.21's
+global audit count and §3.22's idempotency keys, and the general rule is now stated three times: **a test may
+only assert on state it created or explicitly cleared.**
+
+Verified after the fixes: two consecutive `test-collection-guard` runs and two consecutive `test-integration`
+invocations, all at 170 tests, 0 failures.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

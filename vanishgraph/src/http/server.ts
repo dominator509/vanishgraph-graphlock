@@ -23,9 +23,11 @@ import { healthRoutes, type HealthDependencies } from './routes/health.ts';
 import { subjectRoutes } from './routes/subjects.ts';
 import { sourceRoutes } from './routes/sources.ts';
 import { appealRoutes } from './routes/appeals.ts';
+import { deadlineRoutes } from './routes/deadlines.ts';
 import type { SubjectQueries } from '../application/contracts/subject-queries.ts';
 import type { RecipeVerificationKeys, SourceQueries } from '../application/contracts/source-queries.ts';
 import type { AppealQueries } from '../application/contracts/appeal-queries.ts';
+import type { DeadlineQueries } from '../application/contracts/deadline-queries.ts';
 import { installCorrelation } from './plugins/correlation.ts';
 import { installErrorHandler } from './plugins/error-handler.ts';
 import { installIdentity, type IdentityPluginOptions } from './plugins/identity.ts';
@@ -107,6 +109,12 @@ export interface ServerDependencies {
    * the boundary must not import `src/adapters/**` (ARCHITECTURE.md §2).
    */
   readonly appealQueries: AppealQueries;
+  /**
+   * The deadline model (SPEC-003 §5.13). Injected as a port for the same reason as the others. The clock is
+   * NOT injected here: the routes read it once per request and pass the instant down, so a caller cannot
+   * supply a different "now" to two halves of one derivation.
+   */
+  readonly deadlineQueries: DeadlineQueries;
   readonly logLevel?: string;
 }
 
@@ -172,6 +180,9 @@ export function buildServer(deps: ServerDependencies): VgFastify {
   // The SPEC-003 §5.14 group. No session secret: nothing in §5.14 paginates, so no cursor is minted —
   // passing one would advertise a pagination surface the routes do not have.
   app.register(appealRoutes, { queries: deps.appealQueries });
+
+  // The SPEC-003 §5.13 group. No session secret: nothing in §5.13 paginates.
+  app.register(deadlineRoutes, { queries: deps.deadlineQueries });
 
   app.register(healthRoutes, {
     deps: deps.health,

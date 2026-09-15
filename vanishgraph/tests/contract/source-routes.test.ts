@@ -24,6 +24,7 @@ import assert from 'node:assert/strict';
 import { buildServer, type VgFastify } from '../../src/http/server.ts';
 import {
   testAppealQueries,
+  testDeadlineQueries,
   testIdentity,
   testTenancy,
   TEST_SESSION_SECRET,
@@ -139,6 +140,7 @@ function serverWith(options: {
     sourceQueries: options.port ?? recorded.port,
     recipeVerificationKeys: NO_KEYS,
     appealQueries: testAppealQueries(),
+    deadlineQueries: testDeadlineQueries(),
     subjectQueries: {
       listSubjects: async () => [],
       getSubjectDetail: async () => undefined,

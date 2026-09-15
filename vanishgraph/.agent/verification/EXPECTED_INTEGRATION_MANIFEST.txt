@@ -14,3 +14,4 @@ tests/db/route-catalogue.test.ts
 tests/db/source-catalogue.test.ts
 tests/db/audit-sink.test.ts
 tests/db/appeal-escalations.test.ts
+tests/db/deadline-provenance.test.ts
