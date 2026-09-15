@@ -21,6 +21,15 @@ import type { IdentityPluginOptions } from '../../src/http/plugins/identity.ts';
 import type { TenancyPluginOptions, TenantTransaction } from '../../src/http/plugins/tenancy.ts';
 import type { VerifyResult } from '../../src/adapters/oidc/verify.ts';
 import type { IdempotencyPluginOptions } from '../../src/http/plugins/idempotency.ts';
+import type { SubjectQueries } from '../../src/application/contracts/subject-queries.ts';
+
+/**
+ * The cursor signing secret used by tests.
+ *
+ * A fixed value so cursor assertions are deterministic. It is obviously a test fixture and must never
+ * appear in production configuration — `loadConfig` supplies the real one from SESSION_SECRET.
+ */
+export const TEST_SESSION_SECRET = 'test-session-secret-not-a-real-credential';
 
 /** A token value that is obviously a test fixture and cannot be mistaken for a real credential. */
 export const TEST_TOKEN = 'test-token-not-a-real-credential';
@@ -136,4 +145,34 @@ export function testTenancy(): TestTenancy {
     },
   };
   return { runner, recorded, result };
+}
+/**
+ * A subject read model for tests that do not exercise subjects.
+ *
+ * Returns EMPTY results rather than throwing, because a route test that never touches a subject
+ * should not have to care that one exists. It is NOT evidence about persistence: the suites that
+ * assert subject behaviour run the real adapter against real PostgreSQL in `tests/db/`.
+ *
+ * `listSubjects` returning `[]` and `getSubjectDetail` returning `undefined` is exactly what an
+ * empty tenant looks like, which is the honest behaviour for a stub — a stub that fabricated a row
+ * would make a route test assert against data the database never held.
+ */
+export function testSubjectQueries(): SubjectQueries {
+  return {
+    listSubjects: async () => [],
+    getSubjectDetail: async () => undefined,
+    subjectExists: async () => false,
+    listAliases: async () => [],
+    listIdentifiers: async () => [],
+    listLocationHistory: async () => [],
+    listAuthorityGrants: async () => [],
+    jurisdictionResolves: async () => false,
+    appendLocationHistory: async () => ({ locationHistoryId: 'test-location-0001' }),
+    appendAlias: async () => ({
+      aliasId: 'test-alias-0001',
+      addedAt: new Date(0).toISOString(),
+      quarantined: false,
+      candidateSubjectIds: [],
+    }),
+  };
 }

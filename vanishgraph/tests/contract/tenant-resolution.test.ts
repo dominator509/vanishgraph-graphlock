@@ -24,7 +24,14 @@ import { buildServer, type ServerDependencies } from '../../src/http/server.ts';
 import { ApiError } from '../../src/http/plugins/error-handler.ts';
 import { requireTenantContext, withRequestTenant, type RequestContext } from '../../src/http/plugins/tenancy.ts';
 import type { FastifyRequest } from 'fastify';
-import { testIdempotency, testIdentity, testTenancy, TEST_TOKEN } from './server-support.ts';
+import {
+  testIdempotency,
+  testIdentity,
+  testTenancy,
+  testSubjectQueries,
+  TEST_SESSION_SECRET,
+  TEST_TOKEN,
+} from './server-support.ts';
 import { TenantId } from '../../src/domain/identifiers.ts';
 
 const TENANT_A = '11111111-1111-4111-8111-111111111111';
@@ -42,6 +49,8 @@ function serverWith(options: {
     identity: testIdentity({ tenantId: options.tenantId ?? TENANT_A }),
     tenancy: tenancy.runner,
     idempotency: testIdempotency(),
+    sessionSecret: TEST_SESSION_SECRET,
+    subjectQueries: testSubjectQueries(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),
@@ -217,6 +226,8 @@ describe('tenancy is required by the server type, so it cannot be forgotten', ()
       identity: testIdentity(),
       tenancy: testTenancy().runner,
       idempotency: testIdempotency(),
+      sessionSecret: TEST_SESSION_SECRET,
+      subjectQueries: testSubjectQueries(),
     };
     assert.ok(deps.identity !== undefined);
     assert.ok(deps.tenancy !== undefined);

@@ -20,6 +20,8 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import type { JsonSchemaToTsProvider } from '@fastify/type-provider-json-schema-to-ts';
 
 import { healthRoutes, type HealthDependencies } from './routes/health.ts';
+import { subjectRoutes } from './routes/subjects.ts';
+import type { SubjectQueries } from '../application/contracts/subject-queries.ts';
 import { installCorrelation } from './plugins/correlation.ts';
 import { installErrorHandler } from './plugins/error-handler.ts';
 import { installIdentity, type IdentityPluginOptions } from './plugins/identity.ts';
@@ -70,6 +72,17 @@ export interface ServerDependencies {
    * invisible because the handler looks correct.
    */
   readonly idempotency: IdempotencyPluginOptions;
+  /**
+   * The cursor signing secret (SPEC-003 §2.5). REQUIRED: a cursor signed with an empty or default
+   * secret is a cursor an attacker can mint, and ncodeCursor refuses an empty one rather than
+   * producing forgeable values. It comes from configuration and is never a literal in this layer.
+   */
+  readonly sessionSecret: string;
+  /**
+   * The subject read model (SPEC-003 §5.1). Injected as a port so the boundary never imports an
+   * adapter; the composition root supplies the PostgreSQL implementation.
+   */
+  readonly subjectQueries: SubjectQueries;
   readonly logLevel?: string;
 }
 
@@ -119,6 +132,11 @@ export function buildServer(deps: ServerDependencies): VgFastify {
   // Idempotency runs AFTER identity (the scope key includes the tenant) and BEFORE routes, so the
   // claim happens before any handler can produce an effect.
   installIdempotency(app, deps.idempotency);
+
+  // The SPEC-003 §5.1 group. Registered with Fastify's `:param` syntax; `beginHandler` normalises the
+  // matched pattern back to the registry's `{param}` form, because the registry equals the
+  // specification and the specification uses brace notation.
+  app.register(subjectRoutes, { sessionSecret: deps.sessionSecret, queries: deps.subjectQueries });
 
   app.register(healthRoutes, {
     deps: deps.health,

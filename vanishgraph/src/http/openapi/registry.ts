@@ -59,6 +59,34 @@ export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 
 /** Whether a route requires an `Idempotency-Key` (SPEC-003 §4.1). */
 export type IdempotencyRequirement = 'required' | 'optional' | 'none';
 
+/**
+ * Parameters that raise a route's requirements ABOVE its declared base.
+ *
+ * SPEC-003 §5.1.6 and §5.1.8 are the reason this exists. Their Scope line reads
+ * "Scope `vg.subjects.read` (`vg.pii.reveal` + step-up for `includeValue=true`)" — the base read is
+ * permitted with the read scope alone, and revealing a VALUE additionally needs `vg.pii.reveal` and a
+ * fresh step-up.
+ *
+ * MEASURED DEFECT this corrects: the registry originally declared `vg.pii.reveal` and `stepUp: true`
+ * UNCONDITIONALLY on both routes, so `beginHandler` demanded the reveal scope for a MASKED read and
+ * answered `403 INSUFFICIENT_SCOPE` to a caller the contract permits. The masked read is the route's
+ * documented default, so the mistake denied the common case.
+ *
+ * The requirement is expressed as data rather than as a conditional inside a handler, so the
+ * route-catalogue test can assert it and a second route with the same shape does not have to
+ * reinvent it.
+ */
+export interface ConditionalRequirement {
+  /** The query parameter that triggers the extra requirement. */
+  readonly parameter: string;
+  /** The value that triggers it. Only `'true'` occurs today. */
+  readonly when: string;
+  /** Scopes required IN ADDITION to the route's declared scopes. */
+  readonly scopes: readonly Scope[];
+  /** Whether a fresh step-up is additionally required. */
+  readonly stepUp: boolean;
+}
+
 export interface RouteDefinition {
   /** The SPEC-003 §5 catalogue number, so a failure names the row it violates. */
   readonly id: string;
@@ -74,6 +102,17 @@ export interface RouteDefinition {
   readonly successStatus: number;
   /** `VG-API-*` and related requirements this route serves. */
   readonly serves: readonly string[];
+  /**
+   * Requirements that apply only when a specific query parameter is present.
+   *
+   * Absent on every route whose requirements are unconditional, which is all of them except §5.1.6
+   * and §5.1.8. Their Scope line reads
+   * "Scope `vg.subjects.read` (`vg.pii.reveal` + step-up for `includeValue=true`)" — the base read
+   * needs only the read scope, and revealing a VALUE additionally needs `vg.pii.reveal` and a fresh
+   * step-up. Expressing that as data lets the route-catalogue test assert it and keeps a handler from
+   * having to reimplement the rule.
+   */
+  readonly conditional?: readonly ConditionalRequirement[];
 }
 
 /** Every `/v1` route in the SPEC-003 §5 catalogue. */
@@ -138,11 +177,14 @@ export const ROUTES: readonly RouteDefinition[] = [
     method: 'GET',
     path: '/v1/subjects/{subjectId}/aliases',
     group: '5.1',
-    scopes: ['vg.subjects.read', 'vg.pii.reveal'],
-    stepUp: true,
+    scopes: ['vg.subjects.read'],
+    stepUp: false,
     idempotency: 'optional',
     successStatus: 200,
     serves: [],
+    conditional: [
+      { parameter: 'includeValue', when: 'true', scopes: ['vg.pii.reveal'], stepUp: true },
+    ],
   },
   {
     id: '5.1.7',
@@ -160,11 +202,14 @@ export const ROUTES: readonly RouteDefinition[] = [
     method: 'GET',
     path: '/v1/subjects/{subjectId}/identifiers',
     group: '5.1',
-    scopes: ['vg.subjects.read', 'vg.pii.reveal'],
-    stepUp: true,
+    scopes: ['vg.subjects.read'],
+    stepUp: false,
     idempotency: 'optional',
     successStatus: 200,
     serves: [],
+    conditional: [
+      { parameter: 'includeValue', when: 'true', scopes: ['vg.pii.reveal'], stepUp: true },
+    ],
   },
   {
     id: '5.1.9',

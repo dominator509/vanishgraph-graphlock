@@ -23,7 +23,13 @@ import assert from 'node:assert/strict';
 
 import { buildServer } from '../../src/http/server.ts';
 import { canonicalise, fingerprintOf, validateIdempotencyKey } from '../../src/http/plugins/idempotency.ts';
-import { testIdentity, testTenancy, TEST_TOKEN } from './server-support.ts';
+import {
+  testIdentity,
+  testSubjectQueries,
+  testTenancy,
+  TEST_SESSION_SECRET,
+  TEST_TOKEN,
+} from './server-support.ts';
 import { recordingStore, type RecordingIdempotencyStore } from './idempotency-support.ts';
 import type { IdempotencyRequirement } from '../../src/http/plugins/idempotency.ts';
 
@@ -54,6 +60,8 @@ function effectServer(options: {
       requirementFor: (method, routeTemplate) =>
         method === 'POST' && routeTemplate === '/__test/effect' ? requirement : undefined,
     },
+    sessionSecret: TEST_SESSION_SECRET,
+    subjectQueries: testSubjectQueries(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),
@@ -434,6 +442,8 @@ describe('a pre-effect failure releases the key so the caller can retry', () => 
         store,
         requirementFor: (m, r) => (m === 'POST' && r === '/__test/effect' ? 'required' : undefined),
       },
+      sessionSecret: TEST_SESSION_SECRET,
+      subjectQueries: testSubjectQueries(),
       health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 's', ok: true })] },
     });
     const { withIdempotency } = await import('../../src/http/plugins/idempotency.ts');

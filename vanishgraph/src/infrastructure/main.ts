@@ -25,6 +25,7 @@ import { AUDIENCES, verifyToken } from '../adapters/oidc/verify.ts';
 import { JwksCache, httpsJwksFetcher } from '../adapters/oidc/jwks.ts';
 import { PostgresIdempotencyStore } from '../adapters/idempotency/postgres-store.ts';
 import { PostgresTenantRunner, postgresReadinessProbe } from '../adapters/persistence/postgres-runner.ts';
+import { PostgresSubjectQueries } from '../adapters/persistence/subjects.ts';
 import { parseDsn } from '../adapters/../infrastructure/database/psql.ts';
 
 /** Build identity. Read from the environment so CI can stamp a real commit. */
@@ -109,6 +110,12 @@ async function main(): Promise<number> {
       // only after the transaction has ended.
       runner,
     },
+    // From configuration, never a literal: a cursor signed with a known secret is a cursor any
+    // caller can mint, which defeats the tenant binding it exists to provide.
+    sessionSecret: config.sessionSecret,
+    // The read model is constructed HERE, in the composition root, because this is the only layer
+    // allowed to know that a PostgreSQL adapter exists.
+    subjectQueries: new PostgresSubjectQueries(),
     idempotency: {
       // The durable store is PostgreSQL (SPEC-003 §4.2): the effect must survive a process restart,
       // so an in-memory store would defeat the mechanism it implements.

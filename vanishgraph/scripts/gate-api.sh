@@ -119,15 +119,21 @@ if command -v docker >/dev/null 2>&1; then
 fi
 
 # ---------------------------------------------------------------------------------------------
-# 7. What this node has NOT built, named so the gate cannot imply more than it proves.
+# 7. ROUTE COVERAGE, measured rather than guessed.
+#
+# The previous version asked "are there more than one file under src/http/routes?" — a proxy that
+# became a false negative the moment a second file existed, even though 78 of the 78 registry routes
+# had no handler. A gate that reports "nothing missing" while almost everything is missing is worse
+# than no gate, because it reads as coverage.
+#
+# This instead asks the SERVER which paths it registered, and compares that set against the registry.
+# The comparison is what makes "not yet implemented" a measurement.
 # ---------------------------------------------------------------------------------------------
-echo "ep004 api gate: NOT YET IMPLEMENTED at this milestone:"
-for missing in "src/http/routes/*.ts beyond health.ts" "src/application/contracts/index.ts" "identity and tenancy plugins"; do
-  case "$missing" in
-    "src/application/contracts/index.ts") [ -f src/application/contracts/index.ts ] || echo "  - ${missing}" ;;
-    "src/http/routes/*.ts beyond health.ts") [ "$(find src/http/routes -name '*.ts' | wc -l | tr -d ' ')" -gt 1 ] || echo "  - ${missing}" ;;
-    *) [ -f src/http/plugins/identity.ts ] || echo "  - ${missing}" ;;
-  esac
-done
+echo "ep004 api gate: route coverage (registered vs the SPEC-003 §5 registry):"
+if ! node scripts/route-coverage.ts > .agent/evidence/EP-004/route-coverage.txt 2>&1; then
+  cat .agent/evidence/EP-004/route-coverage.txt >&2
+  fail "the route-coverage measurement failed; refusing to report coverage without it"
+fi
+cat .agent/evidence/EP-004/route-coverage.txt
 
 echo "gate-api: ok"

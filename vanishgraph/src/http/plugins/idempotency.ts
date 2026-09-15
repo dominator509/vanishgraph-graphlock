@@ -332,7 +332,15 @@ export function installIdempotency(app: FastifyInstance, options: IdempotencyPlu
   function normalizeRouteTemplate(request: FastifyRequest): string {
     // Fastify exposes the matched pattern; falling back to the resolved url would scope by path.
     const fromRouter = (request as unknown as { routeOptions?: { url?: string } }).routeOptions?.url;
-    if (typeof fromRouter === 'string' && fromRouter.length > 0) return fromRouter;
+    if (typeof fromRouter === 'string' && fromRouter.length > 0) {
+      // Normalised to the REGISTRY'S brace form, because `requirementFor` looks a route up in the
+      // registry. MEASURED: Fastify reports `/v1/subjects/:subjectId` while the registry holds
+      // `/v1/subjects/{subjectId}`, so without this the lookup missed and every parameterised route
+      // silently resolved to `optional` — meaning an effect-bearing route would accept a request
+      // with NO Idempotency-Key. The normalisation is inline rather than imported so the plugin
+      // keeps no dependency on the route layer.
+      return fromRouter.replace(/:([A-Za-z_][A-Za-z0-9_]*)/g, '{$1}');
+    }
     return request.url.split('?')[0] ?? request.url;
   }
 }

@@ -17,7 +17,14 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { buildServer, type ServerDependencies, type VgFastify } from '../../src/http/server.ts';
-import { testIdempotency, testIdentity, testTenancy, TEST_TOKEN } from './server-support.ts';
+import {
+  testIdempotency,
+  testIdentity,
+  testTenancy,
+  testSubjectQueries,
+  TEST_SESSION_SECRET,
+  TEST_TOKEN,
+} from './server-support.ts';
 import { apiError } from '../../src/http/plugins/error-handler.ts';
 import {
   ERROR_CODE_REGISTRY,
@@ -36,6 +43,8 @@ function testServer(overrides: Partial<ServerDependencies> = {}) {
     identity: testIdentity(),
     tenancy: testTenancy().runner,
     idempotency: testIdempotency(),
+    sessionSecret: TEST_SESSION_SECRET,
+    subjectQueries: testSubjectQueries(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),
