@@ -384,7 +384,96 @@ exact prerequisite" — and unlike §5.3, here there is no specification sentenc
 so the fail-closed reading is the correct one. **These five routes are not implemented**, and this
 record is why.
 
-### 3.18 `COMMANDS.md` names the wrong interpreter for the RLS generator
+### 3.18 EP-004 M6's remaining 51 routes are NODE_BLOCKED on a specification prerequisite, not on effort
+
+**The finding, in one sentence:** SPEC-003 §5.4–§5.16 is a contract over a domain model and a data model
+that no specification defines, so implementing those routes would mean inventing both — which EP-004
+M6's own blocker clause forbids and `AGENTS.md` names as a failure state.
+
+**The transition spine is missing.** Every state-changing route in §5.5–§5.14 returns a `transitionId`
+referring to a transition record. There is no such record anywhere:
+
+| Evidence | Result |
+|---|---|
+| `grep 'CREATE TABLE (transition\|truth_state_transition\|transition_record\|case_transition)'` across `.agent/specs/*.md` and `db/migrations/*.sql` | **no match** |
+| SPEC-001 — the domain model that defines 21 transitions in §4.1 | the token `transitionId` **does not appear at all**; no `Transition` entity, no value object, no port |
+| SPEC-002 §2 — the data model | declares **12 tables** by `CREATE TABLE` and defers **14** more to "the EP-003 milestone bodies"; neither list contains a transition table |
+| Live schema, enumerated from `information_schema` (33 tables) | no transition table |
+| §5.5.5 `GET /v1/exposures/{exposureId}/transitions` | needs `transitionId`, `transitionCode` (`T3`), `fromTruthState`, `toTruthState`, `occurredAt`, `actorIdentity`, `command`, `evidenceArtifactIds[]`, `correlationId` — **no table and no entity carries any of it** |
+
+`audit_event` is not a substitute: its columns are `id, tenant_id, actor, action, target_kind, target_id,
+correlation_id, payload, at` — it has **no from/to truth state and no transition code**, so "which
+transition, from which state, to which state" is not recorded, and `transitionCode` (§5.5.5: "refers to
+the SPEC-001 §4.1 table row, so a reader can check legality without inference") is precisely the field
+that would have to be invented.
+
+**Per-group prerequisites, each verified against the live schema:**
+
+| Group | Routes | Prerequisite that does not exist |
+|---|---|---|
+| §5.4 discovery runs | 5 | A `DiscoveryRun` aggregate. `Discovery`/`DiscoveryRun` appear **nowhere** in SPEC-001, and `discovery`/`candidate` nowhere in SPEC-002 as a table or column. Only SPEC-003 §5.4's prose defines it. |
+| §5.5 exposures | 5 | Transition table (5.5.3/5.5.4 return `transitionId`); `exposure.truth_state_changed_at` for 5.5.2; transition history for 5.5.5 |
+| §5.6 policy decisions | 4 | `policy_decision.exemption_evaluation`; `jurisdiction_policy.policy_checksum` |
+| §5.7 cases | 6 | Transition table (5.7.1 response, 5.7.6 timeline, `truthStateChangedAt`); a HumanGate aggregate for 5.7.5, which no spec defines |
+| §5.8 external actions | 6 | A reconciliation record and a readback record (5.8.3, 5.8.4) — neither is declared anywhere; `external_action` has no attempt-history or readback column |
+| §5.9 controller responses | 3 | Transition table (5.9.1 drives T11) |
+| §5.10 verification observations | 3 | Transition table (5.10.1 drives T14) |
+| §5.11 reappearances | 3 | Transition table (5.11.1 drives T17) |
+| §5.12 evidence artifacts | 5 | An integrity-check record (5.12.4) — no table; 5.12.1/5.12.3 need the object store, which is `BLOCKED_CREDENTIALS` (S3_*) |
+| §5.13 deadlines | 3 | No blocker found; implementable with additive columns |
+| §5.14 appeal escalations | 3 | No blocker found; implementable with additive columns |
+| §5.15 audit events | 2 | `audit_event` has no `actor_kind`, no `outcome`, no `request_id`, no `refusal_code`, no `traceparent`. The domain's `AuditEvent.actor` is a flat `string` with no kind, and §5.15's `actor.kind` vocabulary (`HUMAN\|SERVICE\|SYSTEM`) is defined only inside SPEC-003's example body. `outcome` **is** defined — SPEC-007 §4/§5 lists `SUCCEEDED, REFUSED, FAILED, AMBIGUOUS, GATED` — but no domain object or column carries it. |
+| §5.16 coverage reports, metrics | 3 | A coverage-report aggregate — no table; and coverage itself is produced by the undiscoverable discovery runs |
+| §5 / webhooks (EP-004 M7) | 3 | A `webhook_binding` table — absent, though `WEBHOOK_BINDING_NOT_FOUND` is in the error registry |
+
+**Why this is not the same as §5.3, and why the action differs.** For §5.3, SPEC-002 named the tables and
+the specs named every missing column, so migrations 0012–0014 materialised names that already existed in
+the specifications. Here there is no name to materialise: a table with columns `actor_kind`, `outcome`,
+`request_id`, `refusal_code`, `traceparent` would be *designed by this node* and presented as an
+implementation of a contract, and the transition table would be the audit spine of the entire system —
+SPEC-001 SM-2/SM-3 make an audit record mandatory for every transition, so its shape decides what the
+system can prove.
+
+**Two of the gaps are CONTRADICTIONS, not omissions, so no additive migration can fix them.** A survey
+of every request/response field in §5.4–§5.16 against the delivered schema found ~29 fields with no
+plausible column. Six of the most consequential were verified by hand against the migration text, and
+two of those are cases where an existing column CANNOT hold the contract's value whatever is added:
+
+| # | Contradiction | Verified at |
+|---|---|---|
+| 1 | SPEC-003 §5.6.1/§5.6.4/§5.13.1 carry a **date-string** `policyVersion` (`"2026-01-15"`) that the request must match and the response must echo, while the delivered schema stores versions as **integers** in both `jurisdiction_policy.version` and `policy_decision.policy_version`, under `UNIQUE (tenant_id, jurisdiction, version)`. There is no additive fix: a second date column would be a second version concept, and the two would disagree about which version is in force. | `0004_policy_and_action.sql:28,58` |
+| 2 | SPEC-003 §5.9.1's `claimedOutcome` vocabulary is `DELETED`/`NOT_DELETED`/`UNSPECIFIED`, and `controller_response.claimed_outcome` is typed **`truth_state`** — the enum of the eleven canonical states, which contains none of those three tokens. The column's own comment reads "claimed_outcome is a CLAIM. Nothing in this schema may move a case to a [truth state]" while the type IS a truth state. This is the collapse VG-VERIFY-004 forbids, built into the schema. | `0004_policy_and_action.sql:122,131` |
+
+Three further type/CHECK mismatches were verified and are fixable only by widening a constraint, which
+changes the semantics of a delivered column: `external_action.status` cannot store the contract's
+`FAILED` (`CHECK (status IN ('PREPARED','SUBMITTED','AMBIGUOUS','REFUSED'))`, `0004:76`);
+`mail_piece.delivery_status` cannot store `ACCEPTED` or `IN_TRANSIT` (`0004:103-104`);
+`evidence_artifact.redaction_state` cannot store `UNREDACTED` or `DLP_SCRUBBED` (`0005:12`). And
+`deadline.derivation_ref` is `CHECK (derivation_ref LIKE 'policy:%')` (`0004:117`), so §5.13.2's
+`source: "CONTROLLER_STATED_DATE"` is **unrepresentable by construction** — that column exists to prove
+a deadline derives from a policy version, which is the opposite of an out-of-band controller-stated date.
+
+The remaining ~23 gaps are ordinary missing columns (`source_record.discovery_run_id` and
+`.assessment_state`; `request_case.recipe_id`; `external_action.recipe_id`/`.recipe_version`; path
+identifiers on `verification_observation`; `reappearance.observation_method`; evidence FKs on
+`controller_response` and `deadline`; `deadline.satisfied_by`; `audit_event.actor_kind`/`.outcome`/
+`.request_id`/`.refusal_code`/`.traceparent`), plus the seven missing tables above.
+
+**Action taken, per M6's own instruction** ("stop at `NODE_BLOCKED` for this milestone with the two
+blocking references named, and record the exact prerequisite"): §5.4–§5.16 are recorded
+`NODE_BLOCKED — BLOCKED_PREREQUISITE (specification)`, and **the 51 routes are not implemented**. The 27
+routes that are implemented (§5.1, §5.2, §5.3, §5.17) are complete, verified against real PostgreSQL, and
+unaffected.
+
+**The prerequisite, stated so it can be actioned:** SPEC-002 §2 must be extended from 12 declared tables
+to the full set the contract needs — at minimum a transition-history table (carrying transition code,
+from/to truth state, command, actor, correlation id and evidence ids), a discovery-run aggregate with
+per-source outcomes, a human-gate record, a reconciliation record, a readback record, an integrity-check
+record, a coverage-report record, a webhook-binding table, and the actor-kind/outcome/request-id columns
+on `audit_event`. Alternatively SPEC-003 §5.4–§5.16 should be reduced to the surface the domain model can
+actually express. **Neither is a code change in this repository, which is why this node cannot make it.**
+
+### 3.19 `COMMANDS.md` names the wrong interpreter for the RLS generator
 
 `COMMANDS.md` line 184 declares `sh scripts/generate-rls.ts --write|--check`. `scripts/generate-rls.ts`
 is TypeScript run by Node's native type stripping; `sh` interprets it as shell, and because the file
@@ -392,6 +481,43 @@ begins with `/**` the shell expands `/*` as a glob and then executes the matched
 `/LICENSE.txt: line 2: syntax error`. The gates call it correctly (`node scripts/generate-rls.ts
 --check`, in `gate-data.sh`), so nothing is broken; the documentation is. **Not fixed in this node**,
 because `COMMANDS.md` is a binding declaration and correcting it is a separate deliberate change.
+
+### 3.20 The verification ledger was NOT recording the contract suites, and carried 27 unattributable PASS rows
+
+Found while checking two scripts that disagreed about how many tests exist (`test-unit` reported 500,
+`refresh-verification-state` reported 411). Both numbers were right for their own suite sets; the
+difference exposed a defect in the DOD evidence machinery.
+
+**Defect 1 — `tests/contract/**` was in neither glob list.** `scripts/refresh-verification-state.ts`
+derives `TEST_LEDGER.jsonl` and every `DOD_STATUS.jsonl` evidence string from the suites it runs, and its
+two glob lists named `tests/domain/**`, `tests/harness/**`, `tests/architecture/**` and `tests/db/**` —
+never `tests/contract/**`.
+
+Measured consequence: `TEST_LEDGER.jsonl` contained **zero** rows whose suite began `tests/contract/`.
+The entire contract root — 189 tests including `token-validation` (33), `tenant-resolution` (12),
+`idempotency` (28), `error-mapping-parity` (16), `error-envelope`, `route-registry`,
+`filter-strictness`, `pagination` and `source-routes` — **could not influence `DOD_STATUS.jsonl`**. A
+regression in token validation or in tenant binding would have left every DOD row exactly as it was.
+
+Fixed: the root is added to both lists. It is pure (specification files, `node:*`, relative imports), so
+it needs no database and belongs in the non-`--with-db` set. The ledger went from 411 rows across 19
+suites to **600 rows across 28 suites**, and the DOD summary did **not** change
+(7 PASS / 14 PARTIAL / 20 NOT_STARTED / 1 EXTERNAL_REQUIRED of 42) — the new coverage confirmed existing
+statuses rather than upgrading any, which is the outcome that matters for honesty.
+
+**Defect 2 — 27 unattributable `PASS` rows survived every refresh.** Each was
+`{"test_id":"UNIT-","suite":"","name":"","status":"PASS","evidence_path":"tests/"}`, recorded under an
+earlier epoch. The preserve rule keeps any row whose suite was not re-run, and an empty suite is never in
+`suitesSeen`, so they were kept in perpetuity and inflated the ledger's pass count. They named no suite,
+no test and no file, so nothing could ever re-verify or refute them.
+
+Fixed: a row naming no suite is no longer preserved. The distinction is the point — a row naming a suite
+is a claim that can be RE-VERIFIED next run, which is why preserving it is honest; a row naming nothing
+is an unfalsifiable claim, and a ledger of observed results is exactly the wrong place for one. The
+ledger is now 600 rows, **0 unattributed**.
+
+Both are the same class of defect as a gate that stops checking: evidence kept being produced, and its
+scope quietly stopped covering part of the system.
 
 ## 4. Known limitations recorded honestly (not resolved)
 

@@ -1465,6 +1465,73 @@ specifications named each column, so materialising them cited names rather than 
 Prerequisite: a SPEC-001 entity and SPEC-002 table definition for `DiscoveryRun` plus its per-source
 outcome rows, or a SPEC-003 amendment that delegates the model explicitly.
 
+### 2026-09-15 — M6 is NODE_BLOCKED for §5.4–§5.16: the transition spine has no storage anywhere
+
+M6's goal is "the route catalogue of SPEC-003 §5 wired to the persistence layer". §5.1, §5.2, §5.3 and
+§5.17 are wired — 27 of 78 routes, verified against real PostgreSQL. The remaining 51 cannot be, and the
+reason is a specification prerequisite rather than a shortage of implementation:
+
+**Every state-changing route in §5.5–§5.14 returns a `transitionId`, and no specification defines a
+transition record.**
+
+| Evidence | Result |
+|---|---|
+| `CREATE TABLE (transition\|truth_state_transition\|transition_record\|case_transition)` across all specs and all 14 migrations | no match |
+| SPEC-001 (defines the 21 transitions of §4.1) | the token `transitionId` never appears; no entity, no value object, no port |
+| SPEC-002 §2 | declares **12** tables by DDL and defers **14** by name to "the EP-003 milestone bodies"; no transition table in either list |
+| Live schema (33 tables, from `information_schema`) | no transition table |
+| `audit_event` columns | `id, tenant_id, actor, action, target_kind, target_id, correlation_id, payload, at` — no from/to truth state, no transition code |
+
+§5.5.5 requires `transitionCode` to name "the SPEC-001 §4.1 table row, so a reader can check legality
+without inference" — that field, and the row behind it, would be this node's invention.
+
+**Seven further aggregates are undefined anywhere**, each confirmed absent from SPEC-002's declared list,
+its deferred list, and the live schema: `discovery_run` (plus per-source outcomes), `human_gate`,
+reconciliation, readback, `integrity_check`, `coverage_report`, `webhook_binding`. §5.15 additionally
+needs `audit_event.actor_kind`, `.outcome`, `.request_id`, `.refusal_code`, `.traceparent`, where the
+`actor.kind` vocabulary exists only inside SPEC-003's example body and the domain's `AuditEvent.actor` is
+a flat string.
+
+The full per-group prerequisite table is in `ASSUMPTIONS.md` §3.18. **§5.4–§5.16 are recorded
+`NODE_BLOCKED — BLOCKED_PREREQUISITE (specification)` and the 51 routes are NOT implemented.** M6's own
+instruction is followed: "stop at `NODE_BLOCKED` for this milestone with the two blocking references
+named, and record the exact prerequisite."
+
+**Two gaps are contradictions an additive migration cannot fix** (both verified by hand against the
+migration text):
+
+1. SPEC-003 §5.6/§5.13 carry a **date-string** `policyVersion` (`"2026-01-15"`) that a request must match
+   and a response must echo, while `jurisdiction_policy.version` and `policy_decision.policy_version` are
+   both `integer` (`0004:28,58`) under `UNIQUE (tenant_id, jurisdiction, version)`. A second date column
+   would be a second version concept and the two would disagree about which version is in force.
+2. SPEC-003 §5.9.1's `claimedOutcome` vocabulary is `DELETED`/`NOT_DELETED`/`UNSPECIFIED`, and
+   `controller_response.claimed_outcome` is typed **`truth_state`** (`0004:131`) — an enum containing none
+   of them. The column's own comment (`0004:122`) says a claim "is a CLAIM. Nothing in this schema may
+   move a case to a [truth state]", so the type contradicts the intent the comment states. Storing a
+   controller's claim in a truth-state-typed column is the collapse VG-VERIFY-004 exists to prevent.
+
+Four more verified mismatches need a delivered CHECK widened or a column made representable:
+`external_action.status` cannot hold `FAILED` (`0004:76`); `mail_piece.delivery_status` cannot hold
+`ACCEPTED`/`IN_TRANSIT` (`0004:103`); `evidence_artifact.redaction_state` cannot hold
+`UNREDACTED`/`DLP_SCRUBBED` (`0005:12`); and `deadline.derivation_ref` is
+`CHECK (derivation_ref LIKE 'policy:%')` (`0004:117`) while §5.13.2 submits
+`source: "CONTROLLER_STATED_DATE"` — unrepresentable by construction.
+
+The per-field survey behind this (every request/response field in §5.4–§5.16 matched against the
+delivered schema) is summarised in `ASSUMPTIONS.md` §3.18; six of its most consequential findings were
+re-verified directly against `db/migrations/**` before being recorded here.
+
+**Why the §5.3 precedent does not extend here.** For §5.3, SPEC-002 named the tables and the
+specifications named every missing column, so migrations 0012–0014 materialised existing names. A table
+whose columns are `actor_kind`, `outcome`, `request_id`, `refusal_code`, `traceparent` has no name to
+materialise. And a transition table is not a detail: SM-2 and SM-3 make an audit record mandatory for
+every transition, so its shape decides what the whole system can prove about a removal. Designing it here
+would be designing the product's evidence model inside an HTTP milestone.
+
+**`verify: ok` remains unreachable for the reasons already recorded**, and `RELEASE_GATE.json` is
+unchanged (`{"verdict":"INCONCLUSIVE","reason":"FORGE_ONLY"}`). Nothing in this record changes a gate, a
+test, or a manifest.
+
 ### 2026-09-15 — EP-003 never built a repository layer, and M6's CHANGE list assumes one
 
 M6's CHANGE list names `src/adapters/persistence/**` as though it existed. It does not. EP-003's own

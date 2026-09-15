@@ -102,9 +102,35 @@ function main(): number {
   const sha = candidateSha();
   const now = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
 
+  /**
+   * The suite set this refresher records.
+   *
+   * `tests/contract/**` WAS MISSING FROM BOTH LISTS and is now included. MEASURED consequence of the
+   * omission: `TEST_LEDGER.jsonl` contained **zero** rows whose suite began `tests/contract/`, so the
+   * entire contract root — `token-validation` (33 tests), `tenant-resolution` (12), `idempotency` (28),
+   * `error-mapping-parity` (16), `error-envelope`, `route-registry`, `filter-strictness`, `pagination`
+   * and `source-routes` — could not influence `DOD_STATUS.jsonl`. A regression in token validation or
+   * tenant resolution would have left every DOD row exactly as it was, which makes the DOD record an
+   * incomplete account of what was observed. The root is pure (it reads specification files and imports
+   * only `node:*` and relative paths), so it needs no database and belongs in the non-`--with-db` set.
+   *
+   * This is the same class of defect as a gate that stops checking: the evidence kept being produced,
+   * and its scope quietly stopped covering part of the system.
+   */
   const patterns = WITH_DB
-    ? ['tests/domain/**/*.test.ts', 'tests/harness/**/*.test.ts', 'tests/architecture/**/*.test.ts', 'tests/db/**/*.test.ts']
-    : ['tests/domain/**/*.test.ts', 'tests/harness/**/*.test.ts', 'tests/architecture/**/*.test.ts'];
+    ? [
+        'tests/domain/**/*.test.ts',
+        'tests/harness/**/*.test.ts',
+        'tests/architecture/**/*.test.ts',
+        'tests/contract/**/*.test.ts',
+        'tests/db/**/*.test.ts',
+      ]
+    : [
+        'tests/domain/**/*.test.ts',
+        'tests/harness/**/*.test.ts',
+        'tests/architecture/**/*.test.ts',
+        'tests/contract/**/*.test.ts',
+      ];
 
   if (WITH_DB && (process.env.VG_TEST_DSN_OWNER ?? '') === '') {
     console.error('refresh-verification-state: FAIL - --with-db requires VG_TEST_DSN_OWNER to be set');
@@ -129,8 +155,19 @@ function main(): number {
     : [];
   const preserved = existing.filter((line) => {
     try {
-      const row = JSON.parse(line) as { suite?: string };
-      return row.suite === undefined || !suitesSeen.has(row.suite);
+      const row = JSON.parse(line) as { suite?: string; test_id?: string; name?: string };
+      // A ROW THAT NAMES NO SUITE IS NOT PRESERVED. MEASURED: 27 such rows survived every refresh,
+      // each one `{"test_id":"UNIT-","suite":"","name":"","status":"PASS","evidence_path":"tests/"}` —
+      // a PASS claim with no suite, no test name and no file, recorded under an earlier epoch. The
+      // preserve rule below keeps any row whose suite was not re-run, and an empty suite is never in
+      // `suitesSeen`, so they were kept in perpetuity and inflated the ledger's pass count.
+      //
+      // The distinction that decides this: a row naming a suite is a claim that can be RE-VERIFIED on
+      // the next run, which is why preserving it is honest. A row naming nothing cannot ever be
+      // re-verified or refuted, so preserving it preserves an unfalsifiable claim — the opposite of
+      // what a ledger of observed results is for.
+      if (row.suite === undefined || row.suite.trim().length === 0) return false;
+      return !suitesSeen.has(row.suite);
     } catch {
       return true; // keep anything unparseable rather than destroying a record
     }
