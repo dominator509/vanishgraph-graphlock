@@ -30,11 +30,18 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 /**
  * The maximum accepted cursor length in bytes.
  *
- * SPEC-003 §2.5 makes the cursor opaque, so a legitimate one is small: a keyset payload with a few
- * values. 512 bytes is generous for that and small enough that a flood cannot exhaust memory. The
- * bound is applied to the RAW input, before any decoding.
+ * SPEC-003 §2.5 makes the cursor opaque, so a legitimate one is small: a keyset payload with a few values. The
+ * bound is applied to the RAW input, before any decoding, so a flood cannot exhaust memory.
+ *
+ * RAISED FROM 512 to 1024, and the reason is measured rather than theoretical: once a time-filterable
+ * collection's cursor began carrying its window (see `timeRange`), a `/v1/reappearances` page-1 cursor encoded to
+ * just over 512 bytes and `encodeCursor` REFUSED TO EMIT IT — so the page answered `400 INVALID_CURSOR` on the
+ * FIRST request, with no cursor involved. The file's own warning applies: a cursor the server produces but its
+ * own decoder rejects is a pagination that stops on page one. The range is now stored as epoch milliseconds
+ * (13 characters, not a 24-character ISO string) AND the bound is doubled, so the value is not merely under the
+ * limit but comfortably under it; `tests/contract/pagination.test.ts` asserts a real minted cursor's length.
  */
-export const MAX_CURSOR_BYTES = 512;
+export const MAX_CURSOR_BYTES = 1024;
 
 /** The keyset position: the last row's ordering values, plus an id tiebreaker. */
 export interface CursorKeyset {
@@ -64,6 +71,26 @@ export interface CursorPayload {
   readonly keyset: CursorKeyset;
   /** Issued-at, in epoch seconds. Not used for expiry today, but recorded for a future policy. */
   readonly issuedAt: number;
+  /**
+   * The time window the walk started with, when the route filters by time, as EPOCH MILLISECONDS.
+   *
+   * MEASURED DEFECT THIS FIXES. A time-filterable collection applies a DEFAULT window when the caller omits
+   * `from`/`to` (§2.6: the last 30 days), and the window is resolved against the clock at parse time — so page
+   * 1 and page 2 normalised to filters that differed by a few milliseconds, hashed differently, and EVERY
+   * continuation failed with `400 INVALID_CURSOR`. Pagination over HTTP was impossible for any route whose time
+   * range is optional (§5.5.1, §5.7.2, §5.11.2 and §5.4.2), and it went unnoticed because the suites that walk
+   * many pages pass an explicit `from`/`to` — the one case where the default never moves.
+   *
+   * Carrying the window in the cursor is the fix that is both correct and honest: a continuation sees the SAME
+   * window its first page did, rather than a window that slides under the walk (which would also drop rows that
+   * aged out mid-walk). A request that supplies its own `from`/`to` overrides it and is bound to those instead.
+   *
+   * MILLISECONDS, NOT ISO STRINGS, and that is a size decision with a measured consequence: the ISO form made a
+   * legitimate cursor exceed the length bound (see `MAX_CURSOR_BYTES`), so the first page of a walk was refused
+   * by the server's own encoder. The instants the filter carries are already millisecond-precision, so nothing
+   * is lost by storing them this way, and the parser converts back to RFC 3339 for the applied filter.
+   */
+  readonly timeRange?: { readonly fromMs: number; readonly toMs: number };
 }
 
 export class CursorError extends Error {
@@ -125,6 +152,20 @@ export interface CursorBindings {
 }
 
 /**
+ * Verify a cursor's signature and shape, WITHOUT checking its bindings.
+ *
+ * WHY THIS EXISTS SEPARATELY. A continuation of a time-filterable collection has to know the window its first
+ * page used BEFORE it can compute the filter hash the cursor is bound to — so the cursor must be readable
+ * before the bindings can be checked. Reading it first is safe because the signature is still verified here:
+ * `peekCursor` returns only what this server signed, and the caller is expected to follow it with
+ * `decodeCursor`, which re-checks every binding against the query that was actually applied. `peekCursor` alone
+ * is NOT an authorisation to read anything.
+ */
+export function peekCursor(cursor: string, secret: string): CursorPayload {
+  return verifyCursor(cursor, secret);
+}
+
+/**
  * Verify, decode and re-check every binding.
  *
  * Throws `CursorError` (mapped to `400 INVALID_CURSOR`) for every failure, with a reason for the LOG
@@ -137,6 +178,21 @@ export function decodeCursor(
   expected: CursorBindings,
   now: () => number = Date.now,
 ): CursorPayload {
+  const payload = verifyCursor(cursor, secret);
+
+  // Every binding. A signed cursor is authentic, not AUTHORISED: it was issued by this server, but
+  // for a particular query, and replaying it against a different query is the misuse this catches.
+  if (payload.tenantId !== expected.tenantId) throw new CursorError('tenant binding mismatch');
+  if (payload.routeTemplate !== expected.routeTemplate) throw new CursorError('route binding mismatch');
+  if (payload.filterHash !== expected.filterHash) throw new CursorError('filter binding mismatch');
+  if (payload.sort !== expected.sort) throw new CursorError('sort binding mismatch');
+
+  void now;
+  return payload;
+}
+
+/** Signature, shape and field types. The one place a cursor's bytes are turned into a payload. */
+function verifyCursor(cursor: string, secret: string): CursorPayload {
   // 1. Size, BEFORE any decoding.
   if (Buffer.byteLength(cursor, 'utf8') > MAX_CURSOR_BYTES) {
     throw new CursorError('exceeds the maximum length');
@@ -194,14 +250,17 @@ export function decodeCursor(
     throw new CursorError('payload is missing a required field');
   }
 
-  // 4. Every binding. A signed cursor is authentic, not AUTHORISED: it was issued by this server, but
-  //    for a particular query, and replaying it against a different query is the misuse this catches.
-  if (candidate.tenantId !== expected.tenantId) throw new CursorError('tenant binding mismatch');
-  if (candidate.routeTemplate !== expected.routeTemplate) throw new CursorError('route binding mismatch');
-  if (candidate.filterHash !== expected.filterHash) throw new CursorError('filter binding mismatch');
-  if (candidate.sort !== expected.sort) throw new CursorError('sort binding mismatch');
+  const range = candidate.timeRange as { fromMs?: unknown; toMs?: unknown } | undefined;
+  const timeRange =
+    range !== undefined &&
+    typeof range === 'object' &&
+    typeof range.fromMs === 'number' &&
+    typeof range.toMs === 'number' &&
+    Number.isFinite(range.fromMs) &&
+    Number.isFinite(range.toMs)
+      ? { fromMs: range.fromMs, toMs: range.toMs }
+      : undefined;
 
-  void now;
   return {
     tenantId: candidate.tenantId,
     routeTemplate: candidate.routeTemplate,
@@ -209,6 +268,7 @@ export function decodeCursor(
     sort: candidate.sort,
     keyset: { sortValue: keyset.sortValue ?? null, id: keyset.id },
     issuedAt: candidate.issuedAt,
+    ...(timeRange === undefined ? {} : { timeRange }),
   };
 }
 

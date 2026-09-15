@@ -453,7 +453,18 @@ export function resolvePolicy(
 
 export interface PrepareRequestInput {
   readonly caseId: string;
-  readonly from: 'MATCH_CONFIRMED' | 'REAPPEARED';
+  /**
+   * The state the case is in NOW.
+   *
+   * NOT restricted to `MATCH_CONFIRMED | REAPPEARED` any more, and that was a real gap rather than a widening
+   * for convenience: SPEC-003 §5.7.4 accepts a guarded-transition request "only for the transitions the case's
+   * current state legally permits (T5/T6/T7/T9/T10/T13/T15/T16/T19 as applicable)", so a case at `REQUEST_READY`
+   * asking for `NOT_REMOVABLE` (T10) or `HUMAN_REQUIRED` (T9), and one at `ACKNOWLEDGED` asking for T15/T16, are
+   * all lawful requests this command could not express. The MACHINE still decides: `applyTransition` looks the
+   * pair up in SPEC-001 §4.1 and throws `IllegalTransition` for anything that is not a row there, so a caller
+   * cannot use this parameter to reach a state the table does not permit.
+   */
+  readonly from: TruthState;
   readonly authority: AuthorityGrant;
   readonly decision: PolicyDecision;
   readonly policy: JurisdictionPolicy;

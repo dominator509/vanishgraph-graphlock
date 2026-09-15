@@ -19,6 +19,8 @@ migrate: applying 0018_observation_paths.sql
 migrate: applying 0019_transition_spine.sql
 migrate: applying 0020_exposure_read_fields.sql
 migrate: applying 0021_exposure_observation_defaults.sql
-migrate: applied 21 migration(s); at version 21
+migrate: applying 0022_case_aggregate.sql
+migrate: applying 0023_unbound_policy_decision.sql
+migrate: applied 23 migration(s); at version 23
 migrate: ok
 migrate: ok

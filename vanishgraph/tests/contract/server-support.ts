@@ -32,6 +32,7 @@ import type { AuditQueries } from '../../src/application/contracts/audit-queries
 import type { ObservationQueries } from '../../src/application/contracts/observation-queries.ts';
 import type { ExposureQueries } from '../../src/application/contracts/exposure-queries.ts';
 import type { TransitionQueries } from '../../src/application/contracts/transition-queries.ts';
+import type { CaseQueries } from '../../src/application/contracts/case-queries.ts';
 
 /**
  * The cursor signing secret used by tests.
@@ -329,6 +330,25 @@ export function testExposureQueries(): ExposureQueries {
  * An empty history is exactly what a resource that has never moved looks like. It is NOT evidence that the
  * spine works: `tests/db/exposure-transitions.test.ts` walks a real T3/T4 through the domain command and
  * reads the history back from `audit_event`.
+ */
+export function testCaseQueries(): CaseQueries {
+  return {
+    listCases: async () => [],
+    getCaseDetail: async () => undefined,
+    caseRowVersion: async () => undefined,
+    listTimeline: async () => [],
+    createCase: async () => ({ ok: false, reason: 'EXPOSURE_NOT_FOUND' }),
+    guardedUpdate: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+    recordHumanGate: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+  };
+}
+
+/**
+ * A transition spine for tests that do not exercise §5.5.5/§5.7.3/§5.7.6.
+ *
+ * An empty history is exactly what a resource that has never moved looks like. It is NOT evidence that the
+ * spine works:   ests/db/exposure-transitions.test.ts walks a real T3/T4 through the domain command and
+ * reads the history back from udit_event.
  */
 export function testTransitionQueries(): TransitionQueries {
   return {

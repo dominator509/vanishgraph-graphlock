@@ -28,6 +28,7 @@ import {
   testAuditQueries,
   testExposureQueries,
   testObservationQueries,
+  testCaseQueries,
   testTransitionQueries,
   testIdentity,
   testTenancy,
@@ -149,6 +150,7 @@ function serverWith(options: {
     observationQueries: testObservationQueries(),
     exposureQueries: testExposureQueries(),
     transitionQueries: testTransitionQueries(),
+    caseQueries: testCaseQueries(),
     subjectQueries: {
       listSubjects: async () => [],
       getSubjectDetail: async () => undefined,

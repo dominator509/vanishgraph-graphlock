@@ -29,6 +29,7 @@ import {
   testAuditQueries,
   testExposureQueries,
   testObservationQueries,
+  testCaseQueries,
   testTransitionQueries,
   TEST_SESSION_SECRET,
   TEST_TOKEN,
@@ -61,6 +62,7 @@ function testServer(overrides: Partial<ServerDependencies> = {}) {
     observationQueries: testObservationQueries(),
     exposureQueries: testExposureQueries(),
     transitionQueries: testTransitionQueries(),
+    caseQueries: testCaseQueries(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),

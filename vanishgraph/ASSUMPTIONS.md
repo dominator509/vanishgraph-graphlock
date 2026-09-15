@@ -937,6 +937,77 @@ With transitions readable, the remaining blockers are narrower and each is named
 | §5.16 coverage reports | 3 | A coverage-report aggregate, and coverage is produced by the undiscoverable discovery runs. |
 | EP-004 M7 webhooks | 3 | A `webhook_binding` table; the replay store needs `VALKEY_URL`, for which M7 declares a durable-file fallback. |
 
+### 3.29 The §5.7 case group: one schema conflict, one shared pagination defect, and two declared implementation choices
+
+**§5.7 implemented (6 routes: 5.7.1–5.7.6).** Migration `0022` adds `request_case.recipe_id`, the `human_gate`
+table (SPEC-001 names `HumanGate` as a canonical entity; no specification gives it a field list, so the columns
+are exactly what §5.7.5's request and response require) and a partial unique index that makes "one LIVE case per
+subject × source × exposure" a database rule rather than a handler convention. Migration `0023` is the conflict
+below. Route coverage is measured, not assumed: `node scripts/route-coverage.ts` → **50 registered / 45 working
+of 78**.
+
+**1. A CONTRADICTION between the contract and the schema, resolved by widening the schema.**
+§5.7.1's request body names a `policyDecisionId` at the moment it CREATES the case, and its refusal list
+includes `422 POLICY_DECISION_INCOMPLETE`. SPEC-002 §2 declares `policy_decision.case_id uuid NOT NULL`, so
+under the delivered schema every decision already belongs to a case — a decision offered at creation could only
+belong to a case that does not exist yet. Either §5.7.1 is unimplementable, or a decision may exist before its
+case does. `0023` drops that NOT NULL and recreates the foreign key `DEFERRABLE` (matching
+`request_case.policy_decision_id`'s existing deferred FK), so a decision can be resolved and then bound by the
+same transaction that creates the case. **Why this side moved:** it changes the meaning of no stored value — a
+decision with `case_id IS NULL` is simply unbound — whereas the alternative (accepting a decision that belongs
+to a DIFFERENT case) would put a case and a decision together that the policy engine never resolved as a pair,
+which is the association VG-POLICY-001/002 exist to keep truthful. `tests/db/case-lifecycle.test.ts` asserts a
+bound decision offered for another exposure is refused `POLICY_DECISION_INCOMPLETE`.
+
+**2. A SHARED PAGINATION DEFECT: a time-filterable collection could not be paginated at all.** §2.6 gives
+`from`/`to` an optional default (the last 30 days) on time-filterable routes, and the default is resolved
+against the clock at parse time. A cursor is bound to a hash of the normalised filter, so page 1 and page 2
+normalised to windows a few milliseconds apart, hashed differently, and **every continuation failed
+`400 INVALID_CURSOR`** — for §5.5.1, §5.7.2, §5.11.2 and §5.4.2. It was invisible because every existing walk
+test passes an explicit `from`/`to`, which is the one case where the default never moves; it surfaced the first
+time a walk omitted the range (`tests/db/case-lifecycle.test.ts`). Fixed by carrying the window IN the cursor:
+`peekCursor` verifies the signature and returns the payload before the bindings can be checked, `parseQuery`
+inherits the missing side(s), and the minted cursor records the applied window — so a walk keeps the window it
+started with instead of one that slides under it (which would also drop rows that aged out mid-walk). The
+regression test drives two DIFFERENT clocks through the parser and the cursor, which is what makes it
+deterministic rather than flaky in the direction of passing.
+
+**2b. And the fix's first version broke page ONE, which is the same defect class one level down.** Storing the
+window as two RFC 3339 strings pushed a real `/v1/reappearances` cursor past `MAX_CURSOR_BYTES` (512), so
+`encodeCursor` REFUSED TO EMIT IT and the first page answered `400 INVALID_CURSOR` with no cursor in the
+request — the file's own warning ("a cursor the server produces but its own decoder rejects is a pagination
+that stops on page one") realised exactly. The window is epoch milliseconds now (13 characters, and the filter's
+precision is milliseconds anyway) and the bound is 1024, and `tests/contract/pagination.test.ts` asserts that a
+minted cursor fits the bound the decoder enforces, so the two cannot drift apart again.
+
+**3. `guardsEvaluated.recipeSigned` GATES the transition, and it is a verification rather than a presence.**
+§5.7.4 reports six guards. The domain's `prepareRequest` treats "enabled, signature present, fresh" as
+`recipeSignedAndFresh` — its `assertRecipeUsableAt` has no key map and cannot verify anything — so reporting the
+verification honestly beside a transition that ignored it would have let a case reach `REQUEST_READY` on a
+recipe nobody verified. The port refuses `GUARD_FAILED recipeSignedAndFresh` when verification fails, which
+means **a deployment with no verification key (ADR-006 OPEN) cannot prepare a request at all**. That is the
+honest posture — VG-CHANNEL-003 says an unverified recipe may not authorise a write, and §5.3.7 already refuses
+to CREATE such a recipe — and `tests/db/case-lifecycle.test.ts` proves both directions with a real Ed25519 key
+pair: verified ⇒ T5, key map empty ⇒ refused with the row untouched.
+
+**4. Two declared implementation choices, named as choices.** (a) **Human-gate routing has NO specification
+source**: §5.7.5's response carries `humanQueue` and `serviceLevelDueAt`, its request supplies neither, and no
+table of queues exists anywhere. `HUMAN_GATE_ROUTING` maps the seven gate kinds to a queue and a service level,
+and both are STORED ON THE GATE ROW so a later change cannot rewrite what an earlier gate was told. The queue
+depends on `gateKind` alone, so a caller cannot route its own gate to a faster queue. (b) **Case creation has no
+domain command**: SPEC-001 §6 lists eleven commands and none creates a `RequestCase`, and §5.7.1 says creation
+"never advances" the truth state — so the audit row is written with `action = 'CreateRequestCase'` (a constant
+declared in the adapter) and `transition_code IS NULL`, which the spine's all-or-nothing CHECK requires.
+
+**5. Two smaller readings, and one self-inflicted lesson.** `guardsEvaluated.recipeFresh`/`channelPermitted`/
+`budgetAvailable` are computed from rows (the recipe's `freshness_at`, the source's `permission_class` and the
+decision's channel, and the recipe's `max_attempts_per_window`/`window_seconds` window over `external_action`);
+`request_case.recipe_id` is NULLABLE because cases written before `0022` genuinely have no recipe recorded. And
+the lesson: my first fixture built its worlds with a jurisdiction of `US-C<run><hex>` — fourteen characters —
+which the fixture's own SQL accepted and `new Jurisdiction(...)` refused inside the command, surfacing as a
+`500 INTERNAL_ERROR` on the first PATCH. A domain value object validating a fixture field is the schema doing
+its job; the fixture now uses a valid code and distinguishes worlds by policy VERSION.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

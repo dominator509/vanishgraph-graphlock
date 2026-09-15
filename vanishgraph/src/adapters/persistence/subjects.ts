@@ -28,13 +28,18 @@ import type {
 } from '../../application/contracts/subject-queries.ts';
 
 /**
- * `authorityState` derives from the tenant's live grants for the subject.
+ * The subject's authority state, derived from its grants.
  *
  * The branch ORDER is the semantics: a live grant wins, then a revoked one is reported as `REVOKED`,
  * then any remaining grant is `EXPIRED`, then `NONE`. A subject with both a revoked grant and a valid
  * one is `VALID` — the revoked row is history, not a disqualification.
+ *
+ * EXPORTED SO THERE IS ONE DEFINITION, and it refers to the SUBJECT by the alias `s`. §5.7.2 filters cases by
+ * `authorityGrantState`, which is the same fact about the same subject reached through `request_case`; a second
+ * CASE expression is how a case comes to be listed as being under a valid grant while its subject's own detail
+ * page says otherwise. Any query that interpolates this must alias `protected_subject` as `s`.
  */
-const AUTHORITY_STATE_SQL = `
+export const AUTHORITY_STATE_SQL = `
   CASE
     WHEN EXISTS (
       SELECT 1 FROM authority_grant g

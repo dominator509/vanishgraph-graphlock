@@ -116,6 +116,16 @@ const app = buildServer({
     listTransitionsForCase: async () => [],
     lastTransitionForCase: async () => undefined,
   },
+  // The §5.7 case aggregate. Not-found answers: this probe only enumerates routes.
+  caseQueries: {
+    listCases: async () => [],
+    getCaseDetail: async () => undefined,
+    caseRowVersion: async () => undefined,
+    listTimeline: async () => [],
+    createCase: async () => ({ ok: false, reason: 'EXPOSURE_NOT_FOUND' }),
+    guardedUpdate: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+    recordHumanGate: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+  },
   // The §5.10/§5.11 read model. Empty: this probe only enumerates routes.
   observationQueries: {
     caseExists: async () => false,

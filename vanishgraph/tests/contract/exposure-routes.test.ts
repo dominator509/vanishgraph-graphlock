@@ -33,6 +33,7 @@ import {
   testSourceQueries,
   testSubjectQueries,
   testTenancy,
+  testCaseQueries,
   testTransitionQueries,
   TEST_SESSION_SECRET,
   TEST_TOKEN,
@@ -67,6 +68,7 @@ function app(): VgFastify {
     observationQueries: testObservationQueries(),
     exposureQueries: testExposureQueries(),
     transitionQueries: testTransitionQueries(),
+    caseQueries: testCaseQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
   });
 }
@@ -176,6 +178,7 @@ describe('§5.5 is declared as the registry says it is', () => {
       observationQueries: testObservationQueries(),
       exposureQueries: testExposureQueries(),
       transitionQueries: testTransitionQueries(),
+    caseQueries: testCaseQueries(),
       health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
     });
     const response = await call(server, 'POST', `/v1/exposures/${EXPOSURE_ID}/match-assessments`, {

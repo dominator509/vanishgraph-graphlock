@@ -27,6 +27,7 @@ import { deadlineRoutes } from './routes/deadlines.ts';
 import { auditRoutes } from './routes/audit.ts';
 import { observationRoutes } from './routes/observations.ts';
 import { exposureRoutes } from './routes/exposures.ts';
+import { caseRoutes } from './routes/cases.ts';
 import type { SubjectQueries } from '../application/contracts/subject-queries.ts';
 import type { RecipeVerificationKeys, SourceQueries } from '../application/contracts/source-queries.ts';
 import type { AppealQueries } from '../application/contracts/appeal-queries.ts';
@@ -35,6 +36,7 @@ import type { AuditQueries } from '../application/contracts/audit-queries.ts';
 import type { ObservationQueries } from '../application/contracts/observation-queries.ts';
 import type { ExposureQueries } from '../application/contracts/exposure-queries.ts';
 import type { TransitionQueries } from '../application/contracts/transition-queries.ts';
+import type { CaseQueries } from '../application/contracts/case-queries.ts';
 import { installCorrelation } from './plugins/correlation.ts';
 import { installErrorHandler } from './plugins/error-handler.ts';
 import { installIdentity, type IdentityPluginOptions } from './plugins/identity.ts';
@@ -141,6 +143,12 @@ export interface ServerDependencies {
    * "what moved it", and a route that needs both should have to say so.
    */
   readonly transitionQueries: TransitionQueries;
+  /**
+   * The case aggregate (SPEC-003 §5.7): three reads, creation, the guarded transition and human gates. ONE port
+   * for six routes because they are one aggregate — a second read path would be a second definition of
+   * `actionCount` or of the next deadline.
+   */
+  readonly caseQueries: CaseQueries;
   readonly logLevel?: string;
 }
 
@@ -215,6 +223,11 @@ export function buildServer(deps: ServerDependencies): VgFastify {
 
   // The SPEC-003 5.10.2/5.10.3/5.11.2/5.11.3 reads.
   app.register(observationRoutes, { sessionSecret: deps.sessionSecret, queries: deps.observationQueries });
+  app.register(caseRoutes, {
+    sessionSecret: deps.sessionSecret,
+    queries: deps.caseQueries,
+    transitions: deps.transitionQueries,
+  });
   app.register(exposureRoutes, {
     sessionSecret: deps.sessionSecret,
     queries: deps.exposureQueries,

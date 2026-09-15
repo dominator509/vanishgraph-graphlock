@@ -28,9 +28,12 @@ import {
   encodeCursor,
   filterHashOf,
   isOffsetRequested,
+  peekCursor,
   type CursorPayload,
 } from '../../src/http/pagination/cursor.ts';
 import { buildCollection, buildPage, DEFAULT_LIMIT, MAX_LIMIT } from '../../src/http/dto/page.ts';
+import { parseQuery } from '../../src/http/query/strict.ts';
+import { REAPPEARANCES_QUERY } from '../../src/http/query/filters.ts';
 
 const SECRET = 'test-session-secret-value';
 const TENANT_A = '11111111-1111-4111-8111-111111111111';
@@ -136,8 +139,120 @@ function walk(
   return { ids, pages, pageObjects };
 }
 
-describe('a full walk returns every row exactly once', () => {
-  test('250 rows over createdAt:desc, no duplicates and no gaps', () => {
+describe('a time-filterable collection can be walked without an explicit range (MEASURED DEFECT)', () => {
+  /**
+   * THE DEFECT THIS PINS. A time-filterable route applies a DEFAULT window (the last 30 days) when the caller
+   * omits `from`/`to`, and the window is resolved against the clock. The cursor is bound to a hash of the
+   * normalised filter, so page 1 and page 2 normalised to filters a few milliseconds apart, hashed
+   * differently, and EVERY continuation failed `400 INVALID_CURSOR`. Pagination over HTTP was therefore
+   * impossible for §5.5.1, §5.7.2, §5.11.2 and §5.4.2 unless the caller supplied a range by hand — which is
+   * exactly what every existing walk test did, which is why no suite caught it.
+   *
+   * The fix: the window is carried IN the cursor and a continuation inherits it. This test drives the parser
+   * and the cursor together with two DIFFERENT clocks, which is what makes it deterministic — the real route
+   * resolves `now()` twice within microseconds, and a test that did the same would be flaky in the direction
+   * of passing.
+   */
+  test('a continuation inherits the window its first page used, so the filter hash matches', () => {
+    const first = 1_800_000_000_000;
+    const later = first + 5_000;
+    const page1 = parseQuery({ limit: '1' }, REAPPEARANCES_QUERY, () => first);
+
+    const cursor = encodeCursor(
+      {
+        tenantId: TENANT_A,
+        routeTemplate: '/v1/reappearances',
+        filterHash: filterHashOf(page1.filter),
+        sort: page1.sort,
+        timeRange: {
+          fromMs: Date.parse(String(page1.filter['from'])),
+          toMs: Date.parse(String(page1.filter['to'])),
+        },
+        keyset: { sortValue: '2026-01-01T00:00:00.000Z', id: 'row-1' },
+        issuedAt: 1,
+      },
+      SECRET,
+    );
+
+    // THE CURSOR THE SERVER MINTS MUST FIT THE BOUND THE SERVER ENFORCES. Measured: with the window stored as
+    // ISO strings, a real `/v1/reappearances` cursor encoded to just over 512 bytes and `encodeCursor` refused to
+    // emit it — so the FIRST page of a walk answered `400 INVALID_CURSOR` with no cursor in the request. The
+    // window is epoch milliseconds now and the bound is doubled, and this assertion is what keeps the two from
+    // drifting apart again.
+    assert.ok(
+      Buffer.byteLength(cursor, 'utf8') <= MAX_CURSOR_BYTES,
+      `a minted cursor must fit the decoder's bound: ${String(Buffer.byteLength(cursor, 'utf8'))} > ${String(MAX_CURSOR_BYTES)}`,
+    );
+    const peeked = peekCursor(cursor, SECRET);
+    const page2 = parseQuery({ limit: '1', cursor }, REAPPEARANCES_QUERY, () => later, peeked.timeRange);
+
+    assert.equal(
+      filterHashOf(page2.filter),
+      filterHashOf(page1.filter),
+      'the inherited window must normalise to the same filter, or every continuation is refused',
+    );
+    // And the binding check agrees, which is the assertion the route actually performs.
+    assert.doesNotThrow(() =>
+      decodeCursor(cursor, SECRET, {
+        tenantId: TENANT_A,
+        routeTemplate: '/v1/reappearances',
+        filterHash: filterHashOf(page2.filter),
+        sort: page2.sort,
+      }),
+    );
+    // The window is the FIRST page's, not the later clock's — otherwise rows that aged out mid-walk vanish.
+    assert.equal(page2.filter['to'], page1.filter['to']);
+  });
+
+  test('an explicit range still wins, and a wrong cursor is still refused', () => {
+    const first = 1_800_000_000_000;
+    const page1 = parseQuery({ limit: '1' }, REAPPEARANCES_QUERY, () => first);
+    const cursor = encodeCursor(
+      {
+        tenantId: TENANT_A,
+        routeTemplate: '/v1/reappearances',
+        filterHash: filterHashOf(page1.filter),
+        sort: page1.sort,
+        timeRange: {
+          fromMs: Date.parse(String(page1.filter['from'])),
+          toMs: Date.parse(String(page1.filter['to'])),
+        },
+        keyset: { sortValue: '2026-01-01T00:00:00.000Z', id: 'row-1' },
+        issuedAt: 1,
+      },
+      SECRET,
+    );
+
+    // A caller that supplies its own `from` keeps it; only the omitted side is inherited.
+    const explicit = parseQuery(
+      { from: '2026-01-01T00:00:00.000Z' },
+      REAPPEARANCES_QUERY,
+      () => first,
+      peekCursor(cursor, SECRET).timeRange,
+    );
+    assert.equal(explicit.filter['from'], '2026-01-01T00:00:00.000Z');
+
+    // And a cursor minted for one range is still refused against a query with another: inheritance must not
+    // turn the filter binding into a formality.
+    const other = parseQuery(
+      { from: '2025-01-01T00:00:00.000Z', to: '2025-02-01T00:00:00.000Z' },
+      REAPPEARANCES_QUERY,
+      () => first,
+    );
+    assert.throws(
+      () =>
+        decodeCursor(cursor, SECRET, {
+          tenantId: TENANT_A,
+          routeTemplate: '/v1/reappearances',
+          filterHash: filterHashOf(other.filter),
+          sort: other.sort,
+        }),
+      (error: unknown) => error instanceof CursorError,
+    );
+  });
+});
+
+describe('a full walk returns every row exactly once', () => {  test('250 rows over createdAt:desc, no duplicates and no gaps', () => {
     const rows = seed();
     const { ids, pageObjects } = walk(rows, 'createdAt:desc', {}, 25);
 

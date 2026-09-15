@@ -33,6 +33,7 @@ import {
   testAuditQueries,
   testExposureQueries,
   testObservationQueries,
+  testCaseQueries,
   testTransitionQueries,
   testTenancy,
   TEST_SESSION_SECRET,
@@ -78,6 +79,7 @@ function effectServer(options: {
     observationQueries: testObservationQueries(),
     exposureQueries: testExposureQueries(),
     transitionQueries: testTransitionQueries(),
+    caseQueries: testCaseQueries(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),
@@ -468,6 +470,7 @@ describe('a pre-effect failure releases the key so the caller can retry', () => 
     observationQueries: testObservationQueries(),
     exposureQueries: testExposureQueries(),
     transitionQueries: testTransitionQueries(),
+    caseQueries: testCaseQueries(),
       health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 's', ok: true })] },
     });
     const { withIdempotency } = await import('../../src/http/plugins/idempotency.ts');

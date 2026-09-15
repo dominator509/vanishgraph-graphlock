@@ -26,7 +26,7 @@ import { beginHandler, uuidParam, type HandlerContext } from './handler-context.
 import { parseQuery } from '../query/strict.ts';
 import { EXPOSURES_QUERY } from '../query/filters.ts';
 import { buildCollection } from '../dto/page.ts';
-import { encodeCursor, decodeCursor, filterHashOf } from '../pagination/cursor.ts';
+import { encodeCursor, decodeCursor, filterHashOf, peekCursor } from '../pagination/cursor.ts';
 import { epochMillisFromIfMatch, etagFor, ifMatchHeader } from './preconditions.ts';
 import type {
   AssessmentOutcome,
@@ -177,7 +177,19 @@ export function exposureRoutes(app: FastifyInstance, options: ExposureRouteOptio
   // ---------------------------------------------------------------------------------------------
   app.get(EXPOSURES_ROUTE, async (request, reply) => {
     const h = beginHandler(request, reply);
-    const parsed = parseQuery(request.query as Record<string, unknown>, EXPOSURES_QUERY);
+    // THE CURSOR IS READ BEFORE THE QUERY IS PARSED, so a continuation can inherit the time window its first
+    // page used. The default window is resolved against the clock, so without this every second page hashed a
+    // different filter and was refused INVALID_CURSOR (see cursor.ts). The signature is still verified by
+    // peekCursor, and the binding check below still runs — a peek is not an authorisation.
+    const rawQuery = request.query as Record<string, unknown>;
+    const peeked =
+      typeof rawQuery['cursor'] === 'string' ? peekCursor(rawQuery['cursor'], secret) : undefined;
+    const parsed = parseQuery(
+      rawQuery,
+      EXPOSURES_QUERY,
+      Date.now,
+      peeked?.timeRange,
+    );
     const filterHash = filterHashOf(parsed.filter);
 
     const after =
@@ -216,6 +228,15 @@ export function exposureRoutes(app: FastifyInstance, options: ExposureRouteOptio
               sort: parsed.sort,
               // The keyset value is the SORT FIELD's value, which is what makes the next page a continuation
               // rather than a re-read: `observedAt` sorts on `lastObservedAt`, the other two on their own.
+              // The window this walk started with, so the next page applies the SAME one.
+              ...(typeof parsed.filter['from'] === 'string' && typeof parsed.filter['to'] === 'string'
+                ? {
+                    timeRange: {
+                      fromMs: Date.parse(parsed.filter['from']),
+                      toMs: Date.parse(parsed.filter['to']),
+                    },
+                  }
+                : {}),
               keyset: { sortValue: sortValueOf(last, parsed.sort), id: last.exposureId },
               issuedAt: Math.floor(Date.now() / 1000),
             },

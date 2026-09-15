@@ -210,8 +210,13 @@ type SignatureVerdict = 'VERIFIED' | 'INVALID' | 'KEY_UNCONFIGURED';
  *
  * An Ed25519 key needs no digest (the signature covers the message directly, so the API takes `null`);
  * an RSA key uses SHA-256. Any other key type is `INVALID`, not silently unverified.
+ *
+ * EXPORTED SO THERE IS ONE DEFINITION OF "VERIFIED". §5.7.4's `guardsEvaluated.recipeSigned` has to answer
+ * the same question for the same reason (VG-CHANNEL-003), and a second implementation of this function is
+ * how one route comes to accept a signature the other refuses. It is not a public API: it takes a key map
+ * and returns a verdict, and nothing about it escapes the adapter layer.
  */
-function verifyRecipeSignature(
+export function verifyRecipeSignature(
   input: { readonly signingKeyRef: string; readonly signature: Buffer; readonly payload: string },
   keys: RecipeVerificationKeys,
 ): SignatureVerdict {

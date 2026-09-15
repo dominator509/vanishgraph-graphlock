@@ -275,6 +275,27 @@ export const ERROR_CODE_REGISTRY: readonly ErrorCodeSpec[] = Object.freeze([
   { domainCode: 'IDENTITY_CLASS_MISMATCH', wireCode: 'IDENTITY_CLASS_MISMATCH', status: 409, retryable: false,
     message: 'The source class of this record does not permit this transition.' },
 
+  // SPEC-003 §5.7 / §8.2's 409 list. Same reason as the row above: enumerated in the contract, absent from this
+  // registry until §5.7's routes were implemented.
+  { domainCode: 'CASE_ALREADY_EXISTS', wireCode: 'CASE_ALREADY_EXISTS', status: 409, retryable: false,
+    message: 'A live case already exists for this subject, source and exposure.' },
+  { domainCode: 'CASE_EXPOSURE_STATE_MISMATCH', wireCode: 'CASE_EXPOSURE_STATE_MISMATCH', status: 409, retryable: false,
+    message: 'A case may only be created at the exposure’s own current truth state.' },
+
+  // SPEC-003 §5.7.4/§5.7.5 / §8.2's 422 list.
+  { domainCode: 'INVALID_REQUEST', wireCode: 'POLICY_DECISION_INCOMPLETE', status: 422, retryable: false,
+    message: 'The policy decision is missing one of the four fields a decision must carry.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'RECIPE_NOT_ENABLED', status: 422, retryable: false,
+    message: 'The named recipe is not enabled for this source.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'TRANSITION_NOT_ROUTEABLE', status: 422, retryable: false,
+    message: 'That truth state is reachable only through its own effect or observation route.' },
+  { domainCode: 'GUARD_NOT_SATISFIED', wireCode: 'GUARD_FAILED', status: 422, retryable: false,
+    message: 'A guard for the requested transition was not satisfied.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'EVIDENCE_REQUIRED', status: 422, retryable: false,
+    message: 'This transition requires recorded evidence.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'BYPASS_ATTEMPT_REFUSED', status: 422, retryable: false,
+    message: 'A gate bypass attempt is refused and audited.' },
+
   { domainCode: 'PRECONDITION', wireCode: 'PRECONDITION_FAILED', status: 412, retryable: false,
     message: 'The supplied If-Match value does not match the current resource state.' },
   { domainCode: 'PRECONDITION', wireCode: 'PRECONDITION_REQUIRED', status: 428, retryable: false,

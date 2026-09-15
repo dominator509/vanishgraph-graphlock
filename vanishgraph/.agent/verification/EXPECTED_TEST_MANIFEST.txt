@@ -30,3 +30,4 @@ tests/contract/deadline-routes.test.ts
 tests/contract/audit-routes.test.ts
 tests/contract/observation-routes.test.ts
 tests/contract/exposure-routes.test.ts
+tests/contract/case-routes.test.ts

@@ -33,7 +33,7 @@ import { beginHandler, uuidParam } from './handler-context.ts';
 import { parseQuery } from '../query/strict.ts';
 import { REAPPEARANCES_QUERY } from '../query/filters.ts';
 import { buildCollection } from '../dto/page.ts';
-import { encodeCursor, decodeCursor, filterHashOf } from '../pagination/cursor.ts';
+import { encodeCursor, decodeCursor, filterHashOf, peekCursor } from '../pagination/cursor.ts';
 import type { ObservationQueries, ReappearanceRow } from '../../application/contracts/observation-queries.ts';
 import { RE_ENTRY_STATE_SQL } from '../../application/contracts/observation-queries.ts';
 
@@ -110,7 +110,19 @@ export function observationRoutes(app: FastifyInstance, options: ObservationRout
   // ---------------------------------------------------------------------------------------------
   app.get(REAPPEARANCES_ROUTE, async (request, reply) => {
     const h = beginHandler(request, reply);
-    const parsed = parseQuery(request.query as Record<string, unknown>, REAPPEARANCES_QUERY);
+    // THE CURSOR IS READ BEFORE THE QUERY IS PARSED, so a continuation can inherit the time window its first
+    // page used. The default window is resolved against the clock, so without this every second page hashed a
+    // different filter and was refused INVALID_CURSOR (see cursor.ts). The signature is still verified by
+    // peekCursor, and the binding check below still runs — a peek is not an authorisation.
+    const rawQuery = request.query as Record<string, unknown>;
+    const peeked =
+      typeof rawQuery['cursor'] === 'string' ? peekCursor(rawQuery['cursor'], secret) : undefined;
+    const parsed = parseQuery(
+      rawQuery,
+      REAPPEARANCES_QUERY,
+      Date.now,
+      peeked?.timeRange,
+    );
     const filterHash = filterHashOf(parsed.filter);
 
     const after =
@@ -148,6 +160,16 @@ export function observationRoutes(app: FastifyInstance, options: ObservationRout
               routeTemplate: REAPPEARANCES_ROUTE,
               filterHash,
               sort: parsed.sort,
+              // The window this walk started with, so the next page applies the SAME one rather than a default
+              // that has slid with the clock (the defect recorded in `cursor.ts`).
+              ...(typeof parsed.filter['from'] === 'string' && typeof parsed.filter['to'] === 'string'
+                ? {
+                    timeRange: {
+                      fromMs: Date.parse(parsed.filter['from']),
+                      toMs: Date.parse(parsed.filter['to']),
+                    },
+                  }
+                : {}),
               keyset: { sortValue: last.observedAt, id: last.reappearanceId },
               issuedAt: Math.floor(Date.now() / 1000),
             },

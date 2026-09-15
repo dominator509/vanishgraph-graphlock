@@ -36,6 +36,7 @@ import {
   testAuditQueries,
   testExposureQueries,
   testObservationQueries,
+  testCaseQueries,
   testTransitionQueries,
   TEST_SESSION_SECRET,
   TEST_TOKEN,
@@ -67,6 +68,7 @@ function serverWith(options: {
     observationQueries: testObservationQueries(),
     exposureQueries: testExposureQueries(),
     transitionQueries: testTransitionQueries(),
+    caseQueries: testCaseQueries(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),
@@ -252,6 +254,7 @@ describe('tenancy is required by the server type, so it cannot be forgotten', ()
     observationQueries: testObservationQueries(),
     exposureQueries: testExposureQueries(),
     transitionQueries: testTransitionQueries(),
+    caseQueries: testCaseQueries(),
     };
     assert.ok(deps.identity !== undefined);
     assert.ok(deps.tenancy !== undefined);

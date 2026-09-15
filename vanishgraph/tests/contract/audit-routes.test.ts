@@ -27,6 +27,7 @@ import {
   testIdentity,
   testExposureQueries,
   testObservationQueries,
+  testCaseQueries,
   testTransitionQueries,
   testTenancy,
   TEST_SESSION_SECRET,
@@ -68,6 +69,7 @@ function serverWith(options: { scopes?: readonly string[]; queries?: AuditQuerie
     observationQueries: testObservationQueries(),
     exposureQueries: testExposureQueries(),
     transitionQueries: testTransitionQueries(),
+    caseQueries: testCaseQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
   });
 }

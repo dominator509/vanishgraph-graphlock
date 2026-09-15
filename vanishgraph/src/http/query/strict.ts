@@ -102,6 +102,15 @@ export function parseQuery(
   raw: Record<string, unknown>,
   schema: QuerySchema,
   now: () => number = Date.now,
+  /**
+   * The window a CONTINUATION inherits from its cursor, when the request omits `from`/`to`.
+   *
+   * A default window resolved against the clock moves between pages, so page 2 hashed a different filter from
+   * the one page 1 minted against and every continuation failed `400 INVALID_CURSOR` — measured, and recorded
+   * in `cursor.ts`. With this parameter the walk keeps the window it started with. A request that supplies its
+   * own `from`/`to` ignores it, so an explicit range is never silently replaced.
+   */
+  inheritedTimeRange?: { readonly fromMs: number; readonly toMs: number },
 ): NormalisedQuery {
   // ---------------------------------------------------------------------------------------------
   // 1. Unknown parameters, BEFORE anything else. A typo must be reported as a typo, not as a
@@ -302,29 +311,43 @@ export function parseQuery(
     }
 
     const toMs = rawTo === undefined ? now() : parseTimestamp(rawTo, 'to');
+    const defaulted = rawFrom === undefined || rawTo === undefined;
+    // A CONTINUATION KEEPS THE WINDOW ITS FIRST PAGE USED. Without this the applied default slides with the
+    // clock, the normalised filter (and therefore its hash) differs between pages, and every second page is
+    // refused `INVALID_CURSOR` — the defect recorded in `cursor.ts`.
+    //
+    // ONE SIDE AT A TIME: a caller that supplies `from` explicitly and omits `to` keeps its own `from` and
+    // inherits only the upper bound. Replacing an explicit parameter with an inherited one would silently
+    // ignore what the caller asked for.
+    const inherited = inheritedTimeRange;
+    const inheritedFromMs =
+      rawFrom === undefined && inherited !== undefined ? parseTimestamp(inherited.fromMs, 'from') : undefined;
+    const inheritedToMs =
+      rawTo === undefined && inherited !== undefined ? parseTimestamp(inherited.toMs, 'to') : undefined;
     const fromMs =
-      rawFrom === undefined ? toMs - DEFAULT_TIME_RANGE_DAYS * 24 * 60 * 60 * 1000 : parseTimestamp(rawFrom, 'from');
+      inheritedFromMs ?? (rawFrom === undefined ? toMs - DEFAULT_TIME_RANGE_DAYS * 24 * 60 * 60 * 1000 : parseTimestamp(rawFrom, 'from'));
+    const effectiveToMs = inheritedToMs ?? toMs;
 
-    if (fromMs >= toMs) {
+    if (fromMs >= effectiveToMs) {
       // Inclusive-lower / exclusive-upper means an empty range is a mistake, not a valid query that
       // returns nothing: an empty range and a typo are indistinguishable to a caller otherwise.
       throw new QueryError('SCHEMA_VALIDATION_FAILED', { field: 'from' });
     }
 
-    if (schema.maxSpanDays !== undefined && toMs - fromMs > schema.maxSpanDays * 24 * 60 * 60 * 1000) {
+    if (schema.maxSpanDays !== undefined && effectiveToMs - fromMs > schema.maxSpanDays * 24 * 60 * 60 * 1000) {
       // The SPAN is reported in days so the caller learns the limit they exceeded, and the bound is
       // inclusive of exactly `maxSpanDays`: a request for precisely the maximum is a legitimate request.
       throw new QueryError('TIME_RANGE_TOO_WIDE', {
         timeRangeFrom: new Date(fromMs).toISOString(),
-        timeRangeTo: new Date(toMs).toISOString(),
+        timeRangeTo: new Date(effectiveToMs).toISOString(),
       });
     }
 
     filter['from'] = new Date(fromMs).toISOString();
-    filter['to'] = new Date(toMs).toISOString();
+    filter['to'] = new Date(effectiveToMs).toISOString();
     // Recorded explicitly, so `page.filter` shows the caller that a default was applied rather than
     // presenting a 30-day window as though it were what they asked for.
-    if (rawFrom === undefined || rawTo === undefined) {
+    if (defaulted) {
       filter['appliedDefaultTimeRangeDays'] = DEFAULT_TIME_RANGE_DAYS;
     }
   }
@@ -352,6 +375,13 @@ function parseDecimal(value: unknown): number | undefined {
 }
 
 function parseTimestamp(value: unknown, field: string): number {
+  if (typeof value === 'number') {
+    // The inherited window arrives as epoch milliseconds — see `CursorPayload.timeRange` for why it is not an
+    // ISO string. A number outside the representable range is refused exactly as a malformed string is.
+    return Number.isFinite(value) ? value : (() => {
+      throw new QueryError('SCHEMA_VALIDATION_FAILED', { field });
+    })();
+  }
   if (typeof value !== 'string') throw new QueryError('SCHEMA_VALIDATION_FAILED', { field });
   const parsed = Date.parse(value);
   if (Number.isNaN(parsed)) throw new QueryError('SCHEMA_VALIDATION_FAILED', { field });

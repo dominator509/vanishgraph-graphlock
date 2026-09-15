@@ -18,6 +18,9 @@ erasure_tombstone
 evidence_artifact
 exposure
 external_action
+# carries tenant_id; a gate names a human queue for one tenant's case, and its evidence artifact
+# is tenant-scoped, so a cross-tenant read of gates would leak both the case and the queue
+human_gate
 http_idempotency # carries tenant_id; one tenant's key space must not be visible to another
 identifier
 job              # carries tenant_id; one tenant must never observe or drain another's work

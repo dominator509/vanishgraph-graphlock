@@ -27,6 +27,7 @@ import {
   testAuditQueries,
   testExposureQueries,
   testObservationQueries,
+  testCaseQueries,
   testTransitionQueries,
   testIdentity,
   testTenancy,
@@ -137,6 +138,7 @@ function serverWith(
     observationQueries: testObservationQueries(),
     exposureQueries: testExposureQueries(),
     transitionQueries: testTransitionQueries(),
+    caseQueries: testCaseQueries(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),
@@ -357,6 +359,7 @@ describe('§5.14 follows §4.1 for idempotency and §3.2 for step-up, from the r
     observationQueries: testObservationQueries(),
     exposureQueries: testExposureQueries(),
     transitionQueries: testTransitionQueries(),
+    caseQueries: testCaseQueries(),
         health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 's', ok: true })] },
       });
       const response = await app.inject({ method, url, headers: { authorization: `Bearer ${TEST_TOKEN}` } });

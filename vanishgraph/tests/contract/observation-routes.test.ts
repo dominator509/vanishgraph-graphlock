@@ -29,6 +29,7 @@ import {
   testSourceQueries,
   testSubjectQueries,
   testTenancy,
+  testCaseQueries,
   testTransitionQueries,
   TEST_SESSION_SECRET,
   TEST_TOKEN,
@@ -110,6 +111,7 @@ function serverWith(
     observationQueries: options.port ?? recorded.port,
     exposureQueries: testExposureQueries(),
     transitionQueries: testTransitionQueries(),
+    caseQueries: testCaseQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
   });
   return { app, calls: recorded.calls };

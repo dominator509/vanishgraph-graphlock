@@ -39,6 +39,7 @@ import { PostgresAuditQueries } from '../../src/adapters/persistence/audit-queri
 import { PostgresObservationQueries } from '../../src/adapters/persistence/observations.ts';
 import { PostgresExposureQueries } from '../../src/adapters/persistence/exposures.ts';
 import { PostgresTransitionQueries } from '../../src/adapters/persistence/transitions.ts';
+import { PostgresCaseQueries } from '../../src/adapters/persistence/cases.ts';
 import { PostgresIdempotencyStore } from '../../src/adapters/idempotency/postgres-store.ts';
 import { PostgresSubjectQueries } from '../../src/adapters/persistence/subjects.ts';
 import { PostgresSourceQueries } from '../../src/adapters/persistence/sources.ts';
@@ -84,6 +85,7 @@ function serverFor(tenantId: string, scopes: readonly string[], authTimeAgeSecon
     observationQueries: new PostgresObservationQueries(),
     exposureQueries: new PostgresExposureQueries(),
     transitionQueries: new PostgresTransitionQueries(),
+    caseQueries: new PostgresCaseQueries({ recipeVerificationKeys: { publicKeysByRef: new Map() } }),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
   });
 }
