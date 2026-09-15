@@ -50,3 +50,4 @@
 2026-09-14T14:02:14Z | forge | EP-004 | MILESTONE_PASS | M4 cursor pagination and strict query parsing: ok; 144 contract tests; id tiebreaker implemented per FALLBACK
 2026-09-14T14:47:17Z | forge | EP-004 | MILESTONE_PASS | M5 idempotency semantics: ok; idempotency store integration BLOCKED_CREDENTIALS DATABASE_URL; durable store proven against real PostgreSQL
 2026-09-14T15:16:13Z | forge | EP-004 | MILESTONE_NOTE | M6 in progress: tenant runner + real readiness probe land; /v1/ready 200 ready with a real query (44ms) and 503 not_ready with no leak when the database is down; 78 route handlers NOT yet done
+2026-09-15T02:50:32Z | forge | EP-004 | MILESTONE_NOTE | M6: 17 of 78 registry routes implemented (§5.17 health 4, §5.1 subjects 10, §5.2 authority grants 3); 61 remaining; route coverage now MEASURED by scripts/route-coverage.ts instead of inferred from a file count
