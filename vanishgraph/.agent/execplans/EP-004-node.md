@@ -1332,6 +1332,50 @@ Recovery properties:
 
 ## 12. Surprises & Discoveries
 
+### 2026-09-14 — THREE write routes were missing a required step-up, because the registry trusted one line
+
+SPEC-003 contradicts itself about step-up on the source and recipe routes:
+
+| Source | What it says about §5.3.4 / §5.3.7 / §5.3.10 |
+|---|---|
+| SPEC-003 §3.2 item 7 ("What the API enforces") | "Step-up is required for: … and source/recipe changes (**5.3.4, 5.3.7, 5.3.10**)" — by route number |
+| SPEC-005 §6 ("Step-up authentication") | "Sensitive operations require re-authentication … : … Changing tenant policy data, **sources, or recipes**." |
+| SPEC-003 §5.3.4 / §5.3.7 / §5.3.10 Scope lines | `Scope vg.sources.write. Idempotency **Required**.` — **no step-up mentioned** |
+
+**Measured consequence:** the registry was generated from each route's Scope LINE, so all three were
+recorded `stepUp: false`. Three write routes that change a source's permission class, create a recipe
+version, or enable a recipe were therefore reachable without a fresh authentication.
+
+**Resolution: step-up IS required**, and the Scope lines are the inconsistent part:
+
+1. §3.2 is titled "What the API **enforces**" and enumerates the exact route numbers, which is
+   unambiguous where prose is not.
+2. SPEC-005 §6 independently requires it for "sources, or recipes", and SPEC-005 owns the step-up
+   definition that §3.2 cites.
+3. Every OTHER step-up route in the spec marks it in its Scope line (`5.1.1` reads "Scope
+   `vg.subjects.write` + step-up"), so the omission on these three is the anomaly rather than a
+   deliberate exemption.
+4. For a security control the fail-closed reading is correct: requiring a step-up that turns out to be
+   unnecessary is an inconvenience; omitting one that is required is a vulnerability.
+
+**Owner ratification wanted:** SPEC-003 §5.3.4/§5.3.7/§5.3.10 should state "+ step-up" in their Scope
+lines so the route entries and §3.2 agree. Neither specification is edited in this node.
+
+**A second, related defect fixed at the same time:** `route.stepUp` was INFORMATIONAL. `beginHandler`
+enforced only the parameter-conditional requirement, and each handler that needed an unconditional
+step-up called `requireStepUp` by hand. A route marked `stepUp: true` could therefore be implemented
+WITHOUT the check and nothing would notice — the registry would have said one thing and the code
+another. `beginHandler` now enforces `route.stepUp` from the registry, the five hand-written calls are
+removed, and a contract test reads §3.2 item 7's own route list and fails if any named route lacks
+`stepUp`. Verified by negative control: reverting `5.3.7` to `stepUp: false` makes the test fail with
+`5.3.7 (POST /v1/sources/{sourceId}/recipes)`, then pass once restored.
+
+**A residual ambiguity, recorded rather than decided:** §3.2 item 7 names only 5.3.4, 5.3.7 and
+5.3.10, so SPEC-005 §6's broader "sources" does not visibly cover §5.3.2 (create a source) or §5.3.6
+(create a catalogue entry). The enumeration is the more specific statement and is followed, but a
+source's permission class can be SET at creation, so §5.3.2 arguably changes a source in the sense §6
+means. That is a counsel/spec-owner question.
+
 ### 2026-09-14 — EP-003 never built a repository layer, and M6's CHANGE list assumes one
 
 M6's CHANGE list names `src/adapters/persistence/**` as though it existed. It does not. EP-003's own

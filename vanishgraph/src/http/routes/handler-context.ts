@@ -94,7 +94,15 @@ export function beginHandler(request: FastifyRequest, reply: FastifyReply): Hand
 
   // Checked AFTER the scope, because a caller lacking the scope should learn that rather than be told
   // to re-authenticate for an operation they cannot perform at all.
-  if (conditionalStepUp) {
+  // STEP-UP IS ENFORCED FROM THE REGISTRY, not by each handler remembering to call `requireStepUp`.
+  //
+  // Before this, `route.stepUp` was INFORMATIONAL: handlers that needed it called `requireStepUp` by
+  // hand, so a route marked `stepUp: true` in the registry could be implemented WITHOUT the check and
+  // nothing would notice. The registry is the contract, so it is the control.
+  //
+  // Ordering: step-up is checked AFTER the scope check, because a caller lacking the scope should
+  // learn that rather than be told to re-authenticate for an operation they cannot perform at all.
+  if (route.stepUp || conditionalStepUp) {
     requireStepUp(context, Date.now());
   }
 

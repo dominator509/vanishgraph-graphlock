@@ -147,21 +147,12 @@ export function subjectRoutes(app: FastifyInstance, options: SubjectRouteOptions
   app.get('/v1/subjects/:subjectId/aliases', async (request, reply) => {
     const h = beginHandler(request, reply);
     const subjectId = uuidParam(request, 'subjectId');
-    const raw = request.query as Record<string, unknown>;
-    const includeValue = raw['includeValue'] === 'true';
 
-    // `includeValue` requires `vg.pii.reveal` IN ADDITION to the route's own scope, and the route is
-    // marked step-up because revealing a value is a sensitive read (SPEC-003 §3.2 item 7). The scope
-    // is checked here rather than in the registry because it applies only to this query parameter,
-    // and a registry entry demanding it always would deny the masked read that §5.1.6 documents.
-    if (includeValue) {
-      if (!h.context.scopes.includes('vg.pii.reveal')) {
-        throw apiError('INSUFFICIENT_SCOPE', { missingScopes: ['vg.pii.reveal'] });
-      }
-      const { requireStepUp } = await import('../plugins/identity.ts');
-      requireStepUp(h.context, Date.now());
-    }
-
+    // The `vg.pii.reveal` scope and the step-up for `includeValue=true` are enforced by
+    // `beginHandler` from the registry's `conditional` entry, so this handler does not restate them.
+    // Keeping the rule in ONE place is what stops a second copy drifting from the contract — and the
+    // earlier duplicated version DID drift: the registry demanded the scope unconditionally and
+    // refused the masked read that §5.1.6 documents as the default.
     return h.withTenant(async (tx) => {
       if (!(await queries.subjectExists(tx, subjectId))) throw apiError('RESOURCE_NOT_FOUND');
       // Masked by default. The VALUE is never selected unless the caller holds the reveal scope, so a
@@ -200,16 +191,9 @@ export function subjectRoutes(app: FastifyInstance, options: SubjectRouteOptions
   app.get('/v1/subjects/:subjectId/identifiers', async (request, reply) => {
     const h = beginHandler(request, reply);
     const subjectId = uuidParam(request, 'subjectId');
-    const includeValue = (request.query as Record<string, unknown>)['includeValue'] === 'true';
 
-    if (includeValue) {
-      if (!h.context.scopes.includes('vg.pii.reveal')) {
-        throw apiError('INSUFFICIENT_SCOPE', { missingScopes: ['vg.pii.reveal'] });
-      }
-      const { requireStepUp } = await import('../plugins/identity.ts');
-      requireStepUp(h.context, Date.now());
-    }
-
+    // `includeValue`'s extra scope and step-up are enforced by `beginHandler` from the registry's
+    // `conditional` entry; see the §5.1.6 comment above.
     return h.withTenant(async (tx) => {
       if (!(await queries.subjectExists(tx, subjectId))) throw apiError('RESOURCE_NOT_FOUND');
       const rows = await tx.query<{
@@ -432,13 +416,11 @@ export function subjectRoutes(app: FastifyInstance, options: SubjectRouteOptions
   // Each names the dependency that blocks it, so an operator sees WHY rather than a generic 500.
   // ---------------------------------------------------------------------------------------------
 
-  // 5.1.1 POST /v1/subjects — needs the authority command and step-up.
+  // 5.1.1 POST /v1/subjects — needs the authority command. Step-up is enforced by `beginHandler`
+  // from the registry's `stepUp: true`, so it runs BEFORE the body is examined.
   app.post('/v1/subjects', async (request, reply) => {
-    const h = beginHandler(request, reply);
-    // SPEC-003 §3.2 item 7 marks this route step-up, and the check runs BEFORE the body is examined
-    // so a stale step-up cannot be distinguished from a valid one by response timing.
-    const { requireStepUp } = await import('../plugins/identity.ts');
-    requireStepUp(h.context, Date.now());
+    void reply;
+    beginHandler(request, reply);
     throw apiError('DEPENDENCY_UNAVAILABLE', { reason: 'subject creation requires the authority command wiring (EP-004 M6 remainder)' });
   });
 
@@ -457,9 +439,7 @@ export function subjectRoutes(app: FastifyInstance, options: SubjectRouteOptions
 
   // 5.2.1 POST /v1/subjects/{subjectId}/authority-grants — step-up, and separation of duties.
   app.post('/v1/subjects/:subjectId/authority-grants', async (request, reply) => {
-    const h = beginHandler(request, reply);
-    const { requireStepUp } = await import('../plugins/identity.ts');
-    requireStepUp(h.context, Date.now());
+    beginHandler(request, reply);
     throw apiError('DEPENDENCY_UNAVAILABLE', { reason: 'authority minting requires the AuthorityGrantRepository port, which no node has declared (ASSUMPTIONS 3.12)' });
   });
 
@@ -502,9 +482,7 @@ export function subjectRoutes(app: FastifyInstance, options: SubjectRouteOptions
 
   // 5.2.3 POST /v1/authority-grants/{authorityGrantId}/revocations — step-up.
   app.post('/v1/authority-grants/:authorityGrantId/revocations', async (request, reply) => {
-    const h = beginHandler(request, reply);
-    const { requireStepUp } = await import('../plugins/identity.ts');
-    requireStepUp(h.context, Date.now());
+    beginHandler(request, reply);
     throw apiError('DEPENDENCY_UNAVAILABLE', { reason: 'revocation requires the authority command wiring (EP-004 M6 remainder)' });
   });
 }

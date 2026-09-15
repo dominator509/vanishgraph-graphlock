@@ -177,4 +177,47 @@ describe('the route registry matches SPEC-003 §5 (VG-API-001)', () => {
     assert.ok(line !== undefined, 'the §5.9.1 source defect is expected to still be present');
     assert.equal(findRoute('POST', '/v1/cases/{caseId}/controller-responses')?.scopes[0], 'vg.cases.write');
   });
+
+  test('every route the spec marks step-up really carries stepUp in the registry', () => {
+    // STEP-UP IS A SECURITY CONTROL, so its absence is a vulnerability rather than an inconvenience.
+    // SPEC-003 §3.2 item 7 enumerates the routes that require it, and SPEC-005 §6 lists the
+    // operations ("Minting or expanding an AuthorityGrant", "Executing or authorising an external
+    // write", "Changing tenant policy data, sources, or recipes", …).
+    //
+    // MEASURED DEFECT this catches: the registry was generated from each route's Scope LINE, and
+    // §5.3.4/§5.3.7/§5.3.10 (source permission-class change, recipe creation, recipe enablement) have
+    // Scope lines that omit "+ step-up" even though §3.2 item 7 names those exact route numbers and
+    // SPEC-005 §6 requires it for "sources, or recipes". Three sources agreed and the line was
+    // silent, so the routes were marked NOT step-up — a missing control on three write routes.
+    // The enumeration in §3.2 item 7 is authoritative because it names route numbers.
+    const enumerated: string[] = [];
+    const sectionStart = SPEC_LINES.findIndex((l) => /^### 3\.2 /.test(l));
+    assert.ok(sectionStart >= 0, 'SPEC-003 §3.2 was not found');
+    for (const line of SPEC_LINES.slice(sectionStart, sectionStart + 120)) {
+      // The step-up paragraph is one sentence spanning several lines; collect the route ids from it.
+      if (!/Step-up is required for:/.test(line) && enumerated.length === 0 && !/5\.2\.1/.test(line)) continue;
+      for (const m of line.matchAll(/\b(5\.\d+\.\d+)\b/g)) {
+        if (m[1] !== undefined) enumerated.push(m[1]);
+      }
+      if (/^\s*$/.test(line) && enumerated.length > 0) break;
+    }
+    assert.ok(enumerated.length >= 6, `expected the §3.2 item 7 route list, saw ${String(enumerated.length)}`);
+
+    const notEnforced: string[] = [];
+    for (const id of new Set(enumerated)) {
+      // §5.1.6/§5.1.8 appear as "5.1.6/5.1.8 `includeValue=true`": theirs is CONDITIONAL, so the
+      // registry carries it under `conditional` rather than as an unconditional `stepUp`.
+      const route = ROUTES.find((r) => r.id === id);
+      assert.ok(route !== undefined, `${id} is named by §3.2 item 7 but absent from the registry`);
+      const conditional = (route.conditional ?? []).some((c) => c.stepUp);
+      if (!route.stepUp && !conditional) {
+        notEnforced.push(`${id} (${route.method} ${route.path})`);
+      }
+    }
+    assert.deepEqual(
+      notEnforced,
+      [],
+      `routes the specification requires step-up for but the registry does not enforce:\n  ${notEnforced.join('\n  ')}`,
+    );
+  });
 });
