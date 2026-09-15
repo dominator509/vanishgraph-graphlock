@@ -34,6 +34,8 @@ import { testIdentity, TEST_SESSION_SECRET, TEST_TOKEN } from '../contract/serve
 import { PostgresTenantRunner } from '../../src/adapters/persistence/postgres-runner.ts';
 import { PostgresAuditQueries } from '../../src/adapters/persistence/audit-queries.ts';
 import { PostgresObservationQueries } from '../../src/adapters/persistence/observations.ts';
+import { PostgresExposureQueries } from '../../src/adapters/persistence/exposures.ts';
+import { PostgresTransitionQueries } from '../../src/adapters/persistence/transitions.ts';
 import { appendAuditEvents } from '../../src/adapters/persistence/audit-sink.ts';
 import { PostgresIdempotencyStore } from '../../src/adapters/idempotency/postgres-store.ts';
 import { PostgresSubjectQueries } from '../../src/adapters/persistence/subjects.ts';
@@ -88,6 +90,8 @@ function serverFor(tenantId: string, scopes: readonly string[] = ['vg.audit.read
     deadlineQueries: new PostgresDeadlineQueries(),
     auditQueries: new PostgresAuditQueries(),
     observationQueries: new PostgresObservationQueries(),
+    exposureQueries: new PostgresExposureQueries(),
+    transitionQueries: new PostgresTransitionQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
   });
 }

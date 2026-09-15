@@ -34,7 +34,9 @@ import {
   testAppealQueries,
   testDeadlineQueries,
   testAuditQueries,
+  testExposureQueries,
   testObservationQueries,
+  testTransitionQueries,
   TEST_SESSION_SECRET,
   TEST_TOKEN,
 } from './server-support.ts';
@@ -63,6 +65,8 @@ function serverWith(options: {
     deadlineQueries: testDeadlineQueries(),
     auditQueries: testAuditQueries(),
     observationQueries: testObservationQueries(),
+    exposureQueries: testExposureQueries(),
+    transitionQueries: testTransitionQueries(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),
@@ -246,6 +250,8 @@ describe('tenancy is required by the server type, so it cannot be forgotten', ()
     deadlineQueries: testDeadlineQueries(),
     auditQueries: testAuditQueries(),
     observationQueries: testObservationQueries(),
+    exposureQueries: testExposureQueries(),
+    transitionQueries: testTransitionQueries(),
     };
     assert.ok(deps.identity !== undefined);
     assert.ok(deps.tenancy !== undefined);

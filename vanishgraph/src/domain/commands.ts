@@ -187,6 +187,17 @@ interface TransitionArgs {
   /** Extra audit-only fields (for example a human-readable gate reason). */
   readonly auditExtra?: Readonly<Record<string, EventPayloadValue>>;
   readonly createdIds?: Readonly<Record<string, string>>;
+  /**
+   * The kind of entity the audit row's `targetId` names.
+   *
+   * DEFAULTS TO `RequestCase`, which is what most transitions act on, and is overridden where a transition
+   * acts on something else: T1 acts on a source record, T3/T4 on an exposure. The seed states the convention
+   * (`db/seed/prior_release.sql`: T5 against `RequestCase`, T8 against `ExternalAction`, a registration
+   * against `ProtectedSubject`), and it matters because the target is what an audit reader — and
+   * `transition-queries.ts` — uses to find a resource's history. A T3 written as `RequestCase` with an
+   * exposure id would be a history entry attached to a case that does not exist yet (`ASSUMPTIONS.md` §3.27).
+   */
+  readonly targetKind?: string;
 }
 
 function transition(args: TransitionArgs): TransitionCommandResult {
@@ -203,7 +214,7 @@ function transition(args: TransitionArgs): TransitionCommandResult {
     transitionId: applied.id,
     evidence: applied.evidence,
     events: buildEvents(args.ctx, args.eventNames, args.payload),
-    audit: buildAudit(args.ctx, args.command, 'RequestCase', args.caseId, {
+    audit: buildAudit(args.ctx, args.command, args.targetKind ?? 'RequestCase', args.caseId, {
       ...args.payload,
       ...(args.auditExtra ?? {}),
     }),
@@ -312,6 +323,9 @@ export function recordSourceRecord(
     eventNames: COMMAND_EVENTS.RecordSourceRecord,
     payload,
     createdIds: { sourceRecordId: input.record.id },
+    // T1 acts on a SOURCE RECORD, and the audit row says so. Until this was explicit the row claimed
+    // `RequestCase` with a source-record id, which named an entity that does not exist.
+    targetKind: 'SourceRecord',
   });
 }
 
@@ -320,7 +334,16 @@ export function recordSourceRecord(
 // ---------------------------------------------------------------------------
 
 export interface MatchAssessment {
+  /**
+   * The resource the assessment is about, and what its audit row names.
+   *
+   * §5.5.3/§5.5.4 assess an EXPOSURE, and T3/T4 happen before any case exists — §5.7.1 creates the case at
+   * the exposure's current truth state, which is `MATCH_CONFIRMED` only after T3. The field keeps the name
+   * `caseId` because that is what this interface has always called its target; `targetKind` is what makes
+   * the audit row honest.
+   */
   readonly caseId: string;
+  readonly targetKind?: 'Exposure' | 'RequestCase';
   readonly from: TruthState;
   readonly matched: boolean;
   readonly confidenceAtThreshold: boolean;
@@ -348,6 +371,7 @@ export function assessMatch(
       }),
       eventNames: ['MatchConfirmed'],
       payload: { caseId: input.caseId, humanApproved: input.humanApproved },
+      ...(input.targetKind === undefined ? {} : { targetKind: input.targetKind }),
     });
   }
   return transition({
@@ -359,6 +383,7 @@ export function assessMatch(
     facts: noFacts({ subjectMatchDisproved: input.disproofRecorded }),
     eventNames: ['MatchDisproved'],
     payload: { caseId: input.caseId, disproofRecorded: input.disproofRecorded },
+    ...(input.targetKind === undefined ? {} : { targetKind: input.targetKind }),
   });
 }
 

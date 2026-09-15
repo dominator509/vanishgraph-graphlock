@@ -30,6 +30,8 @@ import type { AppealQueries } from '../../src/application/contracts/appeal-queri
 import type { DeadlineQueries } from '../../src/application/contracts/deadline-queries.ts';
 import type { AuditQueries } from '../../src/application/contracts/audit-queries.ts';
 import type { ObservationQueries } from '../../src/application/contracts/observation-queries.ts';
+import type { ExposureQueries } from '../../src/application/contracts/exposure-queries.ts';
+import type { TransitionQueries } from '../../src/application/contracts/transition-queries.ts';
 
 /**
  * The cursor signing secret used by tests.
@@ -299,5 +301,39 @@ export function testObservationQueries(): ObservationQueries {
     exposureExists: async () => false,
     listReappearances: async () => [],
     listReappearancesForExposure: async () => [],
+  };
+}
+
+/**
+ * An exposure model for tests that do not exercise §5.5.
+ *
+ * Empty and not-found reads, refusing writes — the honest shape of a tenant with no exposures, and the same
+ * rule as the other stubs: a write that FABRICATED a created id would let a route test pass while the real
+ * adapter wrote nothing. The behaviour that matters for §5.5 without a database (the precondition codes, the
+ * body validation, the `COVERAGE_BOUNDS_REQUIRED` rule) is asserted in `tests/contract/exposure-routes.test.ts`;
+ * everything about the transition spine needs real PostgreSQL, because it is a property of the schema.
+ */
+export function testExposureQueries(): ExposureQueries {
+  return {
+    listExposures: async () => [],
+    getExposureDetail: async () => undefined,
+    exposureRowVersion: async () => undefined,
+    recordMatchAssessment: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+    recordDisproof: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+  };
+}
+
+/**
+ * A transition spine for tests that do not exercise §5.5.5/§5.7.3/§5.7.6.
+ *
+ * An empty history is exactly what a resource that has never moved looks like. It is NOT evidence that the
+ * spine works: `tests/db/exposure-transitions.test.ts` walks a real T3/T4 through the domain command and
+ * reads the history back from `audit_event`.
+ */
+export function testTransitionQueries(): TransitionQueries {
+  return {
+    listTransitionsForExposure: async () => [],
+    listTransitionsForCase: async () => [],
+    lastTransitionForCase: async () => undefined,
   };
 }

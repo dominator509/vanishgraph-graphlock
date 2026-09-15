@@ -50,34 +50,54 @@ export const SUBJECTS_QUERY: QuerySchema = {
   truthStateFilterable: false,
 };
 
-/** `GET /v1/exposures` (SPEC-003 §5.5.1) — the first route that filters on truth state. */
+/**
+ * `GET /v1/exposures` (SPEC-003 §5.5.1).
+ *
+ * CORRECTED TO THE SPECIFICATION, and this declaration had drifted in four of its parts before its route
+ * existed — the same defect class `ASSUMPTIONS.md` §3.26 item 2 records for `REAPPEARANCES_QUERY`. §5.5.1
+ * gives `subjectId`, `sourceId`, `truthState`, `minConfidence`, `from`, `to` and
+ * `sort ∈ observedAt|confidence|truthState` (default `observedAt:desc`). The declaration said `caseId`
+ * (which §5.5.1 does not offer), made `minConfidence` an INTEGER (a confidence is 0.00–1.00),
+ * allowed `createdAt` as a sort field (not a field of §5.5.1's row) and set `timeFilterable: false`
+ * although the spec gives `from`/`to`. A declaration nothing enforces drifts; this one is now enforced by
+ * the route that reads it.
+ */
 export const EXPOSURES_QUERY: QuerySchema = {
   paginated: true,
   parameters: {
     ...PAGINATION,
     subjectId: { type: 'string' },
     sourceId: { type: 'string' },
-    caseId: { type: 'string' },
-    minConfidence: { type: 'integer' },
+    minConfidence: { type: 'number', min: 0, max: 1 },
   },
-  sortFields: ['observedAt', 'createdAt', 'confidence'],
+  sortFields: ['observedAt', 'confidence', 'truthState'],
   defaultSort: 'observedAt:desc',
-  timeFilterable: false,
+  timeFilterable: true,
   truthStateFilterable: true,
 };
 
-/** `GET /v1/cases` (SPEC-003 §5.7.2). */
+/**
+ * `GET /v1/cases` (SPEC-003 §5.7.2).
+ *
+ * CORRECTED TO THE SPECIFICATION: §5.7.2 gives `subjectId`, `sourceId`, `truthState`, `channel`,
+ * `authorityGrantState`, `from`, `to` and `sort ∈ createdAt|updatedAt|truthState` (default `updatedAt:desc`).
+ * The declaration had `jurisdiction` (not offered), lacked `channel` and `authorityGrantState`, sorted on
+ * `truthStateChangedAt` — which is not a column, so every documented sort would have answered
+ * `INVALID_SORT_FIELD` while an undocumented one was accepted — defaulted to `createdAt:desc` rather than
+ * `updatedAt:desc`, and set `timeFilterable: false` although the spec gives `from`/`to`.
+ */
 export const CASES_QUERY: QuerySchema = {
   paginated: true,
   parameters: {
     ...PAGINATION,
     subjectId: { type: 'string' },
     sourceId: { type: 'string' },
-    jurisdiction: { type: 'string' },
+    channel: { type: 'string' },
+    authorityGrantState: { type: 'enum', values: ['VALID', 'EXPIRED', 'REVOKED', 'NONE'] },
   },
-  sortFields: ['createdAt', 'updatedAt', 'truthStateChangedAt'],
-  defaultSort: 'createdAt:desc',
-  timeFilterable: false,
+  sortFields: ['createdAt', 'updatedAt', 'truthState'],
+  defaultSort: 'updatedAt:desc',
+  timeFilterable: true,
   truthStateFilterable: true,
 };
 

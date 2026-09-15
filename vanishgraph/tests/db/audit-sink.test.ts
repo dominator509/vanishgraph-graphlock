@@ -49,11 +49,19 @@ after(async () => {
 
 /** Build a domain `AuditEvent` with a UUID correlation id and a UUID target. */
 function event(overrides: { tenantId?: string; targetId?: string | null; payload?: Record<string, string | number | boolean | null>; targetKind?: string } = {}) {
+  return auditEventFor('AssessMatch', overrides);
+}
+
+/** The same, with a caller-chosen action — used by the refusals, which assert on a unique action name. */
+function auditEventFor(
+  action: string,
+  overrides: { tenantId?: string; targetId?: string | null; payload?: Record<string, string | number | boolean | null>; targetKind?: string } = {},
+) {
   return createAuditEvent({
     id: `test:${randomUUID()}`,
     tenantId: new TenantId(overrides.tenantId ?? TENANT_A),
     actor: 'domain-command',
-    action: 'AssessMatch',
+    action,
     targetKind: overrides.targetKind ?? 'Exposure',
     targetId: overrides.targetId === undefined ? randomUUID() : overrides.targetId,
     correlationId: correlation(),
@@ -158,21 +166,43 @@ describe('the audit sink appends real rows', () => {
 });
 
 describe('the sink refuses what it cannot store honestly', () => {
-  test('a non-UUID correlation id is refused, and nothing is written', async () => {
+  test('a correlation id in neither accepted form is refused, and nothing is written', async () => {
     const action = `AuditSinkBadCorr-${randomUUID().slice(0, 8)}`;
     // The domain accepts any string for correlationId; the COLUMN is uuid. Substituting one would break
     // the join between the audit row and the request that caused it, so it must be refused loudly.
+    //
+    // TWO FORMS ARE ACCEPTED — a canonical UUID and the dash-less 32-hex trace id the correlation plugin
+    // mints — because they are the same 128 bits and the second is what EVERY request in this service
+    // carries. MEASURED DEFECT this covers: the sink once accepted only the first, so the first write route
+    // to append an audit row answered 500 for its own correlation id.
     const bad = { ...event(), action, correlationId: 'not-a-uuid' };
     assert.equal(countFor(TENANT_A, action), 0, 'the action name is unique, so it starts at 0');
 
     await assert.rejects(
       runner.withTenantTransaction(TENANT_A, (tx) => appendAuditEvents(tx, [bad])),
-      (error: unknown) => error instanceof AuditUnavailableError && /not a UUID/.test(error.message),
+      (error: unknown) => error instanceof AuditUnavailableError && /neither a UUID nor a 32-hex/.test(error.message),
     );
 
     // Nothing written FOR THIS ATTEMPT. Asserting a global count instead would pass for the wrong reason
     // as soon as any other test had appended a row.
     assert.equal(countFor(TENANT_A, action), 0, 'a refused append must write nothing');
+  });
+
+  test('a dash-less 32-hex correlation id IS stored, canonicalised, and joins to the request', async () => {
+    const action = `AuditSinkHexCorr-${randomUUID().slice(0, 8)}`;
+    const hex = randomUUID().replace(/-/g, '');
+    const event = { ...auditEventFor(action), correlationId: hex };
+
+    const ids = await runner.withTenantTransaction(TENANT_A, (tx) => appendAuditEvents(tx, [event]));
+    assert.equal(ids.length, 1);
+    const stored = asTenant(
+      appDsn(),
+      TENANT_A,
+      `SELECT correlation_id::text FROM audit_event WHERE action = '${action}';`,
+    );
+    assert.deepEqual(stored, [
+      `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`,
+    ]);
   });
 
   test('a non-UUID target id is refused rather than attaching the row to the wrong resource', async () => {

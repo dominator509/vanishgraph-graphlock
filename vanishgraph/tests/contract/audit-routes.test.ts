@@ -25,7 +25,9 @@ import { buildServer, type VgFastify } from '../../src/http/server.ts';
 import {
   testAuditQueries,
   testIdentity,
+  testExposureQueries,
   testObservationQueries,
+  testTransitionQueries,
   testTenancy,
   TEST_SESSION_SECRET,
   TEST_TOKEN,
@@ -64,6 +66,8 @@ function serverWith(options: { scopes?: readonly string[]; queries?: AuditQuerie
     deadlineQueries: testDeadlineQueries(),
     auditQueries: options.queries ?? testAuditQueries(),
     observationQueries: testObservationQueries(),
+    exposureQueries: testExposureQueries(),
+    transitionQueries: testTransitionQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
   });
 }

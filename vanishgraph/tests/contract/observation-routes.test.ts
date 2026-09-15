@@ -23,11 +23,13 @@ import {
   testAppealQueries,
   testAuditQueries,
   testDeadlineQueries,
+  testExposureQueries,
   testIdentity,
   testRecipeVerificationKeys,
   testSourceQueries,
   testSubjectQueries,
   testTenancy,
+  testTransitionQueries,
   TEST_SESSION_SECRET,
   TEST_TOKEN,
 } from './server-support.ts';
@@ -106,6 +108,8 @@ function serverWith(
     deadlineQueries: testDeadlineQueries(),
     auditQueries: testAuditQueries(),
     observationQueries: options.port ?? recorded.port,
+    exposureQueries: testExposureQueries(),
+    transitionQueries: testTransitionQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
   });
   return { app, calls: recorded.calls };

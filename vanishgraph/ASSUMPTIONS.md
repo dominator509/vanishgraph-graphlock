@@ -856,6 +856,87 @@ reads as a measurement.** Use the declared script; if a count is quoted, say wha
 references either, so the earlier one keeps its number and the later is now `3.19-bis` with the collision
 stated in place. A record whose section numbers collide cannot be cited reliably.
 
+### 3.27 The transition spine: a typed home for what SPEC-003 §5.5.5 must read back — and four defects it exposed
+
+**The conflict, and the resolution taken.** §3.18 recorded a three-way specification conflict: SPEC-001:96 gives
+`AuditEvent` seven fields with no transition code and no from/to state, SPEC-002:26-27 forbids `jsonb` for
+"values needing integrity (state, authority, digests)", and SPEC-003 §5.5.5 requires exactly those facts. The
+blocked set was every route that must READ a transition back: §5.5.5, §5.7.3's `lastTransition`, §5.7.6's
+timeline, and the `transitionId`/`transitionCode` fields in nine write bodies.
+
+**Migration `0019` adds four TYPE'd columns and one foreign key to `audit_event`** — `transition_code`,
+`from_truth_state`, `to_truth_state`, `evidence_artifact_ids` (each `uuid[]`, CHECKed non-empty) and `case_id`.
+Recorded here as a reading, with what it does and does not rest on:
+
+  * It **keeps EP-003's own decision** (`.agent/execplans/EP-003-node.md:132`): `audit_event` IS the append-only
+    record of a transition. No second table is invented, so nothing about the audit spine's identity changes.
+  * It **satisfies SPEC-002 §1 rather than working around it**: the states are stored in the existing
+    `truth_state` enum — "truth states use a dedicated enum of exactly the eleven SPEC-000 §5 values" — and
+    `jsonb` keeps its permitted use for recorded bases and provider payloads.
+  * It **inherits two properties a new table would have had to re-earn**: the `CREATE RULE … DO INSTEAD
+    NOTHING` append-only rules and the FORCE RLS `tenant_isolation` policy already apply to the row, so a
+    transition fact cannot be rewritten, deleted, or read across a tenant. `db/tenant-scoped-tables.txt` is
+    unchanged and `check-rls-coverage` still passes.
+  * **The residual risk, stated:** if the specification owner prefers a separate transition aggregate, the
+    read model is behind ONE port (`src/application/contracts/transition-queries.ts`), so the change is
+    contained to that adapter and one migration that copies the columns out.
+
+**`case_id` IS NOT `target_id`, and collapsing them loses history.** The seed states the convention for
+`target_kind`/`target_id` (`db/seed/prior_release.sql:57`): T5 is recorded against `RequestCase`, T8 against
+`ExternalAction`, a registration against `ProtectedSubject` — the target is WHAT WAS ACTED ON. But §5.7.3 and
+§5.7.6 read a CASE, and a T8 whose target is an external action would be missing from them if a case's
+transitions were found by `target_kind = 'RequestCase'`. So the case is a separate typed FK, and an exposure's
+history unions its own transitions with those of the cases derived from it through `request_case.exposure_id`.
+
+**A one-event-per-transition rule, enforced.** The append path REFUSES a transition supplied with a batch of
+more than one audit event: writing the same transition code onto several rows would make one state change
+appear as several in §5.5.5, which is the read a reviewer uses to check legality against SPEC-001 §4.1.
+
+**Four defects this work exposed, all fixed:**
+
+| # | Defect | Evidence it was real |
+|---|---|---|
+| 1 | **The audit sink refused the service's OWN correlation ids.** `installCorrelation` mints `randomUUID().replace(/-/g,'')` (32 hex, no dashes) and honours a W3C `traceparent`'s trace id, while the sink required a canonical UUID — so the FIRST write route to append an audit row answered `500 INTERNAL_ERROR`. Every effect-bearing route would have done the same. | `AuditUnavailableError: correlationId "22ecea…" is not a UUID`, reproduced end-to-end through `app.inject` before the fix. The two forms are the same 128 bits, so the sink now stores the canonical rendering and still refuses any other shape. |
+| 2 | **The seeded `confidence_basis` could not be rendered by the contract that reads it.** The fixture wrote `["exact-name-match","state-match"]` — bare strings — while §5.5.1's `confidence.basis` is `{feature, weight}` objects (and §5.5.3's request requires both). SPEC-002 constrains only that the array is non-empty, so the row was schema-valid and contract-unrenderable: the §5.5.1 list answered 500 for anything holding it. | The strict reader refuses instead of inventing a weight (VG-IDENT-003), and `tests/db/exposure-transitions.test.ts` pins that refusal with the malformed row. The fixture now uses the contract's shape, and a live-database alignment was applied because provisioning is idempotent and does not re-seed. |
+| 3 | **Migration `0020`'s backfill could not see a single row.** `exposure` carries FORCE RLS, which applies to the table OWNER, so `UPDATE … FROM source_record` under the migrator ran with `app.tenant_id` unset — `tenant_id = NULL` is not true, so no rows matched and the following `SET NOT NULL` failed with "contains null values". | The failure itself. Fixed with a per-tenant `set_config` loop inside a `DO` block, and `set_config('app.tenant_id','',true)` afterwards so a later statement in the same migration cannot run with the last tenant's scope. |
+| 4 | **Migration `0020` then forbade the project's own fixture.** It added the two observation instants NOT NULL with no DEFAULT, and `db/seed/prior_release.sql` inserts an exposure without naming them: a fresh provision would have failed at the seed. The live database hid it because provisioning is idempotent. | Reasoned from the seed text and fixed in `0021` (`SET DEFAULT now()`), because a migration that is applied is immutable (DOD-040). |
+| 5 | **The state file `C:\tmp\vanishgraph-db.env` grew to 2 MB, and every gate that sourced it died with `Argument list too long`.** `provision.ts` writes `export VG_DB_STATE_FILE=${JSON.stringify(path)}`, which is CORRECT for its consumer — a POSIX `sh` dot-source unescapes `"C:\\tmp\\…"` back to one separator. The corruption came from a PowerShell loader that copied the raw double-quoted value back into the process environment: the next provisioning round trip re-escaped it, and because Windows accepts repeated separators the SAME file kept being rewritten with twice as many backslashes each time. | `line 4 is 2097201 chars`; measured after `sh scripts/test-unit.sh` began failing with `/c/Program Files/nodejs/node: Argument list too long`. The file's line 4 is restored, and the loader in this session now unescapes `\\` and pins the path literally. **The general lesson is the one already recorded in §3.26:** a tool that parses another tool's output must be shown to round-trip it, and this file is written for `sh`, not for a regex. |
+
+**Fixture discipline, one more time (§3.24's class, third occurrence).** The first version of this suite built its
+worlds inside the SEEDED tenant A, and three other db suites assert that tenant A has exactly one seeded subject
+(`postgres-runner.test.ts:321`, `rls.test.ts:101`, `route-catalogue.test.ts:127`) — so five tests in other files
+failed the first time this suite ran inside `test-integration`. The suite now creates two tenants of its own per
+run, which is also what makes its isolation assertions independent of the seed. Removing the residue required a
+scoped cleanup whose first attempt matched the SEED's own `subject-ref-alpha` — refused by
+`request_case_exposure_id_fkey`, i.e. the schema stopping a cleanup from eating the fixture every other suite
+depends on — and whose second attempt hit `authority_grant_subject_id_fkey` by deleting a subject before its
+grant. Both refusals are recorded because they are the argument for keeping fixtures marked and scoped rather
+than globbed.
+
+**The instrument was overstating coverage, and that is corrected too.** `scripts/route-coverage.ts` counted
+REGISTERED handlers, and five of the routes counted as implemented refuse every request with an unconditional
+`503 DEPENDENCY_UNAVAILABLE` (§5.1.1 creation, §5.1.4 update, §5.1.7 identifier capture, §5.2.1 authority
+minting, §5.2.3 revocation). The script now prints both numbers — registered and "has a handler that is not an
+unconditional refusal" — and names the refusals, so the honest figure is **44 registered / 39 working of 78**.
+Earlier rounds' claims that "§5.1 and §5.2 are implemented and verified" were true of the ROUTES' boundary
+behaviour and false as coverage; the correction stands in the ledger too.
+
+### 3.28 What EP-004 M6 still cannot do, after the transition spine landed
+
+With transitions readable, the remaining blockers are narrower and each is named with what is missing:
+
+| Group | Routes | What is still missing |
+|---|---|---|
+| §5.4 discovery runs | 5 | `DiscoveryRun` is defined by no specification (§3.17). Unchanged. |
+| §5.6 policy decisions | 4 | `policy_decision.exemption_evaluation` and `jurisdiction_policy.policy_checksum` are additive columns. **`policyVersion` remains a CONTRADICTION**: the contract carries a date string, the schema stores integers (§3.19-bis's table). §5.6.1 takes it as INPUT that must be matched, so it needs an owner decision, not a migration. |
+| §5.7 cases | 6 | Read routes implementable now; §5.7.5 also needs a HumanGate record, and 5.7.4/5.7.5 need the guarded-transition wiring. |
+| §5.8 external actions | 6 | A reconciliation record and a readback record (5.8.3, 5.8.4). |
+| §5.9 controller responses | 3 | `controller_response.claimed_outcome` is typed `truth_state` while the contract's tokens are `DELETED|NOT_DELETED|UNSPECIFIED` (§3.19-bis). 5.9.2/5.9.3 are otherwise implementable. |
+| §5.10.1, §5.11.1 | 2 | Now implementable: both return `transitionCode`, and the spine answers it. |
+| §5.12 evidence artifacts | 5 | An integrity-check record; object storage is `BLOCKED_CREDENTIALS` (S3_*). |
+| §5.16 coverage reports | 3 | A coverage-report aggregate, and coverage is produced by the undiscoverable discovery runs. |
+| EP-004 M7 webhooks | 3 | A `webhook_binding` table; the replay store needs `VALKEY_URL`, for which M7 declares a durable-file fallback. |
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

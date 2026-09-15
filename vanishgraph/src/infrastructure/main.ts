@@ -31,6 +31,8 @@ import { PostgresAppealQueries } from '../adapters/persistence/appeals.ts';
 import { PostgresDeadlineQueries } from '../adapters/persistence/deadlines.ts';
 import { PostgresAuditQueries } from '../adapters/persistence/audit-queries.ts';
 import { PostgresObservationQueries } from '../adapters/persistence/observations.ts';
+import { PostgresExposureQueries } from '../adapters/persistence/exposures.ts';
+import { PostgresTransitionQueries } from '../adapters/persistence/transitions.ts';
 import { findRoute } from '../http/openapi/registry.ts';
 import { parseDsn } from '../adapters/../infrastructure/database/psql.ts';
 
@@ -188,6 +190,10 @@ async function main(): Promise<number> {
     auditQueries: new PostgresAuditQueries(),
     // The 5.10/5.11 read model.
     observationQueries: new PostgresObservationQueries(),
+    // The 5.5 exposure model, including the two guarded assessments that drive T3/T4.
+    exposureQueries: new PostgresExposureQueries(),
+    // The transition spine: the audit rows that record state changes, read back by 5.5.5.
+    transitionQueries: new PostgresTransitionQueries(),
     idempotency: {
       // The durable store is PostgreSQL (SPEC-003 §4.2): the effect must survive a process restart,
       // so an in-memory store would defeat the mechanism it implements.

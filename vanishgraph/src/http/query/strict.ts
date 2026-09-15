@@ -43,7 +43,7 @@ export class QueryError extends Error {
 }
 
 /** How a parameter is declared by a route. */
-export type ParameterType = 'integer' | 'string' | 'boolean' | 'enum' | 'multi' | 'timestamp';
+export type ParameterType = 'integer' | 'number' | 'string' | 'boolean' | 'enum' | 'multi' | 'timestamp';
 
 export interface ParameterSpec {
   readonly type: ParameterType;
@@ -51,6 +51,9 @@ export interface ParameterSpec {
   readonly values?: readonly string[];
   /** For `multi`, the maximum number of comma-separated values. Defaults to the §2.6 ceiling. */
   readonly maxValues?: number;
+  /** For `number`, the inclusive bounds §5 declares for the field. */
+  readonly min?: number;
+  readonly max?: number;
 }
 
 /** A route's declared query surface. */
@@ -220,6 +223,20 @@ export function parseQuery(
       filter[name] = parsed;
       continue;
     }
+    if (spec.type === 'number') {
+      // A DECIMAL PARAMETER, which `integer` cannot express. §5.5.1's `minConfidence` is the reason it
+      // exists: a confidence is 0.00–1.00, so an integer-only parser would either refuse every value the
+      // contract documents or round one, and rounding a threshold filter changes which rows a caller sees.
+      const parsed = parseDecimal(value);
+      if (parsed === undefined) throw new QueryError('SCHEMA_VALIDATION_FAILED', { field: name });
+      if ((spec.min !== undefined && parsed < spec.min) || (spec.max !== undefined && parsed > spec.max)) {
+        // Out of the range §5 declares is a malformed request, not an empty result: silently returning no
+        // rows for `minConfidence=2` would look like "nothing matched" rather than "that is not a score".
+        throw new QueryError('SCHEMA_VALIDATION_FAILED', { field: name });
+      }
+      filter[name] = parsed;
+      continue;
+    }
     if (spec.type === 'boolean') {
       if (value !== 'true' && value !== 'false') {
         throw new QueryError('SCHEMA_VALIDATION_FAILED', { field: name });
@@ -319,6 +336,19 @@ function parseInteger(value: unknown): number | undefined {
   if (typeof value !== 'string' || !/^-?\d+$/.test(value)) return undefined;
   const parsed = Number(value);
   return Number.isSafeInteger(parsed) ? parsed : undefined;
+}
+
+/**
+ * A decimal query value.
+ *
+ * `Number('')` is 0 and `Number(' ')` is 0, so the shape is checked before the conversion: an empty
+ * `minConfidence=` must not become a filter of zero, which would silently widen a result set — the exact
+ * failure mode §2.6's strict parsing exists to prevent. `Infinity` and `NaN` are refused for the same reason.
+ */
+function parseDecimal(value: unknown): number | undefined {
+  if (typeof value !== 'string' || !/^-?\d+(\.\d+)?$/.test(value)) return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }
 
 function parseTimestamp(value: unknown, field: string): number {

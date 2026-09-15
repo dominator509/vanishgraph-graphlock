@@ -357,7 +357,13 @@ describe('time ranges follow inclusive-lower / exclusive-upper (§2.6)', () => {
 
   test('time parameters are refused on a route that is not time-filterable', () => {
     assert.equal(codeOf({ from: '2026-01-01T00:00:00.000Z' }, SUBJECTS_QUERY), 'UNKNOWN_QUERY_PARAMETER');
-    assert.equal(codeOf({ to: '2026-01-01T00:00:00.000Z' }, EXPOSURES_QUERY), 'UNKNOWN_QUERY_PARAMETER');
+    // §5.5.1 GIVES `from`/`to` TO THE EXPOSURE LIST, so this assertion used to encode a DRIFT rather than the
+    // contract: `EXPOSURES_QUERY` declared `timeFilterable: false` while the specification gives the range, and
+    // a test asserting the declaration is what let the drift stand. The range is now accepted (and defaults,
+    // with the applied default echoed); the route that is genuinely not time-filterable is the subject list.
+    assert.equal(codeOf({ from: '2026-01-01T00:00:00.000Z' }, SUBJECTS_QUERY), 'UNKNOWN_QUERY_PARAMETER');
+    assert.equal(codeOf({ from: '2026-01-01T00:00:00.000Z', to: '2026-01-02T00:00:00.000Z' }, EXPOSURES_QUERY), 'NO_ERROR');
+    assert.equal(codeOf({ to: '2026-01-01T00:00:00.000Z' }, SUBJECTS_QUERY), 'UNKNOWN_QUERY_PARAMETER');
   });
 });
 
@@ -379,10 +385,17 @@ describe('typed parameters are validated against their declared type', () => {
     }
   });
 
-  test('an integer parameter rejects a non-integer', () => {
-    assert.equal(codeOf({ minConfidence: '50' }, EXPOSURES_QUERY), 'NO_ERROR');
-    for (const bad of ['50.5', 'fifty', '']) {
-      assert.equal(codeOf({ minConfidence: bad }, EXPOSURES_QUERY), 'SCHEMA_VALIDATION_FAILED');
+  test('a decimal parameter accepts only values in its declared range', () => {
+    // `minConfidence` was declared as an INTEGER while §5.5.1's `Confidence` is calibrated 0.00–1.00
+    // (SPEC-000 §5.1, SPEC-001 §2), so this test previously asserted that `50` was accepted and `50.5` refused
+    // — the opposite of the contract in both directions. It now asserts the declared type AND the range: a
+    // value outside 0–1 is a malformed request, not an empty result, because silently returning no rows for
+    // `minConfidence=2` reads as "nothing matched".
+    assert.equal(codeOf({ minConfidence: '0.85' }, EXPOSURES_QUERY), 'NO_ERROR');
+    assert.equal(codeOf({ minConfidence: '0' }, EXPOSURES_QUERY), 'NO_ERROR');
+    assert.equal(codeOf({ minConfidence: '1' }, EXPOSURES_QUERY), 'NO_ERROR');
+    for (const bad of ['50', '50.5', '-0.1', 'fifty', '']) {
+      assert.equal(codeOf({ minConfidence: bad }, EXPOSURES_QUERY), 'SCHEMA_VALIDATION_FAILED', `minConfidence=${bad}`);
     }
   });
 

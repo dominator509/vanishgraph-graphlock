@@ -26,7 +26,9 @@ import {
   testAppealQueries,
   testDeadlineQueries,
   testAuditQueries,
+  testExposureQueries,
   testObservationQueries,
+  testTransitionQueries,
   testIdentity,
   testTenancy,
   TEST_SESSION_SECRET,
@@ -145,6 +147,8 @@ function serverWith(options: {
     deadlineQueries: testDeadlineQueries(),
     auditQueries: testAuditQueries(),
     observationQueries: testObservationQueries(),
+    exposureQueries: testExposureQueries(),
+    transitionQueries: testTransitionQueries(),
     subjectQueries: {
       listSubjects: async () => [],
       getSubjectDetail: async () => undefined,

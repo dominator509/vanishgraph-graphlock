@@ -32,6 +32,8 @@ import { buildServer, type VgFastify } from '../../src/http/server.ts';
 import { testIdentity, TEST_SESSION_SECRET, TEST_TOKEN } from '../contract/server-support.ts';
 import { PostgresTenantRunner } from '../../src/adapters/persistence/postgres-runner.ts';
 import { PostgresObservationQueries } from '../../src/adapters/persistence/observations.ts';
+import { PostgresExposureQueries } from '../../src/adapters/persistence/exposures.ts';
+import { PostgresTransitionQueries } from '../../src/adapters/persistence/transitions.ts';
 import { PostgresAuditQueries } from '../../src/adapters/persistence/audit-queries.ts';
 import { PostgresDeadlineQueries } from '../../src/adapters/persistence/deadlines.ts';
 import { PostgresAppealQueries } from '../../src/adapters/persistence/appeals.ts';
@@ -83,6 +85,8 @@ function serverFor(tenantId: string, scopes: readonly string[] = ['vg.observatio
     deadlineQueries: new PostgresDeadlineQueries(),
     auditQueries: new PostgresAuditQueries(),
     observationQueries: new PostgresObservationQueries(),
+    exposureQueries: new PostgresExposureQueries(),
+    transitionQueries: new PostgresTransitionQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
   });
 }

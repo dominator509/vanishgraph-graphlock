@@ -26,12 +26,15 @@ import { appealRoutes } from './routes/appeals.ts';
 import { deadlineRoutes } from './routes/deadlines.ts';
 import { auditRoutes } from './routes/audit.ts';
 import { observationRoutes } from './routes/observations.ts';
+import { exposureRoutes } from './routes/exposures.ts';
 import type { SubjectQueries } from '../application/contracts/subject-queries.ts';
 import type { RecipeVerificationKeys, SourceQueries } from '../application/contracts/source-queries.ts';
 import type { AppealQueries } from '../application/contracts/appeal-queries.ts';
 import type { DeadlineQueries } from '../application/contracts/deadline-queries.ts';
 import type { AuditQueries } from '../application/contracts/audit-queries.ts';
 import type { ObservationQueries } from '../application/contracts/observation-queries.ts';
+import type { ExposureQueries } from '../application/contracts/exposure-queries.ts';
+import type { TransitionQueries } from '../application/contracts/transition-queries.ts';
 import { installCorrelation } from './plugins/correlation.ts';
 import { installErrorHandler } from './plugins/error-handler.ts';
 import { installIdentity, type IdentityPluginOptions } from './plugins/identity.ts';
@@ -128,6 +131,16 @@ export interface ServerDependencies {
    * four routes because they share the g.observations.read scope and one subject: what was OBSERVED.
    */
   readonly observationQueries: ObservationQueries;
+  /**
+   * The exposure model (SPEC-003 §5.5): two reads and the two guarded assessments that drive T3/T4.
+   */
+  readonly exposureQueries: ExposureQueries;
+  /**
+   * The transition spine (SPEC-003 §5.5.5, §5.7.3, §5.7.6). A SEPARATE port from `exposureQueries` because it
+   * reads the audit trail rather than the aggregate: one answers "what is this exposure", the other answers
+   * "what moved it", and a route that needs both should have to say so.
+   */
+  readonly transitionQueries: TransitionQueries;
   readonly logLevel?: string;
 }
 
@@ -202,6 +215,11 @@ export function buildServer(deps: ServerDependencies): VgFastify {
 
   // The SPEC-003 5.10.2/5.10.3/5.11.2/5.11.3 reads.
   app.register(observationRoutes, { sessionSecret: deps.sessionSecret, queries: deps.observationQueries });
+  app.register(exposureRoutes, {
+    sessionSecret: deps.sessionSecret,
+    queries: deps.exposureQueries,
+    transitions: deps.transitionQueries,
+  });
 
   app.register(healthRoutes, {
     deps: deps.health,

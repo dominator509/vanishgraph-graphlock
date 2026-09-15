@@ -19,6 +19,7 @@
  * is NOT the same as low coverage and must not be reported as such.
  */
 
+import { readFileSync, readdirSync } from 'node:fs';
 import { buildServer } from '../src/http/server.ts';
 import { ROUTES } from '../src/http/openapi/registry.ts';
 
@@ -102,6 +103,19 @@ const app = buildServer({
     listAuditEvents: async () => [],
     getAuditEvent: async () => undefined,
   },
+  // The §5.5 exposure model and the transition spine. Not-found answers: this probe only enumerates routes.
+  exposureQueries: {
+    listExposures: async () => [],
+    getExposureDetail: async () => undefined,
+    exposureRowVersion: async () => undefined,
+    recordMatchAssessment: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+    recordDisproof: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+  },
+  transitionQueries: {
+    listTransitionsForExposure: async () => [],
+    listTransitionsForCase: async () => [],
+    lastTransitionForCase: async () => undefined,
+  },
   // The §5.10/§5.11 read model. Empty: this probe only enumerates routes.
   observationQueries: {
     caseExists: async () => false,
@@ -179,9 +193,65 @@ const want = new Set(ROUTES.map((r) => `${r.method} ${r.path}`));
 const missing = [...want].filter((key) => !have.has(key)).sort();
 const extra = [...have].filter((key) => !want.has(key) && key.startsWith('/v1')).sort();
 
+/**
+ * REGISTERED IS NOT THE SAME AS WORKING, and this file reported them as if it were.
+ *
+ * `printRoutes` proves a handler EXISTS; it says nothing about whether the handler can do what its route
+ * documents. Five routes were registered while refusing every request with an unconditional
+ * `503 DEPENDENCY_UNAVAILABLE` — §5.1.1 subject creation, §5.1.4 subject update, §5.1.7 identifier capture,
+ * §5.2.1 authority minting and §5.2.3 revocation. Counting them as covered made the number this file prints
+ * overstate the work by five, and a number that reads as a measurement is worse than no number
+ * (`ASSUMPTIONS.md` §3.26 item 4 records the same lesson from a different direction).
+ *
+ * THE RULE, and its limits, stated so the number can be judged rather than trusted: a handler is counted as
+ * a STUB when its body refuses with `DEPENDENCY_UNAVAILABLE` **and** contains no success path
+ * (`reply.code(2…)`). That is a static approximation. It under-reports in one direction — a handler that
+ * succeeds on one input and refuses on another counts as working, which is correct, because it does do
+ * something — and it cannot see a handler that refuses with a different code for a dependency reason. It is
+ * deliberately conservative: it never claims MORE coverage than the registered count, only less.
+ */
+function stubbedRoutes(): readonly { readonly route: string; readonly reason: string }[] {
+  const out: { route: string; reason: string }[] = [];
+  const dir = new URL('../src/http/routes/', import.meta.url);
+  for (const file of readdirSync(dir)) {
+    if (!file.endsWith('.ts')) continue;
+    const source = readFileSync(new URL(file, dir), 'utf8');
+    // Split on handler registrations; the text before the first one is module-level, not a handler.
+    const parts = source.split(/app\.(get|post|patch|put|delete)\(\s*'/);
+    for (let i = 1; i < parts.length; i += 2) {
+      const method = (parts[i] ?? '').toUpperCase();
+      const rest = parts[i + 1] ?? '';
+      const template = /^([^']*)'/.exec(rest)?.[1];
+      if (template === undefined) continue;
+      const declaration = rest.indexOf('{');
+      const body = declaration === -1 ? rest : rest.slice(declaration);
+      if (!body.includes('DEPENDENCY_UNAVAILABLE')) continue;
+      if (/reply\.code\(\s*2/.test(body)) continue;
+      const reason = /DEPENDENCY_UNAVAILABLE',\s*\{\s*reason:\s*'([^']*)'/.exec(body)?.[1] ?? 'unspecified';
+      out.push({
+        route: `${method} ${template.replace(/:([A-Za-z_][A-Za-z0-9_]*)/g, '{$1}')}`,
+        reason,
+      });
+    }
+  }
+  return out;
+}
+
+const stubs = stubbedRoutes();
+const working = ROUTES.length - missing.length - stubs.length;
+
 console.log(
   `route coverage: ${String(ROUTES.length - missing.length)} of ${String(ROUTES.length)} registry routes have a handler`,
 );
+console.log(
+  `route coverage: ${String(working)} of ${String(ROUTES.length)} registry routes have a handler that is not an unconditional refusal`,
+);
+if (stubs.length > 0) {
+  // Printed rather than subtracted silently: a route that always refuses is UNIMPLEMENTED work, and naming
+  // it is what keeps the second number above honest.
+  console.log(`route coverage: ${String(stubs.length)} registered route(s) refuse unconditionally:`);
+  for (const stub of stubs) console.log(`  - ${stub.route} — ${stub.reason}`);
+}
 if (extra.length > 0) {
   // An unregistered /v1 route is a DEFECT, not a gap: it exists but the registry does not know its
   // scopes, so it cannot be authorized against the contract.

@@ -25,7 +25,9 @@ import {
   testAppealQueries,
   testDeadlineQueries,
   testAuditQueries,
+  testExposureQueries,
   testObservationQueries,
+  testTransitionQueries,
   testIdentity,
   testTenancy,
   TEST_SESSION_SECRET,
@@ -133,6 +135,8 @@ function serverWith(
     deadlineQueries: testDeadlineQueries(),
     auditQueries: testAuditQueries(),
     observationQueries: testObservationQueries(),
+    exposureQueries: testExposureQueries(),
+    transitionQueries: testTransitionQueries(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),
@@ -351,6 +355,8 @@ describe('§5.14 follows §4.1 for idempotency and §3.2 for step-up, from the r
         deadlineQueries: testDeadlineQueries(),
     auditQueries: testAuditQueries(),
     observationQueries: testObservationQueries(),
+    exposureQueries: testExposureQueries(),
+    transitionQueries: testTransitionQueries(),
         health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 's', ok: true })] },
       });
       const response = await app.inject({ method, url, headers: { authorization: `Bearer ${TEST_TOKEN}` } });

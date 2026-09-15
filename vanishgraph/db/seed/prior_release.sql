@@ -31,8 +31,19 @@ INSERT INTO removal_recipe (id, tenant_id, source_id, version, signature, channe
 
 INSERT INTO source_record (id, tenant_id, source_id, raw_ref, observed_at, content_hash, tainted) VALUES
   ('ffffffff-1111-4111-8111-ffffffffffff', '11111111-1111-4111-8111-111111111111', 'cccccccc-1111-4111-8111-cccccccccccc', 'https://example.invalid/record/1', now() - interval '2 days', repeat('a', 64), false);
+-- The confidence basis is the `{feature, weight}` shape SPEC-003 §5.5.1 and §5.5.3 use, and it was NOT that
+-- until §5.5's read route rendered it. The original fixture wrote `["exact-name-match","state-match"]` — an
+-- array of bare strings, which satisfies SPEC-002 §2 (the column's only constraint is that the array is
+-- non-empty) and satisfies nothing in SPEC-003, whose `confidence.basis` is an array of objects and whose
+-- §5.5.3 request requires `feature` and `weight` per entry. Measured consequence before this change: the
+-- §5.5.1 list answered 500 for any tenant holding the seeded row, because the reader refuses a basis entry it
+-- cannot render instead of inventing a weight for it (VG-IDENT-003: a score without its recorded basis is the
+-- state the rule exists to prevent). The two specifications do not contradict each other — one constrains the
+-- array, the other the element — so the fixture is what was wrong. Recorded in ASSUMPTIONS.md §3.28.
 INSERT INTO exposure (id, tenant_id, subject_id, source_record_id, confidence, confidence_basis, truth_state) VALUES
-  ('99999999-1111-4111-8111-999999999999', '11111111-1111-4111-8111-111111111111', 'aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa', 'ffffffff-1111-4111-8111-ffffffffffff', 0.91, '["exact-name-match","state-match"]'::jsonb, 'MATCH_CONFIRMED');
+  ('99999999-1111-4111-8111-999999999999', '11111111-1111-4111-8111-111111111111', 'aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa', 'ffffffff-1111-4111-8111-ffffffffffff', 0.91,
+   '[{"feature":"NAME_EXACT","weight":0.4},{"feature":"ADDRESS_MATCH","weight":0.31},{"feature":"AGE_BAND_MATCH","weight":0.2}]'::jsonb,
+   'MATCH_CONFIRMED');
 
 INSERT INTO jurisdiction_policy (id, tenant_id, jurisdiction, version, effective_from, rules, provenance) VALUES
   ('88888888-1111-4111-8111-888888888888', '11111111-1111-4111-8111-111111111111', 'US-CA', 1, now() - interval '90 days', ARRAY['CCPA_DELETE'], 'COUNSEL_REVIEWED');

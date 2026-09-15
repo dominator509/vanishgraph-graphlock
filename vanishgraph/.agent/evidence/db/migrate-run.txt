@@ -16,5 +16,8 @@ migrate: applying 0015_appeal_review_state.sql
 migrate: applying 0016_deadline_provenance.sql
 migrate: applying 0017_audit_event_observability.sql
 migrate: applying 0018_observation_paths.sql
-migrate: applied 18 migration(s); at version 18
+migrate: applying 0019_transition_spine.sql
+migrate: applying 0020_exposure_read_fields.sql
+migrate: applying 0021_exposure_observation_defaults.sql
+migrate: applied 21 migration(s); at version 21
 migrate: ok

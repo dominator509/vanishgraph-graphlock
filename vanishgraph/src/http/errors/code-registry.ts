@@ -267,6 +267,14 @@ export const ERROR_CODE_REGISTRY: readonly ErrorCodeSpec[] = Object.freeze([
   { domainCode: 'INVALID_REQUEST', wireCode: 'COVERAGE_BOUNDS_REQUIRED', status: 422, retryable: false,
     message: 'A coverage claim requires its bounds.' },
 
+  // SPEC-003 §5.5.3 / §8.2's 409 list. It had NO registry row until §5.5's assessment route needed it, which
+  // is why the route could reach a code the envelope had no template for: `ErrorCode` is `string`, so an
+  // unregistered wire code typechecks and would only fail when a response was built. VG-IDENT-004 is the rule
+  // it carries — a record seen through a search-engine-class source cannot enter a removal path, because
+  // "found on a search engine" is not "matched to the subject".
+  { domainCode: 'IDENTITY_CLASS_MISMATCH', wireCode: 'IDENTITY_CLASS_MISMATCH', status: 409, retryable: false,
+    message: 'The source class of this record does not permit this transition.' },
+
   { domainCode: 'PRECONDITION', wireCode: 'PRECONDITION_FAILED', status: 412, retryable: false,
     message: 'The supplied If-Match value does not match the current resource state.' },
   { domainCode: 'PRECONDITION', wireCode: 'PRECONDITION_REQUIRED', status: 428, retryable: false,
