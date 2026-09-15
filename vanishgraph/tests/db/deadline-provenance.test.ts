@@ -31,6 +31,7 @@ import { buildServer, type VgFastify } from '../../src/http/server.ts';
 import { testIdentity, TEST_SESSION_SECRET, TEST_TOKEN } from '../contract/server-support.ts';
 import { PostgresTenantRunner } from '../../src/adapters/persistence/postgres-runner.ts';
 import { PostgresDeadlineQueries } from '../../src/adapters/persistence/deadlines.ts';
+import { PostgresAuditQueries } from '../../src/adapters/persistence/audit-queries.ts';
 import { PostgresIdempotencyStore } from '../../src/adapters/idempotency/postgres-store.ts';
 import { PostgresSubjectQueries } from '../../src/adapters/persistence/subjects.ts';
 import { PostgresSourceQueries } from '../../src/adapters/persistence/sources.ts';
@@ -76,6 +77,7 @@ function serverFor(tenantId: string, scopes: readonly string[]): VgFastify {
     recipeVerificationKeys: { publicKeysByRef: new Map<string, string>() },
     appealQueries: new PostgresAppealQueries(),
     deadlineQueries: new PostgresDeadlineQueries(),
+    auditQueries: new PostgresAuditQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
   });
 }

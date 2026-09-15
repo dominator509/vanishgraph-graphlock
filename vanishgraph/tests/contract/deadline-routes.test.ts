@@ -136,6 +136,7 @@ function serverWith(
       createAppealEscalation: async () => ({ ok: false, reason: 'CASE_NOT_FOUND' }),
     },
     deadlineQueries: options.port ?? recorded.port,
+    auditQueries: { listAuditEvents: async () => [], getAuditEvent: async () => undefined },
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
   });
   return { app, calls: recorded.calls };

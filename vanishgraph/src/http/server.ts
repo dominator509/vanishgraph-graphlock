@@ -24,10 +24,12 @@ import { subjectRoutes } from './routes/subjects.ts';
 import { sourceRoutes } from './routes/sources.ts';
 import { appealRoutes } from './routes/appeals.ts';
 import { deadlineRoutes } from './routes/deadlines.ts';
+import { auditRoutes } from './routes/audit.ts';
 import type { SubjectQueries } from '../application/contracts/subject-queries.ts';
 import type { RecipeVerificationKeys, SourceQueries } from '../application/contracts/source-queries.ts';
 import type { AppealQueries } from '../application/contracts/appeal-queries.ts';
 import type { DeadlineQueries } from '../application/contracts/deadline-queries.ts';
+import type { AuditQueries } from '../application/contracts/audit-queries.ts';
 import { installCorrelation } from './plugins/correlation.ts';
 import { installErrorHandler } from './plugins/error-handler.ts';
 import { installIdentity, type IdentityPluginOptions } from './plugins/identity.ts';
@@ -115,6 +117,10 @@ export interface ServerDependencies {
    * supply a different "now" to two halves of one derivation.
    */
   readonly deadlineQueries: DeadlineQueries;
+  /**
+   * The audit-stream read model (SPEC-003 §5.15). Injected as a port for the same reason as the others.
+   */
+  readonly auditQueries: AuditQueries;
   readonly logLevel?: string;
 }
 
@@ -183,6 +189,9 @@ export function buildServer(deps: ServerDependencies): VgFastify {
 
   // The SPEC-003 §5.13 group. No session secret: nothing in §5.13 paginates.
   app.register(deadlineRoutes, { queries: deps.deadlineQueries });
+
+  // The SPEC-003 §5.15 group: two reads, and no mutation surface anywhere (VG-EVIDENCE-003).
+  app.register(auditRoutes, { sessionSecret: deps.sessionSecret, queries: deps.auditQueries });
 
   app.register(healthRoutes, {
     deps: deps.health,

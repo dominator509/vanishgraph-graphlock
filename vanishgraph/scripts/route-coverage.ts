@@ -97,6 +97,11 @@ const app = buildServer({
     satisfyDeadline: async () => ({ ok: false, reason: 'NOT_FOUND' }),
     deriveState: (s, d, n) => (s !== null ? 'SATISFIED' : d < n ? 'BREACHED' : 'OPEN'),
   },
+  // The §5.15 read model. Empty: this probe only enumerates routes.
+  auditQueries: {
+    listAuditEvents: async () => [],
+    getAuditEvent: async () => undefined,
+  },
   health: {
     startedAt: new Date(),
     now: () => new Date(),

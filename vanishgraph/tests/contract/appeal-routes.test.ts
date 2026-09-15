@@ -24,6 +24,7 @@ import { buildServer, type VgFastify } from '../../src/http/server.ts';
 import {
   testAppealQueries,
   testDeadlineQueries,
+  testAuditQueries,
   testIdentity,
   testTenancy,
   TEST_SESSION_SECRET,
@@ -129,6 +130,7 @@ function serverWith(
     recipeVerificationKeys: { publicKeysByRef: new Map<string, string>() },
     appealQueries: options.scopes === undefined ? recorded.port : recorded.port,
     deadlineQueries: testDeadlineQueries(),
+    auditQueries: testAuditQueries(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),
@@ -345,6 +347,7 @@ describe('§5.14 follows §4.1 for idempotency and §3.2 for step-up, from the r
         recipeVerificationKeys: { publicKeysByRef: new Map<string, string>() },
         appealQueries: testAppealQueries(),
         deadlineQueries: testDeadlineQueries(),
+    auditQueries: testAuditQueries(),
         health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 's', ok: true })] },
       });
       const response = await app.inject({ method, url, headers: { authorization: `Bearer ${TEST_TOKEN}` } });

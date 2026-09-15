@@ -29,10 +29,20 @@ import {
 import {
   AUDIT_EVENTS_QUERY,
   CASES_QUERY,
+  DISCOVERY_RUNS_QUERY,
   EXPOSURES_QUERY,
   SUBJECTS_QUERY,
 } from '../../src/http/query/filters.ts';
 import { ALL_TRUTH_STATES } from '../../src/application/contracts/index.ts';
+
+/**
+ * A one-day range, for assertions about something OTHER than the range itself.
+ *
+ * `AUDIT_EVENTS_QUERY` requires `from` and `to` (SPEC-003 §5.15.1 refuses an unbounded audit scan) and caps
+ * the span at 90 days, so every assertion about an audit-route filter, sort or ceiling must carry a valid
+ * range or it fails for a reason the test is not about. One day keeps it inside the cap.
+ */
+const RANGE = { from: '2026-08-01T00:00:00.000Z', to: '2026-08-02T00:00:00.000Z' } as const;
 
 /** Run a parse and return the error code, or a marker when it unexpectedly succeeded. */
 function codeOf(raw: Record<string, unknown>, schema: QuerySchema, now = 1_770_000_000_000): string {
@@ -147,10 +157,15 @@ describe('sorting is restricted to the route allowlist (§2.6)', () => {
 
   test('every documented sort field is accepted in both directions', () => {
     for (const schema of [SUBJECTS_QUERY, EXPOSURES_QUERY, CASES_QUERY, AUDIT_EVENTS_QUERY]) {
+      // The range is added ONLY for a time-filterable schema. `AUDIT_EVENTS_QUERY` REQUIRES one (§5.15.1) and
+      // this sweep is about sort fields rather than about the range — but the schemas that are NOT
+      // time-filterable REFUSE `from`/`to` as unknown parameters, so an unconditional range turns this sweep
+      // into a test of parameter rejection. Conditional on the declaration, one loop serves every schema.
+      const range = schema.timeFilterable ? RANGE : {};
       for (const field of schema.sortFields) {
         for (const direction of ['asc', 'desc']) {
           assert.equal(
-            codeOf({ sort: `${field}:${direction}` }, schema),
+            codeOf({ ...range, sort: `${field}:${direction}` }, schema),
             'NO_ERROR',
             `${field}:${direction} must be accepted`,
           );
@@ -181,7 +196,7 @@ describe('sorting is restricted to the route allowlist (§2.6)', () => {
   test('the applied default sort is echoed back', () => {
     const parsed = parseQuery({}, SUBJECTS_QUERY);
     assert.equal(parsed.sort, 'createdAt:desc');
-    const audit = parseQuery({}, AUDIT_EVENTS_QUERY);
+    const audit = parseQuery(RANGE, AUDIT_EVENTS_QUERY);
     assert.equal(audit.sort, 'at:desc');
   });
 });
@@ -189,12 +204,12 @@ describe('sorting is restricted to the route allowlist (§2.6)', () => {
 describe('a filter exceeding the value ceiling is FILTER_TOO_BROAD (§2.6)', () => {
   test('21 values in one parameter is refused — the case the plan names', () => {
     const twentyOne = Array.from({ length: MAX_FILTER_VALUES + 1 }, (_, i) => `action-${i}`).join(',');
-    assert.equal(codeOf({ action: twentyOne }, AUDIT_EVENTS_QUERY), 'FILTER_TOO_BROAD');
+    assert.equal(codeOf({ ...RANGE, action: twentyOne }, AUDIT_EVENTS_QUERY), 'FILTER_TOO_BROAD');
   });
 
   test('exactly 20 values is accepted: the ceiling is inclusive', () => {
     const twenty = Array.from({ length: MAX_FILTER_VALUES }, (_, i) => `action-${i}`).join(',');
-    assert.equal(codeOf({ action: twenty }, AUDIT_EVENTS_QUERY), 'NO_ERROR');
+    assert.equal(codeOf({ ...RANGE, action: twenty }, AUDIT_EVENTS_QUERY), 'NO_ERROR');
   });
 
   test('the ceiling applies to truthState too', () => {
@@ -234,7 +249,9 @@ describe('time ranges follow inclusive-lower / exclusive-upper (§2.6)', () => {
 
   test('a missing range defaults to 30 days AND echoes the applied default', () => {
     // The echo is what stops an accidental wide scan presenting itself as a narrow one.
-    const parsed = parseQuery({}, AUDIT_EVENTS_QUERY, () => NOW);
+    // The vehicle is the route that still DEFAULTS a missing range. `AUDIT_EVENTS_QUERY` no longer does:
+    // §5.15.1 makes `from` and `to` mandatory there, and `TIME_RANGE_REQUIRED` is asserted separately below.
+    const parsed = parseQuery({}, DISCOVERY_RUNS_QUERY, () => NOW);
     assert.equal(parsed.filter['appliedDefaultTimeRangeDays'], DEFAULT_TIME_RANGE_DAYS);
     const to = Date.parse(String(parsed.filter['to']));
     const from = Date.parse(String(parsed.filter['from']));
@@ -254,7 +271,7 @@ describe('time ranges follow inclusive-lower / exclusive-upper (§2.6)', () => {
   });
 
   test('a half-supplied range still marks that a default was applied', () => {
-    const parsed = parseQuery({ from: '2026-09-01T00:00:00.000Z' }, AUDIT_EVENTS_QUERY, () => NOW);
+    const parsed = parseQuery({ from: '2026-09-01T00:00:00.000Z' }, DISCOVERY_RUNS_QUERY, () => NOW);
     assert.equal(parsed.filter['appliedDefaultTimeRangeDays'], DEFAULT_TIME_RANGE_DAYS);
     assert.equal(parsed.filter['to'], new Date(NOW).toISOString());
   });
@@ -273,12 +290,69 @@ describe('time ranges follow inclusive-lower / exclusive-upper (§2.6)', () => {
 
   test('a malformed timestamp is refused', () => {
     for (const bad of ['yesterday', '2026-13-45', '', '1700000000']) {
+      // On the DEFAULTING route, where a bad `from` is the only thing wrong with the query.
       assert.equal(
-        codeOf({ from: bad }, AUDIT_EVENTS_QUERY),
+        codeOf({ from: bad }, DISCOVERY_RUNS_QUERY),
         'SCHEMA_VALIDATION_FAILED',
         `from=${JSON.stringify(bad)} must be refused`,
       );
+      // And on the audit route WITH a valid upper bound, so the refusal is about the malformed instant rather
+      // than about the missing range, which would otherwise be reported first.
+      assert.equal(
+        codeOf({ from: bad, to: '2026-08-02T00:00:00.000Z' }, AUDIT_EVENTS_QUERY),
+        'SCHEMA_VALIDATION_FAILED',
+        `from=${JSON.stringify(bad)} must be refused on the audit route too`,
+      );
     }
+  });
+
+  test('§5.15.1: an unbounded audit scan is 400 TIME_RANGE_REQUIRED', () => {
+    // Two registry rows existed for this code and for `TIME_RANGE_TOO_WIDE`, and NO code path threw either,
+    // until the audit route declared the requirement and the cap on its query schema. Asserted on the RAW
+    // query, so the refusal cannot be masked by the 30-day default the parser applies elsewhere.
+    assert.equal(codeOf({}, AUDIT_EVENTS_QUERY), 'TIME_RANGE_REQUIRED');
+    assert.equal(codeOf({ from: '2026-08-01T00:00:00.000Z' }, AUDIT_EVENTS_QUERY), 'TIME_RANGE_REQUIRED');
+    assert.equal(codeOf({ to: '2026-08-02T00:00:00.000Z' }, AUDIT_EVENTS_QUERY), 'TIME_RANGE_REQUIRED');
+    // The control: the route that does NOT require a range still accepts an unbounded query, so the assertion
+    // above is about this route's declaration rather than about the parser refusing ranges in general.
+    assert.equal(codeOf({}, DISCOVERY_RUNS_QUERY), 'NO_ERROR');
+  });
+
+  test('§5.15.1: a span beyond 90 days is 400 TIME_RANGE_TOO_WIDE, and exactly 90 is accepted', () => {
+    const day = 24 * 60 * 60 * 1000;
+    const to = Date.parse('2026-09-14T12:00:00.000Z');
+    const span = (days: number): Record<string, unknown> => ({
+      from: new Date(to - days * day).toISOString(),
+      to: new Date(to).toISOString(),
+    });
+
+    // The ceiling is INCLUSIVE: precisely the maximum is a legitimate request, and refusing it would refuse
+    // the largest scan the contract permits.
+    assert.equal(codeOf(span(90), AUDIT_EVENTS_QUERY), 'NO_ERROR', 'exactly 90 days must be accepted');
+    assert.equal(codeOf(span(91), AUDIT_EVENTS_QUERY), 'TIME_RANGE_TOO_WIDE');
+    assert.equal(codeOf(span(365), AUDIT_EVENTS_QUERY), 'TIME_RANGE_TOO_WIDE');
+  });
+
+  test('the normalised filter never contains the pagination controls', () => {
+    // THE ROOT CAUSE OF A REAL DEFECT, pinned here because it is shared plumbing rather than one route's bug.
+    // `parseQuery` used to treat `limit` and `cursor` as filter members. Two consequences, the second fatal:
+    // `page.filter` echoed them a second time, and — because a cursor is bound to `filterHashOf(parsed.filter)`
+    // and a continuation request carries `cursor` in its raw query — page 2 hashed a DIFFERENT filter from the
+    // one page 1 minted against, so EVERY continuation failed with `400 INVALID_CURSOR`. Pagination over HTTP
+    // was therefore impossible for every collection route, and it went unnoticed because the suites that walk
+    // many pages drive the cursor helpers directly while each route was only ever fetched one page at a time.
+    // It was found by the §5.15 suite's HTTP pagination walk over a real table.
+    const first = parseQuery({ ...RANGE, limit: '5' }, AUDIT_EVENTS_QUERY, () => NOW);
+    assert.equal(first.limit, 5, 'the limit is still applied — skipped from the FILTER, not ignored');
+    assert.equal('limit' in first.filter, false, 'the limit must not appear in the filter');
+    assert.equal('cursor' in first.filter, false);
+
+    const second = parseQuery({ ...RANGE, limit: '5', cursor: 'any-opaque-value' }, AUDIT_EVENTS_QUERY, () => NOW);
+    assert.equal(second.cursor, 'any-opaque-value', 'the cursor is still returned in its own slot');
+    assert.equal('cursor' in second.filter, false);
+    // The property that makes a continuation validate: two requests differing ONLY by the cursor produce the
+    // same filter, so a cursor minted under the first hash is accepted under the second.
+    assert.deepEqual(second.filter, parseQuery({ ...RANGE, limit: '5' }, AUDIT_EVENTS_QUERY, () => NOW).filter);
   });
 
   test('time parameters are refused on a route that is not time-filterable', () => {

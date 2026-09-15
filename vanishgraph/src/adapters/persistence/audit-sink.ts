@@ -71,6 +71,34 @@ export class AuditUnavailableError extends Error {
  */
 
 const UUID_SHAPE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** The W3C trace context shape: `version-traceid-spanid-flags`, lowercase hex. */
+const TRACEPARENT_SHAPE = /^[0-9a-f]{2}-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$/;
+
+/**
+ * The observability metadata §5.15.1 reports about the REQUEST that produced a batch of audit events.
+ *
+ * WHY THIS IS A PARAMETER AND NOT A DOMAIN FIELD. `actorKind`, `outcome`, `requestId`, `refusalCode` and
+ * `traceparent` are not part of SPEC-001:96's `AuditEvent` (`id, tenantId, actor, action, target, at,
+ * correlationId`), and three of them are TRANSPORT facts about the request — its correlation identifier, its
+ * W3C trace context, and how it was refused. Knowing them is the append path's business, not the domain's, so
+ * they are supplied here rather than added to the entity; `ASSUMPTIONS.md` §3.25 records the reading,
+ * including that `actor.kind`'s vocabulary has no normative source while `outcome`'s does (SPEC-007 §285).
+ *
+ * ONE BATCH, ONE OUTCOME: a command that succeeds emits several events, all of them SUCCEEDED, and a refused
+ * command's events are all REFUSED. Per-event overrides would let one transition's audit rows disagree about
+ * whether the transition happened.
+ */
+export interface AuditMetadata {
+  readonly actorKind?: 'HUMAN' | 'SERVICE' | 'SYSTEM';
+  readonly outcome?: 'SUCCEEDED' | 'REFUSED' | 'FAILED' | 'AMBIGUOUS' | 'GATED';
+  /** The id of the HTTP request that produced the event, when there was one. */
+  readonly requestId?: string;
+  /** The wire code of the refusal, when the request was refused. */
+  readonly refusalCode?: string;
+  /** The W3C trace context, when the caller supplied or the service generated one. */
+  readonly traceparent?: string;
+}
 function asScalar(key: string, value: unknown): EventPayloadValue {
   if (value === null) return null;
   const kind = typeof value;
@@ -112,7 +140,19 @@ export function toAuditPayload(
 export async function appendAuditEvents(
   tx: TenantTransaction,
   events: readonly AuditEvent[],
+  metadata: AuditMetadata = {},
 ): Promise<void> {
+  if (metadata.requestId !== undefined && !UUID_SHAPE.test(metadata.requestId)) {
+    throw new AuditUnavailableError(
+      `requestId ${JSON.stringify(metadata.requestId)} is not a UUID; the column is uuid and a fabricated one would not join to the request it names`
+    );
+  }
+  if (metadata.traceparent !== undefined && !TRACEPARENT_SHAPE.test(metadata.traceparent)) {
+    throw new AuditUnavailableError(
+      `traceparent ${JSON.stringify(metadata.traceparent)} is not a W3C trace context; the column's CHECK would refuse it`
+    );
+  }
+
   for (const event of events) {
     if (!UUID_SHAPE.test(event.correlationId)) {
       // `correlation_id` is `uuid` in the schema. A non-UUID value cannot be stored, and substituting one
@@ -134,9 +174,11 @@ export async function appendAuditEvents(
 
     await tx.query(
       `INSERT INTO audit_event
-         (tenant_id, actor, action, target_kind, target_id, correlation_id, payload, at)
+         (tenant_id, actor, action, target_kind, target_id, correlation_id, payload, at,
+          actor_kind, outcome, request_id, refusal_code, traceparent)
        VALUES (current_setting('app.tenant_id', true)::uuid, $1, $2, $3, $4::uuid, $5::uuid, $6::jsonb,
-               to_timestamp($7::bigint / 1000.0))`,
+               to_timestamp($7::bigint / 1000.0), coalesce($8, 'SERVICE'), coalesce($9, 'SUCCEEDED'),
+               $10::uuid, $11, $12)`,
       [
         event.actor,
         event.action,
@@ -145,6 +187,15 @@ export async function appendAuditEvents(
         event.correlationId,
         JSON.stringify(toAuditPayload(event.payload)),
         Math.trunc(event.atMs),
+        // `null` here lets the column's DEFAULT apply, rather than this function writing a value it guessed.
+        // `coalesce($8, 'SERVICE')` in the statement above is what makes an explicit SQL NULL fall back to the
+        // default: naming the column in an INSERT bypasses its DEFAULT, so without the coalesce a batch that
+        // supplied no metadata would write NULL into a NOT NULL column.
+        metadata.actorKind ?? null,
+        metadata.outcome ?? null,
+        metadata.requestId ?? null,
+        metadata.refusalCode ?? null,
+        metadata.traceparent ?? null,
       ],
     );
   }

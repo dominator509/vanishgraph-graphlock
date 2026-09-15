@@ -14,6 +14,7 @@ migrate: applying 0013_catalog_entry_key.sql
 migrate: applying 0014_disabled_reason_vocabulary.sql
 migrate: applying 0015_appeal_review_state.sql
 migrate: applying 0016_deadline_provenance.sql
-migrate: applied 16 migration(s); at version 16
+migrate: applying 0017_audit_event_observability.sql
+migrate: applied 17 migration(s); at version 17
 migrate: ok
 migrate: ok

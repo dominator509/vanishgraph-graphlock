@@ -27,3 +27,4 @@ tests/contract/idempotency.test.ts
 tests/contract/source-routes.test.ts
 tests/contract/appeal-routes.test.ts
 tests/contract/deadline-routes.test.ts
+tests/contract/audit-routes.test.ts

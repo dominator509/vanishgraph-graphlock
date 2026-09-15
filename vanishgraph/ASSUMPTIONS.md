@@ -750,6 +750,52 @@ only assert on state it created or explicitly cleared.**
 Verified after the fixes: two consecutive `test-collection-guard` runs and two consecutive `test-integration`
 invocations, all at 170 tests, 0 failures.
 
+### 3.25 An HTTP pagination walk was IMPOSSIBLE for every collection route, and §5.15's audit fields
+
+Two findings from implementing §5.15 (migration 0017, 2 routes).
+
+**The pagination defect — found only by walking pages over HTTP against a real table.** `parseQuery` treated
+`limit` and `cursor` as FILTER members, because each route's schema spreads `PAGINATION` into `parameters` and
+the parser then walked every declared parameter. Two consequences, the second fatal:
+
+1. `page.filter` echoed the caller's `limit` and `cursor`, so the applied filter was not a filter.
+2. **A cursor could never validate on the next request.** A caller binds a cursor to
+   `filterHashOf(parsed.filter)`, and a continuation request carries `cursor` in its raw query — so page 2
+   hashed a DIFFERENT filter from the one page 1 minted against, and every continuation failed with
+   `400 INVALID_CURSOR`. Measured: the two parsed filters differed by exactly the `cursor` member.
+
+So **pagination over HTTP was impossible for every collection route** — §5.1, §5.3, §5.4, §5.11, §5.16 and
+every future one — and it went unnoticed because the suites that walk many pages drive the cursor HELPERS
+directly, while each route was only ever fetched one page at a time. It surfaced the first time a suite
+paginated through a route: §5.15's audit walk, with `limit=1` over five events sharing one instant.
+
+Fixed by skipping the two controls in the parameter loop, and pinned at the parser level by a test asserting
+that the normalised filter contains neither — a cheap, deterministic regression test for a defect whose route
+level symptom needs a database. `limit` is still applied; it is skipped from the FILTER, not ignored.
+
+**§5.15's five extra fields.** SPEC-001:96 gives `AuditEvent` seven fields; §5.15.1 reports those plus
+`actor.kind`, `requestId`, `outcome`, `refusalCode` and `traceparent`. They are stored as columns (0017) and
+supplied by the APPEND path as request metadata rather than added to the domain entity, because three of them
+are transport facts — the request's id, its W3C trace context, and how it was refused — and the entity's value
+is that it is pure. Two readings are recorded as choices: `outcome` is checked against **SPEC-007 §285's five
+tokens** (`SUCCEEDED, REFUSED, FAILED, AMBIGUOUS, GATED`) rather than §5.15.1's two, because that is the
+normative source and the narrower example is a subset; and **`actor.kind`'s vocabulary has NO normative source
+anywhere** — `HUMAN|SERVICE|SYSTEM` appears only inside §5.15.1's example body — so its CHECK is built from an
+example, and every append today records the default `SERVICE` because the actor is the constant
+`domain-command`.
+
+**Two registry rows had no enforcement at all.** `TIME_RANGE_REQUIRED` and `TIME_RANGE_TOO_WIDE` were
+enumerated in SPEC-003 §8.2 and present in the registry, and **no code path threw either** until §5.15.1's
+requirements were declared on `AUDIT_EVENTS_QUERY` as `requireTimeRange`/`maxSpanDays`. Both are now produced
+by the parser, so the refusal cannot drift from the route's declaration.
+
+**A recurring mechanical cost, recorded as a follow-up.** Adding one required port to `ServerDependencies` has
+now forced edits at ~10 construction sites in four consecutive rounds (§5.3, §5.14, §5.13, §5.15), twice
+including a per-file import insertion. The right fix is a single `testServerDependencies(overrides)` builder in
+`tests/contract/server-support.ts` so a new port costs ONE edit. It is not done here because migrating ten
+call sites late in a round would be a large diff in tests this round cannot fully re-verify; it is recorded so
+the next round does it deliberately rather than discovering the churn again.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

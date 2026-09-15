@@ -25,6 +25,7 @@ import { buildServer, type VgFastify } from '../../src/http/server.ts';
 import {
   testAppealQueries,
   testDeadlineQueries,
+  testAuditQueries,
   testIdentity,
   testTenancy,
   TEST_SESSION_SECRET,
@@ -141,6 +142,7 @@ function serverWith(options: {
     recipeVerificationKeys: NO_KEYS,
     appealQueries: testAppealQueries(),
     deadlineQueries: testDeadlineQueries(),
+    auditQueries: testAuditQueries(),
     subjectQueries: {
       listSubjects: async () => [],
       getSubjectDetail: async () => undefined,

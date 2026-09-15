@@ -24,6 +24,7 @@ import { PostgresSubjectQueries } from '../../src/adapters/persistence/subjects.
 import { PostgresSourceQueries } from '../../src/adapters/persistence/sources.ts';
 import { PostgresAppealQueries } from '../../src/adapters/persistence/appeals.ts';
 import { PostgresDeadlineQueries } from '../../src/adapters/persistence/deadlines.ts';
+import { PostgresAuditQueries } from '../../src/adapters/persistence/audit-queries.ts';
 import { parseDsn } from '../../src/infrastructure/database/psql.ts';
 
 const TENANT_A = '11111111-1111-4111-8111-111111111111';
@@ -81,6 +82,7 @@ function serverFor(
     // The REAL model, like the others: this suite asserts persistence behaviour, so a stub proves nothing.
     appealQueries: new PostgresAppealQueries(),
     deadlineQueries: new PostgresDeadlineQueries(),
+    auditQueries: new PostgresAuditQueries(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),

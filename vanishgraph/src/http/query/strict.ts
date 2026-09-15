@@ -63,6 +63,13 @@ export interface QuerySchema {
   readonly defaultSort: string;
   /** Whether the route accepts `from`/`to`. */
   readonly timeFilterable: boolean;
+  /**
+   * Whether `from` AND `to` are MANDATORY (SPEC-003 §5.15.1's audit stream: "an unbounded audit scan is
+   * refused"). Declared rather than hand-checked so the refusal cannot drift from the route's declaration.
+   */
+  readonly requireTimeRange?: boolean;
+  /** The maximum permitted span in days, refusing with `TIME_RANGE_TOO_WIDE` beyond it (§5.15.1: 90). */
+  readonly maxSpanDays?: number;
   /** Whether the route accepts `truthState`. */
   readonly truthStateFilterable: boolean;
   /** Whether the route accepts `limit`/`cursor`. Collection routes do. */
@@ -183,8 +190,26 @@ export function parseQuery(
 
   // ---------------------------------------------------------------------------------------------
   // 5. Every other declared parameter, by declared type.
+  //
+  //    `limit` AND `cursor` ARE SKIPPED, AND THEY ARE THE TWO THAT MUST BE. They are the PAGINATION
+  //    CONTROLS: each schema spreads `PAGINATION` into `parameters` so the parser will accept them, and each
+  //    is already parsed into its own slot above and reported in its own member of the `page` object
+  //    (`limit`, `nextCursor`). Treating them as filter members as well had two consequences, and the second
+  //    is a real defect this comment exists to keep fixed:
+  //
+  //      1. `page.filter` echoed the caller's `limit` and `cursor` a second time, so the applied filter was
+  //         not a filter.
+  //      2. **A CURSOR COULD NEVER VALIDATE ON THE NEXT REQUEST.** Callers bind a cursor to
+  //         `filterHashOf(parsed.filter)`, and a request carrying a cursor has `cursor` IN its raw query — so
+  //         page 2 hashed a DIFFERENT filter from the one page 1 minted its cursor against, and every
+  //         continuation failed with `400 INVALID_CURSOR`. Measured: `filter1` and `filter2` differed by
+  //         exactly the cursor member. Pagination over HTTP was therefore impossible for EVERY collection
+  //         route, and it went unnoticed because the suites that walk many pages drive the cursor helpers
+  //         directly and the routes were only ever fetched one page at a time.
   // ---------------------------------------------------------------------------------------------
+  const PAGINATION_CONTROLS = new Set(['limit', 'cursor']);
   for (const [name, spec] of Object.entries(schema.parameters)) {
+    if (PAGINATION_CONTROLS.has(name)) continue;
     const value = raw[name];
     if (value === undefined) continue;
     if (name === 'from' || name === 'to') continue; // handled below with the range default
@@ -239,10 +264,26 @@ export function parseQuery(
   // ---------------------------------------------------------------------------------------------
   // 6. Time range. A missing range on a time-filterable collection defaults to the last 30 days, and
   //    the APPLIED default is echoed so a wide scan cannot present itself as a narrow one (§2.6).
+  //
+  //    TWO DECLARED REFUSALS were registered but never raised until §5.15.1 needed them:
+  //    `TIME_RANGE_REQUIRED` (SPEC-003 §5.15.1 makes `from`/`to` mandatory on the audit stream, because "an
+  //    unbounded audit scan is refused") and `TIME_RANGE_TOO_WIDE` (the same route caps the span at 90 days).
+  //    Both are DECLARED on the schema rather than checked in a handler, so the rule lives beside the route's
+  //    other query declarations, `page.filter` cannot advertise a range the route then refuses, and a second
+  //    route with a cap gets it by setting a field. Before this, no code path anywhere threw either code: a
+  //    registry row existed for two refusals the API could not produce.
   // ---------------------------------------------------------------------------------------------
   if (schema.timeFilterable) {
     const rawFrom = raw['from'];
     const rawTo = raw['to'];
+
+    // Checked on the RAW query, before any default is applied: a route that requires a range must refuse a
+    // request that did not supply one, and reading the normalised filter afterwards could not tell the
+    // difference because a default would already be in it.
+    if (schema.requireTimeRange === true && (rawFrom === undefined || rawTo === undefined)) {
+      throw new QueryError('TIME_RANGE_REQUIRED', { collection: 'audit-events' });
+    }
+
     const toMs = rawTo === undefined ? now() : parseTimestamp(rawTo, 'to');
     const fromMs =
       rawFrom === undefined ? toMs - DEFAULT_TIME_RANGE_DAYS * 24 * 60 * 60 * 1000 : parseTimestamp(rawFrom, 'from');
@@ -252,6 +293,16 @@ export function parseQuery(
       // returns nothing: an empty range and a typo are indistinguishable to a caller otherwise.
       throw new QueryError('SCHEMA_VALIDATION_FAILED', { field: 'from' });
     }
+
+    if (schema.maxSpanDays !== undefined && toMs - fromMs > schema.maxSpanDays * 24 * 60 * 60 * 1000) {
+      // The SPAN is reported in days so the caller learns the limit they exceeded, and the bound is
+      // inclusive of exactly `maxSpanDays`: a request for precisely the maximum is a legitimate request.
+      throw new QueryError('TIME_RANGE_TOO_WIDE', {
+        timeRangeFrom: new Date(fromMs).toISOString(),
+        timeRangeTo: new Date(toMs).toISOString(),
+      });
+    }
+
     filter['from'] = new Date(fromMs).toISOString();
     filter['to'] = new Date(toMs).toISOString();
     // Recorded explicitly, so `page.filter` shows the caller that a default was applied rather than

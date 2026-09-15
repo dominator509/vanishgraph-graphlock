@@ -96,6 +96,11 @@ export const AUDIT_EVENTS_QUERY: QuerySchema = {
   sortFields: ['at', 'id'],
   defaultSort: 'at:desc',
   timeFilterable: true,
+  // §5.15.1: "`from`, `to` (**required** on this route: an unbounded audit scan is refused with `400
+  // TIME_RANGE_REQUIRED`; maximum span 90 days)". Both are declared here so the two refusals the registry
+  // already enumerated are produced by the parser rather than by a handler that could forget them.
+  requireTimeRange: true,
+  maxSpanDays: 90,
   truthStateFilterable: false,
 };
 

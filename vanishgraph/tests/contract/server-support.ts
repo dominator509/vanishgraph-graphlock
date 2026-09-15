@@ -28,6 +28,7 @@ import type {
 } from '../../src/application/contracts/source-queries.ts';
 import type { AppealQueries } from '../../src/application/contracts/appeal-queries.ts';
 import type { DeadlineQueries } from '../../src/application/contracts/deadline-queries.ts';
+import type { AuditQueries } from '../../src/application/contracts/audit-queries.ts';
 
 /**
  * The cursor signing secret used by tests.
@@ -263,5 +264,21 @@ export function testDeadlineQueries(): DeadlineQueries {
       if (satisfiedAtMs !== null) return 'SATISFIED';
       return dueAtMs < nowMs ? 'BREACHED' : 'OPEN';
     },
+  };
+}
+
+/**
+ * An audit read model for tests that do not exercise §5.15.
+ *
+ * Empty results, because an audit stream with no rows is exactly what a tenant that has done nothing looks
+ * like — and a stub that fabricated an event would let a route test assert against a trail the database never
+ * held. The behaviour that matters for §5.15 (the two time-range refusals, and that no mutating audit route
+ * exists) is asserted without a database in `tests/contract/audit-routes.test.ts`, because those are boundary
+ * rules.
+ */
+export function testAuditQueries(): AuditQueries {
+  return {
+    listAuditEvents: async () => [],
+    getAuditEvent: async () => undefined,
   };
 }
