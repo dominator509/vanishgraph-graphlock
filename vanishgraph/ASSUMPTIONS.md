@@ -251,6 +251,40 @@ EP-002's execplan never mentions either name, so this was an omission rather tha
 deferral. `IdempotencyStore` is now declared once, in the node that first needed it, which is the
 best available outcome now that EP-002 is closed.
 
+**Correction to a claim I made in this same session, and the lesson it carries.** I briefly recorded a
+*third* undeclared port here — `AuditSink` — on the strength of a search that returned no matches. The
+search was `Select-String -Path 'src\**\*.ts' -Pattern 'AuditSink|INSERT INTO audit_event'`. **PowerShell's
+`-Path 'src\**\*.ts'` does not recurse the way a glob reader expects, so it silently matched nothing, and
+I read an empty result as evidence of absence.** `AuditSink` is declared, at
+`src/domain/ports/index.ts:107`:
+
+```ts
+/** Append-only event sink (VG-EVIDENCE-003). */
+export interface AuditSink {
+  append(events: readonly AuditEvent[]): Promise<void>;
+}
+```
+
+THE RULE THIS ESTABLISHES, and it applies to every search in this project: **a negative result is only
+evidence if the search is shown to work.** The repository already demands negative controls for tests;
+the same discipline is required for the searches that justify a claim about what does not exist. Every
+"there is no X" statement in this file was produced by a search, and the searches that matter are worth
+re-running with a positive control beside them.
+
+Two accurate gaps in `AuditSink`'s case remain, and they are smaller than "undeclared":
+
+1. **Placement.** It is declared INLINE in the barrel, and SPEC-001 §5.1 rule 1 requires "one file per
+   port, inside a `ports/` directory, with `ports/index.ts` as the barrel". `KeyProvider` and
+   `IdempotencyStore` were both moved to their own files for exactly this reason, and their file comments
+   record the deviation as fixed. `AuditSink` was not. Fixed by EP-004 M6: it now lives in
+   `src/domain/ports/audit-sink.ts` and is re-exported from the barrel.
+2. **No ADAPTER implements it.** Ports are declared by EP-002 and implemented by the node that needs them
+   (§5.1 rule 4), so an unimplemented port is expected rather than a defect — but it means **nothing in
+   this codebase has ever written an `audit_event` row.** Verified with a working search: `INSERT INTO
+   audit_event` matches nothing under `src/` (positive control: `IdempotencyStore` matches 17 times in the
+   same tree). The only `audit_event` rows that exist are those `db/seed/prior_release.sql` inserts.
+   Implemented by EP-004 M6 as `src/adapters/persistence/audit-sink.ts`.
+
 **`AuthorityGrantRepository` remains an open gap.** No node has declared it and no code implements
 it. It is recorded here rather than silently left out, and the node that first needs a persisted
 authority grant — most likely EP-006, which owns the identity and authority surface — must declare it
@@ -384,42 +418,107 @@ exact prerequisite" — and unlike §5.3, here there is no specification sentenc
 so the fail-closed reading is the correct one. **These five routes are not implemented**, and this
 record is why.
 
-### 3.18 EP-004 M6's remaining 51 routes are NODE_BLOCKED on a specification prerequisite, not on effort
+### 3.18 CORRECTION: the transition spine DOES have a home — and the real gap is an undeclared `AuditSink` port
 
-**The finding, in one sentence:** SPEC-003 §5.4–§5.16 is a contract over a domain model and a data model
-that no specification defines, so implementing those routes would mean inventing both — which EP-004
-M6's own blocker clause forbids and `AGENTS.md` names as a failure state.
+**This section retracts a claim I published earlier in the same session.** I recorded §5.4–§5.16 as
+`NODE_BLOCKED — BLOCKED_PREREQUISITE (specification)` on the ground that "every state-changing route
+returns a `transitionId`, and no specification defines a transition record". The first half is true; the
+conclusion was wrong, and the evidence that refutes it was in the repository the whole time.
 
-**The transition spine is missing.** Every state-changing route in §5.5–§5.14 returns a `transitionId`
-referring to a transition record. There is no such record anywhere:
+**What I searched for, and what I should have searched for.** I searched for a TABLE named after the
+concept (`CREATE TABLE transition…`) and, finding none anywhere, concluded there was no home for
+transition facts. I never asked the question the graph's own plan had already answered: *where did the
+node that owns the schema decide transition facts go?* EP-003's execplan, `.agent/execplans/EP-003-node.md`
+line 132, states it in a column-mapping table:
 
-| Evidence | Result |
+> | `Reappearance.priorRemovedEventId` | `prior_removed_event_id` | resolved to `audit_event(id)`:
+> **SPEC-002 defines no separate transition table, and `audit_event` is the append-only record of the
+> T14 transition** |
+
+and the seed data it specifies writes the transition fact INTO that record
+(`EP-003-node.md:2182`):
+
+> `INSERT INTO audit_event (…) VALUES ('11111111-…', 'domain-command', 'RequestReady', 'RequestCase',
+> '7777…', '1111…', '{"transitionId":"T5"}'::jsonb)`
+
+So the design is: **an `AuditEvent` IS the transition record, with the transition code and its facts in
+`audit_event.payload`.** SPEC-001 §4.3 SM-2 ("no state change may be committed without its `AuditEvent`")
+and SM-3 (a transition must carry its declared evidence) are the same statement from the invariant side.
+The domain already produces exactly this: every `CommandResult` carries `transitionId` (the `T<n>` code —
+`TransitionId` is declared as a code union in `src/domain/truth-state.ts:155`), `from`, `to`, `evidence`
+and a complete `audit: AuditEvent`.
+
+**What was actually missing: the append path, not the port.** `AuditSink` IS declared — inline in
+`src/domain/ports/index.ts` until EP-004 M6 moved it to its own file (§3.12 records both the placement fix
+and the unreliable search that briefly made me claim the port was missing). What had never existed was an
+IMPLEMENTATION, and therefore any `audit_event` write at all: `INSERT INTO audit_event` matched nothing
+under `src/` (verified with a working search — positive control: `IdempotencyStore` matches 17 times in
+the same tree), and the only audit rows in existence were the ones `db/seed/prior_release.sql` inserts.
+
+**That gap is now FIXED and verified.** EP-004 M6 implemented
+`src/adapters/persistence/audit-sink.ts` and proved it with `tests/db/audit-sink.test.ts` (13 tests, real
+PostgreSQL): an append is readable back with every SPEC-001 field intact; **a rolled-back state change
+leaves NO audit row** — the SM-2 property, and the one that distinguishes this design from the forbidden
+"commit state and log later", asserted beside a committed-append control so it cannot pass vacuously; a
+non-UUID correlation id or target id is refused rather than substituted; a nested payload value is
+refused; a cross-tenant batch is refused; tenant B cannot read tenant A's audit rows while A can; and
+UPDATE/DELETE on a row are no-ops. This is the first audit write path the project has ever had.
+
+**The remaining gap is sharper than "no table exists", and it is a three-way specification conflict:**
+
+| Citation | What it fixes |
 |---|---|
-| `grep 'CREATE TABLE (transition\|truth_state_transition\|transition_record\|case_transition)'` across `.agent/specs/*.md` and `db/migrations/*.sql` | **no match** |
-| SPEC-001 — the domain model that defines 21 transitions in §4.1 | the token `transitionId` **does not appear at all**; no `Transition` entity, no value object, no port |
-| SPEC-002 §2 — the data model | declares **12 tables** by `CREATE TABLE` and defers **14** more to "the EP-003 milestone bodies"; neither list contains a transition table |
-| Live schema, enumerated from `information_schema` (33 tables) | no transition table |
-| §5.5.5 `GET /v1/exposures/{exposureId}/transitions` | needs `transitionId`, `transitionCode` (`T3`), `fromTruthState`, `toTruthState`, `occurredAt`, `actorIdentity`, `command`, `evidenceArtifactIds[]`, `correlationId` — **no table and no entity carries any of it** |
+| SPEC-001:96 | `AuditEvent` = `id, tenantId, actor, action, target, at, correlationId` — **no transition code, no from/to truth state**, and no `payload` field at all |
+| SPEC-001:155 (SM-2) | "Every transition appends an `AuditEvent`" — the audit row IS where a transition is recorded, but its declared fields cannot carry what §5.5.5 asks a reader to see |
+| SPEC-002:26-27 | "`jsonb` is permitted only for recorded bases and provider payloads — **never for values needing integrity (state, authority, digests)**" |
+| SPEC-003 §5.5.5 | requires per transition: `transitionCode` (`T3`), `fromTruthState`, `toTruthState`, `actorIdentity`, `command`, `evidenceArtifactIds[]`, `correlationId` |
 
-`audit_event` is not a substitute: its columns are `id, tenant_id, actor, action, target_kind, target_id,
-correlation_id, payload, at` — it has **no from/to truth state and no transition code**, so "which
-transition, from which state, to which state" is not recorded, and `transitionCode` (§5.5.5: "refers to
-the SPEC-001 §4.1 table row, so a reader can check legality without inference") is precisely the field
-that would have to be invented.
+A transition's `from`/`to` truth states ARE state values needing integrity, so **`audit_event.payload` is
+the one place SPEC-002 §1 rules out** — and it is exactly the place `EP-003-node.md:132` chose ("`audit_event`
+is the append-only record of the [T14] transition") and `EP-003-node.md:2182`'s seed demonstrates
+(`'{"transitionId":"T5"}'::jsonb`). So the housing is not merely absent from the DDL: **the housing the plan
+selected is the one the data-model specification forbids, and neither specification supplies an
+alternative.**
+
+**Consequence, stated precisely.** Now that the append exists, most of §5.5–§5.14's reads and its state
+changes are implementable. What is NOT implementable is anything that must READ BACK a transition's code or
+its from/to states: §5.5.5, §5.7.3's `lastTransition`, §5.7.6's `TRANSITION` timeline entries, and the
+`transitionId`/`transitionCode` fields in the success bodies of §5.5.3, §5.5.4, §5.7.4, §5.7.5, §5.8.2,
+§5.8.3, §5.9.1, §5.10.1 and §5.11.1. Producing those means putting integrity-bearing state into `jsonb`,
+which SPEC-002 §1 forbids. `src/adapters/persistence/audit-sink.ts` deliberately contains **no
+`transitionPayload` helper** and says so where one would naturally sit, so a later node cannot
+reintroduce the forbidden shape by accident.
+
+**`verify: ok` and `RELEASE_GATE.json` remain unchanged, and the 27 implemented routes are unaffected.**
+
+### 3.19 EP-004 M6's remaining routes: what IS genuinely undefined, after the correction above
+
+**The finding, stated precisely.** The blockers are narrower than I first claimed and fall into three
+classes: (1) **one** aggregate no specification defines at all (`DiscoveryRun`, §5.4 — see §3.17);
+(2) one **specification conflict** about where transition facts may be stored (§3.18), which blocks the
+transition-reading routes rather than the state changes; and (3) ordinary additive columns and records
+whose owning node has not yet been identified. Only class (1) is a complete absence.
+
+**The transition record is NOT missing — see §3.18.** `AuditEvent` IS the transition record, per EP-003's
+own decision at `.agent/execplans/EP-003-node.md:132` and the seed at `EP-003-node.md:2182`; the append
+path now exists and is verified. What SPEC-002 §1 forbids is storing the transition's STATE in that
+record's `jsonb` payload, which is the only place the plan put it. The per-group list below reflects that:
+entries that named "transition table" as their prerequisite are struck through and replaced with what
+actually remains.
 
 **Per-group prerequisites, each verified against the live schema:**
 
-| Group | Routes | Prerequisite that does not exist |
+| Group | Routes | What actually does not exist |
 |---|---|---|
-| §5.4 discovery runs | 5 | A `DiscoveryRun` aggregate. `Discovery`/`DiscoveryRun` appear **nowhere** in SPEC-001, and `discovery`/`candidate` nowhere in SPEC-002 as a table or column. Only SPEC-003 §5.4's prose defines it. |
-| §5.5 exposures | 5 | Transition table (5.5.3/5.5.4 return `transitionId`); `exposure.truth_state_changed_at` for 5.5.2; transition history for 5.5.5 |
-| §5.6 policy decisions | 4 | `policy_decision.exemption_evaluation`; `jurisdiction_policy.policy_checksum` |
-| §5.7 cases | 6 | Transition table (5.7.1 response, 5.7.6 timeline, `truthStateChangedAt`); a HumanGate aggregate for 5.7.5, which no spec defines |
-| §5.8 external actions | 6 | A reconciliation record and a readback record (5.8.3, 5.8.4) — neither is declared anywhere; `external_action` has no attempt-history or readback column |
-| §5.9 controller responses | 3 | Transition table (5.9.1 drives T11) |
-| §5.10 verification observations | 3 | Transition table (5.10.1 drives T14) |
-| §5.11 reappearances | 3 | Transition table (5.11.1 drives T17) |
-| §5.12 evidence artifacts | 5 | An integrity-check record (5.12.4) — no table; 5.12.1/5.12.3 need the object store, which is `BLOCKED_CREDENTIALS` (S3_*) |
+| §5.4 discovery runs | 5 | A `DiscoveryRun` aggregate. `Discovery`/`DiscoveryRun` appear **nowhere** in SPEC-001, and `discovery`/`candidate` nowhere in SPEC-002 as a table or column. Only SPEC-003 §5.4's prose defines it. **Genuinely undefined.** |
+| §5.5 exposures | 5 | Read routes implementable. The `transitionId`/`transitionCode` in 5.5.3/5.5.4's success bodies and all of 5.5.5 need transition facts READ BACK, which SPEC-002 §1 forbids storing in `jsonb` (§3.18). `truthStateChangedAt` for 5.5.2 is derivable from `updated_at` (trigger in `0006`). |
+| §5.6 policy decisions | 4 | `policy_decision.exemption_evaluation`; `jurisdiction_policy.policy_checksum` — two additive columns. |
+| §5.7 cases | 6 | Read routes implementable except `lastTransition`/timeline. 5.7.1/5.7.4/5.7.5 need transition facts read back (§3.18); 5.7.5 also needs a HumanGate record — `human_gate` has 9 mentions in EP-002's and EP-004's plans, so those must be read before judging it undefined. |
+| §5.8 external actions | 6 | A reconciliation record and a readback record (5.8.3, 5.8.4). `reconciliation` has 19 mentions across six execplans, and EP-007/EP-008 name `readback`, so ownership needs reading before judging. |
+| §5.9 controller responses | 3 | 5.9.2/5.9.3 implementable; 5.9.1 returns `transitionCode`, which needs transition facts read back (§3.18). |
+| §5.10 verification observations | 3 | 5.10.2/5.10.3 implementable; 5.10.1 returns `transitionCode` (§3.18). |
+| §5.11 reappearances | 3 | 5.11.2/5.11.3 implementable; 5.11.1 returns `transitionCode` (§3.18). |
+| §5.12 evidence artifacts | 5 | An integrity-check record (5.12.4); 5.12.1/5.12.3 need the object store, which is `BLOCKED_CREDENTIALS` (S3_*). |
 | §5.13 deadlines | 3 | No blocker found; implementable with additive columns |
 | §5.14 appeal escalations | 3 | No blocker found; implementable with additive columns |
 | §5.15 audit events | 2 | `audit_event` has no `actor_kind`, no `outcome`, no `request_id`, no `refusal_code`, no `traceparent`. The domain's `AuditEvent.actor` is a flat `string` with no kind, and §5.15's `actor.kind` vocabulary (`HUMAN\|SERVICE\|SYSTEM`) is defined only inside SPEC-003's example body. `outcome` **is** defined — SPEC-007 §4/§5 lists `SUCCEEDED, REFUSED, FAILED, AMBIGUOUS, GATED` — but no domain object or column carries it. |
@@ -518,6 +617,44 @@ ledger is now 600 rows, **0 unattributed**.
 
 Both are the same class of defect as a gate that stops checking: evidence kept being produced, and its
 scope quietly stopped covering part of the system.
+
+### 3.21 The first audit append exposed a flaky test that asserted on a GLOBAL row count
+
+`test-integration` failed once and then passed on re-run. The failure was a single test —
+`postgres-runner.test.ts`'s "the audit table is append-only through the runner too" — with
+`AssertionError: audit rows must survive an UPDATE and DELETE through the runner`. Root cause:
+
+```ts
+const before = asTenant(ownerDsn(), TENANT_A, 'SELECT count(*)::text FROM audit_event;');
+// …UPDATE all rows, DELETE all rows, through the runner…
+const after  = asTenant(ownerDsn(), TENANT_A, 'SELECT count(*)::text FROM audit_event;');
+assert.equal(after[0], before[0], 'audit rows must survive an UPDATE and DELETE through the runner');
+```
+
+**A global row count is a SHARED FIXTURE, and asserting on one is really asserting about every other test
+running beside it.** `node --test` runs the database files in parallel, so the moment
+`tests/db/audit-sink.test.ts` began appending real audit rows the count grew mid-test and the assertion
+failed — intermittently, and with a message that named the wrong cause. It had held until now only
+because **nothing in this project had ever appended an audit row**, so the count was stable by accident
+rather than by design. This is the same coupling that made the `Run`-suffixed fixture names necessary in
+§3.7, in a different guise.
+
+Fixed by asserting what VG-DATA-004 actually means, which is also STRONGER than before:
+
+| Assertion | Before | After |
+|---|---|---|
+| the DELETE removed nothing | `after === before` — breaks under any concurrent append | `after >= before` together with `before > 0`; a working DELETE takes the count to 0 so it is still caught, and an empty table can no longer make the check vacuous |
+| the UPDATE changed nothing | `assert.equal(tampered.status, 0)` — asserted the COUNTING QUERY RAN, so it would pass even if every row had been rewritten | `count(actor = 'tampered-by-runner') === 0` |
+
+**A second lesson, about reading a test report.** I first read the transcript's outer `✖` line
+(`✖ the tenant-scoped runner and the raw-owner path agree about the fixture`) as a second failing test and
+began investigating a concurrency problem with `protected_subject`. It is the SUITE-level marker that a
+child failed; the fixture test itself printed `✔` one line above. The fixture was verified intact
+afterwards (1 subject per tenant; references `subject-ref-alpha` / `subject-ref-beta`), so that
+investigation was unnecessary — but the check that resolved it is worth repeating: read the child lines,
+not the parent summary.
+
+Verified by three consecutive full runs of `tests/db/**`: **147 tests, 147 pass, 0 fail**, exit 0 each time.
 
 ## 4. Known limitations recorded honestly (not resolved)
 

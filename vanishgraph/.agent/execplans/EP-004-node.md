@@ -1465,40 +1465,55 @@ specifications named each column, so materialising them cited names rather than 
 Prerequisite: a SPEC-001 entity and SPEC-002 table definition for `DiscoveryRun` plus its per-source
 outcome rows, or a SPEC-003 amendment that delegates the model explicitly.
 
-### 2026-09-15 — M6 is NODE_BLOCKED for §5.4–§5.16: the transition spine has no storage anywhere
+### 2026-09-15 — CORRECTION: the transition record DOES have a home; the real gap is the undeclared `AuditSink`
 
-M6's goal is "the route catalogue of SPEC-003 §5 wired to the persistence layer". §5.1, §5.2, §5.3 and
-§5.17 are wired — 27 of 78 routes, verified against real PostgreSQL. The remaining 51 cannot be, and the
-reason is a specification prerequisite rather than a shortage of implementation:
+**This section retracts a claim I made earlier in this same node**, which read: "M6 is NODE_BLOCKED for
+§5.4–§5.16: the transition spine has no storage anywhere." The observation behind it was accurate — no
+transition TABLE exists — but the conclusion was wrong, and the answer had been in this repository all
+along.
 
-**Every state-changing route in §5.5–§5.14 returns a `transitionId`, and no specification defines a
-transition record.**
+`EP-003-node.md:132`, in that node's own column-mapping table:
 
-| Evidence | Result |
+> | `Reappearance.priorRemovedEventId` | `prior_removed_event_id` | resolved to `audit_event(id)`:
+> **SPEC-002 defines no separate transition table, and `audit_event` is the append-only record of the
+> T14 transition** |
+
+and the seed that node specifies writes the transition fact into that record (`EP-003-node.md:2182`):
+`INSERT INTO audit_event (…) VALUES (…, '{"transitionId":"T5"}'::jsonb)`.
+
+**The methodological error, named so it is not repeated:** I searched for a table named after the concept
+(`CREATE TABLE transition…`) and, finding none, concluded there was no home. I never asked where the node
+that OWNS the schema decided the data goes. A decision recorded in a plan's column-mapping table is as
+binding as a DDL statement. The correct reading is that **an `AuditEvent` IS the transition record** —
+SM-2 ("no state change may be committed without its `AuditEvent`") and SM-3 (a transition must carry its
+declared evidence) are the same statement from the invariant side — and the domain already produces it:
+every `CommandResult` carries `transitionId` (the `T<n>` code, declared as a union in
+`src/domain/truth-state.ts:155`), `from`, `to`, `evidence` and a complete `audit: AuditEvent`.
+
+**The real gap, found by following that thread.** Nothing persists any of it:
+
+| Fact | Evidence |
 |---|---|
-| `CREATE TABLE (transition\|truth_state_transition\|transition_record\|case_transition)` across all specs and all 14 migrations | no match |
-| SPEC-001 (defines the 21 transitions of §4.1) | the token `transitionId` never appears; no entity, no value object, no port |
-| SPEC-002 §2 | declares **12** tables by DDL and defers **14** by name to "the EP-003 milestone bodies"; no transition table in either list |
-| Live schema (33 tables, from `information_schema`) | no transition table |
-| `audit_event` columns | `id, tenant_id, actor, action, target_kind, target_id, correlation_id, payload, at` — no from/to truth state, no transition code |
+| `src/domain/ports/` holds only `idempotency-store.ts`, `index.ts`, `key-provider.ts` | directory listing |
+| SPEC-001 §5.1:183 requires `AuditSink` at `src/domain/ports/`; §5.1:212 defines it as an "append-only event sink" | SPEC-001 |
+| No `AuditSink` type, no implementation, and **no `INSERT INTO audit_event` anywhere in `src/`** | `grep -r 'AuditSink\|INSERT INTO audit_event' src/` → no matches |
+| The only `audit_event` rows in existence are those `db/seed/prior_release.sql` inserts | live table contents |
 
-§5.5.5 requires `transitionCode` to name "the SPEC-001 §4.1 table row, so a reader can check legality
-without inference" — that field, and the row behind it, would be this node's invention.
+So `AuditSink` is a **third** spec-named port the port-declaring node never declared — and
+`ASSUMPTIONS.md` §3.12, the section that exists to record precisely this, listed only two and missed it.
+SPEC-006 §5.3 row 22 and §7.1 row 11 make it load-bearing: no state change may be committed without its
+`AuditEvent`, and sink unavailability means ABANDON the operation — "commit state and log later" is named
+as the forbidden alternative.
 
-**Seven further aggregates are undefined anywhere**, each confirmed absent from SPEC-002's declared list,
-its deferred list, and the live schema: `discovery_run` (plus per-source outcomes), `human_gate`,
-reconciliation, readback, `integrity_check`, `coverage_report`, `webhook_binding`. §5.15 additionally
-needs `audit_event.actor_kind`, `.outcome`, `.request_id`, `.refusal_code`, `.traceparent`, where the
-`actor.kind` vocabulary exists only inside SPEC-003's example body and the domain's `AuditEvent.actor` is
-a flat string.
+**Consequence: most of §5.5–§5.14 is implementable after all.** The domain commands for those transitions
+are written and tested (`tests/domain/commands.test.ts`), the aggregate tables exist, and `audit_event` is
+the designated home for transition facts. The work is to declare the port, implement the append in the
+same transaction as the state change, and wire the groups — ordinary node work, not a specification
+prerequisite. What remains genuinely undefined is narrower: `DiscoveryRun` (§5.4, see below), and the
+aggregates listed in `ASSUMPTIONS.md` §3.19 whose owning node has not yet been identified.
 
-The full per-group prerequisite table is in `ASSUMPTIONS.md` §3.18. **§5.4–§5.16 are recorded
-`NODE_BLOCKED — BLOCKED_PREREQUISITE (specification)` and the 51 routes are NOT implemented.** M6's own
-instruction is followed: "stop at `NODE_BLOCKED` for this milestone with the two blocking references
-named, and record the exact prerequisite."
-
-**Two gaps are contradictions an additive migration cannot fix** (both verified by hand against the
-migration text):
+**Two contradictions an additive migration cannot fix remain valid findings** (both re-verified against
+the migration text and the live database):
 
 1. SPEC-003 §5.6/§5.13 carry a **date-string** `policyVersion` (`"2026-01-15"`) that a request must match
    and a response must echo, while `jurisdiction_policy.version` and `policy_decision.policy_version` are
@@ -1510,16 +1525,15 @@ migration text):
    move a case to a [truth state]", so the type contradicts the intent the comment states. Storing a
    controller's claim in a truth-state-typed column is the collapse VG-VERIFY-004 exists to prevent.
 
-Four more verified mismatches need a delivered CHECK widened or a column made representable:
+Four further verified mismatches need a delivered CHECK widened or a column made representable:
 `external_action.status` cannot hold `FAILED` (`0004:76`); `mail_piece.delivery_status` cannot hold
 `ACCEPTED`/`IN_TRANSIT` (`0004:103`); `evidence_artifact.redaction_state` cannot hold
 `UNREDACTED`/`DLP_SCRUBBED` (`0005:12`); and `deadline.derivation_ref` is
 `CHECK (derivation_ref LIKE 'policy:%')` (`0004:117`) while §5.13.2 submits
 `source: "CONTROLLER_STATED_DATE"` — unrepresentable by construction.
 
-The per-field survey behind this (every request/response field in §5.4–§5.16 matched against the
-delivered schema) is summarised in `ASSUMPTIONS.md` §3.18; six of its most consequential findings were
-re-verified directly against `db/migrations/**` before being recorded here.
+**`verify: ok` and `RELEASE_GATE.json` are unchanged by this correction**, and the 27 implemented routes
+are unaffected: this section changes a record, not a control.
 
 **Why the §5.3 precedent does not extend here.** For §5.3, SPEC-002 named the tables and the
 specifications named every missing column, so migrations 0012–0014 materialised existing names. A table

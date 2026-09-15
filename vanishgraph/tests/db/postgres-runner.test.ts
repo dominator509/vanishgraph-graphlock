@@ -21,7 +21,7 @@ import assert from 'node:assert/strict';
 
 import { PostgresTenantRunner, postgresReadinessProbe } from '../../src/adapters/persistence/postgres-runner.ts';
 import { parseDsn } from '../../src/infrastructure/database/psql.ts';
-import { asTenant, exec, ownerDsn } from './harness.ts';
+import { asTenant, ownerDsn } from './harness.ts';
 
 const TENANT_A = '11111111-1111-4111-8111-111111111111';
 const TENANT_B = '22222222-2222-4222-8222-222222222222';
@@ -332,18 +332,41 @@ describe('the tenant-scoped runner and the raw-owner path agree about the fixtur
 
   test('the audit table is append-only through the runner too', async () => {
     // VG-DATA-004 is enforced by rules, so it must hold on this path as well as on the psql one.
+    //
+    // MEASURED FLAKE, and why this test no longer compares two GLOBAL counts. It used to assert
+    // `after === before` on `SELECT count(*) FROM audit_event`. That held only because nothing in the
+    // suite ever appended an audit row: `node --test` runs database test FILES in parallel, so the
+    // moment `tests/db/audit-sink.test.ts` began writing real audit rows the count grew mid-test and the
+    // assertion failed — intermittently, and with a message (`audit rows must survive an UPDATE and
+    // DELETE`) that named the wrong cause. A global row count is a SHARED FIXTURE, and an assertion on
+    // one is really an assertion about every other test running beside it.
+    //
+    // The intent is preserved and strengthened by asserting the two things VG-DATA-004 actually means:
+    // the DELETE must not REMOVE anything (a working DELETE would take the count to 0, so "did not
+    // decrease" catches it while tolerating concurrent appends), and the UPDATE must not CHANGE anything
+    // (zero rows may carry the tampered actor). The old tamper check only asserted that the counting
+    // query SUCCEEDED, which would pass if every row had been rewritten.
     const before = asTenant(ownerDsn(), TENANT_A, 'SELECT count(*)::text FROM audit_event;');
+    const beforeCount = Number(before[0] ?? '0');
+    assert.ok(beforeCount > 0, 'the table must hold rows, or "nothing was deleted" proves nothing');
+
     await runner.withTenantTransaction(TENANT_A, async (tx) => {
       await tx.query("UPDATE audit_event SET actor = 'tampered-by-runner'");
       await tx.query('DELETE FROM audit_event');
     });
-    const after = asTenant(ownerDsn(), TENANT_A, 'SELECT count(*)::text FROM audit_event;');
-    assert.equal(after[0], before[0], 'audit rows must survive an UPDATE and DELETE through the runner');
 
-    const tampered = exec(
+    const after = asTenant(ownerDsn(), TENANT_A, 'SELECT count(*)::text FROM audit_event;');
+    const afterCount = Number(after[0] ?? '0');
+    assert.ok(
+      afterCount >= beforeCount,
+      `audit rows must survive a DELETE through the runner (before ${String(beforeCount)}, after ${String(afterCount)})`,
+    );
+
+    const tampered = asTenant(
       ownerDsn(),
+      TENANT_A,
       "SELECT count(*)::text FROM audit_event WHERE actor = 'tampered-by-runner';",
     );
-    assert.equal(tampered.status, 0);
+    assert.equal(tampered[0], '0', 'audit rows must survive an UPDATE through the runner: no row may carry the tampered actor');
   });
 });

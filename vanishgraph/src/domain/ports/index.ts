@@ -20,7 +20,6 @@ import type {
   TenantId,
 } from '../identifiers.ts';
 import type {
-  AuditEvent,
   JurisdictionPolicy,
   RemovalRecipe,
   SourceRecord,
@@ -103,10 +102,14 @@ export interface PolicyRepository {
   ): Promise<JurisdictionPolicy | undefined>;
 }
 
-/** Append-only event sink (VG-EVIDENCE-003). */
-export interface AuditSink {
-  append(events: readonly AuditEvent[]): Promise<void>;
-}
+/**
+ * Append-only event sink (VG-EVIDENCE-003).
+ *
+ * Re-exported from `./audit-sink.ts` per SPEC-001 §5.1 rule 1 (one file per port, barrel at
+ * `ports/index.ts`). It was declared INLINE here until EP-004 M6 moved it — the same correction
+ * already applied to `KeyProvider` and `IdempotencyStore`. See `ASSUMPTIONS.md` §3.12.
+ */
+export type { AuditSink } from './audit-sink.ts';
 
 export interface EgressRequest {
   readonly tenantId: TenantId;
