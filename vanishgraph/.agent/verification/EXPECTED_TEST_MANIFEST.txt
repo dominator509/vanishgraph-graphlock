@@ -65,3 +65,4 @@ tests/contract/enrollment-controls.test.ts
 tests/contract/authority-repository.test.ts
 tests/contract/step-up.test.ts
 tests/contract/jit-support-access.test.ts
+tests/contract/rate-limit-abuse.test.ts
