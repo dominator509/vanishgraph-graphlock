@@ -24,19 +24,36 @@
     "test:integration": "sh scripts/test-integration.sh",
     "scan:truth-state": "node scripts/scan-truth-state-input.ts",
     "gate:api": "sh scripts/gate-api.sh",
-    "gate:data": "sh scripts/gate-data.sh"
+    "gate:data": "sh scripts/gate-data.sh",
+    "build:web": "node scripts/emit-route-manifest.ts && vite build",
+    "dev:web": "vite",
+    "test:ui": "playwright test",
+    "test:a11y": "playwright test --project=a11y"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "1.63.0",
     "@types/node": "24.10.1",
     "@types/pg": "8.23.1",
-    "typescript": "5.9.3"
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "axe-core": "4.13.0",
+    "jsdom": "29.1.1",
+    "typescript": "5.9.3",
+    "vite": "8.3.0"
   },
   "dependencies": {
     "@fastify/type-provider-json-schema-to-ts": "5.0.0",
+    "@tanstack/react-query": "5.103.0",
+    "@tanstack/react-router": "1.170.36",
     "fastify": "5.12.4",
     "ioredis": "6.0.0",
     "jose": "6.2.12",
     "pg": "8.23.0",
-    "pino": "10.3.1"
+    "pino": "10.3.1",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "zod": "4.6.5"
   }
 }

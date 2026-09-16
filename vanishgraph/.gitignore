@@ -35,3 +35,8 @@ Thumbs.db
 # (.agent/evidence/EP-003/restore-drill/dump-digest.txt) because the dump's bytes are specific
 # to one container and one run, so they cannot be a durable identity (DOD-029).
 .agent/evidence/**/restore-drill/*.dump
+
+# UI build output: an ARTEFACT, not source. It is produced by `npm run build:web` and verified by
+# `sh scripts/test-e2e.sh`, which REQUIRES it to exist — so committing it would let a stale bundle be
+# the thing the end-to-end stage tests (SPEC-008 VG-SHIP-021/022 wants the freshly built artefact).
+ui/dist/

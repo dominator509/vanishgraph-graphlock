@@ -92,6 +92,26 @@ Pinned exact versions; `package-lock.json` is committed (DOD-002, VG-SHIP-027).
 
 **Domain runtime dependencies: none.** Enforced by gate.
 
+**Resolved UI versions, and why each is present (EP-005 M1).** The stack row above is the CHOICE; these are the
+versions actually installed and locked, which the plan requires be recorded.
+
+| Package | Version | Why it is here |
+|---|---|---|
+| `react` / `react-dom` | 19.3.0 | The rendering library ADR-007 names; nothing renders without it |
+| `@tanstack/react-router` | 1.170.36 | File-based routing whose tree is INTROSPECTABLE, which is what makes the route manifest derivable rather than hand-maintained (VG-UI-004) |
+| `@tanstack/react-query` | 5.103.0 | Server-state cache; configured with `retry: false` because a retry is a second request and VG-ACTION-001 is at-most-once |
+| `zod` | 4.6.5 | Declared by the stack table as shared validation. **It is not yet shared**: the API validates by hand and the UI has nothing to validate until it consumes the contract (EP-005 M5+) — recorded in ASSUMPTIONS §3.47 rather than implied by this row |
+| `vite` / `@vitejs/plugin-react` | 8.3.0 / 6.1.1 | The build ADR-007 chose; a static bundle, no server rendering |
+| `@playwright/test` | 1.63.0 | Acceptance against the BUILT bundle (SPEC-008 VG-SHIP-021/022) |
+| `axe-core` / `@axe-core/playwright` | 4.13.0 / 4.13.0 | The accessibility project; automated checks are necessary and NOT sufficient (VG-UI-064 is `EXTERNAL_REQUIRED`) |
+| `jsdom` | 29.1.1 | DOM for unit-level component assertions without a browser |
+| `@types/react` / `@types/react-dom` | 19.3.0 / 19.3.0 | Types for the above |
+
+**The browser runtime is provisioned and probed, not assumed**: `npx playwright install chromium` downloaded Chrome
+Headless Shell 153.0.8010.12 (114.6 MiB) and a launch probe rendered a heading and reported
+`browser launched: 153.0.8010.12`, recorded in ASSUMPTIONS §3.47.
+
+
 ### Deliberately not used
 
 - **Temporal** — a second stateful cluster for orchestration the domain already

@@ -13,11 +13,13 @@
 # infrastructure behaviour — which is precisely how a privacy guarantee silently
 # becomes a network call.
 #
-# THREE RULES, all enforced here:
+# THREE RULES, all enforced here (and a FOURTH added by EP-005 M1):
 #   (1) src/domain/**        may import only relative paths and node:* builtins.
 #   (2) src/application/**   may import only node:*, relative paths, and src/domain.
 #   (3) src/http/**          must not import src/domain internals, src/adapters, or
 #                            src/infrastructure. It MAY import its own framework.
+#   (4) ui/src/**            must not import src/domain, src/adapters, src/http or
+#                            src/infrastructure. It MAY import its own framework and its own modules.
 #
 # Rule (3) is what makes the API boundary real: a handler that reaches a database
 # driver or an adapter directly has bypassed the application layer where authority,
@@ -106,6 +108,45 @@ if [ -n "$violations" ]; then
   echo "" >&2
   echo "Move the dependency behind a port declared in SPEC-001 §5 and implement it in" >&2
   echo "an adapter. Do not relax this check (DOD-027)." >&2
+  exit 1
+fi
+
+# ---------------------------------------------------------------------------------------------
+# (4) ui: the browser bundle may not reach the server's layers (EP-005 M1, ARCHITECTURE.md §2).
+#
+# THE RULE HAS TWO JOBS. The first is layering: a component that imported `src/http/routes/**` would be sharing code
+# with the service rather than consuming its contract. The second is DISCLOSURE, and it is the one that matters more:
+# the UI is shipped to a browser, so anything it imports is public. `src/domain` holds the truth-state machinery and
+# the privacy rules, `src/adapters` holds the SQL, and `src/infrastructure` holds the composition root with its
+# configuration reading — a bundle that pulled any of them in would publish the service's internals to every visitor.
+#
+# WHAT IT MAY IMPORT: `node:*` (build-time only), its own modules, the packages the plan pins for it, and — when a
+# later milestone adds them — generated application-contract TYPES, which carry no runtime code. A TYPE-ONLY import of
+# a contract is legitimate and would arrive as `import type`; the check below is on the specifier, so such a file must
+# name a generated types module rather than reaching into `src/**`.
+# ---------------------------------------------------------------------------------------------
+if [ -d ui/src ]; then
+  ui_specs=$(grep -rhoE "(from|import)[[:space:]]*'[^']+'" ui/src 2>/dev/null \
+    | sed -E "s/.*'([^']+)'.*/\1/" | sort -u || true)
+  for spec in $ui_specs; do
+    case "$spec" in
+      ../src/domain/*|../../src/domain/*|../../../src/domain/*|\
+      ../src/adapters/*|../../src/adapters/*|../../../src/adapters/*|\
+      ../src/http/*|../../src/http/*|../../../src/http/*|\
+      ../src/infrastructure/*|../../src/infrastructure/*|../../../src/infrastructure/*)
+        violations="${violations}  ui/src: ${spec} (the browser bundle must not import the service's layers)
+" ;;
+      *) ;;   # its own modules, node builtins, and UI packages: fine
+    esac
+  done
+fi
+
+if [ -n "$violations" ]; then
+  echo "import boundary: FAIL - a layer imports something it must not" >&2
+  echo "Offending module specifiers:" >&2
+  printf '%s' "$violations" >&2
+  echo "" >&2
+  echo "Consume the service through its HTTP contract, or add a generated types module. Do not relax this check (DOD-027)." >&2
   exit 1
 fi
 

@@ -115,8 +115,7 @@ binding suite table. One definition of "the unit tests" exists, in the script.
 `sh scripts/gate-domain.sh` (gate-domain: ok, node EP-002);
 `sh scripts/gate-data.sh` (gate-data: ok, node EP-003);
 `sh scripts/gate-api.sh` (gate-api: ok, node EP-004). Later nodes add their own
-`gate-<purpose>.sh` the same way. `gate-data` provisions, migrates, asserts the live
-RLS inventory against `db/tenant-scoped-tables.txt`, proves cross-tenant read AND write
+`gate-<purpose>.sh` the same way. `gate-data` provisions, migrates, asserts the liveRLS inventory against `db/tenant-scoped-tables.txt`, proves cross-tenant read AND write
 refusal as `vg_app`, proves `audit_event` is append-only, runs the database suites and
 the mutation check, proves `verify.sh` now advances past `integration`, and tears the
 container down with proof.
@@ -145,6 +144,35 @@ The gate scans IDENTIFIERS, not prose: SPEC-000 §4 forbids these synonyms "used
 identifiers", so SEMANTIC error messages — sentences shown to a human — are out of its scope by
 construction, and the wording rules for what a user READS are the UI-copy rules EP-005 M2
 applies through this same script.
+
+### The portal (EP-005)
+
+`sh scripts/gate-ui.sh` (gate-ui: ok, node EP-005) is this node's gate. It verifies what can be
+verified without a browser runtime or a database: the UI type-checks (`tsc -p tsconfig.ui.json`),
+the layer import boundary holds (including the UI rule that the browser bundle may not import
+`src/domain|adapters|http|infrastructure`), the committed route manifest is the one the route tree
+produces, the credential-free contract suites pass, and the manifest equals SPEC-004 §1's declared
+route set. **It prints an `UNVERIFIED-BY-THIS-GATE` block on every run** naming the browser-runtime
+suites, the manual assistive-technology validation (`EXTERNAL_REQUIRED`, VG-UI-064/DOD-039), and the
+real-data flows (`BLOCKED_CREDENTIALS`), and it never reports those as passing.
+
+`npm run build:web` (`vite build`) emits `ui/src/route-manifest.json` from
+`scripts/emit-route-manifest.ts` and then builds the static bundle into `ui/dist`. The manifest
+emitter walks `ui/src/routes/**` and normalises TanStack's `$param` to SPEC-004's `[param]`; the
+equality against the specification is asserted by `tests/contract/route-manifest.test.ts`, which
+PARSES the specification's table rather than copying it.
+
+`npm run dev:web` (`vite`) runs the development server. **Acceptance never runs against it**:
+`sh scripts/test-e2e.sh` (`end-to-end tests: ok`) requires the built bundle at `ui/dist/index.html`,
+makes a real attempt at the Playwright suites, and classifies honestly — a missing browser runtime is
+`BLOCKED_ENVIRONMENT` with the property named, no suites at all is `FAIL`, and its sentinel appears
+only after the suites ran and passed against the built artefact (SPEC-008 VG-SHIP-021/022).
+
+`npm run test:ui` (`playwright test`) runs both Playwright projects against the built bundle;
+`npm run test:a11y` runs the axe-core project alone, so an accessibility failure is never reported as
+a functional one. `npx playwright --version` prints the pinned version, and
+`npx --no-install tsc -p tsconfig.ui.json --noEmit` type-checks the UI alone — the two commands M1's
+RUN block needs.
 
 ### The service
 

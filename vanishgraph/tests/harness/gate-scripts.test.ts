@@ -312,6 +312,15 @@ describe('repository hygiene', () => {
       'jose',
       'pg',
       'pino',
+      // THE UI RUNTIME, added by EP-005 M1 as one deliberate act rather than five silent ones. Each is named in
+      // ARCHITECTURE.md §4 with the reason it is present, and each is required by the stack row for the portal:
+      // ADR-007 fixes Vite + React + TanStack Router/Query, and `zod` is the validation library that table declares
+      // shared (it is NOT yet shared — the API validates by hand, recorded in ASSUMPTIONS §3.47).
+      'react',
+      'react-dom',
+      '@tanstack/react-router',
+      '@tanstack/react-query',
+      'zod',
     ];
 
     for (const name of Object.keys(pkg.dependencies ?? {})) {

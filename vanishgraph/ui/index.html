@@ -1,0 +1,25 @@
+<!doctype html>
+<!--
+  The single HTML document the Vite single-page application is built from (ADR-007: no server rendering, no route
+  handlers, no framework server runtime — the portal is a static bundle that talks to the `/v1` API).
+
+  NO THIRD-PARTY ORIGIN APPEARS HERE. SPEC-004 §12 / VG-UI-090…093 forbid trackers, and a `<script src="https://…">`
+  is how one arrives; the Content-Security-Policy a deployment serves is the enforcement, and this document is written
+  so that policy can be strict.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!--
+      `referrer` is set to `same-origin` so a route path cannot leak to an external host through the Referer header:
+      VG-UI-005 keeps PII out of URLs, and this keeps the URL itself from travelling.
+    -->
+    <meta name="referrer" content="same-origin" />
+    <title>VanishGraph</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

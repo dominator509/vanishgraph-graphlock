@@ -1904,6 +1904,51 @@ recorded so the two files are not confused). `RELEASE_GATE.json` is **not modifi
 the `KeyProvider` port cannot encrypt a value at all (§3.37 item 3), so §5.1.7 has no path to its effect until the
 port gains the operation `LocalFileKeyProvider` already implements and the wrapped DEK is persisted.
 
+### 3.47 EP-005 M1: the portal foundation, the route manifest, and a browser runtime that is probed rather than assumed
+
+**The UI node's foundation exists**: a Vite + React + TanStack SPA under `ui/`, 25 route modules matching SPEC-004 §1's
+table, an emitted route manifest with a two-way equality test against the **parsed specification**, the UI layer rule
+in `scripts/import-boundary.sh`, `scripts/gate-ui.sh` (`gate-ui: ok`), a real `scripts/test-e2e.sh`, and the pinned
+dependency set recorded in `ARCHITECTURE.md`. `tests/contract/route-manifest.test.ts` 6/6.
+
+**1. THE 25 ROUTE MODULES ARE GENERATED FROM THE SPECIFICATION, AND THE TEST PARSES IT TOO.** The route filenames come
+from SPEC-004 §1's table, the modules render their declared path, surface and purpose, and
+`tests/contract/route-manifest.test.ts` re-parses that table and asserts **set equality in both directions** — a
+manifest with 24 routes fails on the missing one, and an undeclared route fails on the extra one. A hand-copied list
+would have drifted; this cannot.
+
+**2. THE PAGES RENDER NO CONTROL AT ALL, AND THAT IS DELIBERATE.** M1's job is the foundation; the surfaces arrive in
+M5 (portal) and M6 (console/admin/auditor). A page with a placeholder button would be a control a later
+route-and-control inventory (VG-UI-001) would find and could not explain, so each page states its declared purpose and
+nothing else. The honesty of a shell is that it does not promise a job it has not implemented.
+
+**3. THE UI IMPORT RULE IS ENFORCED AND VERIFIED BY INJECTING A VIOLATION.** Rule 4 forbids the browser bundle from
+importing `src/domain|adapters|http|infrastructure`, and the reason is disclosure as much as layering: the bundle is
+shipped to every visitor, so an import of the domain's privacy rules or an adapter's SQL would publish the service's
+internals. MEASURED both ways — with `import { TenantId } from '../../src/domain/identifiers.ts'` injected into
+`PageShell.tsx` the gate fails naming `ui/src: ../../src/domain/identifiers.ts`, and after reverting it prints
+`import boundary: ok`. A rule that cannot fail is decoration.
+
+**4. THE BROWSER RUNTIME IS PROVISIONED AND PROBED, NOT ASSUMED — AND THE PROBE FOUND THE DISTINCTION THAT MATTERS.**
+`npx playwright --version` printed 1.63.0, but `npx playwright install --dry-run chromium` showed the version Playwright
+wants (`chromium-1243`) was NOT in the cache, which held only older headless shells from other projects: **an installed
+package is not a provisioned runtime.** `npx playwright install chromium` then downloaded Chrome Headless Shell
+153.0.8010.12 (114.6 MiB), and a launch probe rendered a heading and reported
+`browser launched: 153.0.8010.12; rendered heading: probe`. This unblocks M4/M7/M8's browser suites; until this round
+they would have been `BLOCKED_ENVIRONMENT`.
+
+**5. THREE THINGS RECORDED RATHER THAN GLOSSED.**
+(a) **`zod` is installed and NOT yet shared with the API.** The stack table lists it as "shared by API and UI", but the
+API validates by hand — measured: `zod` appears in no `src/**` file. Installing it for the UI is honest; claiming the
+two layers now share it is not, and `ARCHITECTURE.md` says so in the row itself.
+(b) **`gate-ui.sh` differs from the plan's sketch in one precondition**, with the reason in the script: the sketch
+requires `ui/src/copy/truth-state.ts`, which M2 creates. Requiring it now would make this gate fail on the milestone
+that builds the foundation; M2 extends the gate when the file lands.
+(c) **`scripts/test-e2e.sh` currently reports `FAIL`** — not because anything is broken, but because `tests/e2e/` holds
+no suite yet, and a stage that ran nothing must not print a sentinel. The runner is real and its classification is
+tested by its own behaviour: a missing browser would be `BLOCKED_ENVIRONMENT`, no suites is `FAIL`, and the sentinel
+appears only after the suites pass against the built bundle.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

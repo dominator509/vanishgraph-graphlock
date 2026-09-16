@@ -1,0 +1,30 @@
+{
+  "generatedBy": "scripts/emit-route-manifest.ts",
+  "routes": [
+    "/admin/authority",
+    "/admin/catalog",
+    "/admin/metrics",
+    "/admin/policy",
+    "/admin/tenant",
+    "/admin/users",
+    "/auditor/cases/[caseId]",
+    "/auditor/claims",
+    "/auditor/evidence/[evidenceId]",
+    "/auditor/exports",
+    "/console/cases/[caseId]",
+    "/console/coverage",
+    "/console/exposures/[exposureId]",
+    "/console/gates",
+    "/console/queue",
+    "/console/recipes",
+    "/portal",
+    "/portal/alerts",
+    "/portal/authority",
+    "/portal/cases/[caseId]",
+    "/portal/cases/[caseId]/evidence/[evidenceId]",
+    "/portal/exposures",
+    "/portal/limitations",
+    "/portal/onboarding",
+    "/portal/requests"
+  ]
+}
