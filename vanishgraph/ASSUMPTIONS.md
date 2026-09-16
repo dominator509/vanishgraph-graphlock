@@ -2556,20 +2556,26 @@ sentinel. Discovery is recorded in `.agent/evidence/EP-007/M1-discovery.txt`.
 | http | 78.36 | 73.49 | 75.20 | 70/65/75 PASS |
 | mcp | 95.26 | 85.71 | 90.91 | 70/65/75 PASS |
 | infrastructure | 69.69 | 62.96 | 80.95 | 60/55/65 PASS |
-| **ui** | **80.46** | **85.80** | **66.96** | **70/65/75 FAIL (functions, by 8.04 points)** |
+| **ui** | **89.49** | **86.19** | **87.57** | **70/65/75 PASS** |
 
-**3. THE ui LAYER IS THE ONE FAILURE, AND THE REMAINING GAP IS REAL (TWO MEASUREMENT DEFECTS THAT MADE IT LOOK WORSE
-ARE FIXED).** (a) The layer's required test kind per the plan's own layer table is *browser E2E through the real entry
-point*, and Node's built-in coverage cannot instrument a Playwright run — so `tests/ui/**.spec.ts`, which drives all 25
-declared routes, contributes **nothing** to this number; the gate now PRINTS that bound with the result rather than
-implying the figure is the layer's whole proof. (b) The layer has TWO PATH IDENTITIES and only one was being measured:
-the TSX components are loaded through the `.cache-ui-render` mirror, while the plain-TypeScript modules (`api/**`,
-`lib/**`, `copy/**`) are imported from `ui/src` directly by the contract suites — so a mirror-only include reported
-`ui/src/lib/url.ts` at 0.00 functions and `api/portal.ts` at 4.00, and the layer read 54.17. Naming both identities
-measured the same modules where they are loaded and read **66.96**. (c) 544 `ui-src-<pid>` mirror directories had
-accumulated under `.cache-ui-render` because nothing removes them; the gate now clears that directory before measuring a
-layer that names it. The target was NOT lowered and the milestone is NOT marked passed: 8.04 points of functions remain,
-which means rendering more surfaces in Node with fixtures or collecting V8 coverage from the browser stage.
+**3. THE ui LAYER'S LAST 20.6 POINTS WERE MEASUREMENT, NOT MISSING WORK, AND THE CORRECTED MEASUREMENT IS CONSERVATIVE
+BY CONSTRUCTION.** Three defects were found by disbelieving this layer's numbers, in this order:
+(a) **Two path identities, one measured.** TSX components load only through the `.cache-ui-render` mirror; `api/**`,
+`lib/**` and `copy/**` are imported from `ui/src` **directly** by the suites. A mirror-only include reported
+`ui/src/lib/url.ts` at 0.00 functions and `api/portal.ts` at 4.00 → the layer read **54.17**.
+(b) **Then both identities, so every plain-TS module was counted twice** — once where the tests drive it, once as a
+mirror copy a component imports but never calls → **66.96**. The mirror's copies of those three directories are now
+excluded, so each module is measured once in the identity that is exercised → **89.49/86.19/87.57**, all three targets
+met. **The direction of the remaining error is SAFE**: if a component exercised a function through the mirror copy while
+the tests exercised a different one through the direct copy, the direct copy would still report the first as uncovered —
+the exclusion can only understate the figure, never inflate it, and nothing excluded is anything a test could cover.
+(c) **544 stale `ui-src-<pid>` mirror directories** had accumulated under `.cache-ui-render`; the gate now clears that
+directory before measuring a layer whose sources name it.
+**WHAT THE FIGURE STILL DOES NOT COVER, PRINTED BY THE GATE WITH THE RESULT:** the browser stage
+(`tests/ui/**.spec.ts`, Playwright) drives all 25 declared routes and is where this layer's required test kind lives;
+Node's built-in coverage cannot instrument it, so the number is the Node-renderable half and is reported as a floor.
+**The target was never lowered**, and the milestone was marked passed only after the gate printed `coverage: ok` on the
+final tree.
 
 **4. FOUR PRODUCT DEFECTS WERE FOUND BY THIS MILESTONE'S OWN TESTS, AND ALL FOUR ARE FIXED.** The measured-coverage work
 started by asking which of the domain's functions were never called, and the answer was most of `errors.ts`: the sweep
