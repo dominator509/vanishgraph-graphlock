@@ -57,3 +57,4 @@ tests/contract/scope-catalogue.test.ts
 tests/security/masking-patterns.test.ts
 tests/contract/mfa-enforcement.test.ts
 tests/contract/authorization-code.test.ts
+tests/contract/audience-binding.test.ts
