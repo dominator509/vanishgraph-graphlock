@@ -61,3 +61,4 @@ tests/contract/audience-binding.test.ts
 tests/contract/role-matrix.test.ts
 tests/contract/scope-enforcement.test.ts
 tests/contract/authority-grant.test.ts
+tests/contract/enrollment-controls.test.ts
