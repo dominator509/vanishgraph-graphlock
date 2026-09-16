@@ -203,9 +203,28 @@ function main(): number {
     return 'unit';
   };
 
+  /**
+   * THE ID MUST IDENTIFY ONE TEST, AND IT DID NOT.
+   *
+   * MEASURED DEFECT, corrected in EP-006 M11: `test_id` was `${prefix}-${name}`, so five test names shared by two or
+   * more suites produced identical ids — six suites declare `every code these routes emit is registered (H-7)`, two
+   * declare `a wildcard scope is TOKEN_SCOPE_WILDCARD_FORBIDDEN`, and so on. The `suite` field disambiguated them, so no
+   * information was lost, but an id that names six rows is not an identifier: a reader (or a script) that keys on
+   * `test_id` alone silently conflates them, which is exactly what happened to the EP-006 M11 writer before it was
+   * corrected. The suite is therefore part of the id now, and a duplicate name WITHIN one suite (the runner permits it)
+   * gets a numeric suffix rather than collapsing.
+   */
+  const usedIds = new Map<string, number>();
+  const idFor = (suite: string, name: string): string => {
+    const base = `${kindFor(suite) === 'integration' ? 'INT' : 'UNIT'}-${suite}-${name}`;
+    const seen = usedIds.get(base) ?? 0;
+    usedIds.set(base, seen + 1);
+    return seen === 0 ? base : `${base}#${String(seen + 1)}`;
+  };
+
   const fresh = cases.map((c) =>
     JSON.stringify({
-      test_id: `${kindFor(c.suite) === 'integration' ? 'INT' : 'UNIT'}-${c.name}`,
+      test_id: idFor(c.suite, c.name),
       suite: c.suite,
       name: c.name,
       status: c.status,

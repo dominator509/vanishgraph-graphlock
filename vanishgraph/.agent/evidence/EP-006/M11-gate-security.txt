@@ -1,0 +1,73 @@
+import boundary: ok
+secret scan: 690 file(s) scanned, 0 findings
+secret scan: ok
+▶ the scope vocabulary equals SPEC-003 §3.3 (EP-006 M1)
+  ✔ set equality in both directions, against the parsed specification table (2.5467ms)
+  ✔ isScope accepts every declared scope and refuses anything else (0.2772ms)
+  ✔ a wildcard is refused, never expanded (0.6067ms)
+  ✔ the ingress scope is refused wherever a caller could present it (0.2257ms)
+  ✔ the machine-forbidden set is the SEVEN §3.2 item 9 names, not the four the plan states (0.4425ms)
+✔ the scope vocabulary equals SPEC-003 §3.3 (EP-006 M1) (5.315ms)
+▶ the role bundles are derived from the specification, not invented (EP-006 M1)
+  ✔ every role in the catalogue is one of the seven §2 declares, and every declared role is present (0.6866ms)
+  ✔ each bundle equals the scopes §3.3 says that role may carry (0.8553ms)
+  ✔ every bundle is inside the catalogue, carries no wildcard and no ingress scope (0.6564ms)
+  ✔ every role carries its prohibition sentence from §2, not an empty note (0.3555ms)
+  ✔ the prohibited combinations the specification names are absent from the bundles (0.3056ms)
+  ✔ NEGATIVE CASE: a bundle carrying a scope outside the catalogue fails (0.3104ms)
+✔ the role bundles are derived from the specification, not invented (EP-006 M1) (3.5835ms)
+▶ the security configuration names variables and never values (EP-006 M1)
+  ✔ a complete environment reads, and the values are returned rather than logged (0.2746ms)
+  ✔ every absent variable aborts with its own name, and no message contains a value (0.8386ms)
+  ✔ a short SESSION_SECRET is refused, and the message names the requirement rather than the value (0.1756ms)
+  ✔ the absent-variable report lists names only, in declaration order (0.3093ms)
+✔ the security configuration names variables and never values (EP-006 M1) (1.8533ms)
+ℹ tests 15
+ℹ suites 3
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 182.4017
+▶ the masking scan fires on every shape it looks for (SPEC-006 §8)
+  ✔ each planted shape is reported (12.4504ms)
+  ✔ the fail-closed idiom is NOT reported: disabling errexit and reading the status is not masking (0.7532ms)
+  ✔ this repository’s own scripts carry no masking pattern (7.6204ms)
+✔ the masking scan fires on every shape it looks for (SPEC-006 §8) (22.3361ms)
+▶ a revoked grant halts the next write, and the check is at execution time (VG-AUTH-024)
+  ✔ a grant revoked after the case reached REQUEST_READY refuses the write with zero effects (3.4898ms)
+  ✔ the TIME-SHIFTED grant is refused at execution time even though it was valid when queued (0.6592ms)
+✔ a revoked grant halts the next write, and the check is at execution time (VG-AUTH-024) (5.878ms)
+▶ a scope violation is refused with the state unchanged (VG-AUTH-025)
+  ✔ a read-scoped grant cannot write, and the refusal is a decision rather than an exception (0.5302ms)
+  ✔ a grant for one subject cannot act for another, and the refusal names the binding (0.3986ms)
+  ✔ the boundary gate refuses a missing scope and a missing role, with the state unchanged (0.6404ms)
+✔ a scope violation is refused with the state unchanged (VG-AUTH-025) (1.9825ms)
+▶ cross-tenant access is refused by the service layer, and looks like absence (VG-AUTH-022, SPEC-006 H-9)
+  ✔ another tenant is refused by the matrix for every role, and the answer is absence rather than a violation (0.5654ms)
+  ✔ the RLS half is asserted in the integration stage, and this test only checks that pointer (1.234ms)
+✔ cross-tenant access is refused by the service layer, and looks like absence (VG-AUTH-022, SPEC-006 H-9) (2.2059ms)
+▶ the secret scanner detects every shape it claims to (DOD-018)
+  ✔ each planted shape is reported, and its near-miss is not (19.4673ms)
+  ✔ the scanner has no baseline auto-accept mechanism, and refuses a zero-file scan (0.605ms)
+  ✔ the scanner excludes only itself and the lockfile, each for a stated reason (0.2563ms)
+✔ the secret scanner detects every shape it claims to (DOD-018) (21.8815ms)
+ℹ tests 13
+ℹ suites 5
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 243.3061
+ep006 security gate: UNVERIFIED-BY-THIS-GATE (recorded as BLOCKED_CREDENTIALS/BLOCKED_PREREQUISITE):
+  - KEYCLOAK_ISSUER: BLOCKED_CREDENTIALS (probe: sh scripts/probes/keycloak.sh)
+  - DATABASE_URL: BLOCKED_CREDENTIALS (probe: sh scripts/probes/database_url.sh)
+  - VALKEY_URL: BLOCKED_CREDENTIALS (probe: sh scripts/probes/valkey_url.sh)
+  - CLOUD_WORKLOAD_IDENTITY: BLOCKED_CREDENTIALS (probe: sh scripts/probes/cloud_identity.sh)
+  - RLS second enforcement layer: BLOCKED_PREREQUISITE (EP-003 schema and RLS policy not created)
+  - realm MFA policy, refresh rotation, global sign-out, administrative revocation: BLOCKED_CREDENTIALS (KEYCLOAK_*)
+  - manual assistive-technology validation of verification flows (SPEC-005 section 11, DOD-039): EXTERNAL_REQUIRED
+  - counsel review of authorized-agent evidence, minors, identity-method sufficiency (SPEC-005 section 11): EXTERNAL_REQUIRED
+gate-security: ok

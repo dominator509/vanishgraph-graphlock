@@ -1,0 +1,36 @@
+EP-006 M11 — the node-closing gate and stage pass, in one run, on the tree this node ships.
+
+PROVENANCE. Every line below is the tail of the corresponding capture in this directory, written by the run itself; no
+sentinel was typed by hand. The pass covers `typecheck`, `lint`, `format-check`, `import-boundary`, `reality-gate`,
+`copy-lint-gate`, `validate-env`, `secret-scan`, `gate-security`, `security-check`, `gate-ui`, `test-unit` and
+`test-integration`.
+
+WHAT THE EVIDENCE IS ABOUT. The candidate is commit `6c52f46` ([EP-006][M10]). That is checkable rather than asserted:
+`git diff --name-only 6c52f46 -- src tests db ui` is EMPTY after the M10 commit, so every change made while M11 was
+written is documentation, ledger state, evidence capture or the harness refresher — no file under `src/`, `tests/`,
+`db/` or `ui/` differs from the commit whose content these gates and stages ran against.
+
+RESULTS, AS OBSERVED
+
+typecheck        exit=0  typecheck: ok
+lint             exit=0  typecheck: ok | import boundary: ok | lint: ok
+format-check     exit=0  format-check: ok
+import-boundary  exit=0  import boundary: ok
+reality-gate     exit=0  reality gate: ok
+copy-lint-gate   exit=0  copy lint gate: 112 file(s) scanned, 51 forbidden token(s), 46 allowlisted by exact name, 0 hits
+validate-env     exit=0  env validation: ok, then the NOTICE that names 14 unprovisioned REQUIRED variables — the
+                         recorded BLOCKED_CREDENTIALS state, not a failure
+secret-scan      exit=0  secret scan: 690 file(s) scanned, 0 findings
+gate-security    exit=0  gate-security: ok            (names the counsel and human-UAT/accessibility EXTERNAL_REQUIRED rows)
+security-check   exit=0  security check: ok           (names BLOCKED_CREDENTIALS VALKEY_URL and BLOCKED_PREREQUISITE ADR-006)
+gate-ui          exit=0  gate-ui: ok                  (names VG-UI-064 EXTERNAL_REQUIRED)
+test-unit        exit=0  test-unit: ok                1074 tests, 242 suites, 0 fail, 0 skipped, 0 todo
+test-integration exit=0  test-integration: ok         360 tests, 106 suites, 0 fail, 0 skipped;
+                         collection guard: {"tests":360,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":31,
+                                           "manifestChecked":31,"failed":[],"verdict":"OK"}
+                         upgrade matrix: UNPROVEN (scripts/test-migrations.sh absent) — recorded by the stage itself
+
+WHAT THIS PASS DOES NOT ESTABLISH: that the Keycloak realm enforces MFA, that a durable counter holds across processes,
+that a managed KMS resolves a key, that any human reviewed anything, or that the platform is secure, compliant or ready
+for production. Those are the nine BLOCKED_CREDENTIALS and two EXTERNAL_REQUIRED rows in
+`.agent/verification/state/TEST_LEDGER.jsonl`, and `RELEASE_GATE.json` remains `INCONCLUSIVE`/`FORGE_ONLY`.

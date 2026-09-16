@@ -1,0 +1,2 @@
+copy lint gate: 112 file(s) scanned, 51 forbidden token(s), 46 allowlisted by exact name, 0 hits
+copy lint gate: ok
