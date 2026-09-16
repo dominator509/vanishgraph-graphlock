@@ -17,7 +17,7 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 
 import { buildServer, type VgFastify } from '../../src/http/server.ts';
-import { testIdentity, testServerDependencies, TEST_TOKEN } from './server-support.ts';
+import { testIdentity, testServerDependencies, testSubjectQueries, TEST_TOKEN } from './server-support.ts';
 import { ROUTES } from '../../src/http/openapi/registry.ts';
 import { isErrorCode } from '../../src/http/errors/code-registry.ts';
 
@@ -86,6 +86,90 @@ const VALID_MINT = {
 
 const GRANT_ID = '33333333-1111-4111-8111-333333333333';
 
+describe('§5.1.6/§5.1.8 includeValue is refused, never silently downgraded to a mask', () => {
+  const REVEAL_SCOPES = ['vg.subjects.read', 'vg.pii.reveal'];
+
+  test('a reveal whose gates are satisfied is 503 naming decryption, and returns no masked rows', async () => {
+    // MEASURED DEFECT this pins: both routes accepted `includeValue=true`, `beginHandler` correctly required
+    // `vg.pii.reveal` and a fresh step-up, and the handler then returned `valueMasked` with NO error — a caller that
+    // had satisfied both gates received something that looked like a reveal and was not one. The refusal names the
+    // dependency instead (ADR-006's KMS is open, the KeyProvider port has no encrypt operation, and no code persists
+    // `tenant_key`).
+    const server = app(REVEAL_SCOPES);
+    for (const collection of ['aliases', 'identifiers'] as const) {
+      const response = await call(
+        server,
+        'GET',
+        `/v1/subjects/${SUBJECT_ID}/${collection}?includeValue=true`,
+      );
+      assert.equal(response.status, 503, `${collection}: ${JSON.stringify(response.json)}`);
+      assert.equal(codeOf(response), 'DEPENDENCY_UNAVAILABLE');
+      const details = (response.json['error'] as Record<string, unknown>)['details'] as Record<string, unknown>;
+      assert.match(String(details['reason']), /decryption/);
+      // Nothing that could be mistaken for the revealed collection.
+      assert.equal(Object.prototype.hasOwnProperty.call(response.json, 'data'), false);
+    }
+    await server.close();
+  });
+
+  test('`includeValue=false` and an absent parameter reach the read instead of being refused', async () => {
+    const server = app();
+    for (const suffix of ['', '?includeValue=false']) {
+      const response = await call(server, 'GET', `/v1/subjects/${SUBJECT_ID}/identifiers${suffix}`);
+      // 404 is the honest answer from the default stub (`subjectExists` is false) and is exactly the point: the
+      // request REACHED the port, so a masked read is not blocked by the reveal refusal. Asserting 200 here would
+      // have required a database, which is the database suite's job.
+      assert.equal(response.status, 404, `${suffix}: ${JSON.stringify(response.json)}`);
+      assert.equal(codeOf(response), 'RESOURCE_NOT_FOUND');
+    }
+    await server.close();
+  });
+
+  test('a value that is neither true nor false is refused rather than treated as false', async () => {
+    const server = app();
+    const response = await call(server, 'GET', `/v1/subjects/${SUBJECT_ID}/aliases?includeValue=maybe`);
+    assert.equal(response.status, 400, JSON.stringify(response.json));
+    assert.equal(codeOf(response), 'SCHEMA_VALIDATION_FAILED');
+    await server.close();
+  });
+
+  test('§5.1.7 refuses identifier capture and names the key-provider blocker', async () => {
+    // `subjectExists` is overridden to true so the request reaches the dependency refusal rather than stopping at
+    // the stub's 404 — the route checks the subject BEFORE the dependency on purpose, so a caller's own mistake is
+    // reported as theirs.
+    const server = buildServer(
+      testServerDependencies({
+        identity: testIdentity({ tenantId: TENANT_A, scopes: SCOPES }),
+        subjectQueries: { ...testSubjectQueries(), subjectExists: async () => true },
+      }),
+    );
+    const response = await call(server, 'POST', `/v1/subjects/${SUBJECT_ID}/identifiers`, {
+      body: { kind: 'EMAIL', value: 'jane.doe@example.com', provenance: 'SUBJECT_SUPPLIED' },
+    });
+    assert.equal(response.status, 503, JSON.stringify(response.json));
+    assert.equal(codeOf(response), 'DEPENDENCY_UNAVAILABLE');
+    const details = (response.json['error'] as Record<string, unknown>)['details'] as Record<string, unknown>;
+    // The reason names the DECISION and the measured facts, not a generic "not configured".
+    assert.match(String(details['reason']), /durable key provider/);
+    assert.match(String(details['reason']), /ADR-006/);
+    // The value must not appear anywhere in the response.
+    assert.equal(JSON.stringify(response.json).includes('jane.doe'), false);
+    await server.close();
+  });
+
+  test('§5.1.7 refuses a bad kind and a missing value BEFORE reaching the dependency', async () => {
+    const server = app(SCOPES);
+    const badKind = await call(server, 'POST', `/v1/subjects/${SUBJECT_ID}/identifiers`, {
+      body: { kind: 'PASSPORT', value: 'x' },
+    });
+    assert.equal(badKind.status, 422, JSON.stringify(badKind.json));
+    assert.equal(codeOf(badKind), 'IDENTIFIER_KIND_UNSUPPORTED');
+
+    const noValue = await call(server, 'POST', `/v1/subjects/${SUBJECT_ID}/identifiers`, { body: { kind: 'EMAIL' } });
+    assert.equal(noValue.status, 400, JSON.stringify(noValue.json));
+    await server.close();
+  });
+});
 describe('§5.2.1 and §5.2.3 are declared as the registry says they are', () => {
   test('both carry vg.authority.write, a step-up and required idempotency, and 201 on success', () => {
     for (const [id, method, path] of [

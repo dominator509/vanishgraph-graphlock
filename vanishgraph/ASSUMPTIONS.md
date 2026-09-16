@@ -1404,6 +1404,49 @@ a contended-but-correct gate a failure. The same refresh afterwards reported **8
 the general shape recurs: a harness limit is not a product defect, and the only way to tell them apart was to read
 what the failure actually said — nothing.
 
+### 3.37 §5.1.6/§5.1.8 revealed a value nobody could decrypt, and §5.1.7 named its blocker instead of guessing
+
+**What changed (no routes added; one defect fixed and one refusal made precise).** Coverage unchanged at
+`68 registered / 67 working of 78`: §5.1.7 is still an unconditional refusal and the instrument still counts it as
+one, which is the honest classification. Tests: `tests/db/subject-commands.test.ts` 21/21,
+`tests/contract/subject-command-routes.test.ts` 17/17, unit 646/646, integration 291/291 across 22 files
+(`filesSeen: 22`, `manifestChecked: 22`).
+
+**1. `includeValue=true` WAS ACCEPTED, BOTH GATES WERE SATISFIED, AND THE CALLER GOT A MASK.** §5.1.6 and §5.1.8
+declare `includeValue` as "`value` in place of `valueMasked` when `includeValue=true` and the scope is held"; the
+registry's `conditional` entry correctly demanded `vg.pii.reveal` **and** a fresh step-up; and then both handlers
+returned `valueMasked` with no error. A caller that had done everything the contract asks received a response that
+looked like a reveal and was not one — and an operator would conclude the value is unavailable rather than that the
+request was unanswerable. That is the "parameter accepted and then ignored" class §2.6 exists to prevent, on the two
+routes where the consequence is a human believing they saw an identity value. Both routes now refuse
+`503 DEPENDENCY_UNAVAILABLE` naming decryption, and the contract suite asserts the refusal **and** that no `data`
+array is returned (a refusal must not smuggle a mask out as a success). `includeValue=false` and an absent parameter
+are unaffected, and a value that is neither `true` nor `false` is `400` rather than being treated as false.
+
+**2. §5.1.7'S REFUSAL NOW NAMES THE MEASURED BLOCKER, and the reason is three facts read from the code rather than
+one adjective.** The old reason was "identifier encryption is not configured". The actual state: (a) ADR-006's
+managed KMS is OPEN and `ManagedKmsKeyProvider` raises `KeyProviderBlockedError` on `wrap`/`unwrap`/`rotate`/
+`shred`/`hmac`; (b) **the `KeyProvider` PORT cannot encrypt a value at all** — it declares `wrap` (DEK),
+`unwrap` (decrypt), `rotate`, `shred` and `hmac`, and the only `encrypt` in this repository is a method on the
+concrete `LocalFileKeyProvider` that the port does not expose, so no caller holding the port can produce ciphertext;
+(c) that local provider keeps its DEKs in an in-process `Map` (`private readonly deks = new Map<…>`) and is
+tests-and-local-only by VG-SCOPE-020, and **no code anywhere writes `tenant_key`** — measured by searching `src/**`
+for the table name, which appears only in the port's own doc comment. Writing the caller's value through (c) would
+create an identifier nobody can ever read, in a column whose entire purpose is lawful retrieval; that is a permanent
+defect, and no later migration can undo it. So the effect stays refused, the reason names all three facts, and the
+database suite asserts the half that matters most — **the refusal writes no row**.
+
+**3. WHAT WOULD UNBLOCK §5.1.7, STATED SO THE NEXT NODE DOES NOT HAVE TO REDISCOVER IT.** Two things, in order:
+the `KeyProvider` port needs the encrypt operation that `LocalFileKeyProvider` already implements (or a documented
+reason why encryption lives outside the port); and the wrapped DEK must be PERSISTED so a restart can unwrap what a
+previous process wrote — `tenant_key` has `wrapped_dek` and `key_version` columns and no writer. Only then is an
+identifier durable, and only then should the route perform its effect. Until both are true this route is a stub, and
+`route-coverage` counts it as one — the classification is correct, not a limitation of the instrument.
+
+**4. THE REVEAL REFUSAL ALSO CLOSES A SILENT-DEGRADATION HOLE IN §5.1.6's ALIAS LIST**, which the same fix covers:
+aliases are masked for the same reason (their `value_enc` is written as raw UTF-8 bytes, a limitation EP-003
+recorded), so a reveal there was equally unanswerable and equally silent.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

@@ -446,6 +446,38 @@ function futureIso(): string {
   return new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString();
 }
 
+describe('§5.1.7 and the reveal routes against a real database', () => {
+  test('identifier capture is refused AND writes no row, so no unreadable value is stored', async () => {
+    const created = await call(app, 'POST', '/v1/subjects', { body: createBody() });
+    const subjectId = String(created.json['subjectId']);
+    const response = await call(app, 'POST', `/v1/subjects/${subjectId}/identifiers`, {
+      body: { kind: 'EMAIL', value: `subject-${RUN}@example.com`, provenance: 'SUBJECT_SUPPLIED' },
+    });
+    assert.equal(response.status, 503, JSON.stringify(response.json));
+    assert.equal(codeOf(response), 'DEPENDENCY_UNAVAILABLE');
+    // The half that matters: a refusal that still wrote a row would leave an identifier nobody can decrypt — the
+    // permanent privacy defect the refusal exists to avoid.
+    const rows = read(TENANT_A, `SELECT count(*)::text FROM identifier WHERE subject_id = '${subjectId}'`);
+    assert.deepEqual(rows, ['0'], 'a refused capture must leave no identifier row');
+  });
+
+  test('a masked identifier read still works, and the reveal is refused rather than masked', async () => {
+    const created = await call(app, 'POST', '/v1/subjects', { body: createBody() });
+    const subjectId = String(created.json['subjectId']);
+
+    const masked = await call(app, 'GET', `/v1/subjects/${subjectId}/identifiers`);
+    assert.equal(masked.status, 200, JSON.stringify(masked.json));
+    assert.deepEqual(masked.json['data'], []);
+
+    const reveal = buildApp(TENANT_A, ['vg.subjects.read', 'vg.pii.reveal']);
+    const refused = await call(reveal, 'GET', `/v1/subjects/${subjectId}/identifiers?includeValue=true`);
+    assert.equal(refused.status, 503, JSON.stringify(refused.json));
+    assert.equal(codeOf(refused), 'DEPENDENCY_UNAVAILABLE');
+    assert.equal(Object.prototype.hasOwnProperty.call(refused.json, 'data'), false);
+    await reveal.close();
+  });
+});
+
 describe('§5.2.1 minting a further authority grant', () => {
   async function existingSubject(): Promise<string> {
     const created = await call(app, 'POST', '/v1/subjects', { body: createBody() });

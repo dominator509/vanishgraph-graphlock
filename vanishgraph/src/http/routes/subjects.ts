@@ -61,6 +61,38 @@ function optionalInstant(body: Record<string, unknown>, field: string): number |
   return Date.parse(value);
 }
 
+/**
+ * §5.1.6/§5.1.8 `includeValue=true` is REFUSED, never silently downgraded to a masked read.
+ *
+ * MEASURED DEFECT this corrects: both routes accepted `includeValue=true`, `beginHandler` correctly required
+ * `vg.pii.reveal` and a fresh step-up for it (the registry's `conditional` entry), and then the handler returned
+ * `valueMasked` with NO error — a caller that had satisfied both gates received a response that looked like a
+ * reveal and was not one. That is the "parameter accepted and then ignored" class §2.6's strict parsing exists to
+ * prevent, and on these two routes it is worse than a typo: an operator would conclude the value is unavailable
+ * rather than that the request was unanswerable.
+ *
+ * WHY REFUSE RATHER THAN DECRYPT. Revealing a value requires DECRYPTION, and this repository has no durable key
+ * provider: ADR-006's managed KMS is open (its adapter raises `KeyProviderBlockedError` on every operation), the
+ * `KeyProvider` PORT has no encrypt operation at all (only `wrap`/`unwrap`/`rotate`/`shred`/`hmac`), the only
+ * adapter that can encrypt, `LocalFileKeyProvider`, holds its DEKs in an in-process Map and is TESTS-AND-LOCAL-ONLY
+ * by VG-SCOPE-020, and NO CODE ANYWHERE WRITES `tenant_key` — measured by searching `src/**` for the table name,
+ * which appears only in the port's own doc comment. Returning a mask for a reveal request would be the dishonest
+ * option; returning the plaintext is impossible; so the request is refused and the reason is named.
+ */
+function refuseUnsupportedReveal(request: { readonly query: unknown }): void {
+  const raw = request.query as Record<string, unknown>;
+  const value = raw['includeValue'];
+  if (value === undefined) return;
+  if (value !== 'true' && value !== 'false') {
+    throw apiError('SCHEMA_VALIDATION_FAILED', { field: 'includeValue' });
+  }
+  if (value === 'false') return;
+  throw apiError('DEPENDENCY_UNAVAILABLE', {
+    reason:
+      'value reveal requires decryption and no durable key provider is configured (ADR-006 open; no code writes tenant_key)',
+  });
+}
+
 /** Map §5.2.1's refusals onto the wire codes the contract names. */
 function mintRefusal(outcome: Exclude<MintAuthorityOutcome, { ok: true }>): ReturnType<typeof apiError> {
   switch (outcome.reason) {
@@ -239,6 +271,9 @@ export function subjectRoutes(app: FastifyInstance, options: SubjectRouteOptions
   app.get('/v1/subjects/:subjectId/aliases', async (request, reply) => {
     const h = beginHandler(request, reply);
     const subjectId = uuidParam(request, 'subjectId');
+    // The reveal gates ran in `beginHandler` (scope + step-up). A caller that satisfied them is REFUSED rather than
+    // handed a mask: see `refuseUnsupportedReveal`.
+    refuseUnsupportedReveal(request);
 
     // The `vg.pii.reveal` scope and the step-up for `includeValue=true` are enforced by
     // `beginHandler` from the registry's `conditional` entry, so this handler does not restate them.
@@ -283,6 +318,8 @@ export function subjectRoutes(app: FastifyInstance, options: SubjectRouteOptions
   app.get('/v1/subjects/:subjectId/identifiers', async (request, reply) => {
     const h = beginHandler(request, reply);
     const subjectId = uuidParam(request, 'subjectId');
+    // Same rule as §5.1.6: the gates ran, and a reveal that cannot be performed is refused, not masked.
+    refuseUnsupportedReveal(request);
 
     // `includeValue`'s extra scope and step-up are enforced by `beginHandler` from the registry's
     // `conditional` entry; see the §5.1.6 comment above.
@@ -429,12 +466,23 @@ export function subjectRoutes(app: FastifyInstance, options: SubjectRouteOptions
       if (!(await queries.subjectExists(tx, subjectId))) throw apiError('RESOURCE_NOT_FOUND');
 
       // The plaintext NEVER reaches a response, a log line or an audit field (VG-SEC-002). It is
-      // stored encrypted; the schema's `value_enc` is bytea and the key lives outside the database.
+      // stored encrypted; the schema's `value_enc` is bytea and the key must live outside the database.
       //
-      // ENCRYPTION IS NOT YET WIRED (EP-003 recorded the KMS as BLOCKED_CREDENTIALS, ADR-006 open), so
-      // this call refuses rather than storing a plaintext value in an encrypted column — which would
-      // be a silent, permanent privacy defect that no later migration could undo.
-      throw apiError('DEPENDENCY_UNAVAILABLE', { reason: 'identifier encryption is not configured' });
+      // REFUSED, AND THE REASON IS THE MEASURED BLOCKER rather than "not configured". Three facts, each read from
+      // the code rather than assumed: (1) ADR-006's managed KMS is OPEN and `ManagedKmsKeyProvider` raises
+      // `KeyProviderBlockedError` on wrap/unwrap/rotate/shred/hmac; (2) the `KeyProvider` PORT cannot encrypt a
+      // value at all — it declares `wrap`/`unwrap`/`rotate`/`shred`/`hmac`, and the only `encrypt` in this
+      // repository is a method on the concrete `LocalFileKeyProvider` that the port does not expose; (3) that local
+      // provider keeps its DEKs in an in-process `Map` and is tests-and-local-only by VG-SCOPE-020, and no code
+      // anywhere writes `tenant_key`, so ciphertext written today could not be decrypted after a restart.
+      //
+      // Writing the caller's value through (3) would therefore create a permanent privacy defect: a stored
+      // identifier nobody can ever read, in a column whose whole purpose is lawful retrieval. The honest states are
+      // "refused, here is why" and "no row created", and the database suite asserts both.
+      throw apiError('DEPENDENCY_UNAVAILABLE', {
+        reason:
+          'identifier capture requires a durable key provider: ADR-006 (managed KMS) is open, the KeyProvider port exposes no encrypt operation, and no code persists tenant_key',
+      });
     });
   });
 
