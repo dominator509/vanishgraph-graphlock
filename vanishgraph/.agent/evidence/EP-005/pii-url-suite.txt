@@ -1,0 +1,29 @@
+▶ every PII class is refused, and the fixture set covers all eight (VG-UI-083)
+  ✔ the pattern set declares exactly the eight classes, each with an enforcement point (2.3576ms)
+  ✔ the fixture set has one example for every declared class, and no example without a class (0.2842ms)
+  ✔ each BROWSER-enforced class refuses its own fixture, and names the class that matched (2.3428ms)
+  ✔ the two SERVER-enforced classes are declared as such, never faked as client checks (1.1368ms)
+  ✔ a bare identifier in a query is refused, while a route segment may be one (0.4398ms)
+  ✔ every surface the builder owns is guarded: path segment, query value, history.state and title (0.4987ms)
+  ✔ a segment carrying a path delimiter is refused, because it would change the route (0.2023ms)
+  ✔ the fold is what makes the alias class work, and the class is absent without aliases (0.2104ms)
+✔ every PII class is refused, and the fixture set covers all eight (VG-UI-083) (9.1577ms)
+▶ the URL builder is the only place a path or query is constructed
+  ✔ no other UI module builds a path or query string by concatenation (21.6287ms)
+  ✔ the CSP forbids third-party script, eval and cross-origin form posts (VG-UI-076) (2.7352ms)
+✔ the URL builder is the only place a path or query is constructed (24.7417ms)
+▶ telemetry is a closed catalogue with a DLP class per parameter (VG-UI-075)
+  ✔ an event not in the catalogue is refused (0.9191ms)
+  ✔ an undeclared parameter is refused and a missing declared parameter is refused (0.5842ms)
+  ✔ a value that matches a PII class is refused even in an enum parameter (0.289ms)
+  ✔ each egress class validates its own shape (0.8692ms)
+  ✔ a validated emission carries only the declared parameters (0.266ms)
+✔ telemetry is a closed catalogue with a DLP class per parameter (VG-UI-075) (3.3553ms)
+ℹ tests 15
+ℹ suites 3
+ℹ pass 15
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 243.2905

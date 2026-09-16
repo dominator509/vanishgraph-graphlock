@@ -57,3 +57,4 @@ Running 36 tests using 4 workers
   ok 34 [a11y] › tests\ui\a11y.spec.ts:63:3 › axe-core over every declared route › every route is scanned and the artefact digest is recorded (12.5s)
 
   36 passed (34.0s)
+end-to-end tests: ok

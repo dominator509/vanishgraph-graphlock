@@ -1,44 +1,57 @@
 # Next action
 
-**EP-004 (API/service node) is closed.** `graph-next.sh` names **EP-005** — the portal node.
+**EP-005 (UI/client node) is closed.** `graph-next.sh` names **EP-006**.
 
-## Three provisioning actions unblock the credential-dependent rows
+## What EP-005 verified, exactly — and what it does not claim
 
-These are the only things standing between the current state and a fully verified API node. Each is an environment
-action, not code, and none of them is simulated anywhere in this repository.
+The four surfaces SPEC-004 §1 declares are built against the specification's contract: the subject portal, the
+operations console, the tenant admin console, and the read-only auditor view. `sh scripts/gate-ui.sh` → `gate-ui: ok`,
+the credential-free contract suites pass, the browser suite passes against the built artefact, and the copy,
+route-manifest, coverage, ownership, auditor-readonly and PII-pattern contract suites all pass with recorded tool
+versions.
 
-1. **`DATABASE_URL`** — export the PostgreSQL DSN (`sh scripts/db-provision.sh` writes it to the state file outside the
-   repository). PostgreSQL IS provisioned and reachable and the database suites run against it; what is unset is the
-   exported VARIABLE the probes read. Unblocks the `BLOCKED_CREDENTIALS` rows whose probe is
+**THE HONEST STATEMENT, IN THE PLAN'S OWN WORDS: this does NOT mean the UI is complete, accessible, WCAG compliant, or
+production ready.** It means:
+
+* the copy, route, coverage, ownership, auditor-readonly and PII-pattern contract suites pass;
+* automated accessibility checks ran with recorded tool versions (axe-core over all 25 declared routes, focus
+  management, reduced motion, 320-pixel reflow);
+* **lived-use accessibility validation is `EXTERNAL_REQUIRED`** (VG-UI-064): NVDA with Firefox and Chrome, VoiceOver
+  with Safari, keyboard-only operation, 200% zoom, 400% reflow and a documented colour-vision-deficiency review, signed
+  by named authorized human participants. The request is
+  `.agent/evidence/EP-005/accessibility/human-gate-request.json`; the per-criterion report beside it records 21 `PASS`,
+  1 `FAIL`, 19 `PARTIAL`, 2 `EXTERNAL_REQUIRED` and 11 `N/A`, and **no criterion depending on lived use is `PASS`**;
+* `RELEASE_GATE.json` remains `INCONCLUSIVE`. Do not change it.
+
+The one `FAIL` is **2.4.5 Multiple Ways**: this artefact renders no in-product navigation, so its routes are reachable
+only by URL. Owner: the surface chrome that M5/M6 would have built had the chrome been in scope.
+
+## The provisioning actions that unblock the credential-dependent rows
+
+Unchanged in substance from EP-004, and each is an environment action rather than code. None is simulated anywhere.
+
+1. **`DATABASE_URL`** — export the PostgreSQL DSN. Unblocks the `BLOCKED_CREDENTIALS` rows whose probe is
    `sh scripts/probes/database_url.sh`.
-2. **`VALKEY_URL`** — provision the coordination store. Until then the webhook replay binding in production is the
-   durable FILE store (append-only, exclusive lock), which is proven, while the Valkey binding has never been
-   exercised against a real store. Probe: `sh scripts/probes/valkey_url.sh`.
-3. **`KEYCLOAK_ISSUER`** — point the service at a real identity provider. Token validation is proven against locally
-   signed tokens; that is a different claim from a real IdP, and the row says so. Probe: `sh scripts/probes/keycloak.sh`.
+2. **`VALKEY_URL`** — provision the coordination store. The durable FILE replay store is proven; the Valkey binding has
+   never been exercised against a real store.
+3. **`KEYCLOAK_ISSUER`** — point the service at a real identity provider. This is the one that matters most for the UI
+   node: **every subject-scoped and principal-scoped route renders a system error naming this gap**, because the portal
+   cannot tell which subject or tenant is asking without a session. It also blocks the five keyboard flows
+   (`BLOCKED_CREDENTIALS`) and the post-sign-out back-navigation assertion (VG-UI-077).
 
-## What EP-004 verified, exactly
+## The human action
 
-`sh scripts/gate-api.sh` → `gate-api: ok`; the credential-free contract suite; the black-box acceptance suite with
-runtime canaries; the vocabulary gate (`copy lint gate: ok`); unit and integration suites. **Every registry route has
-a handler**, and **six routes cannot perform their declared effect** — each refuses and names the missing dependency:
+**VG-UI-064 (DOD-039)** is the node's open external gate. An automated tool, an agent or the implementer cannot satisfy,
+impersonate or substitute for it, and the sign-off block in the request file is deliberately `false` with `signedBy:
+null`. Any generated accessibility sign-off would be a fabrication defect.
 
-| Route | Blocked by |
-|---|---|
-| `POST /v1/discovery-runs`, `GET /v1/discovery-runs`, `GET /v1/discovery-runs/{id}` | no specification defines `DiscoveryRun` |
-| `POST /v1/evidence-artifacts` | no multipart parser and no `EvidenceStore` |
-| `GET /v1/evidence-artifacts/{id}/content` | no `EvidenceStore`, and the port as declared cannot isolate tenants |
-| `POST /v1/evidence-artifacts/{id}/integrity-checks` | no `EvidenceStore` |
-| `POST /v1/subjects/{subjectId}/identifiers` | no durable key provider (ADR-006 open) |
+## What EP-006 inherits from this node
 
-The honest statement of this node: **the credential-free contract and black-box acceptance suites pass; the
-credential-dependent rows are `BLOCKED_CREDENTIALS` on the named variables; six routes are `BLOCKED_PREREQUISITE` on
-named missing dependencies.** "EP-004 complete" does not mean the API works — it means every route has a handler, every
-claim has executed evidence, and every gap is recorded where a reader will find it.
-
-## What EP-005 inherits
-
-The UI node consumes the same gate for its copy rules (`sh scripts/copy-lint-gate.sh`, VG-UI-080…083) and the OpenAPI
-document at `.agent/evidence/openapi.json`. Two inherited debts are named in `ASSUMPTIONS.md`: every hand-parsed write
-route except §5.1.1 still IGNORES an undeclared body field (§3.45 item 1), and the `KeyProvider` port cannot encrypt a
-value at all, so §5.1.7 has no path to its effect (§3.37 item 3).
+* The UI's data boundary is real but has never rendered a real response: every surface is asserted against fixtures and
+  against the contract. When the three variables above are exported, the first honest test of these surfaces is a real
+  response — and the fixtures must not be mistaken for that test.
+* Two contract gaps found while naming fields, recorded rather than papered over: SPEC-003 §5.4.3 declares no catalogue
+  version for a discovery run (SPEC-004 §3 requires one beside every coverage figure), and SPEC-003 declares no endpoint
+  at all for SPEC-004 §1's `/auditor/exports`.
+* The alerts surface (`ReappearanceAlerts`) is built and asserted but mounted nowhere, because SPEC-003 §5.11.3 names no
+  row fields for its list.

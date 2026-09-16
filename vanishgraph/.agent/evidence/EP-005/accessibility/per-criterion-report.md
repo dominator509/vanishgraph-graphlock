@@ -36,13 +36,13 @@ and unsigned.
 | 1.3.3 Sensory Characteristics | A | PASS | No instruction in the copy refers to shape, size, position or sound. The state is carried by label, glyph and machine value. |
 | 1.3.4 Orientation | AA | PASS | No orientation lock: there is no orientation media query and no `screen.orientation` use in `ui/src`; the 320×640 viewport test asserts the layout reflows rather than requiring a width (`tests/ui/reduced-motion.spec.ts`). |
 | 1.3.5 Identify Input Purpose | AA | PARTIAL | No input exists in the artefact yet; the rule binds the forms M5/M6 build, and `ErrorState`, `EmptyState` and the gate notice carry no inputs. |
-| 1.4.1 Use of Color | A | PASS | Every state is distinguishable with colour removed: label text, a unique glyph and the machine token, plus a forced-grayscale image comparison of all eleven states (`tests/ui/states.spec.ts`). |
+| 1.4.1 Use of Color | A | PARTIAL | The DOM and image evidence is executed: every state carries label text, a unique glyph and the machine token, and a forced-grayscale image comparison shows all eleven differ (`tests/ui/states.spec.ts`). Whether that encoding is USABLE rather than merely distinguishable is a lived-experience judgement, and it belongs to the VG-UI-064 manual gate. |
 | 1.4.2 Audio Control | A | N/A | No audio plays. |
 | 1.4.3 Contrast (Minimum) | AA | PASS | Computed in two independent ways: from the stylesheet tokens (`tests/contract/contrast-tokens.test.ts`, all eleven tints ≥ 4.5:1 against `--vg-ink-900`) and from the browser's computed styles for every rendered element of every region state (`tests/ui/states.spec.ts`). |
 | 1.4.4 Resize Text | AA | EXTERNAL_REQUIRED | Automated checks can confirm relative units (`rem`, no fixed `px` root font size) but not that text resizes to 200% legibly in the reader's own configuration. Owned by the VG-UI-064 manual gate. |
 | 1.4.5 Images of Text | AA | PASS | No raster or vector text exists: every label is a text node, and the bundle contains no image asset. |
 | 1.4.10 Reflow | AA | PARTIAL | The region states reflow at 320 CSS pixels with no horizontal scrolling (`tests/ui/reduced-motion.spec.ts`); the 400% reflow of the full surfaces is part of the VG-UI-064 manual gate. |
-| 1.4.11 Non-text Contrast | AA | PASS | Every state hue is ≥ 3:1 against its own tint and the focus ring, border and accents are ≥ 3:1 against the surface, computed from the tokens (`tests/contract/contrast-tokens.test.ts`) and from computed styles in the browser (`tests/ui/states.spec.ts`). |
+| 1.4.11 Non-text Contrast | AA | PARTIAL | Ratios are computed from the tokens and from browser computed styles (`tests/contract/contrast-tokens.test.ts`, `tests/ui/states.spec.ts`), and all meet 3:1. The criterion also covers graphical boundaries a reader must perceive in use, which is the manual gate’s. |
 | 1.4.12 Text Spacing | AA | PARTIAL | The stylesheet uses no fixed line-height, letter-spacing or word-spacing, and no `text-overflow` clamp on the qualifier (`ui/src/tokens/truth-state.css`); the reader-applied spacing override of the criterion is part of the manual gate. |
 | 1.4.13 Content on Hover or Focus | AA | PASS | No hover- or focus-only content exists: the mandatory qualifier is always-visible prose and VG-UI-010's four hiding shapes are asserted absent (`tests/contract/vocabulary-ui.test.ts`). |
 | 2.1.1 Keyboard | A | PARTIAL | Native elements only; the disclosure, the cancel, the retry and the "Stay signed in" controls are `<button>`/`<details>`/`<a>`; focus identity is asserted after client-side navigation and the browser Back button (`tests/ui/keyboard.spec.ts`). The five end-to-end keyboard flows are `BLOCKED_PREREQUISITE` on M5/M6 and are recorded as such in that suite. |
@@ -57,7 +57,7 @@ and unsigned.
 | 2.4.4 Link Purpose (In Context) | A | PARTIAL | Every rendered link has a distinct accessible name from its text (`Back to your portal`, `Sign in again`); the artifact renders no link in the app shell yet. |
 | 2.4.5 Multiple Ways | AA | **FAIL** | The 25 declared routes are reachable only by typing a URL: this artifact renders no in-product navigation, so a reader cannot locate a page within the set by any route other than the address bar. **Owner: M5/M6**, which own the surface chrome. Recorded as a failure of this artefact rather than deferred silently. |
 | 2.4.6 Headings and Labels | AA | PASS | Every route renders one `h1` carrying its path, and each region renders a labelled `h2`; the axe pass reports no `heading-order` or `empty-heading` violation. |
-| 2.4.7 Focus Visible | AA | PASS | A 2px `:focus-visible` outline with a 1px offset (a non-colour indicator), measured in the browser for the cancel control, and the only outline suppression in the built stylesheet is the programmatically focused heading (`tests/ui/keyboard.spec.ts`, `tests/ui/states.spec.ts`). |
+| 2.4.7 Focus Visible | AA | PARTIAL | The outline exists, is 2px with a 1px offset, and is measured in the browser; the only suppression in the built stylesheet is the programmatically focused heading (`tests/ui/keyboard.spec.ts`). Whether the ring is VISIBLE ENOUGH on a reader’s own display and settings is the manual gate’s judgement. |
 | 2.4.11 Focus Not Obscured (Minimum) | AA | PASS | No overlay, sticky header or toast exists to obscure the focused element; the shell renders no fixed-position element. |
 | 2.5.1 Pointer Gestures | A | PASS | No path-based or multi-point gesture exists; every affordance is a native control operable with a single pointer action. |
 | 2.5.2 Pointer Cancellation | A | PASS | Actions fire on the control's activation event (`click` via `onClick`), not on pointer-down; no drag interaction exists. |
@@ -85,11 +85,13 @@ and unsigned.
 
 | Status | Count |
 |---|---|
-| PASS | 24 |
+| PASS | 21 |
 | FAIL | 1 |
-| PARTIAL | 16 |
+| PARTIAL | 19 |
 | EXTERNAL_REQUIRED | 2 |
 | N/A | 11 |
+
+**NO CRITERION THAT DEPENDS ON LIVED USE IS `PASS`.** The three criteria whose value is a perceptual judgement — 1.4.1, 1.4.11 and 2.4.7 — are recorded as `PARTIAL` with the executed evidence named and the human judgement that would close them left to VG-UI-064. A `PASS` here means "assessed by executed evidence and no failure found", never "a person found this usable".
 
 **The FAIL is 2.4.5 Multiple Ways, and it is owned by M5/M6.** It is recorded rather than deferred because the
 acceptance criterion for a per-criterion report is that an unassessed or unmet criterion is visible, not that the report
