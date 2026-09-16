@@ -1,0 +1,3 @@
+test collection guard: FAIL - 1 test(s) failed
+  - tests/harness/flake-probe.test.ts :: negative control for the flake guard: passes on even runs, fails on odd ones
+      deliberate verdict change: run index 1  1 !== 0

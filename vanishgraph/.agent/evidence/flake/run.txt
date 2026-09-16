@@ -1,0 +1,7 @@
+flake guard - 2026-09-16T23:44:05Z
+config: config/testing/flake-runs.json (flakeRuns=5 seed=vg-flake-1)
+runs: 2 (FLAKE_RUNS override)
+suites: tests/architecture/**/*.test.ts
+
+run 1 exit=0 {"tests":7,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":2,"manifestChecked":0,"failed":[],"verdict":"OK"}
+run 2 exit=0 {"tests":7,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":2,"manifestChecked":0,"failed":[],"verdict":"OK"}
