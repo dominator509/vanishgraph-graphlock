@@ -12,7 +12,7 @@
  * verified event, the earlier verification is never blamed, and the re-removal path preserves the prior history.
  */
 
-import { SubjectScopedGap } from '../components/portal/PortalRoute.tsx';
+import { SubjectScopedGap } from '../components/region/RegionRoute.tsx';
 
 export function Page_portal_alerts(): React.JSX.Element {
   return (
@@ -25,3 +25,5 @@ export function Page_portal_alerts(): React.JSX.Element {
     />
   );
 }
+
+

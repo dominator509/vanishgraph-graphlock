@@ -2277,6 +2277,63 @@ configuration gap or a transport error on this machine. The five keyboard flows 
 `DATABASE_URL`, `VALKEY_URL` and `KEYCLOAK_ISSUER` are provisioned, the first honest test of these surfaces is a real
 response — and the fixtures must not be mistaken for that test.
 
+### 3.53 EP-005 M6: the console, admin and auditor surfaces, and three expectations that measurement contradicted
+
+**1. THE PLAN'S 405 IS NOT WHAT THE ARTEFACT DOES, AND THE SUITE RECORDS THE MEASUREMENT.** The plan says "every
+`/auditor` route returns `405` for a write method". MEASURED, against the built bundle served by `vite preview`:
+`GET /auditor/claims` returns **200** with the SPA document, and `POST`, `PUT`, `PATCH` and `DELETE` return **404** —
+not 405. The application is a static bundle with no server-side route handling, so no status code could make the
+auditor's read-only property true; what makes it true is that (a) no module under `ui/src/routes/auditor/**` or
+`ui/src/components/auditor/**` reaches a write path, imports the HTTP client, declares an event handler or renders a
+form, and (b) the rendered auditor surfaces contain no controls at all. `tests/contract/auditor-readonly.test.ts` asserts
+(a) and (b); `tests/ui/auditor.spec.ts` asserts the measured method behaviour — writes are refused with a client error
+and never return the application document. **Repeating the plan's 405 would have been an expectation reported as a
+measurement.**
+
+**2. A RETRY OF A READ IS NOT A MUTATION, AND THE BROWSER SUITE HAD TO SAY SO PRECISELY.** The first version of the
+auditor spec asserted that auditor pages render zero `button, input, select, textarea`. It failed: the parameterised
+auditor routes render the region's error state on a machine with no API, and that state offers a retry. The retry
+re-issues the same `GET` and mutates nothing, so the honest assertion is narrower and stronger — no form, no submit
+control, no input at all, and every control present must be either navigation or the region's own read retry, with a
+name that claims no mutation. VG-UI-002 forbids a control "bound to a mutation handler"; a read retry is not one, and
+weakening the rule to "no controls at all in any state" would have forced the error state to be unactionable.
+
+**3. THE ROUTE-WIRING HELPER WAS IN THE WRONG FAMILY, AND A TEST I WROTE FOUND IT.** `surface-ownership.test.ts` asserts
+that no surface imports another surface's component family. Its first strict form flagged sixteen route modules for
+importing `components/portal/…`, because the shared region wiring (`PortalRoute`, `region-from-query`) lived under the
+portal's directory while being used by all four surfaces. The wiring was moved to **`ui/src/components/region/`** and the
+component renamed `RegionRoute`: a directory named after the surface that happened to create a file first is not a claim
+about who may use it. Three imports remain legitimately shared — the case-history presentation and the exposure-review
+affordances — and rather than weaken the rule silently, the exemption is a NAMED LIST of at most four modules with an
+anti-drift test that fails if it grows or admits a write-capable name.
+
+**4. THE M6 RECORDS THAT MOVED WHEN M6 ARRIVED.** The keyboard suite's queue-filtering record asserted "no data region
+yet (the console surface is M6)" — and it failed the moment `/console/queue` was wired, which is exactly what those
+records are for. It now asserts the current blocker (the principal cannot be resolved without `KEYCLOAK_ISSUER`) and the
+absence of the queue's terminal filter control.
+
+**5. WHAT M6 BUILT AND WHAT IT CANNOT MOUNT.** Built and asserted: `CaseQueue` (both outcome columns unconditional, with
+the four figures through `MetricFigure` — the negative case is a queue that omits `NOT_REMOVABLE`),
+`RecipeFreshness` (a disabled write path with no named reason is REFUSED), `RemovalEffectiveness` (refuses any numerator
+input set that is not exactly `{VERIFIED_REMOVED}`, reports the outcomes in the denominator composition, renders the
+scope statement, the interval, the coverage line and the tenant scope), `AuthorityAdmin` (refuses to render the issue
+control for self-approval, SPEC-005 VG-AUTHZ-016), `PolicyAssignment` (no control authors a legal basis), `ClaimResolution`
+(refuses a claim that does not resolve requirement → case → artefact → digest) and `EvidenceBundleList` (no download
+control). Sixteen routes are wired: the four parameterised console/auditor routes make real requests, and the twelve
+collection routes render the system error naming the principal-configuration gap, because a tenant console cannot list a
+tenant's cases before it knows who is asking.
+
+**6. A CONTRACT GAP FOUND WHILE NAMING FIELDS.** SPEC-004 §1 declares `/auditor/exports` ("Evidence bundle requests")
+and **SPEC-003 declares no endpoint for it at all** — measured: the generated document has no path containing "export"
+or "bundle". The view model is therefore the UI's own, says so in its header, and avoids borrowing an API spelling that
+does not exist.
+
+**7. MILESTONE EVIDENCE (all re-run after the last edit).** `surface-ownership.test.ts` + `auditor-readonly.test.ts` +
+`portal-surfaces.test.ts`: **40 tests, 40 pass**; `test-unit: ok` (**821 tests, 821 pass, 0 fail**);
+`test collection guard: ok`; `sh scripts/test-e2e.sh` → **`end-to-end tests: ok`, 31 browser tests passed**;
+`gate-ui: ok`; `typecheck: ok`; `lint: ok`; `format-check: ok`; `import boundary: ok`; `reality gate: ok`;
+`copy lint gate: ok`. The human-gate request's digest was refreshed for the fourth time.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

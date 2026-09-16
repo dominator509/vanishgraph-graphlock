@@ -16,12 +16,12 @@
 import { useState } from 'react';
 
 import { OnboardingStepper } from '../components/portal/OnboardingStepper.tsx';
-import { PortalRoute } from '../components/portal/PortalRoute.tsx';
+import { RegionRoute } from '../components/region/RegionRoute.tsx';
 
 export function Page_portal_onboarding(): React.JSX.Element {
   const [answer, setAnswer] = useState<'CONTINUE' | 'LEAVE' | null>(null);
   return (
-    <PortalRoute
+    <RegionRoute
       path="/portal/onboarding"
       surface="Subject portal"
       purpose="Getting started: scope, identity, authority, review, coverage"
@@ -45,3 +45,5 @@ export function Page_portal_onboarding(): React.JSX.Element {
     />
   );
 }
+
+

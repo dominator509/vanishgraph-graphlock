@@ -10,12 +10,12 @@
  */
 
 import { TruthStateLegend } from '../components/portal/TruthStateLegend.tsx';
-import { PortalRoute } from '../components/portal/PortalRoute.tsx';
+import { RegionRoute } from '../components/region/RegionRoute.tsx';
 import { ServiceScopeStatement } from '../components/scope/ServiceScopeStatement.tsx';
 
 export function Page_portal_limitations(): React.JSX.Element {
   return (
-    <PortalRoute
+    <RegionRoute
       path="/portal/limitations"
       surface="Subject portal"
       purpose="What the service cannot do (VG-UI-070)"
@@ -32,3 +32,5 @@ export function Page_portal_limitations(): React.JSX.Element {
     />
   );
 }
+
+

@@ -10,14 +10,20 @@
  * explicit one, because a rendered control is a promise this node has not kept.
  */
 
-import { PageShell } from '../components/PageShell.tsx';
+import { SubjectScopedGap } from '../components/region/RegionRoute.tsx';
 
 export function Page_console_recipes(): React.JSX.Element {
   return (
-    <PageShell
-      surface="Operations console"
+    <SubjectScopedGap
       path="/console/recipes"
+      surface="Operations console"
       purpose="`RemovalRecipe` and `Source` freshness"
+      region="Recipes and source permissions"
+      operation="loading recipe freshness"
     />
   );
 }
+
+
+
+

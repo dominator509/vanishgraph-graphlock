@@ -10,14 +10,20 @@
  * explicit one, because a rendered control is a promise this node has not kept.
  */
 
-import { PageShell } from '../components/PageShell.tsx';
+import { SubjectScopedGap } from '../components/region/RegionRoute.tsx';
 
 export function Page_console_queue(): React.JSX.Element {
   return (
-    <PageShell
-      surface="Operations console"
+    <SubjectScopedGap
       path="/console/queue"
+      surface="Operations console"
       purpose="`RequestCase` work queue"
+      region="Cases that need a person or a decision"
+      operation="loading the case queue"
     />
   );
 }
+
+
+
+

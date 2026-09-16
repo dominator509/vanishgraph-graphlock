@@ -160,7 +160,7 @@ describe('every declared /portal route resolves and belongs to its declared surf
         // on the shared route they delegate to instead of being rendered here — and the browser suite navigates them
         // with a real router, which is the stronger evidence. Saying which check ran is the point: a silent skip would
         // read as a pass.
-        assert.match(source, /<PortalRoute/, `${path} must delegate to the shared portal route`);
+        assert.match(source, /<RegionRoute/, `${path} must delegate to the shared region route`);
         assert.match(source, new RegExp(`path="${path.replace(/[[\]]/g, '\\$&')}"`), `${path} must declare its own path`);
         continue;
       }
@@ -696,4 +696,5 @@ describe('the legend is built from the one canonical mapping (VG-UI-007/070)', (
     assert.match(accessibleText(one(doc, '[data-truth-state-legend]')), /this legend shows an example scope/);
   });
 });
+
 

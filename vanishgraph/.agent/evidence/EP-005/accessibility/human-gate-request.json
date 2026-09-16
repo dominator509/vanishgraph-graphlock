@@ -4,8 +4,8 @@
   "verdict": "EXTERNAL_REQUIRED",
   "externalPartyRole": "accessibility practitioner",
   "requestEvidencePath": ".agent/evidence/EP-005/accessibility/per-criterion-report.md",
-  "requestedArtifactDigest": "sha256:c1da7264cbe4d2cfc3da709c7b8c65a4b245e92a8bd67c02b333d57db3d4aa55",
-  "requestedArtifact": "ui/dist — the Vite build output of the portal (entry document digest above; assets index-Cgk_pGaQ.css and index-B0g1U2hK.js), as built at EP-005 M5 when the portal surfaces were wired. The digest is asserted against the built artefact by tests/ui/a11y.spec.ts, so a stale request fails rather than passing silently — MEASURED three times: it did exactly that after the M4 focus fix, after the M5 route wiring, and again after the case-detail and appeal surfaces were added.",
+  "requestedArtifactDigest": "sha256:a4fd52ad1351320f4faf73c971ae9cff0a16431f5b461f145fd6da0998969604",
+  "requestedArtifact": "ui/dist — the Vite build output of the portal (entry document digest above; assets index-Cgk_pGaQ.css and index-hDI4Rgu0.js), as built at EP-005 M6 when the console, admin and auditor surfaces were added. The digest is asserted against the built artefact by tests/ui/a11y.spec.ts, so a stale request fails rather than passing silently — MEASURED four times: it fired after the M4 focus fix, after the M5 route wiring, after the M5 case-detail surfaces, and again after M6.",
   "criteria": [
     "1.4.4 Resize Text",
     "3.3.8 Accessible Authentication (Minimum)",

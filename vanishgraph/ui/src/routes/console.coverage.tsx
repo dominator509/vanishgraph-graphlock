@@ -10,14 +10,20 @@
  * explicit one, because a rendered control is a promise this node has not kept.
  */
 
-import { PageShell } from '../components/PageShell.tsx';
+import { SubjectScopedGap } from '../components/region/RegionRoute.tsx';
 
 export function Page_console_coverage(): React.JSX.Element {
   return (
-    <PageShell
-      surface="Operations console"
+    <SubjectScopedGap
       path="/console/coverage"
+      surface="Operations console"
       purpose="Per-run coverage reports"
+      region="Coverage reports"
+      operation="loading the coverage reports"
     />
   );
 }
+
+
+
+

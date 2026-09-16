@@ -17,7 +17,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
 
 import { portalApi } from '../api/portal.ts';
-import { PortalRoute } from '../components/portal/PortalRoute.tsx';
+import { RegionRoute } from '../components/region/RegionRoute.tsx';
 
 export function Page_portal_cases__caseId__evidence__evidenceId_(): React.JSX.Element {
   const params = useParams({ strict: false }) as { readonly caseId?: string; readonly evidenceId?: string };
@@ -29,7 +29,7 @@ export function Page_portal_cases__caseId__evidence__evidenceId_(): React.JSX.El
   });
 
   return (
-    <PortalRoute
+    <RegionRoute
       path="/portal/cases/[caseId]/evidence/[evidenceId]"
       surface="Subject portal"
       purpose="Evidence viewer"
@@ -74,3 +74,5 @@ export function Page_portal_cases__caseId__evidence__evidenceId_(): React.JSX.El
     />
   );
 }
+
+

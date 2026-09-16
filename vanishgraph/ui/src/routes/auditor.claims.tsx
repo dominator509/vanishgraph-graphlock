@@ -10,14 +10,20 @@
  * explicit one, because a rendered control is a promise this node has not kept.
  */
 
-import { PageShell } from '../components/PageShell.tsx';
+import { SubjectScopedGap } from '../components/region/RegionRoute.tsx';
 
 export function Page_auditor_claims(): React.JSX.Element {
   return (
-    <PageShell
-      surface="Auditor view"
+    <SubjectScopedGap
       path="/auditor/claims"
+      surface="Auditor view"
       purpose="Claim → requirement → case → artifact → digest"
+      region="Claim resolution"
+      operation="loading the claims"
     />
   );
 }
+
+
+
+

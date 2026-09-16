@@ -1,51 +1,54 @@
-[WebServer] (node:27388) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (node:25824) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 [WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
-[WebServer] (node:37520) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (node:1644) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 [WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
 
-Running 28 tests using 4 workers
+Running 31 tests using 4 workers
 
-(node:17632) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(node:31924) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)
-(node:35452) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(node:8280) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)
-(node:14304) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(node:31140) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)
-(node:36252) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(node:35892) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)
-  ok  4 [ui] › tests\ui\keyboard.spec.ts:65:3 › focus management (VG-UI-059) › the heading is focusable but is not in the tab order (1.4s)
-  ok  2 [ui] › tests\ui\keyboard.spec.ts:39:3 › focus management (VG-UI-059) › a full page load does not steal focus (1.4s)
-  ok  1 [ui] › tests\ui\keyboard.spec.ts:47:3 › focus management (VG-UI-059) › a client-side navigation moves focus to the new page heading (1.5s)
-  ok  3 [ui] › tests\ui\keyboard.spec.ts:55:3 › focus management (VG-UI-059) › the browser Back button moves focus to the previous page heading (1.7s)
-  ok  5 [ui] › tests\ui\keyboard.spec.ts:72:3 › focus management (VG-UI-059) › the built stylesheet suppresses the outline for nothing but a programmatically focused heading (416ms)
-  ok  6 [ui] › tests\ui\keyboard.spec.ts:91:3 › focus management (VG-UI-059) › Tab never moves focus outside the page (610ms)
-  ok  8 [ui] › tests\ui\keyboard.spec.ts:173:5 › the five keyboard-only flows: recorded, not claimed (VG-UI-060) › BLOCKED_CREDENTIALS onboarding: identity verification needs an identity provider (KEYCLOAK_ISSUER is unprovisioned) (573ms)
-  ok  9 [ui] › tests\ui\keyboard.spec.ts:173:5 › the five keyboard-only flows: recorded, not claimed (VG-UI-060) › BLOCKED_CREDENTIALS exposure review: the records are /v1 data scoped to a session subject (441ms)
-  ok 10 [ui] › tests\ui\keyboard.spec.ts:173:5 › the five keyboard-only flows: recorded, not claimed (VG-UI-060) › BLOCKED_CREDENTIALS evidence reveal: the evidence read is /v1 data and the API is not reachable from the preview server (478ms)
-  ok 11 [ui] › tests\ui\keyboard.spec.ts:173:5 › the five keyboard-only flows: recorded, not claimed (VG-UI-060) › BLOCKED_CREDENTIALS appeal request: an appeal needs a case, which is /v1 data scoped to a session subject (389ms)
-  ok 12 [ui] › tests\ui\keyboard.spec.ts:173:5 › the five keyboard-only flows: recorded, not claimed (VG-UI-060) › BLOCKED_CREDENTIALS queue filtering: the console surface is M6 (391ms)
-  ok 13 [ui] › tests\ui\reduced-motion.spec.ts:22:3 › reduced motion (VG-UI-062) › the app declares no animation, and none under reduced motion either (555ms)
-  ok  7 [ui] › tests\ui\keyboard.spec.ts:104:3 › focus management (VG-UI-059) › every declared route is keyboard-reachable and exposes a heading (1.9s)
-  ok 15 [ui] › tests\ui\reduced-motion.spec.ts:71:3 › reduced motion (VG-UI-062) › the state-change snapshot shows the final presentation with no intermediate frame (2.2s)
-  ok 14 [ui] › tests\ui\reduced-motion.spec.ts:50:3 › reduced motion (VG-UI-062) › a declared transition is removed, not shortened, under reduced motion (2.9s)
-  ok 18 [ui] › tests\ui\states.spec.ts:42:3 › the seven region states render, and only what they declare › loading announces once, politely, and reserves the box (1.4s)
-  ok 19 [ui] › tests\ui\states.spec.ts:57:3 › the seven region states render, and only what they declare › the delayed loading state offers a keyboard-operable cancel (1.1s)
-  ok 20 [ui] › tests\ui\states.spec.ts:73:3 › the seven region states render, and only what they declare › the gate notice offers no control of any kind (1.0s)
-  ok 21 [ui] › tests\ui\states.spec.ts:85:3 › the seven region states render, and only what they declare › the access-denied state renders no data and no controls but the way back (1.2s)
-  ok 22 [ui] › tests\ui\states.spec.ts:96:3 › the seven region states render, and only what they declare › the expired session state renders no control that pretends to extend it (1.2s)
-  ok 16 [ui] › tests\ui\reduced-motion.spec.ts:86:3 › reduced motion (VG-UI-062) › the region states reflow to a 320 CSS pixel viewport without horizontal scrolling (6.0s)
-  ok 25 [ui] › tests\ui\states.spec.ts:201:3 › contrast, measured from computed styles in a browser (VG-UI-058) › the focus ring is at least 3:1 against the surface it is drawn on (913ms)
-  ok 23 [ui] › tests\ui\states.spec.ts:107:3 › state is never carried by colour alone (VG-UI-057) › all eleven states are mutually distinguishable under a forced grayscale filter (2.9s)
-  ok 17 [ui] › tests\ui\states.spec.ts:27:3 › the seven region states render, and only what they declare › each state declares itself on the region element and has a focusable heading (8.5s)
-(node:20320) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+  ok  2 [ui] › tests\ui\auditor.spec.ts:29:3 › write methods under /auditor are refused › the auditor surface set is the one the specification declares (13ms)
+  ok  4 [ui] › tests\ui\auditor.spec.ts:33:3 › write methods under /auditor are refused › POST, PUT, PATCH and DELETE are refused on every auditor URL, and GET returns the application (289ms)
+  ok  3 [ui] › tests\ui\keyboard.spec.ts:47:3 › focus management (VG-UI-059) › a client-side navigation moves focus to the new page heading (668ms)
+  ok  1 [ui] › tests\ui\auditor.spec.ts:52:3 › write methods under /auditor are refused › the auditor pages carry no form, no submit control, and nothing bound to a mutation (1.4s)
+  ok  5 [ui] › tests\ui\keyboard.spec.ts:39:3 › focus management (VG-UI-059) › a full page load does not steal focus (668ms)
+  ok  7 [ui] › tests\ui\keyboard.spec.ts:65:3 › focus management (VG-UI-059) › the heading is focusable but is not in the tab order (442ms)
+  ok  6 [ui] › tests\ui\keyboard.spec.ts:55:3 › focus management (VG-UI-059) › the browser Back button moves focus to the previous page heading (653ms)
+  ok  8 [ui] › tests\ui\keyboard.spec.ts:72:3 › focus management (VG-UI-059) › the built stylesheet suppresses the outline for nothing but a programmatically focused heading (426ms)
+  ok  9 [ui] › tests\ui\keyboard.spec.ts:91:3 › focus management (VG-UI-059) › Tab never moves focus outside the page (651ms)
+  ok 11 [ui] › tests\ui\keyboard.spec.ts:173:5 › the five keyboard-only flows: recorded, not claimed (VG-UI-060) › BLOCKED_CREDENTIALS onboarding: identity verification needs an identity provider (KEYCLOAK_ISSUER is unprovisioned) (602ms)
+  ok 12 [ui] › tests\ui\keyboard.spec.ts:173:5 › the five keyboard-only flows: recorded, not claimed (VG-UI-060) › BLOCKED_CREDENTIALS exposure review: the records are /v1 data scoped to a session subject (648ms)
+  ok 13 [ui] › tests\ui\keyboard.spec.ts:173:5 › the five keyboard-only flows: recorded, not claimed (VG-UI-060) › BLOCKED_CREDENTIALS evidence reveal: the evidence read is /v1 data and the API is not reachable from the preview server (574ms)
+  ok 14 [ui] › tests\ui\keyboard.spec.ts:173:5 › the five keyboard-only flows: recorded, not claimed (VG-UI-060) › BLOCKED_CREDENTIALS appeal request: an appeal needs a case, which is /v1 data scoped to a session subject (582ms)
+  ok 15 [ui] › tests\ui\keyboard.spec.ts:173:5 › the five keyboard-only flows: recorded, not claimed (VG-UI-060) › BLOCKED_CREDENTIALS queue filtering: the console queue needs an authenticated principal (KEYCLOAK_ISSUER is unprovisioned) (505ms)
+  ok 16 [ui] › tests\ui\reduced-motion.spec.ts:22:3 › reduced motion (VG-UI-062) › the app declares no animation, and none under reduced motion either (624ms)
+  ok 10 [ui] › tests\ui\keyboard.spec.ts:104:3 › focus management (VG-UI-059) › every declared route is keyboard-reachable and exposes a heading (3.2s)
+  ok 18 [ui] › tests\ui\reduced-motion.spec.ts:71:3 › reduced motion (VG-UI-062) › the state-change snapshot shows the final presentation with no intermediate frame (2.6s)
+  ok 17 [ui] › tests\ui\reduced-motion.spec.ts:50:3 › reduced motion (VG-UI-062) › a declared transition is removed, not shortened, under reduced motion (3.5s)
+  ok 21 [ui] › tests\ui\states.spec.ts:42:3 › the seven region states render, and only what they declare › loading announces once, politely, and reserves the box (1.5s)
+  ok 22 [ui] › tests\ui\states.spec.ts:57:3 › the seven region states render, and only what they declare › the delayed loading state offers a keyboard-operable cancel (1.1s)
+  ok 23 [ui] › tests\ui\states.spec.ts:73:3 › the seven region states render, and only what they declare › the gate notice offers no control of any kind (1.0s)
+  ok 24 [ui] › tests\ui\states.spec.ts:85:3 › the seven region states render, and only what they declare › the access-denied state renders no data and no controls but the way back (1.1s)
+  ok 25 [ui] › tests\ui\states.spec.ts:96:3 › the seven region states render, and only what they declare › the expired session state renders no control that pretends to extend it (916ms)
+  ok 19 [ui] › tests\ui\reduced-motion.spec.ts:86:3 › reduced motion (VG-UI-062) › the region states reflow to a 320 CSS pixel viewport without horizontal scrolling (6.0s)
+  ok 28 [ui] › tests\ui\states.spec.ts:201:3 › contrast, measured from computed styles in a browser (VG-UI-058) › the focus ring is at least 3:1 against the surface it is drawn on (1.1s)
+  ok 26 [ui] › tests\ui\states.spec.ts:107:3 › state is never carried by colour alone (VG-UI-057) › all eleven states are mutually distinguishable under a forced grayscale filter (2.9s)
+  ok 20 [ui] › tests\ui\states.spec.ts:27:3 › the seven region states render, and only what they declare › each state declares itself on the region element and has a focusable heading (9.9s)
+(node:37576) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)
-(node:32820) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(node:36224) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)
-  ok 27 [a11y] › tests\ui\a11y.spec.ts:122:3 › axe-core over every declared route › the per-criterion report exists and makes no conformance claim (144ms)
-  ok 24 [ui] › tests\ui\states.spec.ts:144:3 › contrast, measured from computed styles in a browser (VG-UI-058) › text on every region background meets 4.5:1 and its boundary meets 3:1 (7.6s)
-(node:32944) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(node:37004) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
 (Use `node --trace-warnings ...` to show where the warning was created)
-  ok 28 [a11y] › tests\ui\a11y.spec.ts:137:3 › axe-core over every declared route › the human gate is recorded as EXTERNAL_REQUIRED with a party role and an artefact digest (19ms)
-  ok 26 [a11y] › tests\ui\a11y.spec.ts:63:3 › axe-core over every declared route › every route is scanned and the artefact digest is recorded (26.5s)
+  ok 27 [ui] › tests\ui\states.spec.ts:144:3 › contrast, measured from computed styles in a browser (VG-UI-058) › text on every region background meets 4.5:1 and its boundary meets 3:1 (7.7s)
+  ok 31 [a11y] › tests\ui\a11y.spec.ts:122:3 › axe-core over every declared route › the per-criterion report exists and makes no conformance claim (33ms)
+  ok 30 [a11y] › tests\ui\a11y.spec.ts:137:3 › axe-core over every declared route › the human gate is recorded as EXTERNAL_REQUIRED with a party role and an artefact digest (39ms)
+  ok 29 [a11y] › tests\ui\a11y.spec.ts:63:3 › axe-core over every declared route › every route is scanned and the artefact digest is recorded (11.3s)
 
-  28 passed (47.7s)
+  31 passed (33.3s)

@@ -10,7 +10,7 @@
  * and not a spinner, which would claim a request is in flight when none was sent.
  */
 
-import { SubjectScopedGap } from '../components/portal/PortalRoute.tsx';
+import { SubjectScopedGap } from '../components/region/RegionRoute.tsx';
 
 export function Page_portal(): React.JSX.Element {
   return (
@@ -23,3 +23,5 @@ export function Page_portal(): React.JSX.Element {
     />
   );
 }
+
+

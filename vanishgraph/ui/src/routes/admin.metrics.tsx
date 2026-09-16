@@ -10,14 +10,20 @@
  * explicit one, because a rendered control is a promise this node has not kept.
  */
 
-import { PageShell } from '../components/PageShell.tsx';
+import { SubjectScopedGap } from '../components/region/RegionRoute.tsx';
 
 export function Page_admin_metrics(): React.JSX.Element {
   return (
-    <PageShell
-      surface="Tenant admin console"
+    <SubjectScopedGap
       path="/admin/metrics"
+      surface="Tenant admin console"
       purpose="Metric configuration and denominators"
+      region="Removal-effectiveness metric"
+      operation="loading the removal-effectiveness metric"
     />
   );
 }
+
+
+
+

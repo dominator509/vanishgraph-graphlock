@@ -13,7 +13,7 @@
  * rendered output. M6's counterpart (`/console/exposures/[exposureId]`) has the same boundary.
  */
 
-import { SubjectScopedGap } from '../components/portal/PortalRoute.tsx';
+import { SubjectScopedGap } from '../components/region/RegionRoute.tsx';
 
 export function Page_portal_exposures(): React.JSX.Element {
   return (
@@ -26,3 +26,5 @@ export function Page_portal_exposures(): React.JSX.Element {
     />
   );
 }
+
+

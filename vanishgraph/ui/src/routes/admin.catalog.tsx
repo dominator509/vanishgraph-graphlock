@@ -10,14 +10,20 @@
  * explicit one, because a rendered control is a promise this node has not kept.
  */
 
-import { PageShell } from '../components/PageShell.tsx';
+import { SubjectScopedGap } from '../components/region/RegionRoute.tsx';
 
 export function Page_admin_catalog(): React.JSX.Element {
   return (
-    <PageShell
-      surface="Tenant admin console"
+    <SubjectScopedGap
       path="/admin/catalog"
+      surface="Tenant admin console"
       purpose="`SourceCatalogEntry` and `RemovalRecipe` enablement"
+      region="Source catalogue"
+      operation="loading the source catalogue"
     />
   );
 }
+
+
+
+

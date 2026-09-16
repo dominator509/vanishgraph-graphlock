@@ -10,14 +10,20 @@
  * explicit one, because a rendered control is a promise this node has not kept.
  */
 
-import { PageShell } from '../components/PageShell.tsx';
+import { SubjectScopedGap } from '../components/region/RegionRoute.tsx';
 
 export function Page_admin_users(): React.JSX.Element {
   return (
-    <PageShell
-      surface="Tenant admin console"
+    <SubjectScopedGap
       path="/admin/users"
+      surface="Tenant admin console"
       purpose="Users and roles"
+      region="Users and roles"
+      operation="loading the users and roles"
     />
   );
 }
+
+
+
+

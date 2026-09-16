@@ -18,7 +18,7 @@ import { PageShell } from '../PageShell.tsx';
 import { Region, type RegionPresentation } from '../states/Region.tsx';
 import { regionStateOf, type QueryLike, type RegionOptions } from './region-from-query.ts';
 
-export interface PortalRouteProps<T> {
+export interface RegionRouteProps<T> {
   /** The route path, as SPEC-004 §1 declares it. It is the page heading. */
   readonly path: string;
   readonly surface: string;
@@ -32,7 +32,7 @@ export interface PortalRouteProps<T> {
   readonly ready: (data: T) => ReactNode;
 }
 
-export function PortalRoute<T>({
+export function RegionRoute<T>({
   path,
   surface,
   purpose,
@@ -41,7 +41,7 @@ export function PortalRoute<T>({
   query,
   options,
   ready,
-}: PortalRouteProps<T>): React.JSX.Element {
+}: RegionRouteProps<T>): React.JSX.Element {
   const outcome = regionStateOf(query, { ...options, name: region, height });
   const state =
     outcome.kind === 'ready'
@@ -109,3 +109,4 @@ export function identityNotConfigured(path: string, region: string, operation: s
     },
   };
 }
+

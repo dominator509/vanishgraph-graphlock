@@ -10,14 +10,20 @@
  * explicit one, because a rendered control is a promise this node has not kept.
  */
 
-import { PageShell } from '../components/PageShell.tsx';
+import { SubjectScopedGap } from '../components/region/RegionRoute.tsx';
 
 export function Page_admin_authority(): React.JSX.Element {
   return (
-    <PageShell
-      surface="Tenant admin console"
+    <SubjectScopedGap
       path="/admin/authority"
+      surface="Tenant admin console"
       purpose="`AuthorityGrant` issue/revoke"
+      region="Authority records"
+      operation="loading the authority records"
     />
   );
 }
+
+
+
+

@@ -15,136 +15,136 @@
   },
   "target": {
     "artefact": "ui/dist (vite build output, served by vite preview)",
-    "indexHtmlSha256": "c1da7264cbe4d2cfc3da709c7b8c65a4b245e92a8bd67c02b333d57db3d4aa55"
+    "indexHtmlSha256": "a4fd52ad1351320f4faf73c971ae9cff0a16431f5b461f145fd6da0998969604"
   },
   "routes": [
     {
       "declared": "/admin/authority",
       "url": "/admin/authority",
       "violations": [],
-      "passes": 8,
+      "passes": 17,
       "incomplete": 0,
-      "inapplicable": 55
+      "inapplicable": 46
     },
     {
       "declared": "/admin/catalog",
       "url": "/admin/catalog",
       "violations": [],
-      "passes": 8,
+      "passes": 17,
       "incomplete": 0,
-      "inapplicable": 55
+      "inapplicable": 46
     },
     {
       "declared": "/admin/metrics",
       "url": "/admin/metrics",
       "violations": [],
-      "passes": 8,
+      "passes": 17,
       "incomplete": 0,
-      "inapplicable": 55
+      "inapplicable": 46
     },
     {
       "declared": "/admin/policy",
       "url": "/admin/policy",
       "violations": [],
-      "passes": 8,
+      "passes": 17,
       "incomplete": 0,
-      "inapplicable": 55
+      "inapplicable": 46
     },
     {
       "declared": "/admin/tenant",
       "url": "/admin/tenant",
       "violations": [],
-      "passes": 8,
+      "passes": 17,
       "incomplete": 0,
-      "inapplicable": 55
+      "inapplicable": 46
     },
     {
       "declared": "/admin/users",
       "url": "/admin/users",
       "violations": [],
-      "passes": 8,
+      "passes": 17,
       "incomplete": 0,
-      "inapplicable": 55
+      "inapplicable": 46
     },
     {
       "declared": "/auditor/cases/[caseId]",
       "url": "/auditor/cases/00000000-0000-0000-0000-000000000000",
       "violations": [],
-      "passes": 8,
+      "passes": 19,
       "incomplete": 0,
-      "inapplicable": 55
+      "inapplicable": 44
     },
     {
       "declared": "/auditor/claims",
       "url": "/auditor/claims",
       "violations": [],
-      "passes": 8,
+      "passes": 17,
       "incomplete": 0,
-      "inapplicable": 55
+      "inapplicable": 46
     },
     {
       "declared": "/auditor/evidence/[evidenceId]",
       "url": "/auditor/evidence/00000000-0000-0000-0000-000000000000",
       "violations": [],
-      "passes": 8,
+      "passes": 19,
       "incomplete": 0,
-      "inapplicable": 55
+      "inapplicable": 44
     },
     {
       "declared": "/auditor/exports",
       "url": "/auditor/exports",
       "violations": [],
-      "passes": 8,
+      "passes": 17,
       "incomplete": 0,
-      "inapplicable": 55
+      "inapplicable": 46
     },
     {
       "declared": "/console/cases/[caseId]",
       "url": "/console/cases/00000000-0000-0000-0000-000000000000",
       "violations": [],
-      "passes": 8,
+      "passes": 19,
       "incomplete": 0,
-      "inapplicable": 55
+      "inapplicable": 44
     },
     {
       "declared": "/console/coverage",
       "url": "/console/coverage",
       "violations": [],
-      "passes": 8,
+      "passes": 17,
       "incomplete": 0,
-      "inapplicable": 55
+      "inapplicable": 46
     },
     {
       "declared": "/console/exposures/[exposureId]",
       "url": "/console/exposures/00000000-0000-0000-0000-000000000000",
       "violations": [],
-      "passes": 8,
+      "passes": 19,
       "incomplete": 0,
-      "inapplicable": 55
+      "inapplicable": 44
     },
     {
       "declared": "/console/gates",
       "url": "/console/gates",
       "violations": [],
-      "passes": 8,
+      "passes": 17,
       "incomplete": 0,
-      "inapplicable": 55
+      "inapplicable": 46
     },
     {
       "declared": "/console/queue",
       "url": "/console/queue",
       "violations": [],
-      "passes": 8,
+      "passes": 17,
       "incomplete": 0,
-      "inapplicable": 55
+      "inapplicable": 46
     },
     {
       "declared": "/console/recipes",
       "url": "/console/recipes",
       "violations": [],
-      "passes": 8,
+      "passes": 17,
       "incomplete": 0,
-      "inapplicable": 55
+      "inapplicable": 46
     },
     {
       "declared": "/portal",

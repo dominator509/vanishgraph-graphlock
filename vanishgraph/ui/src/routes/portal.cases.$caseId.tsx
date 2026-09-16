@@ -24,7 +24,7 @@ import { useParams } from '@tanstack/react-router';
 import { portalApi } from '../api/portal.ts';
 import { AppealEscalationPanel } from '../components/portal/AlertsAndAppeals.tsx';
 import { ControllerResponseList, DeadlineList, TransitionList } from '../components/portal/CaseDetail.tsx';
-import { PortalRoute } from '../components/portal/PortalRoute.tsx';
+import { RegionRoute } from '../components/region/RegionRoute.tsx';
 import { TruthTimeline } from '../components/truth/TruthTimeline.tsx';
 
 export function Page_portal_cases__caseId_(): React.JSX.Element {
@@ -45,7 +45,7 @@ export function Page_portal_cases__caseId_(): React.JSX.Element {
   });
 
   return (
-    <PortalRoute
+    <RegionRoute
       path="/portal/cases/[caseId]"
       surface="Subject portal"
       purpose="Case detail and append-only timeline"
@@ -112,3 +112,5 @@ export function Page_portal_cases__caseId_(): React.JSX.Element {
     />
   );
 }
+
+

@@ -12,7 +12,7 @@
  * `If-Match` for that POST, so a retry cannot create a second escalation.
  */
 
-import { SubjectScopedGap } from '../components/portal/PortalRoute.tsx';
+import { SubjectScopedGap } from '../components/region/RegionRoute.tsx';
 
 export function Page_portal_requests(): React.JSX.Element {
   return (
@@ -25,3 +25,5 @@ export function Page_portal_requests(): React.JSX.Element {
     />
   );
 }
+
+

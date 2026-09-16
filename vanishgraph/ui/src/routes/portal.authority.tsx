@@ -14,7 +14,7 @@
  * output. What is missing here is the data, not the surface.
  */
 
-import { SubjectScopedGap } from '../components/portal/PortalRoute.tsx';
+import { SubjectScopedGap } from '../components/region/RegionRoute.tsx';
 
 export function Page_portal_authority(): React.JSX.Element {
   return (
@@ -27,3 +27,5 @@ export function Page_portal_authority(): React.JSX.Element {
     />
   );
 }
+
+

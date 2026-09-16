@@ -10,14 +10,20 @@
  * explicit one, because a rendered control is a promise this node has not kept.
  */
 
-import { PageShell } from '../components/PageShell.tsx';
+import { SubjectScopedGap } from '../components/region/RegionRoute.tsx';
 
 export function Page_admin_policy(): React.JSX.Element {
   return (
-    <PageShell
-      surface="Tenant admin console"
+    <SubjectScopedGap
       path="/admin/policy"
+      surface="Tenant admin console"
       purpose="`JurisdictionPolicy` assignment"
+      region="Policy versions by jurisdiction"
+      operation="loading the policy versions"
     />
   );
 }
+
+
+
+

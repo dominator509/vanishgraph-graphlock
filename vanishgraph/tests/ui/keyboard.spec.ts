@@ -161,11 +161,11 @@ test.describe('the five keyboard-only flows: recorded, not claimed (VG-UI-060)',
     {
       flow: 'queue filtering',
       route: '/console/queue',
-      blocked: 'the console surface is M6',
+      // M6 MOUNTED THIS ROUTE, so the blocker moved and this record moved with it: the queue now renders a region, and
+      // what it cannot do is resolve the principal that owns the tenant's cases.
+      blocked: 'the console queue needs an authenticated principal (KEYCLOAK_ISSUER is unprovisioned)',
       terminal: /filter/i,
-      // The console routes are still M1 shells: they render a heading and no region at all, which is the honest state of
-      // a milestone that has not run yet, and this row fails once M6 adds the surface without completing the flow here.
-      regionState: [],
+      regionState: ['error', 'access-denied'],
     },
   ];
 

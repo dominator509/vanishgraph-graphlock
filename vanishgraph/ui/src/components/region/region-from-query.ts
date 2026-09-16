@@ -137,3 +137,4 @@ export function regionStateOf<T>(query: QueryLike<T>, options: RegionOptions<T>)
   }
   return { kind: 'ready', data };
 }
+
