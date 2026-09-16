@@ -124,6 +124,11 @@ function main(): number {
         'tests/architecture/**/*.test.ts',
         'tests/contract/**/*.test.ts',
         'tests/db/**/*.test.ts',
+        // THE BLACK-BOX ROOT IS PART OF THE --with-db RUN, and MEASURED why it must be: it drives the real server over
+        // HTTP and creates its own tenant, so it needs PostgreSQL — and without it DOD-011 (black-box acceptance) and
+        // DOD-012 (independent readback) had NO executed evidence in this refresher, which is why both rows still read
+        // NOT_STARTED after the suite that proves them had been passing for a round.
+        'tests/blackbox/**/*.test.ts',
       ]
     : [
         'tests/domain/**/*.test.ts',
@@ -262,6 +267,24 @@ function main(): number {
   }
 
   if (WITH_DB) {
+    const blackbox = cases.filter((c) => c.suite.startsWith('tests/blackbox/'));
+    const blackboxPass = blackbox.filter((c) => c.status === 'PASS').length;
+    updates['DOD-011'] = {
+      status: blackboxPass > 0 ? 'PASS' : 'NOT_STARTED',
+      evidence:
+        `Acceptance is asserted through PUBLIC HTTP ONLY: ${String(blackboxPass)} black-box test(s) pass in ` +
+        'tests/blackbox/acceptance.test.ts, driving the real server through app.inject — no route module is imported, ' +
+        'no command is called directly, and no table is read to decide a result. The route non-goals are asserted to ' +
+        'refuse and to create nothing, with the subject list compared before and after.',
+    };
+    updates['DOD-012'] = {
+      status: blackboxPass > 0 ? 'PASS' : 'NOT_STARTED',
+      evidence:
+        'Independent readback is reached through a SECOND PUBLIC CHANNEL: GET /v1/audit-events returns the ' +
+        'RegisterSubject row for a subject the black-box suite created over HTTP, and the audit stream carries no ' +
+        'displayRef (VG-SEC-002). The persistence-side readback — a committed transition and its audit row in the ' +
+        'same transaction — is asserted in tests/db/**; what remains BLOCKED_CREDENTIALS is the real-IdP token row.',
+    };
     updates['DOD-016'] = {
       status: 'PARTIAL',
       evidence:
