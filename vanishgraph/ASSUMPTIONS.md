@@ -1154,6 +1154,57 @@ wrapper as `{ status: 200 | 201 }`. The route was reported as an unconditional r
 succeeds. The detector now recognises a returned `status: 2xx` literal too, and §5.8.2 counts as working with the
 five genuine stubs still named.
 
+### 3.33 §5.6: a contract that dates its policy versions, one column with no specification behind it, and a route that must
+NOT exist
+
+**§5.6 implemented (4 routes).** Coverage measured after this group: `65 registered / 60 working of 78` — 5 genuine
+conditional stubs, 13 routes not yet implemented (§5.4 ×5, §5.12 ×5, §5.16 ×3). Migration `0028` added
+`jurisdiction_policy.version_label` (backfilled from `effective_from`), `policy_decision.version_label` and
+`policy_decision.exemption_evaluation`, with indexes on the resolution lookups. Tests: `tests/db/policy-decisions.test.ts`
+9/9, `tests/contract/policy-routes.test.ts` 9/9.
+
+**1. §5.6.1 CARRIES ITS POLICY VERSION AS A DATE STRING, AND THE TABLE STORED NO DATE STRING.** The request field is
+`policyVersion: "2026-01-15"`; `jurisdiction_policy` had `effective_from timestamptz` and an integer version, so there
+was nothing a caller's label could be matched against and the resolution would have had to guess which version a date
+referred to. `0028` adds `version_label` and backfills it from `effective_from` as a date — the SAME instant the row
+already had, rendered in the shape the contract asks for, not a new fact. A label in any other shape is refused
+`400` rather than coerced (the first attempt at an ISO-instant bridge produced a label no caller could have sent).
+`policy_decision.version_label` records the label that was resolved, so a decision still says which version answered it
+after the policy row is superseded.
+
+**2. `exemption_evaluation` IS A COLUMN I ADDED FOR A FIELD I CANNOT HONESTLY POPULATE.** §5.6's decision response
+carries an exemption evaluation; no specification in the pack declares WHICH exemption checks exist, in what order, or
+what a positive result means. The column exists so the shape is representable, and the adapter reports
+`{evaluated:false, exempt:null, checks:[]}` — an explicit "not evaluated", never a fabricated pass. Inventing a check
+list would put an unlegislated rule into a legal decision, which is the class of error this product exists to avoid.
+
+**3. THE ORDER OF TWO REFUSALS, RECORDED BECAUSE MY FIRST TEST ASSERTED THE OPPOSITE.** I wrote the legal-basis rule
+(VG-POLICY-001 — a caller may not assert a `legalBasis`) as the first thing §5.6.1 checks, and the test asserted `422`
+for a body that also omitted `If-Match`. The code answered `428 PRECONDITION_REQUIRED`: the precondition guards the
+route BEFORE the body is read, exactly as every other §5 write route does. The code is right and the expectation was
+wrong, so the test now pins the real order — `428` without the precondition, `422 LEGAL_BASIS_NOT_AUTHORABLE` with it —
+rather than the code being bent to a guess.
+
+**4. THE MOST IMPORTANT ASSERTION IN THIS GROUP IS THAT A ROUTE IS ABSENT.** §5.6.4 states that policy data has "no
+write counterpart on `/v1`" and that "there is no route by which an API caller or a model can author a jurisdiction rule
+or a legal basis". A negative property that nothing tests is a property that a later milestone can quietly break, so
+`policy-routes.test.ts` asserts that no registry row under `/v1/jurisdiction-policies` is anything but `GET`, and that
+`PATCH`/`DELETE` on the three §5.6 paths are refused. This is cheaper than a rule nobody can see, and it is the only
+form in which "cannot" is verifiable here.
+
+**5. THREE RULES THE DATABASE DECIDED, NOT ME.** (a) Resolution refuses a version the request names but which no rule
+row carries (`POLICY_VERSION_SUPERSEDED`) separately from a jurisdiction that resolves to no in-force version at all
+(`JURISDICTION_UNRESOLVED`) — two different operator problems, so two codes. (b) A refusal that several rules cause
+NAMES the rules, because a caller told only "refused" cannot tell a policy gap from a defect. (c) The channel priority
+judgement is the DOMAIN engine's (VG-CHANNEL-001), not a second implementation in the route: §5.6.1 passes the
+considered alternatives through the same function §5.8 uses, so policy resolution and action submission cannot
+disagree about which channel was available.
+
+**6. WHAT §5.6 STILL CANNOT DO.** The resolution reads policy rows that no `/v1` route can author — which is the
+contract's design (§5.6.4, VG-POLICY-001), not a gap, but it means the group is only exercisable against seeded or
+out-of-band policy data. `exemption_evaluation` is present and unpopulated (item 2). Neither is a stub: all four routes
+perform their declared work against whatever policy data exists.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

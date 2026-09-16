@@ -25,6 +25,7 @@ migrate: applying 0024_reappearance_content_hash.sql
 migrate: applying 0025_controller_response_fields.sql
 migrate: applying 0026_action_records.sql
 migrate: applying 0027_action_status_and_path.sql
-migrate: applied 27 migration(s); at version 27
+migrate: applying 0028_policy_version_label.sql
+migrate: applied 28 migration(s); at version 28
 migrate: ok
 migrate: ok

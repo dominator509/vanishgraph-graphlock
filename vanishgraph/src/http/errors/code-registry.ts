@@ -301,6 +301,15 @@ export const ERROR_CODE_REGISTRY: readonly ErrorCodeSpec[] = Object.freeze([
   { domainCode: 'INVALID_REQUEST', wireCode: 'MESSAGE_ID_MALFORMED', status: 422, retryable: false,
     message: 'A message id must be an RFC 5322 msg-id of the form <local@domain>.' },
 
+  // SPEC-003 §5.6.1/§5.6.4's policy list. `POLICY_VERSION_SUPERSEDED` is what a caller must act on when the
+  // version they named is no longer in force; `LEGAL_BASIS_NOT_AUTHORABLE` is the code that keeps VG-POLICY-001
+  // enforceable — a caller (or a model) may not assert a legal basis the policy data does not authorise.
+  { domainCode: 'POLICY_VERSION_SUPERSEDED', wireCode: 'POLICY_VERSION_SUPERSEDED', status: 409, retryable: false,
+    message: 'The named policy version is no longer in force.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'LEGAL_BASIS_NOT_AUTHORABLE', status: 422, retryable: false,
+    message: 'A legal basis must be referenced from policy data, never asserted by the caller.' },
+  { domainCode: 'AUTHORITY_MISSING', wireCode: 'CASE_AUTHORITY_INVALID', status: 409, retryable: false,
+    message: 'The case’s authority grant is revoked or expired.' },
   // SPEC-003 §5.8's list. §5.8.3 refuses a reconciliation of an action that was never ambiguous; §5.8.2 refuses a
   // payload field the egress allowlist does not name (`DATA_EGRESS_MATRIX.md` states default deny and enumerates no
   // fields, so the allowlist is a declared set in the adapter) and a disabled recipe.

@@ -28,6 +28,7 @@ import { buildServer, type VgFastify } from '../../src/http/server.ts';
 import { testIdentity, TEST_SESSION_SECRET, TEST_TOKEN } from '../contract/server-support.ts';
 import { PostgresTenantRunner } from '../../src/adapters/persistence/postgres-runner.ts';
 import { PostgresActionQueries } from '../../src/adapters/persistence/actions.ts';
+import { PostgresPolicyQueries } from '../../src/adapters/persistence/policies.ts';
 import { PostgresControllerResponseQueries } from '../../src/adapters/persistence/controller-responses.ts';
 import { PostgresCaseQueries } from '../../src/adapters/persistence/cases.ts';
 import { PostgresObservationQueries } from '../../src/adapters/persistence/observations.ts';
@@ -102,6 +103,7 @@ function serverFor(
     caseQueries: new PostgresCaseQueries({ recipeVerificationKeys: keys }),
     controllerResponseQueries: new PostgresControllerResponseQueries(),
     actionQueries: new PostgresActionQueries({ recipeVerificationKeys: keys }),
+    policyQueries: new PostgresPolicyQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
   });
 }

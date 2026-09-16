@@ -143,6 +143,14 @@ const app = buildServer({
     recordReconciliation: async () => ({ ok: false, reason: 'NOT_FOUND' }),
     requestReadback: async () => ({ ok: false, reason: 'NOT_FOUND' }),
   },
+  // The §5.6 policy model. Not-found answers: this probe only enumerates routes.
+  policyQueries: {
+    resolvePolicyDecision: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+    listPolicyDecisions: async () => [],
+    getPolicyDecision: async () => undefined,
+    listJurisdictionPolicies: async () => [],
+    caseRowVersion: async () => undefined,
+  },
   // The §5.10/§5.11 read model. Empty: this probe only enumerates routes.
   observationQueries: {
     caseExists: async () => false,

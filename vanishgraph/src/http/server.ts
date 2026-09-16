@@ -30,6 +30,7 @@ import { exposureRoutes } from './routes/exposures.ts';
 import { caseRoutes } from './routes/cases.ts';
 import { controllerResponseRoutes } from './routes/controller-responses.ts';
 import { actionRoutes } from './routes/actions.ts';
+import { policyRoutes } from './routes/policies.ts';
 import type { SubjectQueries } from '../application/contracts/subject-queries.ts';
 import type { RecipeVerificationKeys, SourceQueries } from '../application/contracts/source-queries.ts';
 import type { AppealQueries } from '../application/contracts/appeal-queries.ts';
@@ -41,6 +42,7 @@ import type { TransitionQueries } from '../application/contracts/transition-quer
 import type { CaseQueries } from '../application/contracts/case-queries.ts';
 import type { ControllerResponseQueries } from '../application/contracts/controller-response-queries.ts';
 import type { ActionQueries } from '../application/contracts/action-queries.ts';
+import type { PolicyQueries } from '../application/contracts/policy-queries.ts';
 import { installCorrelation } from './plugins/correlation.ts';
 import { installErrorHandler } from './plugins/error-handler.ts';
 import { installIdentity, type IdentityPluginOptions } from './plugins/identity.ts';
@@ -160,6 +162,8 @@ export interface ServerDependencies {
    * execution route evaluates every guard and then refuses the EFFECT, because no channel transport exists.
    */
   readonly actionQueries: ActionQueries;
+  /** Policy decisions and jurisdiction policies (SPEC-003 §5.6). Read-only except for the resolution route. */
+  readonly policyQueries: PolicyQueries;
   readonly logLevel?: string;
 }
 
@@ -236,6 +240,7 @@ export function buildServer(deps: ServerDependencies): VgFastify {
   app.register(observationRoutes, { sessionSecret: deps.sessionSecret, queries: deps.observationQueries });
   app.register(controllerResponseRoutes, { queries: deps.controllerResponseQueries });
   app.register(actionRoutes, { sessionSecret: deps.sessionSecret, queries: deps.actionQueries });
+  app.register(policyRoutes, { queries: deps.policyQueries });
   app.register(caseRoutes, {
     sessionSecret: deps.sessionSecret,
     queries: deps.caseQueries,

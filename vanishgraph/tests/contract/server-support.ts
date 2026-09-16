@@ -36,6 +36,7 @@ import type { TransitionQueries } from '../../src/application/contracts/transiti
 import type { CaseQueries } from '../../src/application/contracts/case-queries.ts';
 import type { ControllerResponseQueries } from '../../src/application/contracts/controller-response-queries.ts';
 import type { ActionQueries } from '../../src/application/contracts/action-queries.ts';
+import type { PolicyQueries } from '../../src/application/contracts/policy-queries.ts';
 
 /**
  * The cursor signing secret used by tests.
@@ -402,6 +403,16 @@ export function testActionQueries(): ActionQueries {
   };
 }
 
+export function testPolicyQueries(): PolicyQueries {
+  return {
+    resolvePolicyDecision: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+    listPolicyDecisions: async () => [],
+    getPolicyDecision: async () => undefined,
+    listJurisdictionPolicies: async () => [],
+    caseRowVersion: async () => undefined,
+  };
+}
+
 export function testServerDependencies(overrides: Partial<ServerDependencies> = {}): ServerDependencies {
   return {
     version: '0.0.0-test',
@@ -423,6 +434,7 @@ export function testServerDependencies(overrides: Partial<ServerDependencies> = 
     caseQueries: testCaseQueries(),
     controllerResponseQueries: testControllerResponseQueries(),
     actionQueries: testActionQueries(),
+    policyQueries: testPolicyQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
     ...overrides,
   };

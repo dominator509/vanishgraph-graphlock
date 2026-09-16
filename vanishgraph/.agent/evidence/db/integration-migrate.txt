@@ -1,3 +1,3 @@
-migrate: applied 0 migration(s); at version 27
+migrate: applied 0 migration(s); at version 28
 migrate: ok
 migrate: ok

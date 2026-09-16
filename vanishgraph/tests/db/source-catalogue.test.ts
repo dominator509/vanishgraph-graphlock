@@ -48,6 +48,7 @@ import { PostgresTransitionQueries } from '../../src/adapters/persistence/transi
 import { PostgresCaseQueries } from '../../src/adapters/persistence/cases.ts';
 import { PostgresControllerResponseQueries } from '../../src/adapters/persistence/controller-responses.ts';
 import { PostgresActionQueries } from '../../src/adapters/persistence/actions.ts';
+import { PostgresPolicyQueries } from '../../src/adapters/persistence/policies.ts';
 import { PostgresIdempotencyStore } from '../../src/adapters/idempotency/postgres-store.ts';
 import { findRoute } from '../../src/http/openapi/registry.ts';
 import { appDsn, asTenant, exec } from './harness.ts';
@@ -114,6 +115,7 @@ function serverFor(tenantId: string, scopes: readonly string[], authTimeAgeSecon
     caseQueries: new PostgresCaseQueries({ recipeVerificationKeys: { publicKeysByRef: new Map() } }),
     controllerResponseQueries: new PostgresControllerResponseQueries(),
     actionQueries: new PostgresActionQueries({ recipeVerificationKeys: { publicKeysByRef: new Map() } }),
+    policyQueries: new PostgresPolicyQueries(),
     subjectQueries: { ...testSubjectQueriesStub },
     health: {
       startedAt: new Date(),

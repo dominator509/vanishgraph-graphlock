@@ -24,6 +24,7 @@ import { testIdentity, TEST_SESSION_SECRET, TEST_TOKEN } from '../contract/serve
 import { PostgresTenantRunner } from '../../src/adapters/persistence/postgres-runner.ts';
 import { PostgresControllerResponseQueries } from '../../src/adapters/persistence/controller-responses.ts';
 import { PostgresActionQueries } from '../../src/adapters/persistence/actions.ts';
+import { PostgresPolicyQueries } from '../../src/adapters/persistence/policies.ts';
 import { PostgresCaseQueries } from '../../src/adapters/persistence/cases.ts';
 import { PostgresObservationQueries } from '../../src/adapters/persistence/observations.ts';
 import { PostgresExposureQueries } from '../../src/adapters/persistence/exposures.ts';
@@ -85,6 +86,7 @@ function serverFor(tenantId: string, scopes: readonly string[] = SCOPES): VgFast
     caseQueries: new PostgresCaseQueries({ recipeVerificationKeys: { publicKeysByRef: new Map() } }),
     controllerResponseQueries: new PostgresControllerResponseQueries(),
     actionQueries: new PostgresActionQueries({ recipeVerificationKeys: { publicKeysByRef: new Map() } }),
+    policyQueries: new PostgresPolicyQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
   });
 }

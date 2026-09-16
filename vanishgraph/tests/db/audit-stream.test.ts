@@ -39,6 +39,7 @@ import { PostgresTransitionQueries } from '../../src/adapters/persistence/transi
 import { PostgresCaseQueries } from '../../src/adapters/persistence/cases.ts';
 import { PostgresControllerResponseQueries } from '../../src/adapters/persistence/controller-responses.ts';
 import { PostgresActionQueries } from '../../src/adapters/persistence/actions.ts';
+import { PostgresPolicyQueries } from '../../src/adapters/persistence/policies.ts';
 import { appendAuditEvents } from '../../src/adapters/persistence/audit-sink.ts';
 import { PostgresIdempotencyStore } from '../../src/adapters/idempotency/postgres-store.ts';
 import { PostgresSubjectQueries } from '../../src/adapters/persistence/subjects.ts';
@@ -98,6 +99,7 @@ function serverFor(tenantId: string, scopes: readonly string[] = ['vg.audit.read
     caseQueries: new PostgresCaseQueries({ recipeVerificationKeys: { publicKeysByRef: new Map() } }),
     controllerResponseQueries: new PostgresControllerResponseQueries(),
     actionQueries: new PostgresActionQueries({ recipeVerificationKeys: { publicKeysByRef: new Map() } }),
+    policyQueries: new PostgresPolicyQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
   });
 }
