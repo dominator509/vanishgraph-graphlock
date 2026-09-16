@@ -68,3 +68,4 @@ tests/contract/jit-support-access.test.ts
 tests/contract/rate-limit-abuse.test.ts
 tests/contract/mcp-least-privilege.test.ts
 tests/contract/egress-and-redaction.test.ts
+tests/contract/secret-handling.test.ts
