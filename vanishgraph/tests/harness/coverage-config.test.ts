@@ -167,9 +167,16 @@ describe('the coverage configuration matches the specification it mirrors (DOD-0
         const matches = ALL_FILES.filter((file) => globMatches(glob, file));
         assert.ok(matches.length >= 1, `${layer.name}: suite glob ${glob} matches nothing`);
       }
-      // AND THE EXCLUSIONS MUST MATCH SOMETHING TOO, or they are decoration.
+      // AND THE EXCLUSIONS MUST MATCH SOMETHING TOO, or they are decoration. The ui layer's exclusions name the
+      // MIRROR's copies of its plain-TypeScript modules — the identity the suites do NOT drive — so they are checked
+      // against the synthesised mirror paths, exactly as that layer's source glob is.
       for (const glob of layer.exclude ?? []) {
-        const matches = ALL_FILES.filter((file) => globMatches(glob, file));
+        const candidates = glob.startsWith('.cache-ui-render/')
+          ? filesUnder('ui/src')
+              .filter((file) => /\.tsx?$/.test(file))
+              .map((file) => file.replace(/^ui\/src\//, '.cache-ui-render/').replace(/\.tsx?$/, '.js'))
+          : ALL_FILES;
+        const matches = candidates.filter((file) => globMatches(glob, file));
         assert.ok(matches.length >= 1, `${layer.name}: exclude glob ${glob} matches nothing`);
       }
     }

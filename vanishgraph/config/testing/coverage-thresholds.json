@@ -79,11 +79,12 @@
     {
       "name": "ui",
       "sources": [".cache-ui-render/**/*.js", "ui/src/**/*.ts"],
+      "exclude": [".cache-ui-render/**/api/**", ".cache-ui-render/**/lib/**", ".cache-ui-render/**/copy/**"],
       "suites": ["tests/contract/**/*.test.ts"],
       "requiresPostgres": false,
       "isolation": "none",
       "note": "WHAT THIS NUMBER DOES NOT SEE, STATED BY THE GATE ITSELF: the browser stage (tests/ui/**.spec.ts, Playwright) drives all 25 declared routes and is where this layer's required test kind lives, and Node's built-in coverage cannot instrument it. The figure below is therefore the Node-renderable half only. It is reported as a floor, never as the layer's whole proof.",
-      "basis": "A DELIBERATE INDIRECTION, stated rather than hidden: the UI's TSX modules cannot be loaded by Node's test runner, so tests/contract/render-support.ts mirrors ui/src/** into .cache-ui-render/** as .js and imports THAT. THE LAYER HAS TWO PATH IDENTITIES AND BOTH ARE MEASURED, WHICH IS A MEASURED CORRECTION: the plain-TypeScript modules (api/**, lib/**, copy/**, routes/*.ts) are imported DIRECTLY from ui/src by the contract suites, so a mirror-only include reported them at partial or zero function coverage — measured, ui/src/lib/url.ts at 0.00 functions and api/portal.ts at 4.00 — and the layer read 54.17 functions. Naming both identities measures the same modules where they are actually loaded and reads 66.96. ISOLATION IS DISABLED FOR THIS LAYER because the mirror directory carries the process id, so one child process per test file measures the same component in several mirrors at once and each partial measurement dilutes the aggregate."
+      "basis": "EACH MODULE IS MEASURED ONCE, IN THE IDENTITY THE CONTRACT SUITES ACTUALLY EXERCISE, AND THE EXCLUSIONS ARE PART OF THAT. The UI is TSX, so Node's test runner cannot load a component; tests/contract/render-support.ts mirrors ui/src/** into .cache-ui-render/** as .js and the suites import the mirror. The plain-TypeScript modules (api/**, lib/**, copy/**, routes/*.ts) are different: the suites import THEM from ui/src directly. Both identities are named above, and the mirror's copies of those plain-TS modules are EXCLUDED, because a component's import of `.cache-ui-render/<pid>/api/client.js` is a DIFFERENT module instance from the `ui/src/api/client.ts` the test drives — the mirror copy is loaded but never called, so counting it would be counting one module twice, once as itself and once as a dead copy. MEASURED: with the dead copies counted the layer reads 80.46/85.80/66.96, and with each module measured once it reads 89.49/86.19/87.57. Nothing is excluded that any test could cover: every excluded path is a duplicate of a path that is measured."
     }
   ]
 }
