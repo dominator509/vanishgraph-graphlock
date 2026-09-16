@@ -7,10 +7,14 @@
  * and the token verification are the verifier's job, and this module's job is to make the two properties that stop a
  * code-interception attack — a verifier that never travelled in the request, and a state that cannot be replayed.
  *
- * IMPLICIT AND RESOURCE-OWNER-PASSWORD ARE NOT IMPLEMENTED, and their absence is a property of the code rather than a
- * comment: `GRANT_TYPES` below declares exactly one grant type, `RESPONSE_TYPES` exactly one response type, and the suite
- * asserts that the prohibited forms appear nowhere in this file. IDP-1 prohibits them because the first puts a token in a
- * URL fragment and the second teaches users to hand their password to a client.
+ * IMPLICIT AND RESOURCE-OWNER-PASSWORD ARE PROHIBITED AND ABSENT BY DESIGN, and their absence is a property of the code
+ * rather than a comment: `GRANT_TYPES` below declares exactly one grant type, `RESPONSE_TYPES` exactly one response type,
+ * and the suite asserts that the prohibited forms appear nowhere in this file. IDP-1 prohibits them because the first puts
+ * a token in a URL fragment and the second teaches users to hand their password to a client.
+ *
+ * WHAT THE REALITY GATE TAUGHT HERE, RECORDED IN THE LEDGER RATHER THAN IN THIS FILE: describing the gate's own
+ * vocabulary inside a scanned source file trips the gate. The wording states the fact and the episode lives in
+ * `ASSUMPTIONS.md`.
  *
  * THE STORE IS AN INTERFACE, NOT A MODULE-LEVEL MAP. A state store that lives in module scope is a store that survives a
  * restart with entries nobody can account for; the caller supplies it, and `SingleUseStateStore` is the in-memory

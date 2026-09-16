@@ -7,6 +7,7 @@
  */
 
 import { describe, test } from 'node:test';
+import { installSupportAccess, isSupportReachablePath } from '../../src/http/plugins/support-access.ts';
 import assert from 'node:assert/strict';
 
 import {
@@ -182,5 +183,86 @@ describe('progressive lockout escalates and then refuses (VG-AUTH-019)', () => {
     assert.equal(decision.alert?.actorIdentity, 'actor-opaque-1');
     assert.equal(decision.alert?.tenantId, TENANT);
     assert.match(decision.alert?.detail ?? '', /consecutive authorization failures/);
+  });
+});
+
+describe('the SUPPORT gate refuses without an ACTIVE session and audits the refusal (EP-006 M6)', () => {
+  function hooksFor(): { readonly hooks: ((request: unknown, reply: unknown, done: () => void) => void)[]; readonly audits: string[]; readonly refusals: string[] } {
+    const hooks: ((request: unknown, reply: unknown, done: () => void) => void)[] = [];
+    const audits: string[] = [];
+    const refusals: string[] = [];
+    const app = { addHook: (_name: string, hook: (request: unknown, reply: unknown, done: () => void) => void) => hooks.push(hook) };
+    installSupportAccess(app as never, {
+      clock,
+      sessionFor: () => undefined,
+      audit: (event) => audits.push(event.event),
+      refuse: (_request, _reply, code) => refusals.push(code),
+      identityOf: (request) => (request as { identity?: { tenantId: string; actorIdentity: string; roles: string[] } }).identity,
+    });
+    return { hooks, audits, refusals };
+  }
+
+  test('a SUPPORT identity with no session is refused, audited, and the handler never runs', () => {
+    const { hooks, audits, refusals } = hooksFor();
+    let dispatched = 0;
+    hooks[0]?.({ method: 'GET', url: '/v1/subjects/sub_1', identity: { tenantId: TENANT, actorIdentity: 'support-opaque-1', roles: ['SUPPORT'] } }, {}, () => {
+      dispatched += 1;
+    });
+    assert.deepEqual(refusals, ['SUPPORT_SESSION_REQUIRED']);
+    assert.deepEqual(audits, ['support.session.refused'], 'the refusal is audited, which is the signal the control produces');
+    assert.equal(dispatched, 0, 'no done(): the handler must not run on a refused request');
+  });
+
+  test('an ACTIVE live session passes, and a non-SUPPORT identity is untouched', () => {
+    const hooks: ((request: unknown, reply: unknown, done: () => void) => void)[] = [];
+    const entered = enterSupportSession(open().session, clock).session;
+    installSupportAccess({ addHook: (_name: string, hook: (request: unknown, reply: unknown, done: () => void) => void) => hooks.push(hook) } as never, {
+      clock,
+      sessionFor: () => entered,
+      audit: () => {
+        throw new Error('an admitted request must not be audited as refused');
+      },
+      refuse: () => {
+        throw new Error('an admitted request must not be refused');
+      },
+      identityOf: (request) => (request as { identity?: { tenantId: string; actorIdentity: string; roles: string[] } }).identity,
+    });
+    let dispatched = 0;
+    hooks[0]?.({ method: 'GET', url: '/v1/subjects/sub_1', identity: { tenantId: TENANT, actorIdentity: 'support-opaque-1', roles: ['SUPPORT'] } }, {}, () => {
+      dispatched += 1;
+    });
+    // A non-SUPPORT identity passes even with no session at all.
+    hooks[0]?.({ method: 'GET', url: '/v1/subjects/sub_1', identity: { tenantId: TENANT, actorIdentity: 'operator-1', roles: ['OPERATOR'] } }, {}, () => {
+      dispatched += 1;
+    });
+    assert.equal(dispatched, 2);
+  });
+
+  test('a revoked or expired session is refused by the same path', () => {
+    for (const state of ['REVOKED', 'EXPIRED'] as const) {
+      const hooks: ((request: unknown, reply: unknown, done: () => void) => void)[] = [];
+      const refusals: string[] = [];
+      installSupportAccess({ addHook: (_name: string, hook: (request: unknown, reply: unknown, done: () => void) => void) => hooks.push(hook) } as never, {
+        clock,
+        sessionFor: () => ({ ...enterSupportSession(open().session, clock).session, state }),
+        audit: () => undefined,
+        refuse: (_request, _reply, code) => refusals.push(code),
+        identityOf: (request) => (request as { identity?: { tenantId: string; actorIdentity: string; roles: string[] } }).identity,
+      });
+      let dispatched = 0;
+      hooks[0]?.({ method: 'GET', url: '/v1/subjects/sub_1', identity: { tenantId: TENANT, actorIdentity: 'support-opaque-1', roles: ['SUPPORT'] } }, {}, () => {
+        dispatched += 1;
+      });
+      assert.deepEqual(refusals, ['SUPPORT_SESSION_REQUIRED'], `${state} must be refused`);
+      assert.equal(dispatched, 0);
+    }
+  });
+
+  test('the SUPPORT-reachable path set is diagnostics only', () => {
+    assert.equal(isSupportReachablePath('/v1/subjects/sub_1'), true);
+    assert.equal(isSupportReachablePath('/v1/cases/cas_1?limit=5'), true);
+    assert.equal(isSupportReachablePath('/v1/support/sessions'), true);
+    assert.equal(isSupportReachablePath('/v1/evidence-artifacts/ev_1/content'), false, 'no content download for SUPPORT');
+    assert.equal(isSupportReachablePath('/v1/admin/tenant'), false);
   });
 });

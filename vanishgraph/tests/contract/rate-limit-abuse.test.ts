@@ -15,10 +15,10 @@ import assert from 'node:assert/strict';
 import {
   DEFAULT_RATE_LIMIT_POLICY,
   DISCOVERY_SOURCE_CEILING,
-  InMemoryRateLimitCounter,
   checkRateLimit,
   type RateLimitClass,
-} from '../../src/adapters/coordination/rate-limit.ts';
+} from '../../src/application/security/rate-limit-policy.ts';
+import { InMemoryRateLimitCounter } from '../../src/adapters/coordination/rate-limit.ts';
 
 const TENANT = '11111111-1111-4111-8111-111111111111';
 const OTHER_TENANT = '22222222-2222-4222-8222-222222222222';
@@ -134,4 +134,5 @@ describe('the conservative discovery ceiling is checked before dispatch (VG-DISC
     assert.equal(refused.headers['RateLimit-Remaining'], '0');
   });
 });
+
 
