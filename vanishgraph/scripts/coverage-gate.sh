@@ -36,9 +36,16 @@ CONFIG=config/testing/coverage-thresholds.json
 EVIDENCE=.agent/evidence/EP-007
 mkdir -p "$EVIDENCE"
 
-fail() { echo "coverage: FAIL - $1" >&2; exit 1; }
-error() { echo "coverage: ERROR - $1" >&2; exit 1; }
-blocked() { echo "coverage: BLOCKED_CREDENTIALS - $1" >&2; exit 1; }
+# THE CAPTURE CARRIES A COMPLETION MARKER, AND MEASURED WHY IT MUST: this gate truncates its evidence file at the start
+# and appends one block per layer, so a run killed part-way through (the executor's 600-second cap did exactly that
+# while this gate was mid-flight) leaves a capture that is indistinguishable from a finished one. Any reader, and any
+# accounting that hashes it, would be reading a fragment as a whole. The marker is written on EVERY exit path, so a
+# capture without one is by construction an interrupted run.
+mark() { printf 'coverage gate: %s\n' "$1" >>"$EVIDENCE/coverage-gate.txt" 2>/dev/null || true; }
+
+fail() { mark "interrupted: FAIL - $1"; echo "coverage: FAIL - $1" >&2; exit 1; }
+error() { mark "interrupted: ERROR - $1"; echo "coverage: ERROR - $1" >&2; exit 1; }
+blocked() { mark "interrupted: BLOCKED_CREDENTIALS - $1"; echo "coverage: BLOCKED_CREDENTIALS - $1" >&2; exit 1; }
 
 command -v node >/dev/null 2>&1 || error "node is required but not found"
 [ -f "$CONFIG" ] || error "$CONFIG is missing; the thresholds and the layer table are this gate's contract"
@@ -89,6 +96,7 @@ echo "$LAYERS" | while IFS='|' read -r name sources excludes suites needs_pg lin
   [ -n "$name" ] || continue
 
   if [ "$needs_pg" = "yes" ] && [ -z "${VG_TEST_DSN_APP:-}" ]; then
+    mark "interrupted: BLOCKED_CREDENTIALS - layer $name needs PostgreSQL and no DSN is available"
     echo "coverage: BLOCKED_CREDENTIALS - layer $name needs PostgreSQL and no DSN is available" >&2
     echo "  provision it with sh scripts/db-provision.sh and re-run with VG_DB_STATE_FILE set" >&2
     exit 2
@@ -137,6 +145,7 @@ echo "$LAYERS" | while IFS='|' read -r name sources excludes suites needs_pg lin
   # shellcheck disable=SC2086
   out=$(node --test --experimental-test-coverage $isolation_arg $include_args $exclude_args $suites 2>&1) || {
     set +f
+    mark "interrupted: ERROR - layer $name: its suites did not pass"
     printf '%s\n' "$out" | tail -n 25 >&2
     echo "coverage: ERROR - layer $name: its suites did not pass, so no coverage verdict is available" >&2
     exit 3
@@ -191,13 +200,16 @@ if (short.length === 0) {
         "$m_lines" "$m_branches" "$m_functions" "$lines" "$branches" "$functions" >>"$report"
       ;;
     *)
-      echo "coverage: FAIL - layer $name: ${verdict#short } (targets $lines/$branches/$functions)" >&2
-      printf 'result: FAIL %s\n\n' "${verdict#short }" >>"$report"
+      grep_verdict="${verdict#short }"
+      mark "interrupted: FAIL - layer $name: $grep_verdict (targets $lines/$branches/$functions)"
+      echo "coverage: FAIL - layer $name: $grep_verdict (targets $lines/$branches/$functions)" >&2
+      printf 'result: FAIL %s\n\n' "$grep_verdict" >>"$report"
       exit 4
       ;;
   esac
 done
 sub=$?
-[ "$sub" = "0" ] || exit "$sub"
+[ "$sub" = "0" ] || { mark "interrupted: the layer loop exited $sub"; exit "$sub"; }
 
+mark "complete verdict=PASS"
 echo "coverage: ok"
