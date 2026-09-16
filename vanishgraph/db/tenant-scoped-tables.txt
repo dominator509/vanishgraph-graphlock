@@ -12,6 +12,7 @@ audit_event
 authority_grant
 controller
 controller_response
+coverage_report  # carries tenant_id; a coverage report names which of one tenant's sources were checked
 deadline
 email_thread
 erasure_tombstone

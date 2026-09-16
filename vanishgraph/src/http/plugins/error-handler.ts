@@ -52,6 +52,16 @@ interface FastifyErrorLike {
   readonly statusCode?: number;
   readonly code?: string;
   readonly validation?: readonly { readonly instancePath?: string; readonly params?: unknown }[];
+  /**
+   * `details` on a non-`ApiError` thrower.
+   *
+   * MEASURED DEFECT this exists to fix: `classify` returned `{ code }` and DROPPED `details` for anything that was
+   * not an `ApiError` — so every refusal raised by the query parser (`QueryError`, which carries `field` and
+   * `collection`) reached the client with its reason stripped. The parser's own comment says the offending
+   * parameter is "named in `details` so the caller can fix it", and no test noticed because every suite asserted
+   * the CODE. Values still pass through the envelope's allowlist, so this widens no disclosure.
+   */
+  readonly details?: unknown;
 }
 
 /**
@@ -94,7 +104,15 @@ function classify(error: unknown): { code: ErrorCode; details?: ErrorDetails; st
   }
 
   if (typeof candidate.code === 'string' && isErrorCode(candidate.code)) {
-    return { code: candidate.code };
+    const details = candidate.details;
+    return {
+      code: candidate.code,
+      // A non-null, non-array object; anything else is ignored rather than passed to the envelope, which filters
+      // KEYS and would be the wrong place to discover that the thrower handed it a string.
+      ...(typeof details === 'object' && details !== null && !Array.isArray(details)
+        ? { details: details as ErrorDetails }
+        : {}),
+    };
   }
 
   switch (candidate.statusCode) {

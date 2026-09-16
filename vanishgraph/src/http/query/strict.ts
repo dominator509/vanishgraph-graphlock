@@ -49,6 +49,24 @@ export interface ParameterSpec {
   readonly type: ParameterType;
   /** Permitted values, for `enum`. */
   readonly values?: readonly string[];
+  /**
+   * The wire code an `enum` refusal reports, when the contract names one.
+   *
+   * §5.16.3 declares `400 INVALID_GROUP_BY` for its `groupBy`, while other enum parameters (§5.7.2's
+   * `authorityGrantState`) are refused `SCHEMA_VALIDATION_FAILED`. Declaring it per parameter is what lets both
+   * be true without a handler special-casing one route.
+   */
+  readonly invalidCode?: string;
+  /**
+   * Whether an `enum` parameter takes exactly ONE value.
+   *
+   * Enums default to accepting a comma-separated list, because most of them are FILTERS (§2.6) and a filter over
+   * several tokens is a legitimate query. A parameter that is a CONTROL rather than a filter is not: §5.16.3's
+   * `groupBy` chooses one breakdown, and MEASURED — `groupBy=jurisdiction,source` passed validation, arrived as an
+   * array, and the route mapped it to `none`, so a caller asking for a breakdown received a response with no
+   * breakdown and no error. A silently ignored parameter is the failure §2.6's strict parsing exists to prevent.
+   */
+  readonly single?: boolean;
   /** For `multi`, the maximum number of comma-separated values. Defaults to the §2.6 ceiling. */
   readonly maxValues?: number;
   /** For `number`, the inclusive bounds §5 declares for the field. */
@@ -71,6 +89,15 @@ export interface QuerySchema {
    * refused"). Declared rather than hand-checked so the refusal cannot drift from the route's declaration.
    */
   readonly requireTimeRange?: boolean;
+  /**
+   * The collection name `TIME_RANGE_REQUIRED` reports.
+   *
+   * DECLARED, not hard-coded, and this was a real defect: the refusal named `audit-events` in the parser, so
+   * §5.16.3 — which declares the same error — would have told a caller asking for a metric that they had sent an
+   * unbounded AUDIT query. The name now comes from the route's own schema, so a second route with a mandatory
+   * range names itself.
+   */
+  readonly timeRangeCollection?: string;
   /** The maximum permitted span in days, refusing with `TIME_RANGE_TOO_WIDE` beyond it (§5.15.1: 90). */
   readonly maxSpanDays?: number;
   /** Whether the route accepts `truthState`. */
@@ -256,9 +283,14 @@ export function parseQuery(
     if (spec.type === 'enum') {
       const tokens = typeof value === 'string' ? value.split(',') : [];
       const permitted = spec.values ?? [];
+      // A CONTROL TAKES ONE VALUE. Checked before the token loop so a list is refused for being a list rather
+      // than for whichever token happened to be looked at first.
+      if (spec.single === true && tokens.length !== 1) {
+        throw new QueryError(spec.invalidCode ?? 'SCHEMA_VALIDATION_FAILED', { field: name });
+      }
       for (const token of tokens) {
         if (!permitted.includes(token)) {
-          throw new QueryError('SCHEMA_VALIDATION_FAILED', { field: name });
+          throw new QueryError(spec.invalidCode ?? 'SCHEMA_VALIDATION_FAILED', { field: name });
         }
       }
       filter[name] = tokens.length === 1 ? tokens[0] : tokens;
@@ -307,7 +339,7 @@ export function parseQuery(
     // request that did not supply one, and reading the normalised filter afterwards could not tell the
     // difference because a default would already be in it.
     if (schema.requireTimeRange === true && (rawFrom === undefined || rawTo === undefined)) {
-      throw new QueryError('TIME_RANGE_REQUIRED', { collection: 'audit-events' });
+      throw new QueryError('TIME_RANGE_REQUIRED', { collection: schema.timeRangeCollection ?? 'request' });
     }
 
     const toMs = rawTo === undefined ? now() : parseTimestamp(rawTo, 'to');

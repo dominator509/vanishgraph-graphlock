@@ -37,6 +37,8 @@ import type { CaseQueries } from '../../src/application/contracts/case-queries.t
 import type { ControllerResponseQueries } from '../../src/application/contracts/controller-response-queries.ts';
 import type { ActionQueries } from '../../src/application/contracts/action-queries.ts';
 import type { PolicyQueries } from '../../src/application/contracts/policy-queries.ts';
+import type { CoverageQueries } from '../../src/application/contracts/coverage-queries.ts';
+import { EFFECTIVENESS_CAVEATS } from '../../src/application/contracts/coverage-queries.ts';
 
 /**
  * The cursor signing secret used by tests.
@@ -413,6 +415,40 @@ export function testPolicyQueries(): PolicyQueries {
   };
 }
 
+/**
+ * The §5.16 default: no reports, and a metric with a ZERO denominator.
+ *
+ * The metric stub returns `ratio: null`, not `0`, and that is the honest empty answer — "no confirmed match was
+ * eligible" is what zero rows mean, and a stub reporting `ratio: 0` would let a suite assert a rate that no data
+ * produced.
+ */
+export function testCoverageQueries(): CoverageQueries {
+  return {
+    listCoverageReports: async () => [],
+    getCoverageReport: async () => undefined,
+    removalEffectiveness: async () => ({
+      interval: { from: new Date(0).toISOString(), to: new Date(0).toISOString() },
+      overall: {
+        eligibleConfirmedMatchDenominator: 0,
+        verifiedRemovedNumerator: 0,
+        ratio: null,
+        confidenceInterval: null,
+        denominatorDefinedAs: 'stub',
+      },
+      excludedFromNumerator: {
+        acknowledged: 0,
+        requestSubmitted: 0,
+        searchDelisted: 0,
+        notRemovable: 0,
+        humanRequired: 0,
+        ambiguous: 0,
+      },
+      groups: [],
+      caveats: [...EFFECTIVENESS_CAVEATS],
+    }),
+  };
+}
+
 export function testServerDependencies(overrides: Partial<ServerDependencies> = {}): ServerDependencies {
   return {
     version: '0.0.0-test',
@@ -435,6 +471,7 @@ export function testServerDependencies(overrides: Partial<ServerDependencies> = 
     controllerResponseQueries: testControllerResponseQueries(),
     actionQueries: testActionQueries(),
     policyQueries: testPolicyQueries(),
+    coverageQueries: testCoverageQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
     ...overrides,
   };

@@ -38,6 +38,7 @@ import { PostgresCaseQueries } from '../../src/adapters/persistence/cases.ts';
 import { PostgresControllerResponseQueries } from '../../src/adapters/persistence/controller-responses.ts';
 import { PostgresActionQueries } from '../../src/adapters/persistence/actions.ts';
 import { PostgresPolicyQueries } from '../../src/adapters/persistence/policies.ts';
+import { PostgresCoverageQueries } from '../../src/adapters/persistence/coverage.ts';
 import { PostgresAuditQueries } from '../../src/adapters/persistence/audit-queries.ts';
 import { PostgresDeadlineQueries } from '../../src/adapters/persistence/deadlines.ts';
 import { PostgresAppealQueries } from '../../src/adapters/persistence/appeals.ts';
@@ -95,6 +96,7 @@ function serverFor(tenantId: string, scopes: readonly string[] = ['vg.observatio
     controllerResponseQueries: new PostgresControllerResponseQueries(),
     actionQueries: new PostgresActionQueries({ recipeVerificationKeys: { publicKeysByRef: new Map() } }),
     policyQueries: new PostgresPolicyQueries(),
+    coverageQueries: new PostgresCoverageQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
   });
 }

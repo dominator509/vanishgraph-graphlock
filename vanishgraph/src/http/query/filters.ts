@@ -120,7 +120,55 @@ export const AUDIT_EVENTS_QUERY: QuerySchema = {
   // TIME_RANGE_REQUIRED`; maximum span 90 days)". Both are declared here so the two refusals the registry
   // already enumerated are produced by the parser rather than by a handler that could forget them.
   requireTimeRange: true,
+  timeRangeCollection: 'audit-events',
   maxSpanDays: 90,
+  truthStateFilterable: false,
+};
+
+/** `GET /v1/coverage-reports` (SPEC-003 §5.16.1) — newest-first, filtered by subject or run. */
+export const COVERAGE_REPORTS_QUERY: QuerySchema = {
+  paginated: true,
+  parameters: {
+    ...PAGINATION,
+    subjectId: { type: 'string' },
+    discoveryRunId: { type: 'string' },
+  },
+  // §5.16.1: `sort ∈ generatedAt` (default `generatedAt:desc`). ONE sort field, so the allowlist is one long.
+  sortFields: ['generatedAt'],
+  defaultSort: 'generatedAt:desc',
+  timeFilterable: true,
+  truthStateFilterable: false,
+};
+
+/**
+ * `GET /v1/metrics/removal-effectiveness` (SPEC-003 §5.16.3) — the primary metric.
+ *
+ * NOT PAGINATED, and that is the contract's shape: the response is one object with an `overall` figure, not a
+ * collection, so `limit` and `cursor` are not declared and a caller who sends one is refused
+ * `UNKNOWN_QUERY_PARAMETER` rather than silently ignored.
+ *
+ * `from`/`to` ARE MANDATORY — §5.16.3's error list starts with `400 TIME_RANGE_REQUIRED`, and VG-API-058's
+ * negative case is a metric request without a range. `TIME_RANGE_TOO_WIDE` IS ALSO DECLARED BY §5.16.3, AND NO
+ * BOUND IS APPLIED: §5.15.1 states its cap ("maximum span 90 days") and §5.16.3 states none, so a number here
+ * would be a limit the API enforces that no specification authorises. Recorded in ASSUMPTIONS §3.34.
+ */
+export const REMOVAL_EFFECTIVENESS_QUERY: QuerySchema = {
+  paginated: false,
+  parameters: {
+    subjectId: { type: 'string' },
+    sourceId: { type: 'string' },
+    groupBy: {
+      type: 'enum',
+      values: ['none', 'source', 'jurisdiction', 'channel'],
+      invalidCode: 'INVALID_GROUP_BY',
+      single: true,
+    },
+  },
+  sortFields: [],
+  defaultSort: 'from:desc',
+  timeFilterable: true,
+  requireTimeRange: true,
+  timeRangeCollection: 'metrics/removal-effectiveness',
   truthStateFilterable: false,
 };
 

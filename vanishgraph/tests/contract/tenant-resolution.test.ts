@@ -39,6 +39,7 @@ import {
   testObservationQueries,
   testActionQueries,
   testPolicyQueries,
+  testCoverageQueries,
   testCaseQueries,
   testTransitionQueries,
   TEST_SESSION_SECRET,
@@ -248,6 +249,7 @@ describe('tenancy is required by the server type, so it cannot be forgotten', ()
     controllerResponseQueries: testControllerResponseQueries(),
     actionQueries: testActionQueries(),
     policyQueries: testPolicyQueries(),
+    coverageQueries: testCoverageQueries(),
     };
     assert.ok(deps.identity !== undefined);
     assert.ok(deps.tenancy !== undefined);

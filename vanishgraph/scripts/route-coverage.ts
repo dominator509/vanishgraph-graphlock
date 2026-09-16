@@ -151,6 +151,31 @@ const app = buildServer({
     listJurisdictionPolicies: async () => [],
     caseRowVersion: async () => undefined,
   },
+  // The §5.16 coverage and metric model. Zero denominator, so the stub reports `ratio: null` rather than a rate.
+  coverageQueries: {
+    listCoverageReports: async () => [],
+    getCoverageReport: async () => undefined,
+    removalEffectiveness: async () => ({
+      interval: { from: new Date(0).toISOString(), to: new Date(0).toISOString() },
+      overall: {
+        eligibleConfirmedMatchDenominator: 0,
+        verifiedRemovedNumerator: 0,
+        ratio: null,
+        confidenceInterval: null,
+        denominatorDefinedAs: 'stub',
+      },
+      excludedFromNumerator: {
+        acknowledged: 0,
+        requestSubmitted: 0,
+        searchDelisted: 0,
+        notRemovable: 0,
+        humanRequired: 0,
+        ambiguous: 0,
+      },
+      groups: [],
+      caveats: ['ACKNOWLEDGED_IS_NOT_REMOVAL'],
+    }),
+  },
   // The §5.10/§5.11 read model. Empty: this probe only enumerates routes.
   observationQueries: {
     caseExists: async () => false,

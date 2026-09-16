@@ -1205,6 +1205,79 @@ contract's design (§5.6.4, VG-POLICY-001), not a gap, but it means the group is
 out-of-band policy data. `exemption_evaluation` is present and unpopulated (item 2). Neither is a stub: all four routes
 perform their declared work against whatever policy data exists.
 
+### 3.34 §5.16: a table whose producer no specification defines, and three defects in shared machinery that only a new route could expose
+
+**§5.16 implemented (3 routes).** Coverage measured after this group: `68 registered / 63 working of 78` — 5 genuine
+stubs and 10 routes not yet implemented (§5.4 ×5, §5.12 ×5). Migration `0029` adds `coverage_report` with generated
+RLS (34 tenant-scoped tables). Tests: `tests/db/coverage-reports.test.ts` 9/9, `tests/contract/coverage-routes.test.ts`
+10/10, unit 629/629, integration 270/270 across 21 files.
+
+**1. §5.16.1 AND §5.16.2 READ A TABLE THAT NOTHING IN THIS REPOSITORY WRITES, AND THAT IS THE HONEST STATE.**
+§5.16.2's rows are produced by a discovery run (§5.4). §5.4's `DiscoveryRun` aggregate — its lifecycle states, its
+per-source attempt records, the thing that would produce a coverage report — is defined by NO specification in
+`.agent/specs`, verified by search: neither `DiscoveryRun` nor `CoverageReport` appears in any of them. So this node
+created the TABLE OF RECORD and its two READ routes, and did not invent the producer: a lifecycle no specification
+authorises would be a fabricated model, and it belongs to the node that owns discovery. **The consequence is stated
+where it can be read: the database suite's reports are FIXTURES it inserts itself, and they prove the read path and
+nothing else.** Anyone reading "§5.16.1/§5.16.2 implemented" as "coverage reports are generated" would be reading a
+claim this repository does not make. §5.16.3 is different: it computes the primary metric from real rows — the
+transition spine, cases, policy decisions and actions — and needs no missing producer.
+
+**2. THREE DEFECTS IN SHARED MACHINERY, ALL FOUND BECAUSE A NEW ROUTE WALKED A PATH NO OTHER ROUTE WALKED.**
+(a) **`hasMore` was always false for the new list.** The adapter asked the database for exactly `limit` rows, and
+`buildCollection` learns whether another page exists from the EXTRA row it fetches — so a walk stopped after one page
+while rows remained, which is the silent truncation §2.5's page object exists to prevent. MEASURED by the suite's own
+two-row cursor walk, not by inspection. (b) **The error boundary DROPPED `details` for every thrower that was not an
+`ApiError`.** `classify` returned `{ code }` alone, so every refusal raised by the query parser lost its `field` and
+`collection` — while the parser's own comment says the offending parameter is named "so the caller can fix it". Four
+suites asserted those codes and none asserted the details, which is why a doc-comment and its behaviour could
+disagree for this long. (c) **`TIME_RANGE_REQUIRED` named `audit-events` in a hard-coded string**, so a metric request
+without a time range would have been told it had sent an unbounded AUDIT query. The collection name is now declared on
+the route's own schema, and the contract suite asserts the metric route names itself.
+
+**3. A PARAMETER THAT WAS SILENTLY IGNORED.** `groupBy=jurisdiction,source` passed validation — enum parameters
+accept comma-separated lists because most of them are FILTERS (§2.6) — arrived as an array, and the route mapped
+anything that was not exactly one of the three tokens to `none`: the caller asked for a breakdown and received a
+response with no breakdown and no error. `groupBy` is a CONTROL, not a filter, so `ParameterSpec` gained `single:
+true`, which refuses a list with the parameter's own `INVALID_GROUP_BY`. Recorded because the class of defect —
+a parameter that is accepted and then ignored — is the one §2.6's strict parsing exists to prevent.
+
+**4. FOUR DECLARED READINGS, because no specification fixes them (the same discipline as §3.33).**
+(a) **The cohort.** "eligibleConfirmedMatchDenominator" = exposures whose transition into `MATCH_CONFIRMED` falls
+inside the interval AND whose case carries a policy decision; a resolved legal basis and channel is the only evidence
+this schema holds that a lawful channel was available. The numerator counts cohort members whose transition into
+`VERIFIED_REMOVED` occurred at or before the interval's end — a CAUSAL order that may reach past the interval for a
+match confirmed on its last day, and that asymmetry is stated in the response's own `denominatorDefinedAs` rather
+than smoothed over. (b) **`ambiguous`.** §5.16.3 lists an `ambiguous` exclusion and NO truth state is named
+`AMBIGUOUS`; ambiguity is a property of an external action (`external_action.ambiguous`), so it counts cohort members
+with at least one ambiguous action. A member can appear both there and in a truth-state bucket: these are
+DISCLOSURES, not a partition, and inventing a precedence to make them a partition is what the disclosure rules
+forbid. (c) **The interval statistics.** No method is named; the Wilson score interval at the level §5.16.3's example
+shows (0.95) is used, and the reason is measurable rather than conventional — with a numerator of 0 the normal
+approximation reports a NEGATIVE lower bound. (d) **`TIME_RANGE_TOO_WIDE` IS DECLARED BUT UNREACHABLE HERE.** §5.16.3
+lists it and states no bound, while §5.15.1 states its own ("maximum span 90 days"); applying a number the contract
+does not give would enforce a limit no specification authorises. The code stays reachable on §5.15.1 and this is
+recorded rather than papered over with an invented cap.
+
+**5. THE SCHEMA CORRECTED MY SQL, WHICH IS THE USUAL ORDER OF EVENTS.** The first version of the metric query joined
+`source` from `exposure.source_id`. MEASURED result: `column e.source_id does not exist` — `exposure` reaches its
+source through `source_record_id`, and the query now goes through `source_record`. Item 2 of §3.32's rule applies in
+reverse here and is worth repeating: a claim about the schema is evidence only after the schema has been read, and
+the same holds for a query written from memory of the schema.
+
+**6. TWO EXPECTATIONS OF MINE WERE WRONG AND THE CODE WAS RIGHT, both recorded rather than quietly adjusted.**
+I asserted `400 SCHEMA_VALIDATION_FAILED` for a malformed `{coverageReportId}`; the boundary answers `404
+RESOURCE_NOT_FOUND` on purpose, because SPEC-006 H-9 requires an absent resource and another tenant's resource to be
+indistinguishable. And I asserted a structural comparison of the echoed `interval` that failed on identical values;
+it is now asserted field by field, which also says which member drifted. §3.33 item 3 records the same pattern for
+§5.6's precondition ordering: when a test and the code disagree, the assumption is the thing to check first.
+
+**7. A DRIFT FOUND WHILE READING `filters.ts`, RECORDED FOR THE NODE THAT WILL NEED IT.** `DISCOVERY_RUNS_QUERY`
+(§5.4.2's declaration, unused because §5.4 is unimplemented) offers `status ∈ PENDING|RUNNING|SUCCEEDED|FAILED`, while
+§5.4.2 and §5.4.3 say `runState ∈ ACCEPTED|RUNNING|COMPLETED|COMPLETED_PARTIAL|FAILED|HUMAN_REQUIRED` and
+`sort ∈ requestedAt|completedAt`. The declaration is a control that nothing enforces yet, which is exactly how it
+drifted; §5.4's node should correct it to the contract before the route reads it.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a
