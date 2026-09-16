@@ -2390,6 +2390,51 @@ response headers.
 `import boundary: ok`; `reality gate: ok`; `copy lint gate: ok` (112 files, 0 hits). The human-gate request's digest was
 refreshed for the fifth time.
 
+### 3.55 EP-005 M8: the node closes, and the accounting recorded my own capture defect before it recorded the gate
+
+**1. THE FIRST ACCOUNTING RUN RECORDED MY CAPTURE METHOD'S FAILURE AS EVIDENCE, AND IT WAS CORRECTED RATHER THAN KEPT.**
+The M8 script captured each gate's output with `execSync(..., { shell: 'bash' })`. **`bash` does not exist in that
+process's PATH on this host**, so every command exited **127** and the four "evidence" logs recorded a failure that never
+happened — an index row saying `exitCode: 1` for `gate-ui`, which passes. That is false evidence in the one place that
+must not contain any, and it was produced by the accounting rather than by the product. The four index rows and the
+sixteen requirement rows from that run were **removed** (they were minutes old, authored by me, and wrong) and replaced
+with real captures using the default shell, where `sh` resolves: `gate-ui` `exit=0 sentinel=gate-ui: ok`, the contract
+suite `exit=0`, the browser stage `exit=0 sentinel=end-to-end tests: ok` (36 tests), the PII suite `exit=0`. The episode
+is recorded here because the alternative — leaving a false FAIL in the index — would have been a fabrication, and
+because "the capture failed" and "the gate failed" are exactly the two things a careless close-out conflates.
+
+**2. THREE CRITERIA WERE DOWNGRADED FROM THE MILESTONE THAT CLOSES THE NODE.** 1.4.1 Use of Color, 1.4.11 Non-text
+Contrast and 2.4.7 Focus Visible were `PASS` in the M4 report. Their executed evidence has not changed — ratios are still
+computed from the tokens and from browser computed styles, the grayscale comparison still shows all eleven states differ,
+and the focus ring is still measured at 2px with a 1px offset — but **their value is a perceptual judgement**, and the
+plan's instruction for this milestone is that no criterion depending on lived use may be `PASS`. They are now `PARTIAL`
+with the evidence named and the human judgement left to VG-UI-064. The counts are 21 `PASS`, 1 `FAIL`, 19 `PARTIAL`, 2
+`EXTERNAL_REQUIRED`, 11 `N/A`, and the report states in its own words that a `PASS` there means "assessed by executed
+evidence and no failure found", never "a person found this usable".
+
+**3. WHAT THE NODE'S CLOSE MEANS, IN THE PLAN'S WORDS AND NO STRONGER.** The four surfaces are built against the
+SPEC-004 contract; the copy, route-manifest, coverage, ownership, auditor-readonly and PII-pattern contract suites pass;
+automated accessibility checks ran with recorded tool versions (axe-core 4.13.0, 0 violations across all 25 declared
+routes); and lived-use accessibility validation is `EXTERNAL_REQUIRED`. **The node is not "complete", "accessible", "WCAG
+compliant" or "production ready", and none of those words appears in the close-out.** `RELEASE_GATE.json` is unchanged at
+`INCONCLUSIVE`/`FORGE_ONLY`, as the plan requires. The one `FAIL` — 2.4.5 Multiple Ways, because the artefact renders no
+in-product navigation — is carried into `NEXT_ACTION.md` with its owner named.
+
+**4. THE ACCOUNTING, AS FILED.** `ledger.sh status EP-005` → `DONE`; tag `green/EP-005`; `graph-next.sh` → `NEXT EP-006`.
+Seventeen rows in `.agent/verification/state/TEST_LEDGER.jsonl` — 13 `PASS` each with its evidence path and sentinel, 3
+blocked (`VG-UI-005` `BLOCKED_PREREQUISITE` on EP-004's server-side refusal; `VG-UI-060` and `VG-UI-077`
+`BLOCKED_CREDENTIALS` on `KEYCLOAK_ISSUER`/`DATABASE_URL`), and `VG-UI-064` as `EXTERNAL_REQUIRED` with
+`externalPartyRole`, `requestedArtifactDigest`, `requestEvidencePath`, `requestedAt`, `ownerContactRef` and an unsigned
+sign-off. Four artefacts in `EVIDENCE_INDEX.jsonl` with content hashes. The browser stage now runs **36** tests, the
+five `privacy.spec.ts` cases among them — the suite M7 closed without and recorded as remaining.
+
+**5. WHAT EP-006 INHERITS, STATED WHERE THE NEXT READER WILL LOOK.** The UI's data boundary is real but has never
+rendered a real response: every surface is asserted against fixtures and against the contract, and the fixtures must not
+be mistaken for that test. Two contract gaps found while naming fields are recorded rather than papered over — SPEC-003
+§5.4.3 declares no catalogue version for a discovery run, and SPEC-003 declares no endpoint at all for SPEC-004 §1's
+`/auditor/exports` — and `ReappearanceAlerts` is built and asserted but mounted nowhere, because §5.11.3 names no row
+fields for its list.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a
