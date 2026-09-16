@@ -607,6 +607,7 @@ describe('RecordControllerResponse and RecordVerification (T11, T14, VG-VERIFY-0
 describe('DetectReappearance and RequestHumanGate (T17, T20, HUMAN_REQUIRED)', () => {
   test('T17 links a reappearance to the prior removal event', () => {
     const result = detectReappearance(ctx, {
+      exposureId: caseId.value,
       caseId: caseId.value,
       from: 'VERIFIED_REMOVED',
       priorRemovedEventId: 'VerifiedRemoved:corr-0001:432000000',
@@ -622,6 +623,7 @@ describe('DetectReappearance and RequestHumanGate (T17, T20, HUMAN_REQUIRED)', (
 
   test('T20 treats a returning search result as REAPPEARED, not as source removal', () => {
     const result = detectReappearance(ctx, {
+      exposureId: caseId.value,
       caseId: caseId.value,
       from: 'SEARCH_DELISTED',
       priorRemovedEventId: 'VerifiedRemoved:corr-0001:432000000',
@@ -666,6 +668,7 @@ describe('command results are auditable facts (SM-2)', () => {
       registerSubject(ctx, { subject: subject(), grant: grant() }),
       prepared(),
       detectReappearance(ctx, {
+        exposureId: caseId.value,
         caseId: caseId.value,
         from: 'VERIFIED_REMOVED',
         priorRemovedEventId: 'audit-1',

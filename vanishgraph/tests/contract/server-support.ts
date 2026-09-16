@@ -300,8 +300,12 @@ export function testObservationQueries(): ObservationQueries {
     listVerificationObservations: async () => [],
     getVerificationObservation: async () => undefined,
     exposureExists: async () => false,
+    caseRowVersion: async () => undefined,
+    exposureRowVersion: async () => undefined,
     listReappearances: async () => [],
     listReappearancesForExposure: async () => [],
+    recordVerificationObservation: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+    recordReappearance: async () => ({ ok: false, reason: 'NOT_FOUND' }),
   };
 }
 

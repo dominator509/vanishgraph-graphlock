@@ -1008,6 +1008,47 @@ which the fixture's own SQL accepted and `new Jurisdiction(...)` refused inside 
 `500 INTERNAL_ERROR` on the first PATCH. A domain value object validating a fixture field is the schema doing
 its job; the fixture now uses a valid code and distinguishes worlds by policy VERSION.
 
+### 3.30 §5.10.1 and §5.11.1: the two remaining observation writes, and four things they exposed
+
+**§5.10 and §5.11 are now COMPLETE (6 routes).** Coverage measured: `52 registered / 47 working of 78`. Migration
+`0024` adds `reappearance.content_hash`; the two writes run the domain commands (`recordVerification`,
+`detectReappearance`) and the ports compute every guard fact from rows.
+
+**1. `reappearance.content_hash` did not exist.** §5.11.1's request carries a `contentHash` and the delivered
+table had no column for it. It matters: the digest of the content observed AGAIN is what distinguishes the same
+record coming back from a different record at the same URL — the distinction VG-REAPPEAR-002 turns on. `0024`
+adds it with the same shape and CHECK as `source_record.content_hash` (0003:47), NULLABLE because rows written
+before it recorded no digest. The route requires it, so `tests/db/observation-writes.test.ts` asserts the stored
+value equals what was submitted.
+
+**2. `detectReappearance` named a CASE for a transition that moves an EXPOSURE.** T17/T20 move the state of the
+thing observed again — the exposure, which is what §5.11.1's response reports (`exposureId`, `priorTruthState`,
+`truthState`) — and a case need not exist at all: T21 reaches `SEARCH_DELISTED` from `MATCH_CONFIRMED` before any
+case is created. The command's input is now `{exposureId, caseId: string | null, …}`, its audit row's target is
+the exposure, and the payload records the case only when there is one. The three domain tests that called it were
+updated, which is the honest cost of correcting a signature rather than working around it.
+
+**3. The window and the independence check are COMPUTED, never taken from the caller.** §5.10.1's request carries
+`windowSatisfied: {requiredSeconds, elapsedSeconds, met}`. `requiredSeconds` is the caller's REQUIREMENT and is
+read; `elapsedSeconds` and `met` are recomputed from the observation instant against the action's instant, and
+the caller's values are ignored — a control a caller can waive with a boolean is not a control, the same rule
+§5.14's `requiresHumanReview` follows. Independence is checked against the ACTING identity and instant read from
+the case's `T8` audit row, not from the request: the request supplies the observer's identity and the acting
+PATH, and the row is what says who acted and when. When no `T8` row exists, independence cannot be attested and
+the request is refused `OBSERVATION_PATH_NOT_INDEPENDENT` rather than assumed.
+
+**4. Three smaller things, each recorded where it was found.** (a) `DETAILS_ALLOWLIST` had no keys for
+`requiredSeconds`, `elapsedSeconds`, `required` or `supplied`, which §5.10.1's two refusal bodies name verbatim —
+the same gap §3.16 records for `currentEtag`. (b) `tests/contract/error-mapping-parity.test.ts`'s
+forbidden-token rule flagged `PRIOR_REMOVED_EVENT_NOT_FOUND` for containing `REMOVED`, although SPEC-003 §5.11.1
+is where that code comes from and `REMOVED` there is part of the term "prior removed event"; the rule now
+exempts that ONE code and asserts the exemption is genuinely declared in §8.2, so a new code with a forbidden
+token still fails. (c) A NON-TRANSITION audit row cannot carry `case_id`: migration 0019's all-or-nothing CHECK
+ties `case_id` to transition facts, so a refusal is linked to its case by `target_kind`/`target_id` — which is the
+convention the seed uses, and which a first version of the test got wrong by querying `case_id` and finding the
+fixture's own `T8` row instead of the refusal. Stated here as a property of the schema rather than fixed, because
+the CHECK's job is the integrity of transition facts and `target_id` already links the row.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

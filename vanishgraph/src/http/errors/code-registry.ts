@@ -281,6 +281,13 @@ export const ERROR_CODE_REGISTRY: readonly ErrorCodeSpec[] = Object.freeze([
     message: 'A live case already exists for this subject, source and exposure.' },
   { domainCode: 'CASE_EXPOSURE_STATE_MISMATCH', wireCode: 'CASE_EXPOSURE_STATE_MISMATCH', status: 409, retryable: false,
     message: 'A case may only be created at the exposure’s own current truth state.' },
+  // SPEC-003 §5.11.1 / §8.2's 409 list. VG-REAPPEAR-001's rule: a first-ever sighting is never labelled a
+  // reappearance, and the refusal names the observed state so the caller learns the truth.
+  { domainCode: 'REAPPEARANCE_WITHOUT_PRIOR_REMOVAL', wireCode: 'REAPPEARANCE_WITHOUT_PRIOR_REMOVAL', status: 409,
+    retryable: false, message: 'This exposure has no prior removal to reappear from.' },
+  // SPEC-003 §5.11.1's 422 list.
+  { domainCode: 'INVALID_REQUEST', wireCode: 'PRIOR_REMOVED_EVENT_NOT_FOUND', status: 422, retryable: false,
+    message: 'The referenced prior removal event does not resolve for this exposure.' },
 
   // SPEC-003 §5.7.4/§5.7.5 / §8.2's 422 list.
   { domainCode: 'INVALID_REQUEST', wireCode: 'POLICY_DECISION_INCOMPLETE', status: 422, retryable: false,
@@ -553,6 +560,13 @@ export const DETAILS_ALLOWLIST = [
   'failedCheck', 'reason', 'candidateCount', 'expectedDigest', 'actualDigest',
   'requestedField', 'allowedFields', 'idempotencyKeyHash', 'gateKind',
   'earliestEligibleAt', 'timeRangeFrom', 'timeRangeTo', 'collection', 'filterName',
+  // SPEC-003 §5.10.1 names these four in the refusal bodies themselves:
+  // `422 OBSERVATION_WINDOW_NOT_MET` carries `{"requiredSeconds":…,"elapsedSeconds":…}` and
+  // `422 OBSERVATION_METHOD_MISMATCH` carries `{"required":"…","supplied":"…"}`. All four are DURATIONS, METHOD
+  // TOKENS or numbers — the caller's own request values and the instant arithmetic over them — so they disclose
+  // nothing the request did not already contain. Without them the two refusals would have had to drop the fields
+  // the contract specifies, which is the same gap §3.16 records for `currentEtag`.
+  'requiredSeconds', 'elapsedSeconds', 'required', 'supplied',
   // SPEC-003 §4.3 names originalResourceId in the IDEMPOTENCY_KEY_REUSE conflict body. It is an
   // identifier in the caller's OWN tenant, never a request body value.
   'originalResourceId',

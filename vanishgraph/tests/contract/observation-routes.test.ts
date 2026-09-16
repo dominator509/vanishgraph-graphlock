@@ -67,6 +67,8 @@ function recordingObservationQueries(): { readonly port: ObservationQueries; rea
       note('exposureExists');
       return false;
     },
+    caseRowVersion: async () => undefined,
+    exposureRowVersion: async () => undefined,
     listReappearances: async () => {
       note('listReappearances');
       return [];
@@ -74,6 +76,17 @@ function recordingObservationQueries(): { readonly port: ObservationQueries; rea
     listReappearancesForExposure: async () => {
       note('listReappearancesForExposure');
       return [];
+    },
+    // The two §5.10.1/§5.11.1 writes. They refuse rather than fabricate, and they are NOTED like the reads so a
+    // test can assert that a refusal happened BEFORE the port was consulted — which is the difference between a
+    // boundary rule and a persistence rule.
+    recordVerificationObservation: async () => {
+      note('recordVerificationObservation');
+      return { ok: false, reason: 'NOT_FOUND' };
+    },
+    recordReappearance: async () => {
+      note('recordReappearance');
+      return { ok: false, reason: 'NOT_FOUND' };
     },
   };
   return { port, calls };
@@ -255,6 +268,179 @@ describe('§5.10 lists the observations a case’s sub-resource routes are scope
 
   test('every code these routes emit is registered (H-7)', () => {
     for (const code of ['RESOURCE_NOT_FOUND', 'INSUFFICIENT_SCOPE', 'INVALID_CURSOR', 'UNKNOWN_QUERY_PARAMETER']) {
+      assert.equal(isErrorCode(code), true, `${code} must be in the registry`);
+    }
+  });
+});
+
+describe('the §5.10.1/§5.11.1 writes: boundary rules decided before the port', () => {
+  /** A POST helper: the write routes require an `Idempotency-Key`, per §4.1. */
+  async function post(
+    app: VgFastify,
+    url: string,
+    options: { body?: unknown; headers?: Record<string, string> } = {},
+  ): Promise<{ status: number; code: unknown; json: Record<string, unknown>; details: Record<string, unknown> }> {
+    const headers: Record<string, string> = {
+      authorization: `Bearer ${TEST_TOKEN}`,
+      'content-type': 'application/json',
+      'idempotency-key': `contract-key-${EXPOSURE_ID.slice(0, 8)}-${CASE_ID.slice(0, 8)}`,
+      ...(options.headers ?? {}),
+    };
+    const response = await app.inject({
+      method: 'POST',
+      url,
+      headers,
+      ...(options.body === undefined ? {} : { payload: options.body as object }),
+    });
+    let json: Record<string, unknown> = {};
+    try {
+      json = JSON.parse(response.body) as Record<string, unknown>;
+    } catch {
+      json = {};
+    }
+    const error = json['error'];
+    const errorObject = typeof error === 'object' && error !== null ? (error as Record<string, unknown>) : {};
+    const details = errorObject['details'];
+    return {
+      status: response.statusCode,
+      code: errorObject['code'],
+      json,
+      details: typeof details === 'object' && details !== null ? (details as Record<string, unknown>) : {},
+    };
+  }
+
+  const VALID_OBSERVATION = {
+    observationMethod: 'INDEPENDENT_FETCH_DIFFERENT_EGRESS',
+    actorIdentity: 'observer-svc-1',
+    observationPathId: 'path-02',
+    actingPathId: 'path-01',
+    observedAt: '2026-02-01T00:00:00.000Z',
+    finding: 'RECORD_ABSENT',
+    windowSatisfied: { requiredSeconds: 604800, elapsedSeconds: 691200, met: true },
+  };
+
+  const VALID_REAPPEARANCE = {
+    priorRemovedEventId: 'TR-12345',
+    observedAt: '2026-02-01T00:00:00.000Z',
+    observationMethod: 'SCHEDULED_RE_OBSERVATION',
+    contentHash: 'a'.repeat(64),
+    evidenceArtifactId: '44444444-1111-4111-8111-444444444444',
+  };
+
+  test('both routes are declared with the write scope, a required key and an If-Match', () => {
+    const expected: readonly [string, string, string][] = [
+      ['5.10.1', 'POST', '/v1/cases/{caseId}/verification-observations'],
+      ['5.11.1', 'POST', '/v1/exposures/{exposureId}/reappearances'],
+    ];
+    for (const [id, method, path] of expected) {
+      const route = ROUTES.find((candidate) => candidate.id === id);
+      assert.ok(route !== undefined, `${id} is not in the registry`);
+      assert.equal(route.method, method, id);
+      assert.equal(route.path, path, id);
+      assert.deepEqual(route.scopes, ['vg.observations.write'], id);
+      // §5.10.1/§5.11.1 both say `Idempotency **Required**`, and both move a truth state.
+      assert.equal(route.idempotency, 'required', id);
+    }
+  });
+
+  test('a caller without the write scope is refused before the port runs', async () => {
+    const { app, calls } = serverWith({ scopes: ['vg.observations.read'] });
+    const observation = await post(app, `/v1/cases/${CASE_ID}/verification-observations`, {
+      body: VALID_OBSERVATION,
+    });
+    assert.equal(observation.status, 403);
+    assert.equal(observation.code, 'INSUFFICIENT_SCOPE');
+    const reappearance = await post(app, `/v1/exposures/${EXPOSURE_ID}/reappearances`, { body: VALID_REAPPEARANCE });
+    assert.equal(reappearance.status, 403);
+    assert.equal(reappearance.code, 'INSUFFICIENT_SCOPE');
+    assert.deepEqual(calls, [], 'a scope refusal must not touch the port');
+    await app.close();
+  });
+
+  test('a missing If-Match is 428 and an unparseable one is 412', async () => {
+    const { app } = serverWith({ scopes: ['vg.observations.write'] });
+    for (const url of [
+      `/v1/cases/${CASE_ID}/verification-observations`,
+      `/v1/exposures/${EXPOSURE_ID}/reappearances`,
+    ]) {
+      const body = url.includes('exposures') ? VALID_REAPPEARANCE : VALID_OBSERVATION;
+      const missing = await post(app, url, { body });
+      assert.equal(missing.status, 428, `${url} answered ${String(missing.status)}`);
+      assert.equal(missing.code, 'PRECONDITION_REQUIRED');
+
+      const stale = await post(app, url, { body, headers: { 'if-match': 'garbage' } });
+      assert.equal(stale.status, 412, `${url} answered ${String(stale.status)}`);
+      assert.equal(stale.code, 'PRECONDITION_FAILED');
+    }
+    await app.close();
+  });
+
+  test('the finding vocabulary is CLOSED to the three wire tokens', async () => {
+    const { app } = serverWith({ scopes: ['vg.observations.write'] });
+    for (const finding of ['RECORD_ABSENT', 'RECORD_PRESENT', 'INDETERMINATE']) {
+      const accepted = await post(app, `/v1/cases/${CASE_ID}/verification-observations`, {
+        body: { ...VALID_OBSERVATION, finding },
+        headers: { 'if-match': '"ACKNOWLEDGED:1"' },
+      });
+      // The stub port refuses with NOT_FOUND, which is a 404 — the point is that the request got PAST validation
+      // and reached the port, which a 400 would not have.
+      assert.equal(accepted.status, 404, `${finding} was refused before the port: ${JSON.stringify(accepted.json)}`);
+    }
+    for (const finding of ['PRESENT', 'ABSENT', 'INCONCLUSIVE', 'REMOVED', '']) {
+      const refused = await post(app, `/v1/cases/${CASE_ID}/verification-observations`, {
+        body: { ...VALID_OBSERVATION, finding },
+        headers: { 'if-match': '"ACKNOWLEDGED:1"' },
+      });
+      assert.equal(refused.status, 400, `${finding} was accepted`);
+      assert.equal(refused.code, 'SCHEMA_VALIDATION_FAILED');
+    }
+    await app.close();
+  });
+
+  test('a window requirement must be a positive integer, and the caller’s `met` is not read', async () => {
+    const { app } = serverWith({ scopes: ['vg.observations.write'] });
+    for (const requiredSeconds of [0, -1, 1.5, 'x', undefined]) {
+      const refused = await post(app, `/v1/cases/${CASE_ID}/verification-observations`, {
+        body: {
+          ...VALID_OBSERVATION,
+          windowSatisfied: { requiredSeconds, elapsedSeconds: 999999, met: true },
+        },
+        headers: { 'if-match': '"ACKNOWLEDGED:1"' },
+      });
+      assert.equal(refused.status, 400, `requiredSeconds=${String(requiredSeconds)} was accepted`);
+    }
+    // `met: false` with a well-formed requirement reaches the port: the route does not decide the window, and the
+    // port recomputes it from two instants. A route that honoured `met` would be a control the caller waives.
+    const reachedPort = await post(app, `/v1/cases/${CASE_ID}/verification-observations`, {
+      body: { ...VALID_OBSERVATION, windowSatisfied: { requiredSeconds: 604800, elapsedSeconds: 1, met: false } },
+      headers: { 'if-match': '"ACKNOWLEDGED:1"' },
+    });
+    assert.equal(reachedPort.status, 404, JSON.stringify(reachedPort.json));
+    await app.close();
+  });
+
+  test('a content hash that is not a sha-256 hex digest is refused', async () => {
+    const { app } = serverWith({ scopes: ['vg.observations.write'] });
+    for (const contentHash of ['abc', 'A'.repeat(63), 'g'.repeat(64), '']) {
+      const refused = await post(app, `/v1/exposures/${EXPOSURE_ID}/reappearances`, {
+        body: { ...VALID_REAPPEARANCE, contentHash },
+        headers: { 'if-match': '"VERIFIED_REMOVED:1"' },
+      });
+      assert.equal(refused.status, 400, `contentHash=${contentHash} was accepted`);
+    }
+    await app.close();
+  });
+
+  test('every code these two routes emit is registered (H-7)', () => {
+    for (const code of [
+      'OBSERVATION_PATH_NOT_INDEPENDENT',
+      'OBSERVATION_WINDOW_NOT_MET',
+      'OBSERVATION_METHOD_MISMATCH',
+      'REAPPEARANCE_WITHOUT_PRIOR_REMOVAL',
+      'PRIOR_REMOVED_EVENT_NOT_FOUND',
+      'ILLEGAL_TRANSITION',
+      'EVIDENCE_NOT_FOUND',
+    ]) {
       assert.equal(isErrorCode(code), true, `${code} must be in the registry`);
     }
   });

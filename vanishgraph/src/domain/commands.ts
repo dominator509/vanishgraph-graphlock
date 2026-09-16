@@ -772,11 +772,22 @@ export function recordVerification(
 // DetectReappearance, RequestHumanGate
 // ---------------------------------------------------------------------------
 
-/** T17 (from VERIFIED_REMOVED) or T20 (from SEARCH_DELISTED) (VG-REAPPEAR-001). */
+/**
+ * T17 (from VERIFIED_REMOVED) or T20 (from SEARCH_DELISTED) (VG-REAPPEAR-001).
+ *
+ * THE SUBJECT IS AN `exposureId`, NOT A CASE, and that is a correction rather than a rename. T17/T20 move the
+ * state of the thing that was observed again — the exposure — and SPEC-003 §5.11.1's response reports
+ * `exposureId`, `priorTruthState` and `truthState`: the exposure's. A case need not exist at all (T21 reaches
+ * `SEARCH_DELISTED` from `MATCH_CONFIRMED` before any case is created), so a `caseId`-only signature forced
+ * every caller to name a case that may not exist. `caseId` is now NULLABLE and the audit row's target is the
+ * exposure, which is what was acted on.
+ */
 export function detectReappearance(
   ctx: CommandContext,
   input: {
-    readonly caseId: string;
+    readonly exposureId: string;
+    /** The case this reappearance belongs to, when one exists. Recorded in the payload, never invented. */
+    readonly caseId: string | null;
     readonly from: 'VERIFIED_REMOVED' | 'SEARCH_DELISTED';
     readonly priorRemovedEventId: string;
     readonly recordPresentAgain: boolean;
@@ -785,12 +796,17 @@ export function detectReappearance(
   return transition({
     ctx,
     command: 'DetectReappearance',
-    caseId: input.caseId,
+    caseId: input.exposureId,
     from: input.from,
     to: 'REAPPEARED',
     facts: noFacts({ recordPresentAgain: input.recordPresentAgain }),
     eventNames: ['Reappeared'],
-    payload: { caseId: input.caseId, priorRemovedEventId: input.priorRemovedEventId },
+    payload: {
+      exposureId: input.exposureId,
+      caseId: input.caseId,
+      priorRemovedEventId: input.priorRemovedEventId,
+    },
+    targetKind: 'Exposure',
   });
 }
 

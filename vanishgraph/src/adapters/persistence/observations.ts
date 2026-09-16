@@ -1,27 +1,53 @@
 /**
- * The PostgreSQL observation and reappearance read models (SPEC-003 §5.10.2/§5.10.3, §5.11.2/§5.11.3).
+ * The PostgreSQL observation and reappearance models (SPEC-003 §5.10.1–§5.10.3, §5.11.1–§5.11.3).
  *
  * Implements `ObservationQueries` from the application layer. The DTO types come from the port, so a handler
  * that imports them never acquires a dependency on this file.
  *
- * READ-ONLY: this class issues only `SELECT`. The write paths for these aggregates (§5.10.1, §5.11.1) drive
- * domain transitions belong to a later milestone of this node — they need the transition record that
- * `ASSUMPTIONS.md` §3.18 records as unspecified.
+ * THE TWO WRITES GO THROUGH THE DOMAIN COMMANDS. §5.10.1 drives T14 through `recordVerification`, and §5.11.1
+ * drives T17/T20 through `detectReappearance`; both are guard-evaluated transitions, and SPEC-001 §4.3 SM-6
+ * forbids assigning a truth state anywhere but inside the machine. This file loads the facts the commands need
+ * — the case's state, the recipe's verification method, the action's instant and actor, the exposure's prior
+ * removal event — and writes exactly what the commands returned.
  *
- * TENANT SCOPING IS NOT DONE HERE: every statement relies on RLS, and both tables carry FORCE RLS. One
- * consequence is deliberate and worth naming: `evidence_artifact` is joined for its id only, and RLS means a
+ * THE ACTION'S INSTANT AND ACTOR COME FROM THE AUDIT SPINE, not from the request. §5.10.1's independence and
+ * window guards are about the ACTING path: the request supplies the observer's identity and the acting PATH,
+ * and this file reads the actor and instant of the case's T8 transition — the row that recorded the external
+ * effect — so "the acting path cannot verify itself" (VG-VERIFY-001) is checked against what happened rather
+ * than against what the caller says happened.
+ *
+ * TENANT SCOPING IS NOT DONE HERE: every statement relies on RLS, and every table carries FORCE RLS. One
+ * consequence is deliberate and worth naming: `evidence_artifact` is read for its id only, and RLS means a
  * reference to another tenant's artifact simply does not resolve — so a cross-tenant citation reads as an
  * absence rather than as a foreign row.
  */
+
+import { randomUUID as cryptoRandom } from 'node:crypto';
 
 import type { TenantTransaction } from '../../http/plugins/tenancy.ts';
 import type {
   ListReappearancesParams,
   ObservationQueries,
   ReappearanceRow,
+  ReappearanceWriteOutcome,
+  ReappearanceWriteRequest,
   VerificationObservationRow,
+  VerificationWriteOutcome,
+  VerificationWriteRequest,
+  VerificationWriteResponse,
 } from '../../application/contracts/observation-queries.ts';
-import { FINDING_TO_API, REENTRY_RULES, RE_ENTRY_STATE_SQL } from '../../application/contracts/observation-queries.ts';
+import {
+  API_TO_FINDING,
+  FINDING_TO_API,
+  REENTRY_RULES,
+  RE_ENTRY_STATE_SQL,
+} from '../../application/contracts/observation-queries.ts';
+import { detectReappearance, recordVerification } from '../../domain/commands.ts';
+import { createVerificationObservation } from '../../domain/entities.ts';
+import { DomainError } from '../../domain/errors.ts';
+import { CaseId, EvidenceId, TenantId } from '../../domain/identifiers.ts';
+import { ObservationWindow } from '../../domain/values.ts';
+import { appendAuditEvents } from './audit-sink.ts';
 
 /**
  * Translate a stored finding into the API's token, refusing an unmapped value.
@@ -264,4 +290,414 @@ export class PostgresObservationQueries implements ObservationQueries {
     );
     return result.rows.map(toReappearanceRow);
   }
+
+  async caseRowVersion(
+    tx: TenantTransaction,
+    caseId: string,
+  ): Promise<{ readonly rowVersionMs: number; readonly truthState: string } | undefined> {
+    const result = await tx.query<{ updated_at: Date; truth_state: string }>(
+      `SELECT c.updated_at, c.truth_state::text AS truth_state FROM request_case c WHERE c.id = $1::uuid`,
+      [caseId],
+    );
+    const row = result.rows[0];
+    return row === undefined ? undefined : { rowVersionMs: row.updated_at.getTime(), truthState: row.truth_state };
+  }
+
+  async exposureRowVersion(
+    tx: TenantTransaction,
+    exposureId: string,
+  ): Promise<{ readonly rowVersionMs: number; readonly truthState: string } | undefined> {
+    const result = await tx.query<{ updated_at: Date; truth_state: string }>(
+      `SELECT e.updated_at, e.truth_state::text AS truth_state FROM exposure e WHERE e.id = $1::uuid`,
+      [exposureId],
+    );
+    const row = result.rows[0];
+    return row === undefined ? undefined : { rowVersionMs: row.updated_at.getTime(), truthState: row.truth_state };
+  }
+
+  // -----------------------------------------------------------------------------------------------
+  // §5.10.1 — an independent re-observation.
+  // -----------------------------------------------------------------------------------------------
+  async recordVerificationObservation(
+    tx: TenantTransaction,
+    request: VerificationWriteRequest,
+  ): Promise<VerificationWriteOutcome> {
+    const context = await loadVerificationContext(tx, request.caseId);
+    if (context === undefined) return { ok: false, reason: 'NOT_FOUND' };
+    if (context.rowVersionMs !== request.expectedRowVersionMs) {
+      return {
+        ok: false,
+        reason: 'PRECONDITION_FAILED',
+        currentRowVersionMs: context.rowVersionMs,
+        truthState: context.truthState,
+      };
+    }
+    // T14 moves ACKNOWLEDGED → VERIFIED_REMOVED. Any other state is one of §5.10.1's explicitly illegal pairs
+    // (`REQUEST_SUBMITTED` and `VERIFIED_NOT_PRESENT` → `VERIFIED_REMOVED` are forbidden by SPEC-001 §4.2), and
+    // it is reported as an illegal transition with the state named rather than as a guard failure.
+    if (context.truthState !== 'ACKNOWLEDGED') {
+      return { ok: false, reason: 'ILLEGAL_TRANSITION', fromTruthState: context.truthState };
+    }
+    if (request.evidenceArtifactId !== null && !(await evidenceExists(tx, request.evidenceArtifactId))) {
+      return { ok: false, reason: 'EVIDENCE_NOT_FOUND' };
+    }
+
+    // INDEPENDENCE, AGAINST WHAT HAPPENED. The observer must be a different identity from the one that acted,
+    // and must observe along a different path (VG-VERIFY-001). The acting identity and the action's instant come
+    // from the case's T8 audit row; when there is none, independence cannot be attested and the request is
+    // refused rather than assumed.
+    if (context.actingIdentity === null || context.actionAtMs === null) {
+      return { ok: false, reason: 'OBSERVATION_PATH_NOT_INDEPENDENT' };
+    }
+    if (request.observationPathId === request.actingPathId) {
+      return { ok: false, reason: 'OBSERVATION_PATH_NOT_INDEPENDENT' };
+    }
+    if (request.actorIdentity === context.actingIdentity) {
+      return { ok: false, reason: 'OBSERVATION_PATH_NOT_INDEPENDENT' };
+    }
+
+    // VG-VERIFY-003: the recipe declares HOW removal is verified, and an observation by another method cannot
+    // prove it. A case with no recipe has no declared method, which is reported as a mismatch with the required
+    // value named as unrecorded — never as an assumed match.
+    const requiredMethod = context.recipeVerificationMethod ?? 'UNRECORDED';
+    if (request.observationMethod !== requiredMethod) {
+      return {
+        ok: false,
+        reason: 'OBSERVATION_METHOD_MISMATCH',
+        required: requiredMethod,
+        supplied: request.observationMethod,
+      };
+    }
+
+    const observedAtMs = Date.parse(request.observedAt);
+    const elapsedSeconds = Math.floor((observedAtMs - context.actionAtMs) / 1000);
+    const window = new ObservationWindow(request.requiredSeconds * 1000, request.observationMethod);
+    const met = window.hasElapsed(observedAtMs, context.actionAtMs);
+    const storedFinding = API_TO_FINDING[request.finding] ?? 'INCONCLUSIVE';
+
+    // VG-VERIFY-002: absence may not be reported before the window has elapsed. Refused BEFORE the row is
+    // written, so a premature claim leaves no observation behind. A NON-absence finding is recorded whatever the
+    // window says: a record still present is a fact, not a claim of removal.
+    if (storedFinding === 'ABSENT' && !met) {
+      return {
+        ok: false,
+        reason: 'OBSERVATION_WINDOW_NOT_MET',
+        requiredSeconds: request.requiredSeconds,
+        elapsedSeconds,
+      };
+    }
+
+    const observationId = cryptoRandom();
+    const tenantId = new TenantId(context.tenantId);
+    await tx.query(
+      `INSERT INTO verification_observation
+         (id, tenant_id, case_id, method, observed_at, actor_identity, acting_identity, finding, evidence_id,
+          acting_path_id, observation_path_id)
+       VALUES ($1::uuid, current_setting('app.tenant_id', true)::uuid, $2::uuid, $3,
+               to_timestamp($4::bigint / 1000.0), $5, $6, $7, $8::uuid, $9, $10)`,
+      [
+        observationId,
+        request.caseId,
+        request.observationMethod,
+        Math.trunc(observedAtMs),
+        request.actorIdentity,
+        context.actingIdentity,
+        storedFinding,
+        request.evidenceArtifactId,
+        request.actingPathId,
+        request.observationPathId,
+      ],
+    );
+
+    const observation = createVerificationObservation({
+      id: observationId,
+      tenantId,
+      caseId: new CaseId(request.caseId),
+      method: request.observationMethod,
+      observedAtMs,
+      actorIdentity: request.actorIdentity,
+      actingIdentity: context.actingIdentity,
+      finding: storedFinding,
+      // The column is `uuid NOT NULL`, so an observation with no artifact records the CASE's id: the evidence
+      // slot always names a row that exists rather than a sentinel, and `evidenceArtifactId` in the response
+      // reports whether a citation was supplied.
+      evidenceId: new EvidenceId(request.evidenceArtifactId ?? request.caseId),
+    });
+
+    const result = recordVerification(
+      { tenantId, correlationId: request.correlationId, nowMs: request.nowMs },
+      {
+        caseId: request.caseId,
+        from: 'ACKNOWLEDGED',
+        observation,
+        window,
+        actionAtMs: context.actionAtMs,
+        recipeVerificationMethod: requiredMethod,
+        recordAbsent: storedFinding === 'ABSENT',
+      },
+    );
+
+    const failed = 'refused' in result;
+    let transitionId: string | null = null;
+    if (failed) {
+      // The observation HAPPENED and is recorded; the case does not move. §5.10.1's second success body says so
+      // plainly (`verificationFailed: true`, `transitionCode: null`), and VG-VERIFY-004 forbids regressing or
+      // inventing a state to accommodate it. The audit row carries no transition code, because none occurred.
+      await appendAuditEvents(tx, [result.audit], { actorKind: 'SERVICE' });
+    } else {
+      await tx.query(`UPDATE request_case SET truth_state = $2::truth_state WHERE id = $1::uuid`, [
+        request.caseId,
+        result.to,
+      ]);
+      const ids = await appendAuditEvents(
+        tx,
+        [result.audit],
+        { actorKind: 'SERVICE' },
+        {
+          transitionCode: result.transitionId,
+          from: result.from,
+          to: result.to,
+          evidenceArtifactIds: request.evidenceArtifactId === null ? [] : [request.evidenceArtifactId],
+          caseId: request.caseId,
+        },
+      );
+      transitionId = ids[0] ?? null;
+    }
+
+    const response: VerificationWriteResponse = {
+      verificationObservationId: observationId,
+      caseId: request.caseId,
+      truthState: failed ? context.truthState : result.to,
+      transitionCode: failed ? null : result.transitionId,
+      transitionId,
+      observationMethod: request.observationMethod,
+      actingPathId: request.actingPathId,
+      observationPathId: request.observationPathId,
+      // The COMPUTED window, not the caller's claim. `requiredSeconds` is the caller's requirement; whether it
+      // was met is a fact about two instants.
+      windowSatisfied: { requiredSeconds: request.requiredSeconds, elapsedSeconds, met },
+      verificationLagSeconds: elapsedSeconds,
+      evidenceArtifactId: request.evidenceArtifactId,
+      finding: request.finding,
+      verificationFailed: failed,
+      // FALSE, and stated as a fact rather than as a constant. This route only runs for an ACKNOWLEDGED case (the
+      // state check above refuses everything else), so a record still present is what that state EXPECTS rather
+      // than a contradiction of a claimed removal. The field is carried because §5.10.1's response carries it,
+      // and a future route that runs against a state claiming removal would have to compute it from that state.
+      reappearanceSuspected: false,
+    };
+    return { ok: true, response };
+  }
+
+  // -----------------------------------------------------------------------------------------------
+  // §5.11.1 — a reappearance.
+  // -----------------------------------------------------------------------------------------------
+  async recordReappearance(
+    tx: TenantTransaction,
+    request: ReappearanceWriteRequest,
+  ): Promise<ReappearanceWriteOutcome> {
+    const exposure = await tx.query<{
+      truth_state: string;
+      updated_at: Date;
+      case_id: string | null;
+    }>(
+      `SELECT e.truth_state::text AS truth_state, e.updated_at,
+              (SELECT c.id::text FROM request_case c WHERE c.exposure_id = e.id
+                ORDER BY c.created_at DESC, c.id DESC LIMIT 1) AS case_id
+         FROM exposure e WHERE e.id = $1::uuid`,
+      [request.exposureId],
+    );
+    const row = exposure.rows[0];
+    if (row === undefined) return { ok: false, reason: 'NOT_FOUND' };
+    const rowVersionMs = row.updated_at.getTime();
+    if (rowVersionMs !== request.expectedRowVersionMs) {
+      return {
+        ok: false,
+        reason: 'PRECONDITION_FAILED',
+        currentRowVersionMs: rowVersionMs,
+        truthState: row.truth_state,
+      };
+    }
+
+    // VG-REAPPEAR-001: a first-ever sighting is NEVER labelled as a reappearance. The refusal names the state the
+    // exposure is actually in, so the caller learns the truth rather than the label they asked for.
+    if (row.truth_state !== 'VERIFIED_REMOVED' && row.truth_state !== 'SEARCH_DELISTED') {
+      return { ok: false, reason: 'REAPPEARANCE_WITHOUT_PRIOR_REMOVAL', observedState: row.truth_state };
+    }
+
+    const priorEventId = parsePriorRemovedEventId(request.priorRemovedEventId);
+    if (priorEventId === null) return { ok: false, reason: 'PRIOR_REMOVED_EVENT_NOT_FOUND' };
+    // The referenced row must be the transition that ESTABLISHED the state being reappeared from: `T14` for
+    // VERIFIED_REMOVED, `T21` for SEARCH_DELISTED. A row that exists but recorded something else is not this
+    // reappearance's prior event, and linking to it would make the history say the wrong thing.
+    const expectedCode = row.truth_state === 'VERIFIED_REMOVED' ? 'T14' : 'T21';
+    const prior = await tx.query<{ present: boolean }>(
+      `SELECT EXISTS (
+         SELECT 1 FROM audit_event a
+          WHERE a.id = $1::bigint AND a.transition_code = $2
+            AND a.to_truth_state::text = $3
+            AND (a.case_id IN (SELECT c.id FROM request_case c WHERE c.exposure_id = $4::uuid)
+                 OR (a.target_kind = 'Exposure' AND a.target_id = $4::uuid))
+       ) AS present`,
+      [priorEventId, expectedCode, row.truth_state, request.exposureId],
+    );
+    if (prior.rows[0]?.present !== true) return { ok: false, reason: 'PRIOR_REMOVED_EVENT_NOT_FOUND' };
+
+    if (!(await evidenceExists(tx, request.evidenceArtifactId))) {
+      return { ok: false, reason: 'EVIDENCE_NOT_FOUND' };
+    }
+
+    const observedAtMs = Date.parse(request.observedAt);
+    const reappearanceId = cryptoRandom();
+    await tx.query(
+      `INSERT INTO reappearance
+         (id, tenant_id, exposure_id, prior_removed_event_id, observed_at, content_hash, evidence_id, observation_method)
+       VALUES ($1::uuid, current_setting('app.tenant_id', true)::uuid, $2::uuid, $3::bigint,
+               to_timestamp($4::bigint / 1000.0), $5, $6::uuid, $7)`,
+      [
+        reappearanceId,
+        request.exposureId,
+        priorEventId,
+        Math.trunc(observedAtMs),
+        request.contentHash,
+        request.evidenceArtifactId,
+        request.observationMethod,
+      ],
+    );
+
+    const tenantId = new TenantId(
+      (
+        await tx.query<{ tenant_id: string }>(
+          `SELECT e.tenant_id::text AS tenant_id FROM exposure e WHERE e.id = $1::uuid`,
+          [request.exposureId],
+        )
+      ).rows[0]?.tenant_id ?? '',
+    );
+
+    let result;
+    try {
+      result = detectReappearance(
+        { tenantId, correlationId: request.correlationId, nowMs: request.nowMs },
+        {
+          exposureId: request.exposureId,
+          caseId: row.case_id,
+          from: row.truth_state as 'VERIFIED_REMOVED' | 'SEARCH_DELISTED',
+          priorRemovedEventId: String(priorEventId),
+          recordPresentAgain: true,
+        },
+      );
+    } catch (error) {
+      if (error instanceof DomainError) {
+        return { ok: false, reason: 'ILLEGAL_TRANSITION', fromTruthState: row.truth_state };
+      }
+      throw error;
+    }
+
+    await tx.query(`UPDATE exposure SET truth_state = $2::truth_state WHERE id = $1::uuid`, [
+      request.exposureId,
+      result.to,
+    ]);
+    await appendAuditEvents(
+      tx,
+      [result.audit],
+      { actorKind: 'SERVICE' },
+      {
+        transitionCode: result.transitionId,
+        from: result.from,
+        to: result.to,
+        evidenceArtifactIds: [request.evidenceArtifactId],
+        ...(row.case_id === null ? {} : { caseId: row.case_id }),
+      },
+    );
+
+    return {
+      ok: true,
+      response: {
+        reappearanceId,
+        exposureId: request.exposureId,
+        priorRemovedEventId: String(priorEventId),
+        priorTruthState: row.truth_state,
+        truthState: result.to,
+        transitionCode: result.transitionId,
+        observedAt: new Date(observedAtMs).toISOString(),
+        reentry: REENTRY_RULES,
+      },
+    };
+  }
+}
+
+/** Whether an evidence artifact resolves for this tenant (RLS makes another tenant's an absence). */
+async function evidenceExists(tx: TenantTransaction, evidenceArtifactId: string): Promise<boolean> {
+  const result = await tx.query<{ present: boolean }>(
+    `SELECT EXISTS (SELECT 1 FROM evidence_artifact e WHERE e.id = $1::uuid) AS present`,
+    [evidenceArtifactId],
+  );
+  return result.rows[0]?.present === true;
+}
+
+/**
+ * The prior removal event, from either accepted form.
+ *
+ * `TR-<digits>` is the form SPEC-003 §5.11.1's example uses; the bare digits are what §5.11.2 and §5.11.3
+ * RENDER, because this API returns identifiers as their underlying keys (the same reading `ASSUMPTIONS.md` §3.27
+ * records for `transitionId`). Accepting both is what keeps a caller from having to know which form it is
+ * holding, and the value is returned as digits so the stored bigint and the response agree.
+ */
+function parsePriorRemovedEventId(value: string): string | null {
+  const match = /^(?:TR-)?(\d{1,19})$/.exec(value.trim());
+  if (match?.[1] === undefined) return null;
+  const parsed = BigInt(match[1]);
+  // A bigint column accepts up to 2^63-1; a larger value would fail in SQL with a type error whose message names
+  // the column rather than the caller's input.
+  return parsed <= 9223372036854775807n ? match[1] : null;
+}
+
+interface VerificationContext {
+  readonly tenantId: string;
+  readonly truthState: string;
+  readonly rowVersionMs: number;
+  readonly recipeVerificationMethod: string | null;
+  readonly actingIdentity: string | null;
+  readonly actionAtMs: number | null;
+}
+
+/** The facts §5.10.1's guards need, including the acting identity and instant read from the audit spine. */
+async function loadVerificationContext(
+  tx: TenantTransaction,
+  caseId: string,
+): Promise<VerificationContext | undefined> {
+  const base = await tx.query<{
+    tenant_id: string;
+    truth_state: string;
+    updated_at: Date;
+    verification_method: string | null;
+  }>(
+    `SELECT c.tenant_id::text AS tenant_id, c.truth_state::text AS truth_state, c.updated_at,
+            r.verification_method
+       FROM request_case c
+       LEFT JOIN removal_recipe r ON r.id = c.recipe_id
+      WHERE c.id = $1::uuid`,
+    [caseId],
+  );
+  const row = base.rows[0];
+  if (row === undefined) return undefined;
+
+  // The T8 row is the record of the external effect: its `actor` is the identity that acted, and its `at` is
+  // when. Newest first, because a case can be submitted more than once after a reappearance.
+  const action = await tx.query<{ actor: string; at: Date }>(
+    `SELECT a.actor, a.at FROM audit_event a
+      WHERE a.case_id = $1::uuid AND a.transition_code = 'T8'
+      ORDER BY a.at DESC, a.id DESC LIMIT 1`,
+    [caseId],
+  );
+  const actionRow = action.rows[0];
+
+  return {
+    tenantId: row.tenant_id,
+    truthState: row.truth_state,
+    rowVersionMs: row.updated_at.getTime(),
+    recipeVerificationMethod: row.verification_method,
+    actingIdentity: actionRow?.actor ?? null,
+    actionAtMs: actionRow?.at.getTime() ?? null,
+  };
 }

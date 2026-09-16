@@ -19,3 +19,4 @@ tests/db/audit-stream.test.ts
 tests/db/observation-reads.test.ts
 tests/db/exposure-transitions.test.ts
 tests/db/case-lifecycle.test.ts
+tests/db/observation-writes.test.ts

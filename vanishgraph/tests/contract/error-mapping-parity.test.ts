@@ -359,12 +359,23 @@ describe('the registry is structurally sound', () => {
   test('no code or message carries an ad-hoc success or lifecycle token', () => {
     // SPEC-000 §5: a truth state is not a success flag, and `REMOVED` is not `OK`. A code named
     // SUCCESS would make a failure indistinguishable from a success at the contract level.
+    //
+    // ONE CODE IS EXEMPT, AND ONLY BECAUSE THE SPECIFICATION NAMES IT. `PRIOR_REMOVED_EVENT_NOT_FOUND` is
+    // SPEC-003 §5.11.1's own refusal (`409`/`422` list) for a `priorRemovedEventId` that does not resolve, and
+    // `REMOVED` there is part of the domain's term "prior removed event" — the audit row that recorded the
+    // removal — not a claim about the resource. Renaming it would break the contract; the token scan is a
+    // syntactic approximation of the rule, and this is the case where the approximation and the intent part
+    // company. The exemption is NOT a hole: the test below asserts the code is genuinely declared in SPEC-003
+    // §8.2, so a NEW code with a forbidden token still fails unless the specification itself declares it.
+    const SPEC_DECLARED_WITH_FORBIDDEN_TOKEN = new Set(['PRIOR_REMOVED_EVENT_NOT_FOUND']);
     const offences: string[] = [];
     for (const row of ERROR_CODE_REGISTRY) {
       const tokens = row.wireCode.split('_');
       for (const forbidden of FORBIDDEN_ADHOC_TOKENS) {
         // A token equal to the forbidden word (not a substring: DELETED is not REMOVED).
-        if (tokens.includes(forbidden)) offences.push(`${row.wireCode} contains token ${forbidden}`);
+        if (tokens.includes(forbidden) && !SPEC_DECLARED_WITH_FORBIDDEN_TOKEN.has(row.wireCode)) {
+          offences.push(`${row.wireCode} contains token ${forbidden}`);
+        }
       }
       // The message must not claim a success either.
       for (const forbidden of ['successfully', 'has been removed', 'was removed']) {
@@ -374,6 +385,15 @@ describe('the registry is structurally sound', () => {
       }
     }
     assert.deepEqual(offences, [], offences.join('\n  '));
+
+    // The exemption must be real: each exempted code has to appear in §8.2, so the list cannot become a place to
+    // park an invented code.
+    for (const code of SPEC_DECLARED_WITH_FORBIDDEN_TOKEN) {
+      assert.ok(
+        spec003Statuses().has(code),
+        `${code} is exempted from the token rule but SPEC-003 §8.2 does not declare it`,
+      );
+    }
   });
 
   test('every status is one SPEC-003 §8.2 declares', () => {

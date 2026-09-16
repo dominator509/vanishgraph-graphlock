@@ -171,6 +171,22 @@ export interface ObservationQueries {
   ): Promise<VerificationObservationRow | undefined>;
   /** Whether the exposure exists for this tenant. */
   exposureExists(tx: TenantTransaction, exposureId: string): Promise<boolean>;
+  /**
+   * The §2.7 concurrency token for a case, or `undefined` when it does not exist.
+   *
+   * Used by §5.10.1 to return the ETag the caller chains its next write against. It reads the SAME pair the
+   * ETag is built from (truth state, `updated_at` in milliseconds) rather than recomputing an ETag from the
+   * response body, so the header cannot disagree with what a follow-up `If-Match` will compare.
+   */
+  caseRowVersion(
+    tx: TenantTransaction,
+    caseId: string,
+  ): Promise<{ readonly rowVersionMs: number; readonly truthState: string } | undefined>;
+  /** The same, for an exposure (§5.11.1). */
+  exposureRowVersion(
+    tx: TenantTransaction,
+    exposureId: string,
+  ): Promise<{ readonly rowVersionMs: number; readonly truthState: string } | undefined>;
   /** §5.11.2 — the tenant-wide list, keyset-paginated, fetching `limit + 1` so the caller learns `hasMore`. */
   listReappearances(
     tx: TenantTransaction,
@@ -181,4 +197,153 @@ export interface ObservationQueries {
     tx: TenantTransaction,
     exposureId: string,
   ): Promise<readonly ReappearanceRow[]>;
+  /** §5.10.1 — record an independent re-observation and drive T14 when every guard holds. */
+  recordVerificationObservation(
+    tx: TenantTransaction,
+    request: VerificationWriteRequest,
+  ): Promise<VerificationWriteOutcome>;
+  /** §5.11.1 — record a reappearance and drive T17 or T20. */
+  recordReappearance(
+    tx: TenantTransaction,
+    request: ReappearanceWriteRequest,
+  ): Promise<ReappearanceWriteOutcome>;
 }
+
+/**
+ * THE FINDING TOKENS, IN ONE PLACE, because the wire and the column disagree.
+ *
+ * §5.10.1's request and response use `RECORD_ABSENT | RECORD_PRESENT | INDETERMINATE`; the delivered
+ * `verification_observation.finding` column's CHECK admits `PRESENT | ABSENT | INCONCLUSIVE`. Neither is a
+ * typo — one names what the OBSERVATION says about the record, the other is the domain's token for the same
+ * fact — so the mapping is declared here and a value outside it is refused rather than coerced. The same
+ * defect class as §5.10.2's read mapping (`FINDING_TO_API`), and the direction is the reverse.
+ */
+export const API_TO_FINDING: Readonly<Record<string, 'PRESENT' | 'ABSENT' | 'INCONCLUSIVE'>> = Object.freeze({
+  RECORD_PRESENT: 'PRESENT',
+  RECORD_ABSENT: 'ABSENT',
+  INDETERMINATE: 'INCONCLUSIVE',
+});
+
+/** Whether a wire token is one §5.10.1 declares. */
+export function isApiFinding(value: string): boolean {
+  return Object.prototype.hasOwnProperty.call(API_TO_FINDING, value);
+}
+
+/** Everything §5.10.1 needs. */
+export interface VerificationWriteRequest {
+  readonly caseId: string;
+  readonly expectedRowVersionMs: number;
+  readonly observationMethod: string;
+  readonly actorIdentity: string;
+  readonly observationPathId: string;
+  readonly actingPathId: string;
+  readonly observedAt: string;
+  /** A token from `API_TO_FINDING`. */
+  readonly finding: string;
+  readonly evidenceArtifactId: string | null;
+  /**
+   * The window the re-observation had to wait out, in seconds.
+   *
+   * FROM THE REQUEST, because NO table declares a verification window: the recipe carries a verification
+   * METHOD but no duration, and SPEC-003 §5.10.1's request supplies `requiredSeconds` itself. What the request
+   * does NOT get to decide is whether the window was MET — `elapsedSeconds` and `met` are computed here from
+   * the observation instant against the action's, because a control a caller can waive with a boolean is not a
+   * control (the same rule §5.14's `requiresHumanReview` follows).
+   */
+  readonly requiredSeconds: number;
+  readonly correlationId: string;
+  readonly nowMs: number;
+}
+
+/** §5.10.1's two success bodies, in one shape: `verificationFailed` distinguishes them. */
+export interface VerificationWriteResponse {
+  readonly verificationObservationId: string;
+  readonly caseId: string;
+  readonly truthState: string;
+  /** `T14` when the guards held, `null` when the observation was recorded and the case did not move. */
+  readonly transitionCode: string | null;
+  readonly transitionId: string | null;
+  readonly observationMethod: string;
+  readonly actingPathId: string;
+  readonly observationPathId: string;
+  readonly windowSatisfied: {
+    readonly requiredSeconds: number;
+    readonly elapsedSeconds: number | null;
+    readonly met: boolean;
+  };
+  readonly verificationLagSeconds: number | null;
+  readonly evidenceArtifactId: string | null;
+  readonly finding: string;
+  readonly verificationFailed: boolean;
+  /** Whether this observation contradicts a state that already claimed removal. */
+  readonly reappearanceSuspected: boolean;
+}
+
+export type VerificationWriteOutcome =
+  | { readonly ok: true; readonly response: VerificationWriteResponse }
+  | { readonly ok: false; readonly reason: 'NOT_FOUND' }
+  | {
+      readonly ok: false;
+      readonly reason: 'PRECONDITION_FAILED';
+      readonly currentRowVersionMs: number;
+      readonly truthState: string;
+    }
+  | { readonly ok: false; readonly reason: 'ILLEGAL_TRANSITION'; readonly fromTruthState: string }
+  | { readonly ok: false; readonly reason: 'OBSERVATION_PATH_NOT_INDEPENDENT' }
+  | {
+      readonly ok: false;
+      readonly reason: 'OBSERVATION_WINDOW_NOT_MET';
+      readonly requiredSeconds: number;
+      readonly elapsedSeconds: number | null;
+    }
+  | {
+      readonly ok: false;
+      readonly reason: 'OBSERVATION_METHOD_MISMATCH';
+      readonly required: string;
+      readonly supplied: string;
+    }
+  | { readonly ok: false; readonly reason: 'EVIDENCE_NOT_FOUND' };
+
+/** Everything §5.11.1 needs. */
+export interface ReappearanceWriteRequest {
+  readonly exposureId: string;
+  readonly expectedRowVersionMs: number;
+  /** The prior removal event: a bare audit-row id or the wire form `TR-<id>` (see the adapter). */
+  readonly priorRemovedEventId: string;
+  readonly observedAt: string;
+  readonly observationMethod: string;
+  readonly contentHash: string;
+  readonly evidenceArtifactId: string;
+  readonly correlationId: string;
+  readonly nowMs: number;
+}
+
+export type ReappearanceWriteOutcome =
+  | {
+      readonly ok: true;
+      readonly response: {
+        readonly reappearanceId: string;
+        readonly exposureId: string;
+        readonly priorRemovedEventId: string;
+        readonly priorTruthState: string;
+        readonly truthState: string;
+        readonly transitionCode: string;
+        readonly observedAt: string;
+        readonly reentry: ReentryRules;
+      };
+    }
+  | { readonly ok: false; readonly reason: 'NOT_FOUND' }
+  | {
+      readonly ok: false;
+      readonly reason: 'PRECONDITION_FAILED';
+      readonly currentRowVersionMs: number;
+      readonly truthState: string;
+    }
+  | {
+      readonly ok: false;
+      readonly reason: 'REAPPEARANCE_WITHOUT_PRIOR_REMOVAL';
+      readonly observedState: string;
+    }
+  | { readonly ok: false; readonly reason: 'PRIOR_REMOVED_EVENT_NOT_FOUND' }
+  | { readonly ok: false; readonly reason: 'EVIDENCE_NOT_FOUND' }
+  | { readonly ok: false; readonly reason: 'ILLEGAL_TRANSITION'; readonly fromTruthState: string };
