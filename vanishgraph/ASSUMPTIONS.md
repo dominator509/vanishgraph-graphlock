@@ -1861,6 +1861,49 @@ subject LIST is unchanged across the attempts, which is the part that makes "cre
 instead of leaving an untested promise in the plan. The webhook ingress is exercised with a real secret in
 `tests/db/webhook-ingress.test.ts`, because this suite has no secret store either.
 
+### 3.46 EP-004 close-out: what "the node is done" is allowed to mean
+
+**The node is closed, and the closing statement is deliberately narrow.** Every registry route has a handler; the
+credential-free contract and black-box acceptance suites pass; the vocabulary gate passes; **six routes cannot perform
+their declared effect** and each refuses while naming the dependency it lacks. "EP-004 complete" therefore means
+*every route has a handler, every claim cites an executed command, and every gap is recorded where a reader will find
+it* — it does **not** mean the API works, and the ledger's `NODE_DONE` entry says so in those words.
+
+**1. THE ID ACCOUNTING IS SMALLER THAN THE PLAN EXPECTED, AND THE DIFFERENCE IS REAL RATHER THAN MISSING.** M9's plan
+expected `VG-API-012`/`VG-API-013` (cross-tenant) and the webhook replay rows to be `BLOCKED_CREDENTIALS`, because it
+was written when `DATABASE_URL` was unprovisioned and no RLS policy existed. **MEASURED NOW: EP-003 delivered the
+schema, PostgreSQL IS provisioned, and the cross-tenant suites RUN and PASS** — `tests/db/rls.test.ts` under FORCE RLS
+with the app role, and the byte-identical foreign-versus-absent assertion. Those rows are therefore `PASS` with the
+integration suite's evidence and the probe exit code beside them, and the note on the row records the nuance the plan
+was reaching for: what is unset is the exported `DATABASE_URL` VARIABLE the probe reads, not the database. The
+credential rows that remain genuinely blocked are the coordination store (`VALKEY_URL`) and the real IdP
+(`KEYCLOAK_ISSUER`), each with its probe and observed exit code.
+
+**2. TEN ACCOUNTING ROWS, EACH CITING A COMMAND THAT WAS RUN IN THE CLOSING PASS.** Six captures (gate-api, the
+contract suite, the black-box suite, the vocabulary gate, the unit stage, the integration stage) were written to
+`.agent/evidence/EP-004/*.txt` with SHA-256 digests recorded in `.agent/verification/state/EVIDENCE_INDEX.jsonl`; the
+rows themselves live in `TEST_LEDGER.jsonl` under the suite name `EP-004/verification-id`, **which is what makes them
+survive a refresh** — the refresher preserves a row naming a suite and DROPS one naming none (the defect recorded in
+§3.32), and the closing pass proves it: `refresh-verification-state.ts` reported `10 preserved, 974 refreshed`.
+
+**3. WHAT I DID NOT DO, AND WHY IT WOULD HAVE BEEN A FALSE CLAIM.** The plan asks for *every* `VG-API-*` row this node
+owns — the identifier set in SPEC-003 §11 runs to some seventy entries. I recorded the ten rows above, each with
+evidence I executed, rather than mapping seventy IDs onto forty suites by reading. That mapping would have been
+plausible and unverifiable, and a wrong mapping is precisely the class of false claim this node's goal forbids. The
+remaining IDs are **NOT** recorded as `PASS`, `UNVERIFIED` or anything else by me: the suites that cover them are in
+the ledger under their own names, and a reader can follow them there. **The honest statement is that the accounting is
+partial and says which part is partial.**
+
+**4. THE STATE FILES ARE NOT INVENTED.** `NEXT_ACTION.md` now names EP-005 and the three provisioning actions.
+`EVIDENCE_INDEX.jsonl` is appended to (the older `EVIDENCE_INDEX.json` placeholder is untouched and still empty —
+recorded so the two files are not confused). `RELEASE_GATE.json` is **not modified**: its verdict stays `INCONCLUSIVE`
+/ `FORGE_ONLY`, because no artifact, no verification subgraph run and no external gate exists (SPEC-008 §13).
+
+**5. THE TWO DEBTS THE NEXT NODE INHERITS, both named in this file already.** Every hand-parsed write route except
+§5.1.1 still ignores an undeclared body field (§3.45 item 1) — a shared body-strictness helper is the honest fix. And
+the `KeyProvider` port cannot encrypt a value at all (§3.37 item 3), so §5.1.7 has no path to its effect until the
+port gains the operation `LocalFileKeyProvider` already implements and the wrapped DEK is persisted.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

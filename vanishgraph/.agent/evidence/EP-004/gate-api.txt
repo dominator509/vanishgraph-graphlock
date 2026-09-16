@@ -1,0 +1,22 @@
+scan-truth-state-input: 35 http file(s) scanned, 5 input-schema block(s), 0 violations
+gate-api: no route accepts a truth state as input (SM-6)
+gate-api: contract ℹ tests 368
+gate-api: contract ℹ pass 368
+gate-api: contract ℹ fail 0
+ep004 api gate: UNVERIFIED-BY-THIS-GATE (credential-dependent; recorded as BLOCKED_CREDENTIALS):
+  - DATABASE_URL: BLOCKED_CREDENTIALS (probe: sh scripts/probes/database_url.sh)
+  - VALKEY_URL: BLOCKED_CREDENTIALS (probe: sh scripts/probes/valkey_url.sh)
+  - KEYCLOAK_ISSUER: BLOCKED_CREDENTIALS (probe: sh scripts/probes/keycloak.sh)
+  NOTE: a vanishgraph PostgreSQL container IS running (EP-003 gate-data provisions it);
+        what is unset above is the exported DATABASE_URL variable the probe reads.
+ep004 api gate: route coverage (registered vs the SPEC-003 §5 registry):
+route coverage: 78 of 78 registry routes have a handler
+route coverage: 72 of 78 registry routes have a handler that is not an unconditional refusal
+route coverage: 6 registered route(s) refuse unconditionally:
+  - POST /v1/discovery-runs — unspecified
+  - GET /v1/discovery-runs — unspecified
+  - POST /v1/evidence-artifacts — artifact upload requires a multipart/form-data parser (Fastify 5 does not parse multipart without a plugin) and an EvidenceStore implementation; neither is present
+  - GET /v1/evidence-artifacts/{evidenceArtifactId}/content — artifact content requires an EvidenceStore implementation, and the port as declared carries no tenant scope, so a digest-keyed store could not isolate tenants
+  - POST /v1/evidence-artifacts/{evidenceArtifactId}/integrity-checks — a fresh digest verification requires an EvidenceStore to recompute SHA-256 over the stored bytes; no store is configured, and reporting the STORED digest as "recomputed" would be a verification that verified nothing
+  - POST /v1/subjects/{subjectId}/identifiers — identifier capture requires a durable key provider: ADR-006 (managed KMS) is open, the KeyProvider port exposes no encrypt operation, and no code persists tenant_key
+gate-api: ok

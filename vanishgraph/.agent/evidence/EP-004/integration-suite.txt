@@ -1,0 +1,12 @@
+test-integration: seed already present (926 tenant row(s))
+{"tests":327,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":27,"manifestChecked":27,"verdict":"OK"}
+ℹ tests 327
+ℹ suites 97
+ℹ pass 327
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 99332.6931
+test-integration: upgrade matrix UNPROVEN (scripts/test-migrations.sh absent); recorded in integration-migrations.txt
+test-integration: ok
