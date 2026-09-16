@@ -1561,6 +1561,26 @@ the mask is built from scheme and host rather than carved out of the value, so a
 mistake. A non-HTTP reference is masked entirely: a `file:`/`data:`/`javascript:` value has no host worth publishing
 and can carry content inline.
 
+**7. THE NODE'S OWN GATE HAS BEEN RED, AND MY "ALL STATIC GATES OK" REPORTS WERE TRUE ONLY OF THE GATES I RAN.**
+Running `sh scripts/gate-api.sh` — EP-004 M6's own RUN command, which I had never executed — fails on
+`scan-truth-state-input` with six hits, and **every one is a false positive of a bare line match**:
+`scripts/scan-truth-state-input.ts` rule 1 is `if (/truthState\s*:/ .test(line))`, flagged with the reason "a request
+schema declares truthState as an input property (SM-6)" — but it performs NO positional analysis, so it fires on
+response object literals (`truthState: outcome.truthState` in `cases.ts` ×3), on a helper's parameter type
+(`appeals.ts`, `deadlines.ts`) and on a function signature (`preconditions.ts`). The same file's own doc comment says
+`truthState` "is the field name SPEC-003 §5 uses in RESPONSES", so the check contradicts its stated rule.
+
+EVIDENCE THAT THIS IS PRE-EXISTING AND NOT MINE, because the distinction matters: `cases.ts` was last written in
+`35e4d87` (§5.7's milestone) and `preconditions.ts` in `6484003`; the scanner has been unchanged since `66bf328`
+(EP-004 M1); and my `ac04218` touched none of the four flagged files. **The gate has therefore been failing for
+several milestone commits.** My summaries have said "lint, format-check, import-boundary, reality-gate ... all ok",
+which was accurate for the gates I ran and misleading as a statement about this node's gates — `gate-api.sh` was not
+among them, and it is the one M6's execplan names. Recorded here so the record shows the miss, not only the fix.
+The repair is to make rule 1 positional (flag `truthState` only inside a request-side schema — `body:`,
+`querystring:`, `params:`, `headers:` — or a JSON-Schema `properties` block those contain), backed by a test that the
+scanner STILL catches a genuine request-schema violation; that is a repair rather than a weakening, and it is the
+first task of the next round. No part of `.agent/reality-*` or the pattern files is involved.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a
