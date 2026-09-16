@@ -32,6 +32,7 @@ import { controllerResponseRoutes } from './routes/controller-responses.ts';
 import { actionRoutes } from './routes/actions.ts';
 import { policyRoutes } from './routes/policies.ts';
 import { coverageRoutes } from './routes/coverage.ts';
+import { evidenceRoutes } from './routes/evidence.ts';
 import type { SubjectQueries } from '../application/contracts/subject-queries.ts';
 import type { SubjectCommands } from '../application/contracts/subject-commands.ts';
 import type { RecipeVerificationKeys, SourceQueries } from '../application/contracts/source-queries.ts';
@@ -46,6 +47,7 @@ import type { ControllerResponseQueries } from '../application/contracts/control
 import type { ActionQueries } from '../application/contracts/action-queries.ts';
 import type { PolicyQueries } from '../application/contracts/policy-queries.ts';
 import type { CoverageQueries } from '../application/contracts/coverage-queries.ts';
+import type { EvidenceQueries } from '../application/contracts/evidence-queries.ts';
 import { installCorrelation } from './plugins/correlation.ts';
 import { installErrorHandler } from './plugins/error-handler.ts';
 import { installIdentity, type IdentityPluginOptions } from './plugins/identity.ts';
@@ -169,6 +171,7 @@ export interface ServerDependencies {
   /** Policy decisions and jurisdiction policies (SPEC-003 §5.6). Read-only except for the resolution route. */
   readonly policyQueries: PolicyQueries;
   readonly coverageQueries: CoverageQueries;
+  readonly evidenceQueries: EvidenceQueries;
   readonly logLevel?: string;
 }
 
@@ -253,6 +256,8 @@ export function buildServer(deps: ServerDependencies): VgFastify {
   // The SPEC-003 §5.16 group: two coverage reads and the primary metric. It paginates (§5.16.1), so it needs the
   // session secret for cursors.
   app.register(coverageRoutes, { sessionSecret: deps.sessionSecret, queries: deps.coverageQueries });
+  // The SPEC-003 5.12 group: two reads, and three routes that name the dependency they lack.
+  app.register(evidenceRoutes, { queries: deps.evidenceQueries });
   app.register(caseRoutes, {
     sessionSecret: deps.sessionSecret,
     queries: deps.caseQueries,

@@ -30,6 +30,7 @@ import { PostgresTenantRunner } from '../../src/adapters/persistence/postgres-ru
 import { PostgresActionQueries } from '../../src/adapters/persistence/actions.ts';
 import { PostgresPolicyQueries } from '../../src/adapters/persistence/policies.ts';
 import { PostgresCoverageQueries } from '../../src/adapters/persistence/coverage.ts';
+import { PostgresEvidenceQueries } from '../../src/adapters/persistence/evidence.ts';
 import { PostgresControllerResponseQueries } from '../../src/adapters/persistence/controller-responses.ts';
 import { PostgresCaseQueries } from '../../src/adapters/persistence/cases.ts';
 import { PostgresObservationQueries } from '../../src/adapters/persistence/observations.ts';
@@ -108,6 +109,7 @@ function serverFor(
     actionQueries: new PostgresActionQueries({ recipeVerificationKeys: keys }),
     policyQueries: new PostgresPolicyQueries(),
     coverageQueries: new PostgresCoverageQueries(),
+    evidenceQueries: new PostgresEvidenceQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
   });
 }

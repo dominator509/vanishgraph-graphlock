@@ -1447,6 +1447,61 @@ identifier durable, and only then should the route perform its effect. Until bot
 aliases are masked for the same reason (their `value_enc` is written as raw UTF-8 bytes, a limitation EP-003
 recorded), so a reveal there was equally unanswerable and equally silent.
 
+### 3.38 §5.12: an `EvidenceStore` that cannot isolate tenants, and a vocabulary the contract does not store
+
+**§5.12.2 (artifact metadata + traceability) and §5.12.5 (a case's artifacts) implemented; §5.12.1, §5.12.3 and
+§5.12.4 now exist as handlers that NAME what they lack.** Coverage measured: `73 registered / 69 working of 78` —
+**4 unconditional refusals** (§5.1.7, and §5.12.1/§5.12.3/§5.12.4) and **5 routes not implemented, all §5.4**. The
+three §5.12 refusals are an improvement in honesty over an absent route: an operator gets the dependency's name
+instead of a 404. Tests: `tests/db/evidence-reads.test.ts` 8/8, `tests/contract/evidence-routes.test.ts` 7/7, unit
+653/653.
+
+**1. THE `EvidenceStore` PORT CANNOT ISOLATE TENANTS, AND THAT IS A SECURITY FINDING RATHER THAN A DETAIL.** Its
+declaration is `put(content, digest)`, `get(digest)`, `verify(digest)` — content-addressed by DIGEST ALONE, with no
+tenant parameter anywhere. Two tenants that upload identical bytes produce the SAME digest, so a digest-keyed store
+cannot distinguish their objects: a `get` for one tenant would return the other's document, and nothing in the port
+would notice. VG-TENANT-002 requires isolation to hold INDEPENDENTLY at each layer, and the database's RLS cannot
+cover this one because the bytes are not in the database. Implementing the port as declared would therefore put
+evidence behind a cross-tenant read that no policy polices, which is why §5.12.3 refuses rather than shipping a store
+that "works". The fix is a domain change — a tenant on every operation, or a tenant-namespaced digest — and it is
+recorded for the node that owns the KMS/evidence story rather than made quietly in a route.
+
+**2. §5.12.1 NEEDS TWO THINGS THAT DO NOT EXIST HERE.** A multipart parser (its content type is
+`multipart/form-data`, and Fastify 5 does not parse it without a plugin; hand-rolling a boundary parser for identity
+documents is not something to improvise) and an `EvidenceStore`. The refusal names both.
+
+**3. THE `redaction_state` CONFLICT IS NOW VISIBLE AT THE BOUNDARY RATHER THAN HIDDEN BY A TRANSLATION.** MEASURED
+earlier: the column's CHECK admits `NONE|SCRUBBED|DENIED` while SPEC-003 §5.12.1 declares `UNREDACTED|DLP_SCRUBBED`.
+The read route reports the STORED token verbatim. A translation table in a read path would have hidden the
+disagreement and chosen a vocabulary on the specification's behalf; the consequence is stated plainly — **a client
+implementing the contract will not see contract tokens until either the CHECK or the contract changes**, and that
+decision belongs to whoever owns the schema, not to this route. The database suite asserts the verbatim behaviour so
+the conflict cannot be "fixed" silently later without a test failing.
+
+**4. TWO FIELDS THE CONTRACT DECLARES AND NOTHING RECORDS.** §5.12.1's row carries `sizeBytes` and a media type;
+`evidence_artifact` has no column for either, and the `EvidenceStore` port returns bytes without metadata. Both are
+reported as `null` — "not recorded" — rather than derived from the digest or the storage reference. Adding the
+columns would be legitimate (the contract declares the fields), and it belongs with the upload route that would
+populate them; fabricating a size in a read route would not.
+
+**5. `requirementIds` IS AN EMPTY LIST, AND THE REASON IS THAT NO SOURCE EXISTS.** VG-EVIDENCE-002's chain is
+requirement → case → artifact → digest. Two thirds are resolvable here: the artifact carries its case, and
+`linkedTraceability.transitionIds` is resolved by a containment test on `audit_event.evidence_artifact_ids` — the
+array the transition writer fills, and the same rows §5.5.5's history reads. **Nothing maps an artifact to a
+requirement id**: no table, no column, and `REQUIREMENT_TRACEABILITY.csv` is a verification-side artefact rather
+than product data. Reporting an empty list is the honest value; filling it from a file outside the running system
+would make a reviewer believe a chain was verified that was not.
+
+**6. ORDERING, DECIDED DELIBERATELY IN THE THREE REFUSING ROUTES.** §5.12.4 resolves the ARTIFACT FIRST and refuses
+the verification second, so an unknown artifact is `404` rather than "a dependency is missing" — a caller's own
+mistake is reported as theirs. The refusal text also says why the shortcut is wrong: reporting the STORED digest as
+the "recomputed" one would be a verification that verified nothing, which is the exact failure VG-EVIDENCE-001
+exists to prevent.
+
+**7. THE READ ROUTES REPORT `immutable: true` ON THE STRENGTH OF AN ABSENCE THAT IS NOW ASSERTED.** VG-EVIDENCE-001
+has no update, replace or delete path for artifact content; the contract suite asserts that no `PATCH`/`PUT`/
+`DELETE` registry row exists on the artifact paths, so the field cannot become a false claim without a test failing.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

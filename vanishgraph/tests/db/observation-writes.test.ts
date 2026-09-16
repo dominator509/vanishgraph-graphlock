@@ -38,6 +38,7 @@ import { PostgresControllerResponseQueries } from '../../src/adapters/persistenc
 import { PostgresActionQueries } from '../../src/adapters/persistence/actions.ts';
 import { PostgresPolicyQueries } from '../../src/adapters/persistence/policies.ts';
 import { PostgresCoverageQueries } from '../../src/adapters/persistence/coverage.ts';
+import { PostgresEvidenceQueries } from '../../src/adapters/persistence/evidence.ts';
 import { PostgresAuditQueries } from '../../src/adapters/persistence/audit-queries.ts';
 import { PostgresDeadlineQueries } from '../../src/adapters/persistence/deadlines.ts';
 import { PostgresAppealQueries } from '../../src/adapters/persistence/appeals.ts';
@@ -107,6 +108,7 @@ function serverFor(tenantId: string, scopes: readonly string[] = SCOPES): VgFast
     actionQueries: new PostgresActionQueries({ recipeVerificationKeys: { publicKeysByRef: new Map() } }),
     policyQueries: new PostgresPolicyQueries(),
     coverageQueries: new PostgresCoverageQueries(),
+    evidenceQueries: new PostgresEvidenceQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
   });
 }

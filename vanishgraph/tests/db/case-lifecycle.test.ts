@@ -35,6 +35,7 @@ import { PostgresControllerResponseQueries } from '../../src/adapters/persistenc
 import { PostgresActionQueries } from '../../src/adapters/persistence/actions.ts';
 import { PostgresPolicyQueries } from '../../src/adapters/persistence/policies.ts';
 import { PostgresCoverageQueries } from '../../src/adapters/persistence/coverage.ts';
+import { PostgresEvidenceQueries } from '../../src/adapters/persistence/evidence.ts';
 import { PostgresTransitionQueries } from '../../src/adapters/persistence/transitions.ts';
 import { PostgresExposureQueries } from '../../src/adapters/persistence/exposures.ts';
 import { PostgresObservationQueries } from '../../src/adapters/persistence/observations.ts';
@@ -117,6 +118,7 @@ function serverFor(
     actionQueries: new PostgresActionQueries({ recipeVerificationKeys: { publicKeysByRef: new Map() } }),
     policyQueries: new PostgresPolicyQueries(),
     coverageQueries: new PostgresCoverageQueries(),
+    evidenceQueries: new PostgresEvidenceQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
   });
 }

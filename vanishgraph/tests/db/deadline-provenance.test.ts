@@ -40,6 +40,7 @@ import { PostgresControllerResponseQueries } from '../../src/adapters/persistenc
 import { PostgresActionQueries } from '../../src/adapters/persistence/actions.ts';
 import { PostgresPolicyQueries } from '../../src/adapters/persistence/policies.ts';
 import { PostgresCoverageQueries } from '../../src/adapters/persistence/coverage.ts';
+import { PostgresEvidenceQueries } from '../../src/adapters/persistence/evidence.ts';
 import { PostgresIdempotencyStore } from '../../src/adapters/idempotency/postgres-store.ts';
 import { PostgresSubjectQueries } from '../../src/adapters/persistence/subjects.ts';
 import { PostgresSubjectCommands } from '../../src/adapters/persistence/subject-commands.ts';
@@ -96,6 +97,7 @@ function serverFor(tenantId: string, scopes: readonly string[]): VgFastify {
     actionQueries: new PostgresActionQueries({ recipeVerificationKeys: { publicKeysByRef: new Map() } }),
     policyQueries: new PostgresPolicyQueries(),
     coverageQueries: new PostgresCoverageQueries(),
+    evidenceQueries: new PostgresEvidenceQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
   });
 }
