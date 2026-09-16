@@ -34,6 +34,9 @@ const app = buildServer({
       withTenantTransaction: async () => {
         throw new Error('the coverage probe performs no database work');
       },
+      withCapabilityTransaction: async () => {
+        throw new Error('the coverage probe performs no database work');
+      },
     },
   },
   idempotency: {

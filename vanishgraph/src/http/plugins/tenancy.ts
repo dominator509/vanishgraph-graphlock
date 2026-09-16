@@ -48,6 +48,24 @@ export interface TenantTransactionRunner {
    * adapter cannot quietly commit a partial write.
    */
   withTenantTransaction<T>(tenantId: string, fn: (tx: TenantTransaction) => Promise<T>): Promise<T>;
+
+  /**
+   * Open a transaction scoped by a WEBHOOK CAPABILITY instead of a tenant, run `fn`, then COMMIT.
+   *
+   * WHY THIS EXISTS, and why it is not a hole in tenant isolation. §6's ingress is the only surface with no bearer
+   * token: the capability in the request path IS what establishes the tenant, so the lookup that resolves it cannot
+   * itself run under a tenant. Migration `0032` gives `webhook_binding` a second, narrower policy — an unbound
+   * session sees ONLY the row whose token hash (or provider key id) it has already presented — and this method is
+   * how that value is set with `SET LOCAL`, exactly as `withTenantTransaction` sets the tenant.
+   *
+   * THE CAPABILITY IS A CLOSED UNION, not a variable name: a caller cannot use this to set `app.tenant_id` or any
+   * other setting, so there is no path by which a route hands itself a different binding than the one it proved.
+   */
+  withCapabilityTransaction<T>(
+    capability: 'token_hash' | 'provider_key',
+    value: string,
+    fn: (tx: TenantTransaction) => Promise<T>,
+  ): Promise<T>;
 }
 
 export interface TenancyPluginOptions {

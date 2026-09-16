@@ -1,2 +1,2 @@
-rls coverage: 34 tenant-scoped tables all enabled, forced and policied
+rls coverage: 35 tenant-scoped tables all enabled, forced and policied
 rls coverage: ok

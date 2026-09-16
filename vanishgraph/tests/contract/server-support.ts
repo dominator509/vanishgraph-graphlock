@@ -162,6 +162,29 @@ export function testTenancy(): TestTenancy {
         };
         return fn(tx);
       },
+      /**
+       * The capability path, recorded the same way.
+       *
+       * The `tenantId` on the recorded transaction is the CAPABILITY VALUE, prefixed so a test cannot mistake a
+       * capability binding for a tenant binding: `token_hash:…`. A test that asserts the delivery ran as a tenant
+       * and a test that asserts the lookup ran before any tenant are different assertions, and conflating them would
+       * hide exactly the bug the two-phase design exists to prevent.
+       */
+      withCapabilityTransaction: async <T,>(
+        capability: 'token_hash' | 'provider_key',
+        value: string,
+        fn: (tx: TenantTransaction) => Promise<T>,
+      ): Promise<T> => {
+        const queries: string[] = [];
+        recorded.push({ tenantId: `${capability}:${value}`, queries });
+        const tx: TenantTransaction = {
+          query: async <R = unknown>(text: string): Promise<{ rows: R[] }> => {
+            queries.push(text);
+            return { rows: result.rows as R[] };
+          },
+        };
+        return fn(tx);
+      },
     },
   };
   return { runner, recorded, result };

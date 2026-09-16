@@ -1,2 +1,2 @@
-{"tests":307,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":24,"manifestChecked":24,"verdict":"OK"}
+{"tests":315,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":25,"manifestChecked":25,"verdict":"OK"}
 test collection guard: ok

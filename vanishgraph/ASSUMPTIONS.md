@@ -1659,6 +1659,49 @@ because §6.1 says the ingress refuses rather than guessing an identity it canno
 suite asserts the ORDER by constructing deliveries that violate several rules at once and checking which code comes
 back.
 
+### 3.42 §6 capability resolution: a policy the generator deleted, and the table §6 requires but no spec defines
+
+**Implemented this round: the webhook binding table, its capability resolution, and the proof that the lookup
+discloses nothing.** Migrations `0032` (the table) and `0033` (the policy), `src/application/contracts/webhook-bindings.ts`,
+`src/adapters/persistence/webhook-bindings.ts`, the runner's `withCapabilityTransaction`, and
+`tests/db/webhook-bindings.test.ts` 8/8 plus `tests/harness/rls-migration-shape.test.ts` 3/3. **The three §6 routes are
+still not wired** — recorded in §3.41 and repeated here so the state cannot be misread.
+
+**1. THE GENERATOR SILENTLY DELETED THE POLICY, AND THE ONLY REASON IT WAS FOUND IS THAT THE TESTS FAILED.**
+`generate-rls.ts` renders a migration that creates a tenant-scoped table as
+`head = original.split('-- RLS-GENERATED-BEGIN')[0]` plus regenerated blocks, so **everything after the first marker
+is discarded on `--write` — while `--check` still reports `drift 0`**, because drift is computed between the rendered
+result and the file it just rendered. I wrote the capability policy below the marker in `0032`; it did not survive;
+`0032` was applied without it; and every capability resolution returned `undefined` with no error anywhere. The
+policy now lives in `0033`, a migration that creates no table — `renderMigration` returns those UNCHANGED — and
+`tests/harness/rls-migration-shape.test.ts` fails if any migration carries SQL after its final marker, which is the
+check whose absence allowed this.
+
+**2. §6's BINDING TABLE IS REQUIRED BY THE CONTRACT AND DEFINED BY NO SPECIFICATION.** §6.1's path token is "an opaque,
+single-purpose capability resolved to one `(tenantId, caseId, controllerId)` binding, rotated and revocable per
+controller"; §6.2/§6.3 answer `404 WEBHOOK_BINDING_NOT_FOUND` for an unknown or retired key. No specification defines
+the store, and `controller` has no token column. `webhook_binding` therefore creates the table the CONTRACT's
+behaviour requires: every column is named by §6's own text, and the alternative — bindings in configuration — would
+make revocation a deployment rather than an operation, which "rotated and revocable per controller" rules out. The
+token is stored as an **unkeyed SHA-256**: a capability that appears in a request path reaches access logs and browser
+history the moment it is used, and the token is high-entropy by construction, so there is nothing for a key to add.
+
+**3. THE LOOKUP CANNOT RUN UNDER A TENANT, AND THE OBVIOUS FIX IS THE WRONG ONE.** `FORCE ROW LEVEL SECURITY` applies
+to the table OWNER too (the lesson recorded earlier for the deferred trigger), so a `SECURITY DEFINER` function would
+not bypass it, and the role model has no BYPASSRLS role — `vg_owner` migrates, `vg_app` runs. A policy that simply
+allowed unbound SELECT (`current_setting('app.tenant_id', true) IS NULL`) would have exposed **every** binding, with
+its case ids and secret names, to any session that forgot to set a tenant. The capability policy instead lets a
+session see ONLY the row whose token hash — or provider key id — it has already presented into its own transaction
+with `set_config(..., true)`. Knowledge of a 256-bit token IS the capability; guessing is not a policy bypass. The
+suite asserts all four directions: no tenant and no capability sees zero rows; one token hash reveals exactly one row;
+a provider key does not reveal token rows; and a tenant-scoped session still sees its own rows and no other tenant's.
+
+**4. TWO MEASURED MISTAKES OF MY OWN IN THIS ROUND'S TESTS, both caught by running them.** (a) `asTenant(dsn, '', …)`
+sets an EMPTY `app.tenant_id`, which fails the `::uuid` cast — the no-tenant path is `withoutTenant`, and the first
+version of that assertion never executed. (b) `asTenant` appends its own `COMMIT;`, so a statement without a trailing
+`;` swallows it and fails with "syntax error at or near COMMIT" — the harness rule recorded in earlier rounds, applied
+here to a new query.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

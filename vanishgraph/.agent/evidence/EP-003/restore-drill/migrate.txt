@@ -29,6 +29,8 @@ migrate: applying 0028_policy_version_label.sql
 migrate: applying 0029_coverage_report.sql
 migrate: applying 0030_subject_contact_preference.sql
 migrate: applying 0031_authority_grant_facts.sql
-migrate: applied 31 migration(s); at version 31
+migrate: applying 0032_webhook_binding.sql
+migrate: applying 0033_webhook_capability_policy.sql
+migrate: applied 33 migration(s); at version 33
 migrate: ok
 migrate: ok

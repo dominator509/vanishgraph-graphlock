@@ -86,6 +86,45 @@ export class PostgresTenantRunner implements TenantTransactionRunner {
    * `finally` releases the connection exactly once, including when the rollback itself throws — a
    * leaked connection would eventually exhaust the pool and take the service down.
    */
+  async withCapabilityTransaction<T>(
+    capability: 'token_hash' | 'provider_key',
+    value: string,
+    fn: (tx: TenantTransaction) => Promise<T>,
+  ): Promise<T> {
+    // The setting name is CHOSEN FROM A CLOSED MAP, so a caller cannot pass a variable name — `app.tenant_id`
+    // included — and thereby bind a different context than the one it proved. The migration's capability policy
+    // reads exactly these two names.
+    const setting = capability === 'token_hash' ? 'app.webhook_token_hash' : 'app.webhook_provider_key';
+    const client: PoolClient = await this.pool.connect();
+    let committed = false;
+    try {
+      await client.query('BEGIN');
+      await client.query('SELECT set_config($1, $2, true)', [setting, value]);
+      await client.query(`SET LOCAL statement_timeout = ${String(this.statementTimeoutMs)}`);
+      const tx: TenantTransaction = {
+        query: async <R = unknown>(text: string, params?: readonly unknown[]): Promise<{ rows: R[] }> => {
+          const result = await client.query(text, params === undefined ? undefined : [...params]);
+          return { rows: result.rows as R[] };
+        },
+      };
+      const result = await fn(tx);
+      await client.query('COMMIT');
+      committed = true;
+      return result;
+    } catch (error) {
+      if (!committed) {
+        try {
+          await client.query('ROLLBACK');
+        } catch {
+          // Same rule as `withTenantTransaction`: the original failure is the one the caller needs.
+        }
+      }
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
   async withTenantTransaction<T>(
     tenantId: string,
     fn: (tx: TenantTransaction) => Promise<T>,

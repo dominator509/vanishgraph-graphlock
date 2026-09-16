@@ -27,3 +27,4 @@ tests/db/coverage-reports.test.ts
 tests/db/subject-commands.test.ts
 tests/db/evidence-reads.test.ts
 tests/db/candidate-records.test.ts
+tests/db/webhook-bindings.test.ts

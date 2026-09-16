@@ -42,6 +42,7 @@ source_catalog_entry
 source_record
 tenant_key
 verification_observation
+webhook_binding  # carries tenant_id; a delivery resolves its capability to one tenant before any tenant is bound
 
 # EXCLUDED from tenant-scoped isolation, each with a reason (RLS-2 requires the reason):
 # tenant             the isolation boundary itself; it has no tenant_id column
