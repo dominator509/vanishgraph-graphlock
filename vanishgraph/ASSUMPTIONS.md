@@ -2556,17 +2556,20 @@ sentinel. Discovery is recorded in `.agent/evidence/EP-007/M1-discovery.txt`.
 | http | 78.36 | 73.49 | 75.20 | 70/65/75 PASS |
 | mcp | 95.26 | 85.71 | 90.91 | 70/65/75 PASS |
 | infrastructure | 69.69 | 62.96 | 80.95 | 60/55/65 PASS |
-| **ui** | **71.56** | **85.21** | **54.17** | **70/65/75 FAIL (functions, by 20.83 points)** |
+| **ui** | **80.46** | **85.80** | **66.96** | **70/65/75 FAIL (functions, by 8.04 points)** |
 
-**3. THE ui LAYER IS THE ONE FAILURE, AND THE REASON IS INSTRUMENTAL AS WELL AS REAL.** Two facts, both measured:
-(a) the layer's required test kind per the plan's own layer table is *browser E2E through the real entry point*, and
-Node's built-in coverage cannot instrument a Playwright run — so `tests/ui/**.spec.ts`, which drives all 25 declared
-routes, contributes **nothing** to this number; (b) the Node-renderable half is genuinely thin: the contract suites mount
-the shared components and a few surfaces, and component event handlers and conditional renderers that only the browser
-suite exercises are uncounted. The gate now PRINTS that bound rather than implying the figure is the layer's whole proof
-(the `ui` entry carries a `note` the gate emits with the result). **The target was not lowered and the milestone was not
-marked passed.** Raising the number means either rendering every surface in Node with fixtures, or collecting V8 coverage
-from the browser stage — the second is what the plan's own layer table implies, and it is the larger piece of work.
+**3. THE ui LAYER IS THE ONE FAILURE, AND THE REMAINING GAP IS REAL (TWO MEASUREMENT DEFECTS THAT MADE IT LOOK WORSE
+ARE FIXED).** (a) The layer's required test kind per the plan's own layer table is *browser E2E through the real entry
+point*, and Node's built-in coverage cannot instrument a Playwright run — so `tests/ui/**.spec.ts`, which drives all 25
+declared routes, contributes **nothing** to this number; the gate now PRINTS that bound with the result rather than
+implying the figure is the layer's whole proof. (b) The layer has TWO PATH IDENTITIES and only one was being measured:
+the TSX components are loaded through the `.cache-ui-render` mirror, while the plain-TypeScript modules (`api/**`,
+`lib/**`, `copy/**`) are imported from `ui/src` directly by the contract suites — so a mirror-only include reported
+`ui/src/lib/url.ts` at 0.00 functions and `api/portal.ts` at 4.00, and the layer read 54.17. Naming both identities
+measured the same modules where they are loaded and read **66.96**. (c) 544 `ui-src-<pid>` mirror directories had
+accumulated under `.cache-ui-render` because nothing removes them; the gate now clears that directory before measuring a
+layer that names it. The target was NOT lowered and the milestone is NOT marked passed: 8.04 points of functions remain,
+which means rendering more surfaces in Node with fixtures or collecting V8 coverage from the browser stage.
 
 **4. FOUR PRODUCT DEFECTS WERE FOUND BY THIS MILESTONE'S OWN TESTS, AND ALL FOUR ARE FIXED.** The measured-coverage work
 started by asking which of the domain's functions were never called, and the answer was most of `errors.ts`: the sweep

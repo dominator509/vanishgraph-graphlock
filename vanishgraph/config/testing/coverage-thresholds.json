@@ -78,12 +78,12 @@
     },
     {
       "name": "ui",
-      "sources": [".cache-ui-render/**/*.js"],
+      "sources": [".cache-ui-render/**/*.js", "ui/src/**/*.ts"],
       "suites": ["tests/contract/**/*.test.ts"],
       "requiresPostgres": false,
       "isolation": "none",
       "note": "WHAT THIS NUMBER DOES NOT SEE, STATED BY THE GATE ITSELF: the browser stage (tests/ui/**.spec.ts, Playwright) drives all 25 declared routes and is where this layer's required test kind lives, and Node's built-in coverage cannot instrument it. The figure below is therefore the Node-renderable half only. It is reported as a floor, never as the layer's whole proof.",
-      "basis": "A DELIBERATE INDIRECTION, stated rather than hidden: the UI is TSX, and Node's test runner cannot load a .tsx module, so tests/contract/render-support.ts mirrors ui/src/** into .cache-ui-render/** as .js and imports THAT. The instrumented files are therefore the mirror, not ui/src itself; the mirror is produced from ui/src by a documented import-specifier rewrite and no other edit. ISOLATION IS DISABLED FOR THIS LAYER, AND MEASURED WHY: the mirror directory carries the process id, so with one child process per test file the same module is measured in several mirrors at once and the aggregate dilutes each partial measurement — measured 54.17% of functions over many processes against the same 54.17% over one, with the line figure moving from 71.56 to a lower, mixed figure. One process means one mirror and one honest aggregate."
+      "basis": "A DELIBERATE INDIRECTION, stated rather than hidden: the UI's TSX modules cannot be loaded by Node's test runner, so tests/contract/render-support.ts mirrors ui/src/** into .cache-ui-render/** as .js and imports THAT. THE LAYER HAS TWO PATH IDENTITIES AND BOTH ARE MEASURED, WHICH IS A MEASURED CORRECTION: the plain-TypeScript modules (api/**, lib/**, copy/**, routes/*.ts) are imported DIRECTLY from ui/src by the contract suites, so a mirror-only include reported them at partial or zero function coverage — measured, ui/src/lib/url.ts at 0.00 functions and api/portal.ts at 4.00 — and the layer read 54.17 functions. Naming both identities measures the same modules where they are actually loaded and reads 66.96. ISOLATION IS DISABLED FOR THIS LAYER because the mirror directory carries the process id, so one child process per test file measures the same component in several mirrors at once and each partial measurement dilutes the aggregate."
     }
   ]
 }

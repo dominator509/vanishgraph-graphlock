@@ -124,6 +124,16 @@ echo "$LAYERS" | while IFS='|' read -r name sources excludes suites needs_pg lin
   isolation_arg=""
   [ "$isolation" = "none" ] && isolation_arg="--experimental-test-isolation=none"
 
+  # THE RENDER MIRROR IS CLEARED BEFORE A LAYER THAT MEASURES IT. MEASURED: 544 `ui-src-<pid>` directories had
+  # accumulated under `.cache-ui-render` across earlier runs, because the harness creates one per process and nothing
+  # removes them. They are not loaded by this run, so they do not appear in the report — but they ARE matched by an
+  # include glob that names the directory, which is one stale copy of every module per past run waiting to be measured
+  # the moment a runner decides to report unloaded files. Cleaning is cheap and makes the measured set exactly what the
+  # run loaded.
+  case "$sources" in
+    *'.cache-ui-render/'*) rm -rf .cache-ui-render ;;
+  esac
+
   # shellcheck disable=SC2086
   out=$(node --test --experimental-test-coverage $isolation_arg $include_args $exclude_args $suites 2>&1) || {
     set +f

@@ -151,17 +151,15 @@ describe('the coverage configuration matches the specification it mirrors (DOD-0
     // THE CHECK THAT MATTERS: a glob matching nothing makes the gate measure an empty set and report a perfect score.
     for (const layer of config.layers) {
       for (const glob of layer.sources) {
-        // THE ui LAYER'S SOURCES ARE A MIRROR, SO THE CANDIDATES ARE SYNTHESISED FROM WHAT IT MIRRORS. Its basis says
-        // the instrumented files are the `.cache-ui-render` copy of `ui/src`, produced by tests/contract/render-support.ts
-        // at run time. Matching the glob against `ui/src` itself would test the wrong path — and it did, MEASURED, when
-        // the substitution in the first version of this test produced `ui/src/**/*.js` and reported that a TSX tree has
-        // no JavaScript in it.
-        const candidates =
-          layer.name === 'ui'
-            ? filesUnder('ui/src')
-                .filter((file) => /\.tsx?$/.test(file))
-                .map((file) => file.replace(/^ui\/src\//, '.cache-ui-render/').replace(/\.tsx?$/, '.js'))
-            : ALL_FILES;
+        // THE ui LAYER HAS TWO PATH IDENTITIES AND EACH GLOB IS CHECKED AGAINST ITS OWN. Its TSX modules are measured
+        // through the `.cache-ui-render` mirror (synthesised here from what they mirror), while its plain-TypeScript
+        // modules are imported from `ui/src` directly. Matching both globs against one candidate set reported
+        // "ui/src/**/*.ts matches nothing" — a false failure that would have been read as a configuration defect.
+        const candidates = layer.name === 'ui' && glob.startsWith('.cache-ui-render/')
+          ? filesUnder('ui/src')
+              .filter((file) => /\.tsx?$/.test(file))
+              .map((file) => file.replace(/^ui\/src\//, '.cache-ui-render/').replace(/\.tsx?$/, '.js'))
+          : ALL_FILES;
         const matches = candidates.filter((file) => globMatches(glob, file));
         assert.ok(matches.length >= 1, `${layer.name}: source glob ${glob} matches nothing`);
       }
