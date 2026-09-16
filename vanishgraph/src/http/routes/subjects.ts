@@ -31,8 +31,13 @@ import { SUBJECTS_QUERY } from '../query/filters.ts';
 import { buildCollection } from '../dto/page.ts';
 import { encodeCursor, decodeCursor, filterHashOf } from '../pagination/cursor.ts';
 import type { SubjectListRow, SubjectQueries } from '../../application/contracts/subject-queries.ts';
-import type { CreateSubjectOutcome, SubjectCommands, SubjectPatch } from '../../application/contracts/subject-commands.ts';
-import { AUTHORITY_KINDS } from '../../application/contracts/subject-commands.ts';
+import type {
+  CreateSubjectOutcome,
+  MintAuthorityOutcome,
+  SubjectCommands,
+  SubjectPatch,
+} from '../../application/contracts/subject-commands.ts';
+import { AUTHORITY_KINDS, IDENTITY_LEVELS, REVOCATION_REASON_SHAPE } from '../../application/contracts/subject-commands.ts';
 
 /** SPEC-003 §5.1.10's jurisdiction shape, and §5.1.1's: a two-letter region, optionally with a subdivision. */
 const JURISDICTION_SHAPE = /^[A-Z]{2}(-[A-Z0-9]{1,3})?$/;
@@ -44,6 +49,47 @@ function requiredText(body: Record<string, unknown>, field: string, max: number)
     throw apiError('SCHEMA_VALIDATION_FAILED', { field });
   }
   return value;
+}
+
+/** An optional RFC 3339 instant from the body, or `null` when it is absent. */
+function optionalInstant(body: Record<string, unknown>, field: string): number | null {
+  const value = body[field];
+  if (value === undefined || value === null) return null;
+  if (typeof value !== 'string' || Number.isNaN(Date.parse(value))) {
+    throw apiError('SCHEMA_VALIDATION_FAILED', { field });
+  }
+  return Date.parse(value);
+}
+
+/** Map §5.2.1's refusals onto the wire codes the contract names. */
+function mintRefusal(outcome: Exclude<MintAuthorityOutcome, { ok: true }>): ReturnType<typeof apiError> {
+  switch (outcome.reason) {
+    case 'SUBJECT_NOT_FOUND':
+      return apiError('RESOURCE_NOT_FOUND');
+    case 'AUTHORITY_KIND_UNSUPPORTED':
+      return apiError('AUTHORITY_KIND_UNSUPPORTED', { field: 'kind' }, 422);
+    case 'AUTHORITY_EVIDENCE_REQUIRED':
+      return apiError('AUTHORITY_EVIDENCE_REQUIRED', { field: 'evidenceArtifactId' }, 422);
+    case 'AUTHORITY_WINDOW_INVALID':
+      return apiError('AUTHORITY_WINDOW_INVALID', { field: 'expiresAt' }, 422);
+    case 'EVIDENCE_NOT_FOUND':
+      return apiError('EVIDENCE_NOT_FOUND', { field: 'evidenceArtifactId' }, 422);
+    case 'SCHEMA_VALIDATION_FAILED':
+      return apiError('SCHEMA_VALIDATION_FAILED', { field: outcome.field }, 422);
+    case 'IDENTITY_LEVEL_INSUFFICIENT':
+      return apiError(
+        'IDENTITY_LEVEL_INSUFFICIENT',
+        { required: outcome.requiredLevel, supplied: outcome.heldLevel },
+        403,
+      );
+    case 'SEPARATION_OF_DUTIES':
+      return apiError('SEPARATION_OF_DUTIES', { field: 'subjectId' }, 403);
+    case 'NOTICE_TRANSPORT_UNAVAILABLE':
+      // §5.2.1 makes `noticeSentAt` mandatory for AGENT grants and SPEC-005 VG-AUTHZ-014 requires the notice, while
+      // no notification transport exists in this repository. The effect is refused by name rather than half-done —
+      // the same shape §5.8.2 uses for a submission with no channel transport. This is the ONLY kind affected.
+      return apiError('DEPENDENCY_UNAVAILABLE', { reason: 'no notification transport is configured (VG-AUTHZ-014)' });
+  }
 }
 
 /** Map §5.1.1's refusals onto the wire codes the contract names. */
@@ -591,10 +637,50 @@ export function subjectRoutes(app: FastifyInstance, options: SubjectRouteOptions
     });
   });
 
-  // 5.2.1 POST /v1/subjects/{subjectId}/authority-grants — step-up, and separation of duties.
+  // 5.2.1 POST /v1/subjects/{subjectId}/authority-grants — mint a further grant. Step-up is enforced by
+  // `beginHandler` from the registry's `stepUp: true`, before the body is read.
   app.post('/v1/subjects/:subjectId/authority-grants', async (request, reply) => {
-    beginHandler(request, reply);
-    throw apiError('DEPENDENCY_UNAVAILABLE', { reason: 'authority minting requires the AuthorityGrantRepository port, which no node has declared (ASSUMPTIONS 3.12)' });
+    const h = beginHandler(request, reply);
+    const subjectId = uuidParam(request, 'subjectId');
+    const body = (request.body ?? {}) as Record<string, unknown>;
+
+    const kind = requiredText(body, 'kind', 32);
+    if (!(AUTHORITY_KINDS as readonly string[]).includes(kind)) {
+      throw apiError('AUTHORITY_KIND_UNSUPPORTED', { field: 'kind' }, 422);
+    }
+    const scopeRaw = body['scope'];
+    if (!Array.isArray(scopeRaw) || scopeRaw.length === 0 || scopeRaw.some((entry) => typeof entry !== 'string')) {
+      throw apiError('SCHEMA_VALIDATION_FAILED', { field: 'scope' });
+    }
+    const identityLevel = requiredText(body, 'identityLevel', 8);
+    if (!(IDENTITY_LEVELS as readonly string[]).includes(identityLevel)) {
+      throw apiError('SCHEMA_VALIDATION_FAILED', { field: 'identityLevel' });
+    }
+    const evidenceRaw = body['evidenceArtifactId'];
+    if (evidenceRaw !== undefined && evidenceRaw !== null && typeof evidenceRaw !== 'string') {
+      throw apiError('SCHEMA_VALIDATION_FAILED', { field: 'evidenceArtifactId' });
+    }
+    const issuedAtMs = optionalInstant(body, 'issuedAt');
+    const expiresAtMs = optionalInstant(body, 'expiresAt');
+
+    return idempotentWrite(h, async (tx) => {
+      const outcome = await commands.mintAuthorityGrant(tx, {
+        subjectId,
+        kind: kind as (typeof AUTHORITY_KINDS)[number],
+        scope: scopeRaw as readonly string[],
+        identityLevel,
+        evidenceArtifactId: typeof evidenceRaw === 'string' ? evidenceRaw : null,
+        issuedAtMs,
+        expiresAtMs,
+        actorSubjectRef: h.context.subjectRef,
+        authLevel: h.context.authLevel,
+        correlationId: h.context.correlationId,
+        nowMs: Date.now(),
+      });
+      if (!outcome.ok) throw mintRefusal(outcome);
+      reply.header('location', `/v1/authority-grants/${outcome.grant.authorityGrantId}`);
+      return { status: 201, body: outcome.grant, resourceId: outcome.grant.authorityGrantId };
+    });
   });
 
   // 5.2.2 GET /v1/subjects/{subjectId}/authority-grants — a real read, no dependency.
@@ -634,10 +720,50 @@ export function subjectRoutes(app: FastifyInstance, options: SubjectRouteOptions
     });
   });
 
-  // 5.2.3 POST /v1/authority-grants/{authorityGrantId}/revocations — step-up.
+  // 5.2.3 POST /v1/authority-grants/{authorityGrantId}/revocations — step-up, and no history rewritten.
   app.post('/v1/authority-grants/:authorityGrantId/revocations', async (request, reply) => {
-    beginHandler(request, reply);
-    throw apiError('DEPENDENCY_UNAVAILABLE', { reason: 'revocation requires the authority command wiring (EP-004 M6 remainder)' });
+    const h = beginHandler(request, reply);
+    const authorityGrantId = uuidParam(request, 'authorityGrantId');
+    const body = (request.body ?? {}) as Record<string, unknown>;
+
+    const reason = requiredText(body, 'reason', 48);
+    if (!REVOCATION_REASON_SHAPE.test(reason)) {
+      throw apiError('SCHEMA_VALIDATION_FAILED', { field: 'reason' });
+    }
+    const evidenceRaw = body['evidenceArtifactId'];
+    if (evidenceRaw !== undefined && evidenceRaw !== null && typeof evidenceRaw !== 'string') {
+      throw apiError('SCHEMA_VALIDATION_FAILED', { field: 'evidenceArtifactId' });
+    }
+    const noteRaw = body['note'];
+    if (noteRaw !== undefined && typeof noteRaw !== 'string') {
+      throw apiError('SCHEMA_VALIDATION_FAILED', { field: 'note' });
+    }
+
+    return idempotentWrite(h, async (tx) => {
+      const outcome = await commands.revokeAuthorityGrant(tx, {
+        authorityGrantId,
+        reason,
+        evidenceArtifactId: typeof evidenceRaw === 'string' ? evidenceRaw : null,
+        // The note is NOT persisted: `authority_grant` has no note column, and §5.2.3's response does not return
+        // it. It is accepted, shape-checked, and deliberately not carried into the audit payload — a free-text note
+        // is the one field in this request that could contain personal data, and SPEC-003 §8.3 forbids that in an
+        // audit payload. Recorded in ASSUMPTIONS §3.36.
+        note: typeof noteRaw === 'string' ? noteRaw : null,
+        correlationId: h.context.correlationId,
+        nowMs: Date.now(),
+      });
+      if (!outcome.ok) {
+        switch (outcome.reason) {
+          case 'NOT_FOUND':
+            throw apiError('RESOURCE_NOT_FOUND');
+          case 'AUTHORITY_ALREADY_REVOKED':
+            throw apiError('AUTHORITY_ALREADY_REVOKED', { reason: outcome.revokedAt }, 409);
+          case 'EVIDENCE_NOT_FOUND':
+            throw apiError('EVIDENCE_NOT_FOUND', { field: 'evidenceArtifactId' }, 422);
+        }
+      }
+      return { status: 201, body: outcome.grant, resourceId: authorityGrantId };
+    });
   });
 }
 

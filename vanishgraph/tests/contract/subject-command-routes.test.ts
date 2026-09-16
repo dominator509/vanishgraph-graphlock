@@ -14,6 +14,7 @@
 
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
 
 import { buildServer, type VgFastify } from '../../src/http/server.ts';
 import { testIdentity, testServerDependencies, TEST_TOKEN } from './server-support.ts';
@@ -75,6 +76,107 @@ const VALID_CREATE = {
   isMinor: false,
   authorityGrant: { kind: 'SELF', scope: ['REMOVAL_REQUEST'], expiresAt: '2027-02-04T00:00:00.000Z' },
 };
+
+const VALID_MINT = {
+  kind: 'SELF',
+  scope: ['REMOVAL_REQUEST'],
+  identityLevel: 'IAL2',
+  expiresAt: '2027-02-04T00:00:00.000Z',
+};
+
+const GRANT_ID = '33333333-1111-4111-8111-333333333333';
+
+describe('§5.2.1 and §5.2.3 are declared as the registry says they are', () => {
+  test('both carry vg.authority.write, a step-up and required idempotency, and 201 on success', () => {
+    for (const [id, method, path] of [
+      ['5.2.1', 'POST', '/v1/subjects/{subjectId}/authority-grants'],
+      ['5.2.3', 'POST', '/v1/authority-grants/{authorityGrantId}/revocations'],
+    ] as const) {
+      const route = ROUTES.find((candidate) => candidate.id === id);
+      assert.ok(route !== undefined, `${id} is not in the registry`);
+      assert.equal(route.method, method, id);
+      assert.equal(route.path, path, id);
+      assert.deepEqual(route.scopes, ['vg.authority.write'], id);
+      // BOTH sections say "+ step-up", and both name Idempotency Required.
+      assert.equal(route.stepUp, true, `${id} requires a fresh step-up`);
+      assert.equal(route.idempotency, 'required', id);
+      assert.equal(route.successStatus, 201, id);
+    }
+  });
+
+  test('a token holding vg.subjects.write but NOT vg.authority.write is refused on both', async () => {
+    // The scopes are different capabilities, and minting authority is the narrower one: §3.3 keeps them apart so a
+    // subject-editing token cannot grant itself authority.
+    const server = app(SCOPES);
+    const minted = await call(server, 'POST', `/v1/subjects/${SUBJECT_ID}/authority-grants`, { body: VALID_MINT });
+    assert.equal(minted.status, 403, JSON.stringify(minted.json));
+    assert.equal(codeOf(minted), 'INSUFFICIENT_SCOPE');
+    const revoked = await call(server, 'POST', `/v1/authority-grants/${GRANT_ID}/revocations`, {
+      body: { reason: 'SUBJECT_WITHDREW' },
+    });
+    assert.equal(revoked.status, 403, JSON.stringify(revoked.json));
+    await server.close();
+  });
+});
+
+describe('§5.2 body rules decided before the port', () => {
+  const AUTHORITY_SCOPES = ['vg.authority.write'];
+
+  test('§5.2.1 refuses an unknown kind, a missing scope, an unknown level and an absent expiry', async () => {
+    const server = app(AUTHORITY_SCOPES);
+    const url = `/v1/subjects/${SUBJECT_ID}/authority-grants`;
+
+    const badKind = await call(server, 'POST', url, { body: { ...VALID_MINT, kind: 'GUARDIAN' } });
+    assert.equal(badKind.status, 422, JSON.stringify(badKind.json));
+    assert.equal(codeOf(badKind), 'AUTHORITY_KIND_UNSUPPORTED');
+
+    const noScope = await call(server, 'POST', url, { body: { ...VALID_MINT, scope: [] } });
+    assert.equal(noScope.status, 400, JSON.stringify(noScope.json));
+
+    const badLevel = await call(server, 'POST', url, { body: { ...VALID_MINT, identityLevel: 'IAL9' } });
+    assert.equal(badLevel.status, 400, JSON.stringify(badLevel.json));
+
+    const noExpiry = await call(server, 'POST', url, {
+      body: { kind: 'SELF', scope: ['REMOVAL_REQUEST'], identityLevel: 'IAL2' },
+    });
+    // Reaches the port (which refuses it) rather than being a boundary error: the contract's own wording puts a
+    // missing expiry under AUTHORITY_WINDOW_INVALID, and the default stub answers with SUBJECT_NOT_FOUND — so the
+    // assertion here is only that the boundary let a well-formed body through.
+    assert.equal(noExpiry.status, 404, JSON.stringify(noExpiry.json));
+    await server.close();
+  });
+
+  test('§5.2.3 refuses a reason that is not a token, and maps the port’s refusals', async () => {
+    const server = app(AUTHORITY_SCOPES);
+    const url = `/v1/authority-grants/${GRANT_ID}/revocations`;
+
+    const sentence = await call(server, 'POST', url, { body: { reason: 'the subject asked us to stop' } });
+    assert.equal(sentence.status, 400, JSON.stringify(sentence.json));
+    assert.equal(codeOf(sentence), 'SCHEMA_VALIDATION_FAILED');
+
+    const missingReason = await call(server, 'POST', url, { body: {} });
+    assert.equal(missingReason.status, 400, JSON.stringify(missingReason.json));
+
+    const badNote = await call(server, 'POST', url, { body: { reason: 'SUBJECT_WITHDREW', note: 42 } });
+    assert.equal(badNote.status, 400, JSON.stringify(badNote.json));
+
+    // The default stub answers NOT_FOUND, which §5.2.3 maps to 404: absent and another tenant's grant are
+    // indistinguishable by construction (SPEC-006 H-9).
+    const unknown = await call(server, 'POST', url, { body: { reason: 'SUBJECT_WITHDREW' } });
+    assert.equal(unknown.status, 404, JSON.stringify(unknown.json));
+    await server.close();
+  });
+
+  test('a mint for a subject that does not resolve is 404, never 403 — the same rule as the reads', async () => {
+    const server = app(AUTHORITY_SCOPES);
+    const response = await call(server, 'POST', `/v1/subjects/${randomUUID()}/authority-grants`, {
+      body: VALID_MINT,
+    });
+    assert.equal(response.status, 404, JSON.stringify(response.json));
+    assert.equal(codeOf(response), 'RESOURCE_NOT_FOUND');
+    await server.close();
+  });
+});
 
 describe('§5.1.1 and §5.1.4 are declared as the registry says they are', () => {
   test('the two routes carry the specified scopes, methods, idempotency and step-up', () => {

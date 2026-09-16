@@ -1344,6 +1344,53 @@ appended with actor `service:subjects.write` and `actorKind: SERVICE`, because t
 identity — a `HUMAN` actor kind would be a claim this layer cannot support, and the audit trail for a subject update
 therefore names no human. Both are limitations, not designs.
 
+### 3.36 §5.2: an authority mint the repository must refuse, and a constraint I deliberately did not add
+
+**§5.2.1 (authority minting) and §5.2.3 (revocation) implemented (2 routes).** Coverage measured: `68 registered /
+67 working of 78` — **ONE stub remains** (§5.1.7 identifier capture) and 10 routes are not implemented (§5.4 ×5,
+§5.12 ×5). Migration `0031` adds `authority_grant.identity_level` and `.notice_sent_at`. Tests:
+`tests/db/subject-commands.test.ts` 19/19 (the §5.2 cases included), `tests/contract/subject-command-routes.test.ts`
+12/12, unit 641/641, integration 289/289 across 22 files.
+
+**1. MINTING AN `AGENT` GRANT IS REFUSED `503 DEPENDENCY_UNAVAILABLE`, AND THAT IS THE HONEST ANSWER.** §5.2.1's own
+text requires `noticeSentAt` non-null for `AGENT` grants — "SPEC-005 `VG-AUTHZ-014` requires notice to the subject's
+verified contact channel on agent enrollment, so a grant with no recorded notice fails acceptance" — and **no
+notification transport exists in this repository**. The route therefore evaluates every guard and then refuses the
+EFFECT, naming the missing transport, exactly as §5.8.2 refuses a submission with no channel transport. The
+alternative was to mint the grant and store `noticeSentAt: null`, which would create authority whose required notice
+never happened; the test asserts the refusal AND that no row was written, so neither can regress alone. `AGENT` is the
+ONLY kind affected: §5.2.1 makes the notice mandatory for `AGENT` alone.
+
+**2. I DID NOT ADD THE CHECK THAT WOULD ENFORCE THAT RULE IN THE DATABASE, AND THE REASON IS AN INCONSISTENCY
+BETWEEN TWO CONTRACT SECTIONS.** The correct long-term constraint is `CHECK (kind <> 'AGENT' OR notice_sent_at IS
+NOT NULL)`. It is absent because **§5.1.1's own contract does not require a notice and its test creates an `AGENT`
+grant** (asserted working in §3.35's suite), so such a CHECK would make §5.1.1's documented path unwritable. The two
+sections disagree about whether an agent grant may exist unnotified; a constraint would resolve that disagreement
+silently, in one direction, and this node's job is to make it visible instead. Recorded as a defect to settle with
+counsel or in the specifications — not as a design.
+
+**3. FOUR MORE DECLARED READINGS.** (a) **`identityLevel` is recorded as the REQUEST asserted it** — the column is
+nullable because every pre-`0031` grant, and every `SELF` grant §5.1.1 creates, genuinely has no recorded level, and
+defaulting to a token would fabricate a verification. (b) **A caller may not assert a level it does not hold**
+(`heldLevel >= identityLevel`), which is the only reading of `403 IDENTITY_LEVEL_INSUFFICIENT` this node can
+evidence. (c) **Separation of duties is checked where it is decisive**: §5.2.1 compares the caller's `subject_ref`
+with the SUBJECT the grant would belong to, which §5.1.1 could only approximate because the subject did not exist yet
+(§3.35 item 2b). (d) **The revocation reason is shape-checked, not enumerated.** §5.2.3's example shows
+`SUBJECT_WITHDREW` and its error list names no "unknown reason" code, so no specification enumerates the vocabulary;
+publishing a list (or a database enum) would refuse a reason the contract permits.
+
+**4. THE `note` FIELD IS ACCEPTED AND DELIBERATELY NOT STORED ANYWHERE.** §5.2.3's request carries `note` and its
+response does not return it; `authority_grant` has no column for it. It is shape-checked, and it is **excluded from
+the audit payload on purpose**: it is the one field in that request a caller could put personal data into, and
+SPEC-003 §8.3 forbids a request value in an audit payload. The test asserts the audit row contains the reason and NOT
+the note, so "we accepted it" cannot quietly become "we logged it".
+
+**5. A SCOPE MISTAKE IN MY OWN SUITE, RECORDED BECAUSE THE CHECK WAS RIGHT.** The §5.2 assertions first failed `403
+INSUFFICIENT_SCOPE` on every call: the suite's default token held `vg.subjects.write` but not `vg.authority.write`.
+§3.3 keeps the two capabilities apart so a subject-editing token cannot grant itself authority, the boundary enforced
+that, and the harness was wrong. The contract suite now asserts the refusal explicitly, so the separation is pinned
+from both sides.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

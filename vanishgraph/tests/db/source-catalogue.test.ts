@@ -122,6 +122,8 @@ function serverFor(tenantId: string, scopes: readonly string[], authTimeAgeSecon
     subjectCommands: {
       createSubject: async () => ({ ok: false, reason: 'EVIDENCE_NOT_FOUND' }),
       updateSubject: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+      mintAuthorityGrant: async () => ({ ok: false, reason: 'SUBJECT_NOT_FOUND' }),
+      revokeAuthorityGrant: async () => ({ ok: false, reason: 'NOT_FOUND' }),
     },
     health: {
       startedAt: new Date(),

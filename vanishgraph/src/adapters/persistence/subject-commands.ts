@@ -20,6 +20,10 @@ import { randomUUID } from 'node:crypto';
 import type {
   CreateSubjectOutcome,
   CreateSubjectRequest,
+  MintAuthorityOutcome,
+  MintAuthorityRequest,
+  RevokeAuthorityOutcome,
+  RevokeAuthorityRequest,
   SubjectCommands,
   SubjectPatch,
   UpdateSubjectOutcome,
@@ -324,6 +328,222 @@ export class PostgresSubjectCommands implements SubjectCommands {
           contactChannel === null || contactRefId === null
             ? null
             : { channel: contactChannel, contactRefId },
+      },
+    };
+  }
+
+  async mintAuthorityGrant(tx: TenantTransaction, request: MintAuthorityRequest): Promise<MintAuthorityOutcome> {
+    // THE NOTICE IS CHECKED FIRST, because it is the one refusal that is about the REPOSITORY rather than the
+    // request: SPEC-005 VG-AUTHZ-014 requires notice to the subject's verified contact channel on agent enrollment
+    // and §5.2.1 makes `noticeSentAt` mandatory in the response, while no notification transport exists here.
+    // Minting the grant anyway would create authority whose required notice never happened, which is precisely the
+    // state a compliance record must not contain.
+    if (request.kind === 'AGENT') return { ok: false, reason: 'NOTICE_TRANSPORT_UNAVAILABLE' };
+
+    const held = identityLevelRank(request.authLevel);
+    const asserted = identityLevelRank(request.identityLevel);
+    if (asserted < 0) return { ok: false, reason: 'SCHEMA_VALIDATION_FAILED', field: 'identityLevel' };
+    // A caller may not assert a verification level it does not itself hold — the same floor §5.1.1 applies, and the
+    // only reading of IDENTITY_LEVEL_INSUFFICIENT this node can evidence (ASSUMPTIONS §3.36).
+    if (held < asserted) {
+      return {
+        ok: false,
+        reason: 'IDENTITY_LEVEL_INSUFFICIENT',
+        requiredLevel: request.identityLevel,
+        heldLevel: request.authLevel,
+      };
+    }
+    // VG-AUTHZ-016 AT THE MOMENT IT IS DECISIVE: the subject exists here, so a TENANT_ADMIN minting a grant for the
+    // subject it IS can be compared directly — the check §5.1.1 could only approximate.
+    if (request.actorSubjectRef.length > 0 && request.actorSubjectRef === request.subjectId) {
+      return { ok: false, reason: 'SEPARATION_OF_DUTIES' };
+    }
+    if (request.kind !== 'SELF' && request.evidenceArtifactId === null) {
+      return { ok: false, reason: 'AUTHORITY_EVIDENCE_REQUIRED' };
+    }
+    if (request.scope.length === 0) {
+      return { ok: false, reason: 'SCHEMA_VALIDATION_FAILED', field: 'scope' };
+    }
+    const issuedAtMs = request.issuedAtMs ?? Math.trunc(request.nowMs);
+    if (request.expiresAtMs === null || request.expiresAtMs <= issuedAtMs || request.expiresAtMs <= request.nowMs) {
+      // §5.2.1's own wording: "expiresAt ≤ issuedAt or already past".
+      return { ok: false, reason: 'AUTHORITY_WINDOW_INVALID' };
+    }
+
+    const subject = await tx.query<{ id: string }>(
+      `SELECT s.id::text AS id FROM protected_subject s WHERE s.id = $1::uuid`,
+      [request.subjectId],
+    );
+    if (subject.rows[0] === undefined) return { ok: false, reason: 'SUBJECT_NOT_FOUND' };
+
+    let evidenceDigest: string | null = null;
+    if (request.evidenceArtifactId !== null) {
+      const artifact = await tx.query<{ digest: string }>(
+        `SELECT e.digest::text AS digest FROM evidence_artifact e WHERE e.id = $1::uuid`,
+        [request.evidenceArtifactId],
+      );
+      const row = artifact.rows[0];
+      if (row === undefined) return { ok: false, reason: 'EVIDENCE_NOT_FOUND' };
+      evidenceDigest = row.digest;
+    }
+
+    const tenantRow = await tx.query<{ tenant_id: string }>(
+      `SELECT current_setting('app.tenant_id', true)::text AS tenant_id`,
+    );
+    const tenantId = new TenantId(tenantRow.rows[0]?.tenant_id ?? '');
+    const grantId = randomUUID();
+    // The domain builds the grant first, so its invariants (non-empty scope, expiry after issue, AGENT needing an
+    // instrument) are enforced before any row exists.
+    let grant;
+    try {
+      grant = createAuthorityGrant({
+        id: grantId,
+        tenantId,
+        subjectId: new SubjectId(request.subjectId),
+        kind: request.kind,
+        scope: request.scope,
+        evidenceId: request.evidenceArtifactId,
+        issuedAtMs: Math.trunc(issuedAtMs),
+        expiresAtMs: Math.trunc(request.expiresAtMs),
+        revokedAtMs: null,
+        signedInstrument: request.kind !== 'SELF',
+      });
+    } catch (error) {
+      if (error instanceof DomainError) {
+        return { ok: false, reason: 'SCHEMA_VALIDATION_FAILED', field: 'scope' };
+      }
+      throw error;
+    }
+
+    await tx.query(
+      `INSERT INTO authority_grant
+         (id, tenant_id, subject_id, kind, scope, evidence_id, issued_at, expires_at, revoked_at,
+          signed_instrument, identity_level, notice_sent_at)
+       VALUES ($1::uuid, current_setting('app.tenant_id', true)::uuid, $2::uuid, $3::authority_kind, $4::text[],
+               $5::uuid, to_timestamp($6::bigint / 1000.0), to_timestamp($7::bigint / 1000.0), NULL, $8, $9, NULL)`,
+      [
+        grant.id,
+        request.subjectId,
+        request.kind,
+        [...grant.scope],
+        request.evidenceArtifactId,
+        Math.trunc(issuedAtMs),
+        Math.trunc(request.expiresAtMs),
+        request.kind !== 'SELF',
+        request.identityLevel,
+      ],
+    );
+    await appendAuditEvents(
+      tx,
+      [
+        createAuditEvent({
+          id: randomUUID(),
+          tenantId,
+          actor: 'service:authority.write',
+          action: 'MintAuthorityGrant',
+          targetKind: 'AuthorityGrant',
+          targetId: grantId,
+          correlationId: request.correlationId,
+          atMs: request.nowMs,
+          payload: {
+            subjectId: request.subjectId,
+            kind: request.kind,
+            identityLevel: request.identityLevel,
+            // The ARTIFACT ID, never its digest or content: an audit payload carries opaque identifiers only.
+            evidenceArtifactId: request.evidenceArtifactId,
+          },
+        }),
+      ],
+      { actorKind: 'SERVICE' },
+    );
+
+    return {
+      ok: true,
+      grant: {
+        authorityGrantId: grantId,
+        subjectId: request.subjectId,
+        kind: request.kind,
+        scope: [...grant.scope],
+        identityLevel: request.identityLevel,
+        evidenceArtifactId: request.evidenceArtifactId,
+        evidenceDigest,
+        issuedAt: new Date(Math.trunc(issuedAtMs)).toISOString(),
+        expiresAt: new Date(Math.trunc(request.expiresAtMs)).toISOString(),
+        revokedAt: null,
+        validNow: true,
+        // ALWAYS null, and that is the honest value: no notice was sent, because none can be. The route refuses
+        // AGENT before reaching here, so this field is null on every kind that has no notice requirement.
+        noticeSentAt: null,
+      },
+    };
+  }
+
+  async revokeAuthorityGrant(
+    tx: TenantTransaction,
+    request: RevokeAuthorityRequest,
+  ): Promise<RevokeAuthorityOutcome> {
+    // FOR UPDATE: two concurrent revocations must not both read "not revoked" and both write a revocation with a
+    // different instant — §5.2.3's 409 exists because the FIRST revocation is the one that took effect.
+    const current = await tx.query<{ id: string; revoked_at: Date | null }>(
+      `SELECT g.id::text AS id, g.revoked_at
+         FROM authority_grant g
+        WHERE g.id = $1::uuid
+          FOR UPDATE`,
+      [request.authorityGrantId],
+    );
+    const row = current.rows[0];
+    if (row === undefined) return { ok: false, reason: 'NOT_FOUND' };
+    if (row.revoked_at !== null) {
+      return { ok: false, reason: 'AUTHORITY_ALREADY_REVOKED', revokedAt: row.revoked_at.toISOString() };
+    }
+    if (request.evidenceArtifactId !== null) {
+      const artifact = await tx.query<{ id: string }>(
+        `SELECT e.id::text AS id FROM evidence_artifact e WHERE e.id = $1::uuid`,
+        [request.evidenceArtifactId],
+      );
+      if (artifact.rows[0] === undefined) return { ok: false, reason: 'EVIDENCE_NOT_FOUND' };
+    }
+
+    const updated = await tx.query<{ revoked_at: Date }>(
+      `UPDATE authority_grant SET revoked_at = now() WHERE id = $1::uuid RETURNING revoked_at`,
+      [request.authorityGrantId],
+    );
+    const revokedAt = updated.rows[0]?.revoked_at;
+    if (revokedAt === undefined) return { ok: false, reason: 'NOT_FOUND' };
+
+    const tenantRow = await tx.query<{ tenant_id: string }>(
+      `SELECT current_setting('app.tenant_id', true)::text AS tenant_id`,
+    );
+    // NO TRANSITION and no rewrite: §5.2.3 states that revocation "never rewrites history: existing ExternalAction
+    // rows and their evidence are retained (VG-REAPPEAR-002)", and it takes effect at the next execution-time
+    // assertion rather than by moving any state here.
+    await appendAuditEvents(
+      tx,
+      [
+        createAuditEvent({
+          id: randomUUID(),
+          tenantId: new TenantId(tenantRow.rows[0]?.tenant_id ?? ''),
+          actor: 'service:authority.write',
+          action: 'RevokeAuthorityGrant',
+          targetKind: 'AuthorityGrant',
+          targetId: request.authorityGrantId,
+          correlationId: request.correlationId,
+          atMs: request.nowMs,
+          payload: {
+            reason: request.reason,
+            evidenceArtifactId: request.evidenceArtifactId,
+          },
+        }),
+      ],
+      { actorKind: 'SERVICE' },
+    );
+
+    return {
+      ok: true,
+      grant: {
+        authorityGrantId: request.authorityGrantId,
+        revokedAt: revokedAt.toISOString(),
+        reason: request.reason,
       },
     };
   }

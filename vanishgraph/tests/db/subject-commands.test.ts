@@ -38,7 +38,9 @@ import { appDsn, asTenant, exec, ownerDsn } from './harness.ts';
 const TENANT_A = randomUUID();
 const TENANT_B = randomUUID();
 const RUN = randomUUID().slice(0, 8);
-const SCOPES = ['vg.subjects.read', 'vg.subjects.write'];
+// `vg.authority.write` is §5.2.1/§5.2.3's scope and is carried by the default token here; the contract suite asserts
+// that a token WITHOUT it is refused 403, so this suite need not repeat that.
+const SCOPES = ['vg.subjects.read', 'vg.subjects.write', 'vg.authority.write'];
 
 let runner: PostgresTenantRunner;
 let idempotency: PostgresIdempotencyStore;
@@ -50,10 +52,20 @@ function nextKey(): string {
   return `subject-suite-key-${RUN}-${String(keyCounter).padStart(4, '0')}`;
 }
 
-function buildApp(tenantId: string, scopes: readonly string[] = SCOPES, authLevel = 'IAL2'): VgFastify {
+function buildApp(
+  tenantId: string,
+  scopes: readonly string[] = SCOPES,
+  authLevel = 'IAL2',
+  subjectRef?: string,
+): VgFastify {
   return buildServer(
     testServerDependencies({
-      identity: testIdentity({ tenantId, scopes, authLevel }),
+      identity: testIdentity({
+        tenantId,
+        scopes,
+        authLevel,
+        ...(subjectRef === undefined ? {} : { subjectRef }),
+      }),
       tenancy: { runner },
       idempotency: {
         store: idempotency,
@@ -433,3 +445,236 @@ describe('§5.1.4 updating a subject', () => {
 function futureIso(): string {
   return new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString();
 }
+
+describe('§5.2.1 minting a further authority grant', () => {
+  async function existingSubject(): Promise<string> {
+    const created = await call(app, 'POST', '/v1/subjects', { body: createBody() });
+    assert.equal(created.status, 201, JSON.stringify(created.json));
+    return String(created.json['subjectId']);
+  }
+
+  test('a guardian grant with a real instrument is minted, recorded, and echoed with its digest', async () => {
+    const subjectId = await existingSubject();
+    const artifactId = newEvidenceArtifact();
+    const response = await call(app, 'POST', `/v1/subjects/${subjectId}/authority-grants`, {
+      body: {
+        kind: 'PARENT_GUARDIAN',
+        scope: ['EXTERNAL_ACTION'],
+        identityLevel: 'IAL2',
+        evidenceArtifactId: artifactId,
+        expiresAt: futureIso(),
+      },
+    });
+    assert.equal(response.status, 201, JSON.stringify(response.json));
+    assert.equal(response.json['identityLevel'], 'IAL2');
+    assert.equal(response.json['validNow'], true);
+    assert.equal(response.json['noticeSentAt'], null);
+    assert.equal(typeof response.json['evidenceDigest'], 'string');
+
+    const rows = read(
+      TENANT_A,
+      `SELECT kind::text || '/' || identity_level || '/' || signed_instrument::text || '/' ||
+              coalesce(evidence_id::text, 'null') || '/' || coalesce(notice_sent_at::text, 'null')
+         FROM authority_grant WHERE id = '${String(response.json['authorityGrantId'])}'`,
+    );
+    assert.deepEqual(rows, [`PARENT_GUARDIAN/IAL2/true/${artifactId}/null`]);
+  });
+
+  test('AN AGENT MINT IS REFUSED 503 NAMING THE MISSING NOTICE TRANSPORT, and writes no row', async () => {
+    // §5.2.1 requires `noticeSentAt` non-null for AGENT grants and SPEC-005 VG-AUTHZ-014 requires the notice to the
+    // subject's verified contact channel. No notification transport exists in this repository, so the effect is
+    // refused by name rather than half-performed — the same shape §5.8.2 uses for a submission with no channel.
+    const subjectId = await existingSubject();
+    const artifactId = newEvidenceArtifact();
+    const before = read(TENANT_A, `SELECT count(*)::text FROM authority_grant WHERE subject_id = '${subjectId}'`)[0];
+    const response = await call(app, 'POST', `/v1/subjects/${subjectId}/authority-grants`, {
+      body: {
+        kind: 'AGENT',
+        scope: ['EXTERNAL_ACTION'],
+        identityLevel: 'IAL2',
+        evidenceArtifactId: artifactId,
+        expiresAt: futureIso(),
+      },
+    });
+    assert.equal(response.status, 503, JSON.stringify(response.json));
+    assert.equal(codeOf(response), 'DEPENDENCY_UNAVAILABLE');
+    const details = (response.json['error'] as Record<string, unknown>)['details'] as Record<string, unknown>;
+    assert.match(String(details['reason']), /notification transport/);
+    assert.equal(
+      read(TENANT_A, `SELECT count(*)::text FROM authority_grant WHERE subject_id = '${subjectId}'`)[0],
+      before,
+      'a refused mint must leave no grant behind',
+    );
+  });
+
+  test('an unknown subject, a missing instrument, a bad window and a bad level are each their own refusal', async () => {
+    const unknown = await call(app, 'POST', `/v1/subjects/${randomUUID()}/authority-grants`, {
+      body: { kind: 'SELF', scope: ['REMOVAL_REQUEST'], identityLevel: 'IAL2', expiresAt: futureIso() },
+    });
+    assert.equal(unknown.status, 404, JSON.stringify(unknown.json));
+
+    const subjectId = await existingSubject();
+    const noEvidence = await call(app, 'POST', `/v1/subjects/${subjectId}/authority-grants`, {
+      body: { kind: 'LEGAL_REPRESENTATIVE', scope: ['EXTERNAL_ACTION'], identityLevel: 'IAL2', expiresAt: futureIso() },
+    });
+    assert.equal(noEvidence.status, 422, JSON.stringify(noEvidence.json));
+    assert.equal(codeOf(noEvidence), 'AUTHORITY_EVIDENCE_REQUIRED');
+
+    const missingArtifact = await call(app, 'POST', `/v1/subjects/${subjectId}/authority-grants`, {
+      body: {
+        kind: 'PARENT_GUARDIAN',
+        scope: ['EXTERNAL_ACTION'],
+        identityLevel: 'IAL2',
+        evidenceArtifactId: randomUUID(),
+        expiresAt: futureIso(),
+      },
+    });
+    assert.equal(missingArtifact.status, 422, JSON.stringify(missingArtifact.json));
+    assert.equal(codeOf(missingArtifact), 'EVIDENCE_NOT_FOUND');
+
+    const pastWindow = await call(app, 'POST', `/v1/subjects/${subjectId}/authority-grants`, {
+      body: {
+        kind: 'SELF',
+        scope: ['REMOVAL_REQUEST'],
+        identityLevel: 'IAL2',
+        issuedAt: futureIso(),
+        expiresAt: new Date(Date.now() + 60_000).toISOString(),
+      },
+    });
+    assert.equal(pastWindow.status, 422, JSON.stringify(pastWindow.json));
+    assert.equal(codeOf(pastWindow), 'AUTHORITY_WINDOW_INVALID');
+
+    const noExpiry = await call(app, 'POST', `/v1/subjects/${subjectId}/authority-grants`, {
+      body: { kind: 'SELF', scope: ['REMOVAL_REQUEST'], identityLevel: 'IAL2' },
+    });
+    assert.equal(noExpiry.status, 422, JSON.stringify(noExpiry.json));
+    assert.equal(codeOf(noExpiry), 'AUTHORITY_WINDOW_INVALID');
+
+    // IAL3 asserted by an IAL2 token: a caller may not claim a verification level it does not hold.
+    const tooHigh = await call(app, 'POST', `/v1/subjects/${subjectId}/authority-grants`, {
+      body: { kind: 'SELF', scope: ['REMOVAL_REQUEST'], identityLevel: 'IAL3', expiresAt: futureIso() },
+    });
+    assert.equal(tooHigh.status, 403, JSON.stringify(tooHigh.json));
+    assert.equal(codeOf(tooHigh), 'IDENTITY_LEVEL_INSUFFICIENT');
+
+    const badKind = await call(app, 'POST', `/v1/subjects/${subjectId}/authority-grants`, {
+      body: { kind: 'GUARDIAN', scope: ['X'], identityLevel: 'IAL2', expiresAt: futureIso() },
+    });
+    assert.equal(badKind.status, 422, JSON.stringify(badKind.json));
+    assert.equal(codeOf(badKind), 'AUTHORITY_KIND_UNSUPPORTED');
+  });
+
+  test('a tenant admin minting a grant for the subject it IS is refused 403 SEPARATION_OF_DUTIES', async () => {
+    const subjectId = await existingSubject();
+    // The decisive form of VG-AUTHZ-016: here the subject EXISTS, so "its own grant" is a direct comparison of the
+    // caller's subject_ref with the subject the grant would belong to.
+    const selfAdmin = buildApp(TENANT_A, ['vg.subjects.read', 'vg.subjects.write', 'vg.authority.write'], 'IAL2', subjectId);
+    const refused = await call(selfAdmin, 'POST', `/v1/subjects/${subjectId}/authority-grants`, {
+      body: { kind: 'SELF', scope: ['REMOVAL_REQUEST'], identityLevel: 'IAL2', expiresAt: futureIso() },
+    });
+    assert.equal(refused.status, 403, JSON.stringify(refused.json));
+    assert.equal(codeOf(refused), 'SEPARATION_OF_DUTIES');
+    await selfAdmin.close();
+  });
+});
+
+describe('§5.2.3 revoking a grant', () => {
+  test('a revocation records the instant and the reason, and rewrites no case state', async () => {
+    const created = await call(app, 'POST', '/v1/subjects', { body: createBody() });
+    const subjectId = String(created.json['subjectId']);
+    const grantId = String(created.json['authorityGrantId']);
+    // A case in flight, to prove revocation does not move it: §5.2.3 says revocation takes effect "at the next
+    // execution-time assertion", so this route must leave the case exactly where it was.
+    const sourceId = randomUUID();
+    const recordId = randomUUID();
+    const exposureId = randomUUID();
+    const caseId = randomUUID();
+    const fixture = exec(
+      ownerDsn(),
+      [
+        'BEGIN;',
+        `SELECT set_config('app.tenant_id', '${TENANT_A}', true);`,
+        `INSERT INTO source (id, tenant_id, name, class, jurisdiction, permission_class)
+           VALUES ('${sourceId}', '${TENANT_A}', 'revoke-source-${RUN}-${sourceId.slice(0, 8)}', 'REGISTRY', 'US-CA',
+                   'WRITE_PERMITTED');`,
+        `INSERT INTO source_record (id, tenant_id, source_id, raw_ref, observed_at, content_hash, tainted)
+           VALUES ('${recordId}', '${TENANT_A}', '${sourceId}', 'https://example.invalid/revoke-${RUN}',
+                   now() - interval '2 days', repeat('e', 64), false);`,
+        `INSERT INTO exposure (id, tenant_id, subject_id, source_record_id, confidence, confidence_basis, truth_state)
+           VALUES ('${exposureId}', '${TENANT_A}', '${subjectId}', '${recordId}', 0.9,
+                   '[{"feature":"NAME_EXACT","weight":0.4}]'::jsonb, 'REQUEST_SUBMITTED');`,
+        `INSERT INTO request_case (id, tenant_id, subject_id, exposure_id, source_id, authority_grant_id, truth_state)
+           VALUES ('${caseId}', '${TENANT_A}', '${subjectId}', '${exposureId}', '${sourceId}', '${grantId}',
+                   'REQUEST_SUBMITTED');`,
+        'COMMIT;',
+      ].join('\n'),
+    );
+    assert.equal(fixture.status, 0, `case fixture failed: ${fixture.output}`);
+
+    const revoked = await call(app, 'POST', `/v1/authority-grants/${grantId}/revocations`, {
+      body: { reason: 'SUBJECT_WITHDREW', note: 'subject called the support line' },
+    });
+    assert.equal(revoked.status, 201, JSON.stringify(revoked.json));
+    assert.equal(revoked.json['reason'], 'SUBJECT_WITHDREW');
+    assert.equal(revoked.json['authorityGrantId'], grantId);
+    assert.equal(typeof revoked.json['revokedAt'], 'string');
+
+    const stored = read(
+      TENANT_A,
+      `SELECT (g.revoked_at IS NOT NULL)::text || '/' || c.truth_state::text
+         FROM authority_grant g JOIN request_case c ON c.authority_grant_id = g.id
+        WHERE g.id = '${grantId}'`,
+    );
+    assert.deepEqual(stored, ['true/REQUEST_SUBMITTED'], 'the case must not have moved');
+
+    // The audit row records the reason and NOT the free-text note (SPEC-003 §8.3 forbids a body value there).
+    const audited = read(
+      TENANT_A,
+      `SELECT payload::text FROM audit_event
+        WHERE target_id = '${grantId}' AND action = 'RevokeAuthorityGrant'`,
+    );
+    assert.equal(audited.length, 1, `expected one audit row, saw ${String(audited.length)}`);
+    assert.match(String(audited[0]), /SUBJECT_WITHDREW/);
+    assert.equal(String(audited[0]).includes('support line'), false, 'the note must not be in the audit payload');
+  });
+
+  test('a second revocation is 409 with the FIRST instant, and an unknown grant is 404', async () => {
+    const created = await call(app, 'POST', '/v1/subjects', { body: createBody() });
+    const grantId = String(created.json['authorityGrantId']);
+    const first = await call(app, 'POST', `/v1/authority-grants/${grantId}/revocations`, {
+      body: { reason: 'SUBJECT_WITHDREW' },
+    });
+    assert.equal(first.status, 201, JSON.stringify(first.json));
+
+    const second = await call(app, 'POST', `/v1/authority-grants/${grantId}/revocations`, {
+      body: { reason: 'SUBJECT_CONTESTED_AGENT' },
+    });
+    assert.equal(second.status, 409, JSON.stringify(second.json));
+    assert.equal(codeOf(second), 'AUTHORITY_ALREADY_REVOKED');
+    const details = (second.json['error'] as Record<string, unknown>)['details'] as Record<string, unknown>;
+    assert.equal(String(details['reason']), String(first.json['revokedAt']), 'the FIRST revocation is the one that took effect');
+
+    const unknown = await call(app, 'POST', `/v1/authority-grants/${randomUUID()}/revocations`, {
+      body: { reason: 'SUBJECT_WITHDREW' },
+    });
+    assert.equal(unknown.status, 404, JSON.stringify(unknown.json));
+  });
+
+  test('a malformed reason is refused at the boundary, and another tenant’s grant is 404', async () => {
+    const created = await call(app, 'POST', '/v1/subjects', { body: createBody() });
+    const grantId = String(created.json['authorityGrantId']);
+
+    const sentence = await call(app, 'POST', `/v1/authority-grants/${grantId}/revocations`, {
+      body: { reason: 'the subject asked us to stop' },
+    });
+    assert.equal(sentence.status, 400, JSON.stringify(sentence.json));
+    assert.equal(codeOf(sentence), 'SCHEMA_VALIDATION_FAILED');
+
+    const other = buildApp(TENANT_B);
+    const crossTenant = await call(other, 'POST', `/v1/authority-grants/${grantId}/revocations`, {
+      body: { reason: 'SUBJECT_WITHDREW' },
+    });
+    assert.equal(crossTenant.status, 404, JSON.stringify(crossTenant.json));
+    await other.close();
+  });
+});

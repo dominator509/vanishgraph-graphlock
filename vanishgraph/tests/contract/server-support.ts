@@ -185,6 +185,8 @@ export function testSubjectCommands(): SubjectCommands {
   return {
     createSubject: async () => ({ ok: false, reason: 'EVIDENCE_NOT_FOUND' }),
     updateSubject: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+    mintAuthorityGrant: async () => ({ ok: false, reason: 'SUBJECT_NOT_FOUND' }),
+    revokeAuthorityGrant: async () => ({ ok: false, reason: 'NOT_FOUND' }),
   };
 }
 
