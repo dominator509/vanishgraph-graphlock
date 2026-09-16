@@ -23,6 +23,10 @@ command -v node >/dev/null 2>&1 || { echo "gate-ui: FAIL - node is required but 
 # milestone that would CREATE it; requiring a file in the milestone that creates it makes that milestone fail. M2 owns
 # the file and adds the precondition here.
 [ -f ui/src/copy/truth-state.ts ] || { echo "gate-ui: FAIL - the canonical truth-state mapping is missing" >&2; exit 1; }
+# THE COVERAGE RENDERER, required from M3 onward. The contract suite proves the rendering rules by RENDERING this
+# component, so a missing file fails there too; requiring it here as well means the failure names the file rather than
+# surfacing as a module-not-found inside the harness.
+[ -f ui/src/components/coverage/CoveragePanel.tsx ] || { echo "gate-ui: FAIL - the coverage renderer is missing" >&2; exit 1; }
 [ -d ui/src/routes ] || { echo "gate-ui: FAIL - the route directory is missing" >&2; exit 1; }
 
 npx --no-install tsc -p tsconfig.ui.json --noEmit || { echo "gate-ui: FAIL - UI typecheck failed" >&2; exit 1; }
@@ -43,7 +47,7 @@ if ! git diff --quiet -- ui/src/route-manifest.json; then
 fi
 
 echo "gate-ui: UNVERIFIED-BY-THIS-GATE:"
-echo "  - browser-runtime suites (keyboard, screen-reader tree, reduced motion, zoom/reflow): run 'npm run test:ui'; BLOCKED_ENVIRONMENT until a browser runtime is provisioned"
+echo "  - browser-runtime suites (keyboard, screen-reader tree, reduced motion, zoom/reflow): NOT DECLARED YET - tests/e2e/ holds no suite before M4, so 'npm run test:ui' reports FAIL rather than a pass. The runtime itself IS provisioned and launch-probed (Chrome Headless Shell 153.0.8010.12, ASSUMPTIONS 3.47), so this is a missing suite, not a missing browser."
 echo "  - manual assistive-technology validation (VG-UI-064, DOD-039): EXTERNAL_REQUIRED, human participants only; automation cannot satisfy or substitute for this gate"
 echo "  - real-data flows: BLOCKED_CREDENTIALS (DATABASE_URL, KEYCLOAK_ISSUER) and BLOCKED_PREREQUISITE (EP-003, EP-004)"
 

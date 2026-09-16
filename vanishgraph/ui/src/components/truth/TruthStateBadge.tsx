@@ -29,7 +29,13 @@ export interface TruthStateScope {
 
 export interface TruthStateBadgeProps {
   readonly state: TruthStateToken;
-  readonly scope?: TruthStateScope;
+  /**
+   * `| undefined` IS DELIBERATE, and it is required by `exactOptionalPropertyTypes`: without it a caller holding an
+   * optional scope cannot pass it through (`<TruthStateBadge scope={maybeScope} />` is a type error), which would push
+   * every call site into a spread workaround. The rule that matters is unchanged and enforced below: a state that
+   * REQUIRES a scope throws without one.
+   */
+  readonly scope?: TruthStateScope | undefined;
   readonly variant?: 'badge' | 'block';
   /** `false` is permitted only where a `StateQualifier` is rendered immediately adjacent (§2.4). */
   readonly showQualifier?: boolean;

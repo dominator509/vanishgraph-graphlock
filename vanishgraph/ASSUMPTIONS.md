@@ -1988,6 +1988,83 @@ skips module specifiers and extends `NON_WIRE_NAMES`. The distinction the gate e
 re-emitted. `scripts/test-e2e.sh` still reports `FAIL` for the reason in §3.47.5(c): `tests/e2e/` holds no suite yet, and
 a stage that ran nothing must not print a sentinel.
 
+### 3.49 EP-005 M3: coverage honesty proved by rendering, and three defects the act of rendering found
+
+**1. THE ORACLE IS RENDERED DOM, AND GETTING THERE TOOK THREE MEASURED CONSTRAINTS.** `node --test` strips types
+natively, which is why the API suites need no build — but JSX is not an erasable type feature, so a `.tsx` module cannot
+be imported by the runner. The plan's fallback forbids weakening the assertion to a source grep ("a source grep is not an
+oracle", SPEC-004 §0.2), so `tests/contract/render-support.ts` transpiles `ui/src/**` with the TypeScript compiler API
+(already a pinned devDependency, the same one `gate-ui` uses) into a mirror, then imports it and renders with
+`react-dom/server` under JSDOM. Three constraints were MEASURED rather than assumed:
+(a) **the mirror cannot live under `node_modules`** — Node refuses type stripping there
+(`ERR_UNSUPPORTED_NODE_MODULES_TYPE_STRIPPING`), and it cannot live outside the project either or the components' bare
+imports would not resolve, so it sits at `.cache-ui-render/` (gitignored, outside the copy gate's scanned surface,
+inside the resolution path of `node_modules`);
+(b) **the emitted JavaScript keeps TypeScript specifiers** (`'../../copy/truth-state.ts'`), so every relative specifier
+is rewritten to `.js` — exact rather than approximate, because this codebase requires explicit extensions on every
+relative import;
+(c) **the root tsconfig has no DOM lib** (`lib: ["ES2023"]`, deliberate: the API layer must not see browser globals), so
+the harness declares the slice of the DOM it uses structurally and loads JSDOM/React through `createRequire` instead of
+widening the API's type environment for a test's convenience.
+
+**2. THE FIRST RENDER FOUND A DEFECT IN MY OWN GUARD — A POLARITY ERROR THAT READING DID NOT CATCH.**
+`MetricFigure` guarded its inputs with `refuse(condition, message)`, and I called it as
+`refuse(Number.isFinite(numerator), …)`: the helper throws when the condition HOLDS, so every VALID figure threw and
+every invalid one rendered. The function name read correctly and the call sites read correctly; only running it showed
+the inversion. Fixed by making the argument the VIOLATION and saying so in the helper's comment. **This is the second
+time in this node that a check was wrong in the direction that makes it silent (the M2 copy-gate regex guard was the
+first), and both were found by executing the check rather than by reviewing it.**
+
+**3. TWO MORE THINGS ONLY THE GATE COULD FIND.**
+(a) **`timeZoneName` cannot be combined with `dateStyle`/`timeStyle` on this runtime** — `new Intl.DateTimeFormat('en-GB',
+{ timeStyle: 'long', timeZoneName: 'longOffset' })` throws `TypeError: Invalid option : option`. VG-UI-034 requires the
+UTC offset in each timeline row, so `TruthTimeline` names the components explicitly; `16 Sept 2026, 11:08:58 GMT+00:00`
+is the measured output, and the suite asserts that string including the offset.
+(b) **`exactOptionalPropertyTypes` made passing an optional scope through a call site a type error** —
+`<TruthStateBadge scope={maybeScope} />` does not compile, because `scope?: TruthStateScope` does not accept an explicit
+`undefined`. `gate-ui` caught it (TS2375). The badge's prop is now `scope?: TruthStateScope | undefined` with the reason
+recorded at the declaration; the rule that matters is unchanged and still enforced — a scope-requiring state WITHOUT a
+scope throws.
+
+**4. THE COMPONENTS ARE DELIBERATELY NOT MOUNTED IN ANY ROUTE YET, AND THAT IS A JUDGEMENT, NOT AN OMISSION.**
+`CoveragePanel`, `MetricFigure`, `ConfidenceBasis`, `PartialCoverageBanner` and `TruthTimeline` exist, are type-checked
+by `tsc -p tsconfig.ui.json`, are rendered by 26 executed assertions, and are required by `gate-ui.sh` as files — but no
+route renders them, because the data they present comes from the API, whose real-data flows are BLOCKED_CREDENTIALS
+until the provisioning actions in `NEXT_ACTION.md` are performed. Mounting them now would mean writing coverage numbers
+and confidence bases into a page by hand, and **a fabricated figure is precisely the defect §3 and §14 exist to
+prevent** — worse than a missing surface, because it is indistinguishable from a working one. M5 and M6 mount them
+against real responses. M1's rule is unchanged: no control, and now no number, that a later inventory could find and
+could not explain.
+
+**5. EVERY SCAN IN THE SUITE PROVES IT CAN FAIL, AND EVERY SCAN PROVES IT SAW SOMETHING.**
+A DOM scan that finds no bare percentage proves nothing unless it finds one when a bare percentage is present, so the
+suite renders deliberately defective trees — `98% removed` in a paragraph, a figure whose denominator is the string
+`many`, a score with an empty basis, a future-dated timeline event — and asserts the SAME scanner reports each. It also
+refuses to pass vacuously: the percentage scan reports "found no percentage at all" as a violation, the coverage-figure
+check names every missing element rather than counting hits, and the source scan asserts it read more than ten files
+before asserting anything about them.
+
+**6. WHAT THIS SUITE DOES NOT PROVE, STATED PLAINLY.** It proves rendered-DOM properties under a server renderer. It does
+NOT prove keyboard focus order, the real browser accessibility tree, reduced-motion behaviour, zoom/reflow, or anything
+about a live region in a running browser — those are M4 and M7's, against the provisioned Chrome Headless Shell, and
+`gate-ui.sh` continues to print them as unverified by that gate. It also does not type-check the props it passes: prop
+types are `tsconfig.ui.json`'s job, and the harness says so in its own header, so a mistyped prop name would surface as a
+missing value in an assertion rather than as a compile error.
+
+**7. A GATE'S OWN OUTPUT IS A CLAIM, AND ONE OF THEM HAD GONE STALE.**
+`gate-ui.sh` printed "BLOCKED_ENVIRONMENT until a browser runtime is provisioned" — true when it was written, false since
+§3.47 provisioned and launch-probed Chrome Headless Shell 153.0.8010.12. It now says what is actually the case: the
+runtime is provisioned, `tests/e2e/` holds no suite before M4, and `npm run test:ui` therefore reports FAIL rather than a
+pass. The gate also gained a precondition on `ui/src/components/coverage/CoveragePanel.tsx`, so a missing coverage
+renderer fails by name instead of surfacing as a module-not-found inside the harness.
+
+**8. MILESTONE EVIDENCE (all re-run after the last edit).** `tests/contract/coverage-presentation.test.ts`:
+**26 tests, 26 pass, 0 fail** (new DOM/render oracle, added to `EXPECTED_TEST_MANIFEST.txt`);
+`gate-ui: ok`; `typecheck: ok`; `lint: ok`; `format-check: ok`; `import boundary: ok`; `reality gate: ok`;
+`test-unit: ok` (**737 tests, 737 pass, 0 fail**); `test collection guard: ok` (41 files seen, 40 manifest entries
+checked); `copy lint gate: ok` (87 files scanned, 0 hits). The three M3 UI files were added without inventing a second
+mapping: the reason a figure is a component at all is that a formatting helper can be bypassed by writing the string.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

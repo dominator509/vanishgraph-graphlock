@@ -40,3 +40,7 @@ Thumbs.db
 # `sh scripts/test-e2e.sh`, which REQUIRES it to exist — so committing it would let a stale bundle be
 # the thing the end-to-end stage tests (SPEC-008 VG-SHIP-021/022 wants the freshly built artefact).
 ui/dist/
+
+# EP-005: the render harness mirror (tests/contract/render-support.ts). An ARTEFACT of a test run, never committed.
+# It holds transpiled copies of ui/src, and Node refuses to load .ts under node_modules, which is why it is here.
+.cache-ui-render/

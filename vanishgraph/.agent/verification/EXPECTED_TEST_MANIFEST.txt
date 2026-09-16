@@ -45,3 +45,4 @@ tests/contract/truth-state-copy.test.ts
 tests/contract/vocabulary-ui.test.ts
 tests/contract/discovery-routes.test.ts
 tests/contract/webhook-verification.test.ts
+tests/contract/coverage-presentation.test.ts
