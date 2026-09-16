@@ -1391,6 +1391,19 @@ INSUFFICIENT_SCOPE` on every call: the suite's default token held `vg.subjects.w
 that, and the harness was wrong. The contract suite now asserts the refusal explicitly, so the separation is pinned
 from both sides.
 
+**6. A GATE WAS RECORDED AS BROKEN WHEN IT WAS ONLY SLOW, AND THE RECORD SAID SO — WHICH IS WHY IT WAS FOUND.**
+Running the verification-state refresher after this node's suites grew produced `896 tests across 52 suites (1
+failed)` and the ledger stored that failure honestly. The failing test was the harness's own
+`scripts/format-check.sh prints format-check: ok`, which passes in ~46s in the unit stage — and the signature of the
+failure was an EMPTY message (`format-check.sh failed:` with nothing after the colon), because the harness spawns each
+gate with a **180-second ceiling** and the spawn had been killed rather than returning a diff. Under the refresher the
+whole tree runs CONCURRENTLY — domain, harness, architecture, contract and 22 database files — and the correct,
+slow gate exceeded a limit chosen when gates ran alone. The ceiling is now 600s and the assertion is unchanged (exit
+0 AND the sentinel), so a gate that genuinely hangs or genuinely fails is still caught; what it no longer does is call
+a contended-but-correct gate a failure. The same refresh afterwards reported **896 tests, 0 failed**. Recorded because
+the general shape recurs: a harness limit is not a product defect, and the only way to tell them apart was to read
+what the failure actually said — nothing.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

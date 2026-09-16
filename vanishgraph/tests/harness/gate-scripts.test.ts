@@ -53,7 +53,19 @@ function runLine(commandLine: string): RunResult {
   const result = spawnSync('sh', ['-c', `${commandLine} > "${shellPath(outFile)}" 2>&1`], {
     cwd: ROOT,
     stdio: 'inherit',
-    timeout: 180_000,
+    // THE CEILING IS FOR A HUNG GATE, NOT FOR A SLOW MACHINE, and it is measured rather than guessed.
+    //
+    // MEASURED FAILURE this corrects: at 180s, `scripts/format-check.sh` passed in ~46s when this suite ran
+    // alone (the unit stage) and exceeded the ceiling when `refresh-verification-state.ts --with-db` ran every
+    // root — domain, harness, architecture, contract and 22 database files — CONCURRENTLY. The spawn was killed,
+    // `status` was null, the captured output was empty, and the test reported `format-check.sh failed:` with
+    // nothing after the colon. A gate that was working was recorded as broken, and the failure signature (no
+    // output at all, versus a formatting diff) is the only thing that distinguished the two.
+    //
+    // Raising the ceiling does NOT weaken the assertion: the test still requires exit 0 AND the sentinel, so a
+    // gate that genuinely hangs or genuinely fails is still caught. What it stops doing is calling a slow,
+    // contended but CORRECT gate a failure.
+    timeout: 600_000,
   });
   const output = existsSync(outFile) ? readFileSync(outFile, 'utf8') : '';
   rmSync(dir, { recursive: true, force: true });
