@@ -1,0 +1,75 @@
+# EP-006 M10 — a cross-tenant REFERENCE is permitted by the schema (RLS constrains the row, not the reference)
+# tenant P (the subject's owner): adc28f0b-b8fb-474c-81a3-287b2420862b
+# tenant Q (the referencing tenant): 2a8f8624-1d7b-4a42-a869-bc2b7d10d1d1
+# subject in P: 9ce0107d-747b-4199-bf8f-f283af9e3b5f
+
+--- fixture
+exit=0
+              set_config              
+--------------------------------------
+ adc28f0b-b8fb-474c-81a3-287b2420862b
+(1 row)
+
+--- tenant Q inserts a grant that REFERENCES tenant P’s subject, as vg_app
+exit=0   (exit 0 means the schema ACCEPTED it)
+              set_config              
+--------------------------------------
+ 2a8f8624-1d7b-4a42-a869-bc2b7d10d1d1
+(1 row)
+
+                       ?column?                       
+------------------------------------------------------
+ vg_cross_insert=912da548-db7f-47c9-9519-50784d648c74
+(1 row)
+
+--- and tenant Q’s own scoped read sees it: 2a8f8624-1d7b-4a42-a869-bc2b7d10d1d1 | vg_rows_visible_in_q=1
+--- tenant-scoped tables carrying a (tenant_id, id) key, which a composite FK needs: vg_tables_with_tenant_id_id_key=0
+--- foreign keys from a tenant-scoped table to another tenant-scoped table: vg_fks_tenant_scoped_to_tenant_scoped=47
+--- the full list:
+alias -> protected_subject
+appeal_escalation -> request_case
+audit_event -> request_case
+authority_grant -> evidence_artifact
+authority_grant -> evidence_artifact
+authority_grant -> protected_subject
+controller_response -> evidence_artifact
+controller_response -> request_case
+coverage_report -> protected_subject
+deadline -> evidence_artifact
+deadline -> request_case
+email_thread -> request_case
+evidence_artifact -> request_case
+exposure -> protected_subject
+exposure -> source_record
+external_action -> removal_recipe
+external_action -> request_case
+human_gate -> evidence_artifact
+human_gate -> request_case
+identifier -> protected_subject
+location_history -> protected_subject
+mail_piece -> evidence_artifact
+mail_piece -> request_case
+policy_decision -> request_case
+readback -> evidence_artifact
+readback -> external_action
+readback -> request_case
+reappearance -> audit_event
+reappearance -> evidence_artifact
+reappearance -> exposure
+reconciliation -> evidence_artifact
+reconciliation -> external_action
+reconciliation -> request_case
+removal_recipe -> source
+request_case -> authority_grant
+request_case -> exposure
+request_case -> policy_decision
+request_case -> protected_subject
+request_case -> removal_recipe
+request_case -> source
+source -> controller
+source_catalog_entry -> source
+source_record -> source
+verification_observation -> evidence_artifact
+verification_observation -> request_case
+webhook_binding -> controller
+webhook_binding -> request_case

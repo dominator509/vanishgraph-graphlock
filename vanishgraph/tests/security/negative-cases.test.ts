@@ -13,13 +13,17 @@
  * returned code looked right.
  *
  * WHAT IS NOT HERE, AND WHY: SPEC-005 VG-AUTH-022 requires cross-tenant denial by the service layer AND by row-level
- * security. The RLS half needs a provisioned database and the EP-003 policies, so it lives in
- * `tests/integration/cross-tenant-both-layers.test.ts` and is recorded `BLOCKED_CREDENTIALS` (`DATABASE_URL`) and
- * `BLOCKED_PREREQUISITE` (EP-003) rather than asserted here against a stub.
+ * security. The RLS half is asserted against a real database in `tests/integration/cross-tenant-both-layers.test.ts`,
+ * which runs in the integration stage. **IT WAS `BLOCKED_CREDENTIALS`/`BLOCKED_PREREQUISITE` WHEN THIS SUITE WAS
+ * WRITTEN AND IT NO LONGER IS**: EP-003 provisioned PostgreSQL, the policies exist, and the integration suite now runs
+ * and passes. What this file asserts about that half is only that the suite exists and is declared in the integration
+ * manifest — a pointer that cannot go stale silently, and no claim to have proven the second layer here.
  */
 
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 import {
   AuthorityError,
@@ -179,10 +183,25 @@ describe('cross-tenant access is refused by the service layer, and looks like ab
     }
   });
 
-  test('the RLS half is RECORDED as blocked rather than stubbed', () => {
-    // SPEC-005 VG-AUTH-022 requires two independent layers. This suite asserts the service layer; the database layer needs
-    // a provisioned PostgreSQL and the EP-003 policies, so it is recorded where it belongs instead of being faked here.
-    const blocked = { status: 'BLOCKED_CREDENTIALS', missingProperty: 'DATABASE_URL', prerequisite: 'EP-003 RLS policy' };
-    assert.equal(blocked.prerequisite, 'EP-003 RLS policy');
+  test('the RLS half is asserted in the integration stage, and this test only checks that pointer', () => {
+    // SPEC-005 VG-AUTH-022 requires two independent layers. This suite asserts the service layer; the database layer
+    // needs a provisioned PostgreSQL and the EP-003 policies, so it lives in the integration stage.
+    //
+    // WHAT THIS REPLACED, AND WHY THE REPLACEMENT IS WEAKER ON PURPOSE: the original test asserted
+    // `{ status: 'BLOCKED_CREDENTIALS', … }.prerequisite === 'EP-003 RLS policy'` — a comparison between two constants
+    // in a local object literal, which passed no matter what the repository contained and would have gone on passing
+    // after the block was lifted. The claim "it is recorded where it belongs" is only meaningful if the record can be
+    // checked, so this test checks the two things that can be: the suite is on disk, and the integration manifest —
+    // which the collection guard enforces — declares it.
+    const root = resolve(import.meta.dirname, '..', '..');
+    const suite = resolve(root, 'tests/integration/cross-tenant-both-layers.test.ts');
+    assert.equal(existsSync(suite), true, 'the database half of VG-AUTH-022 must exist as a suite');
+
+    const manifest = readFileSync(resolve(root, '.agent/verification/EXPECTED_INTEGRATION_MANIFEST.txt'), 'utf8');
+    assert.match(
+      manifest,
+      /^tests\/integration\/cross-tenant-both-layers\.test\.ts$/m,
+      'and it must be declared in the integration manifest, or it can stop running without a red build',
+    );
   });
 });

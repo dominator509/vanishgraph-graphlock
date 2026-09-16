@@ -13,9 +13,9 @@
  * throws `KeyProviderBlockedError`, which names the decision that unblocks it.
  *
  * DO NOT fill this in with a locally-generated key and call it a KMS. The local file-backed
- * provider exists for tests and is excluded from production (VG-SCOPE-020); a second local
+ * provider exists for tests and is excluded from production (ADR-006 is OPEN; SPEC-002 §4); a second local
  * provider with a KMS-shaped class name would be indistinguishable from a real one during
- * configuration review, which is exactly the confusion VG-SCOPE-020 exists to prevent.
+ * configuration review, which is exactly the confusion that rule exists to prevent.
  *
  * There is no command in COMMANDS.md that selects this adapter, because there is no production
  * deployment yet. It is compiled, type-checked and covered by tests that assert it refuses.

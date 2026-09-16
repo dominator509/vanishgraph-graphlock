@@ -32,7 +32,7 @@ export interface WrappedKey {
   readonly wrapped: Uint8Array;
   /** Names the KEK that wrapped it, so a KEK rotation is traceable. */
   readonly kekRef: string;
-  /** Which provider produced it. A local file provider is TESTS ONLY (VG-SCOPE-020). */
+  /** Which provider produced it. A local file provider is TESTS ONLY (ADR-006 is OPEN; SPEC-002 §4). */
   readonly provider: string;
 }
 

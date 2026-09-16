@@ -31,5 +31,6 @@ migrate: applying 0030_subject_contact_preference.sql
 migrate: applying 0031_authority_grant_facts.sql
 migrate: applying 0032_webhook_binding.sql
 migrate: applying 0033_webhook_capability_policy.sql
-migrate: applied 33 migration(s); at version 33
+migrate: applying 0034_authority_grant_execution_time_facts.sql
+migrate: applied 34 migration(s); at version 34
 migrate: ok

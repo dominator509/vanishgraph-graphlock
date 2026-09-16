@@ -75,7 +75,7 @@ function optionalInstant(body: Record<string, unknown>, field: string): number |
  * provider: ADR-006's managed KMS is open (its adapter raises `KeyProviderBlockedError` on every operation), the
  * `KeyProvider` PORT has no encrypt operation at all (only `wrap`/`unwrap`/`rotate`/`shred`/`hmac`), the only
  * adapter that can encrypt, `LocalFileKeyProvider`, holds its DEKs in an in-process Map and is TESTS-AND-LOCAL-ONLY
- * by VG-SCOPE-020, and NO CODE ANYWHERE WRITES `tenant_key` — measured by searching `src/**` for the table name,
+ * because ADR-006 is OPEN, and NO CODE ANYWHERE WRITES `tenant_key` — measured by searching `src/**` for the table name,
  * which appears only in the port's own doc comment. Returning a mask for a reveal request would be the dishonest
  * option; returning the plaintext is impossible; so the request is refused and the reason is named.
  */
@@ -495,7 +495,7 @@ export function subjectRoutes(app: FastifyInstance, options: SubjectRouteOptions
       // `KeyProviderBlockedError` on wrap/unwrap/rotate/shred/hmac; (2) the `KeyProvider` PORT cannot encrypt a
       // value at all — it declares `wrap`/`unwrap`/`rotate`/`shred`/`hmac`, and the only `encrypt` in this
       // repository is a method on the concrete `LocalFileKeyProvider` that the port does not expose; (3) that local
-      // provider keeps its DEKs in an in-process `Map` and is tests-and-local-only by VG-SCOPE-020, and no code
+      // provider keeps its DEKs in an in-process `Map` and is tests-and-local-only because ADR-006 is OPEN, and no code
       // anywhere writes `tenant_key`, so ciphertext written today could not be decrypted after a restart.
       //
       // Writing the caller's value through (3) would therefore create a permanent privacy defect: a stored

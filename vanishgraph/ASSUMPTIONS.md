@@ -194,7 +194,7 @@ ADR-006 (cloud/KMS selection) is **OPEN**, so `src/adapters/crypto/managed-kms-k
 is `BLOCKED_CREDENTIALS` and throws on every operation. The local file-backed provider holds its
 KEK on the same filesystem as the data it protects; it exists so the encryption, rotation and
 shred **mechanics** can be exercised against real PostgreSQL, and it must never be selected in
-production (VG-SCOPE-020). Its class name says so, and a test asserts the managed adapter refuses
+production (ADR-006 is OPEN; SPEC-002 §4). Its class name says so, and a test asserts the managed adapter refuses
 rather than pretending. No test in this node is evidence about a production KMS.
 
 ### 3.9 The backup drill's own pass/fail logic was inverted (caught by running it)
@@ -1430,7 +1430,7 @@ managed KMS is OPEN and `ManagedKmsKeyProvider` raises `KeyProviderBlockedError`
 `unwrap` (decrypt), `rotate`, `shred` and `hmac`, and the only `encrypt` in this repository is a method on the
 concrete `LocalFileKeyProvider` that the port does not expose, so no caller holding the port can produce ciphertext;
 (c) that local provider keeps its DEKs in an in-process `Map` (`private readonly deks = new Map<…>`) and is
-tests-and-local-only by VG-SCOPE-020, and **no code anywhere writes `tenant_key`** — measured by searching `src/**`
+tests-and-local-only because ADR-006 is OPEN, and **no code anywhere writes `tenant_key`** — measured by searching `src/**`
 for the table name, which appears only in the port's own doc comment. Writing the caller's value through (c) would
 create an identifier nobody can ever read, in a column whose entire purpose is lawful retrieval; that is a permanent
 defect, and no later migration can undo it. So the effect stays refused, the reason names all three facts, and the
@@ -2434,6 +2434,107 @@ be mistaken for that test. Two contract gaps found while naming fields are recor
 §5.4.3 declares no catalogue version for a discovery run, and SPEC-003 declares no endpoint at all for SPEC-004 §1's
 `/auditor/exports` — and `ReappearanceAlerts` is built and asserted but mounted nowhere, because §5.11.3 names no row
 fields for its list.
+
+### 3.56 EP-006 M10: three measurements that changed the work, and one gap recorded instead of half-fixed
+
+**1. THE DURABLE AUTHORITY ADAPTER COULD NOT HAVE BEEN WRITTEN HONESTLY WITHOUT A MIGRATION, AND THE SCHEMA SAID SO.**
+`verifyAtExecutionTime` refuses a grant whose `contestedAt` is set (VG-AUTHZ-012) or whose `coolingOffUntil` is still in
+the future (VG-AUTHZ-010), and `mintGrant` requires a `noticeArtifactId` for every non-`SELF` kind (VG-AUTHZ-014). At
+version 0033 none of those three facts had a column: the measured column list was `(id, tenant_id, subject_id, kind,
+scope, evidence_id, issued_at, expires_at, revoked_at, signed_instrument, created_at, identity_level, notice_sent_at)`.
+A durable adapter could therefore have persisted a grant and read it back with both fields `null` — that is, **a
+contested grant would have passed the execution-time check after a restart**, and the control M10 exists to prove would
+have been blind to two of the five facts it evaluates. Migration `0034_authority_grant_execution_time_facts.sql` adds
+`contested_at`, `cooling_off_until` and `notice_artifact_id`, all nullable with no default (a default instant would
+suspend or fabricate), plus an immediate FK to `evidence_artifact`, two shape `CHECK`s and a partial index. The same
+milestone writes `src/adapters/persistence/authority-repository.ts`, which M4 recorded as `BLOCKED_CREDENTIALS`; the
+block no longer applies because EP-003 provisioned the database, so the file exists and
+`tests/integration/authority-at-execution.test.ts` runs it against real rows.
+
+**2. A MUTATION THE SCHEMA FORBIDS, DISCOVERED BY ATTEMPTING IT.** The first version of the time-shifted-grant proof
+moved `expires_at` into the past from another connection. The database refused the statement itself:
+`new row for relation "authority_grant" violates check constraint "authority_grant_check"` — migration 0002's
+`CHECK (expires_at > issued_at)`. **A grant can never be STORED already expired**, so the VG-ERR-029 scenario can only be
+the clock advancing past a stored instant. The test now stores a 1.2 s window, waits it out, and asserts that the wait
+genuinely crossed the stored instant before the write transaction reads it — with the mutation check executed in the
+same test (the request-start value, evaluated at the request-start instant, is still accepted).
+
+**3. THE EVIDENCE PRIVILEGE GAP: CAUGHT BY ITS OWN SUITE, CLOSED, AND ONE ASSERTION CORRECTED BY MEASUREMENT.**
+`db/privileges.sql` granted `SELECT, INSERT, UPDATE, DELETE ON ALL TABLES` to `vg_app` and revoked only `audit_event` and
+`schema_migration`, so the RUNTIME ROLE — the role every request runs as — could `UPDATE` and `DELETE` an evidence
+artifact. Measured before the fix: `has_table_privilege('vg_app','evidence_artifact','DELETE')` returned `true`, and
+`UPDATE evidence_artifact SET digest = repeat('f',64)` executed with **exit 0**. VG-AUTHZ-017 ("evidence deletion is
+unavailable to every role; evidence is retained per policy and removed only by the retention subsystem") and
+VG-EVIDENCE-001 ("content-addressed and immutable") were unmet at the privilege level. `tests/integration/
+evidence-immutability.test.ts` asserts the requirement, so it FAILED first (5 of 9 assertions) and the revocation landed
+in `db/privileges.sql`: `REVOKE UPDATE, DELETE ON evidence_artifact FROM vg_app`, conditional on the table existing.
+**The owner keeps the capability**, because SPEC-002 §5's retention subsystem is the one path that removes evidence and
+revoking it from every role would make that requirement unimplementable; the test asserts the owner's capability
+POSITIVELY so a later edit cannot widen the revocation by accident.
+**AND THEN A CORRECTION.** I asserted that the same audit mutation as `vg_app` would be refused by the missing
+privilege. It is not: **PostgreSQL's rule system rewrites `UPDATE`/`DELETE` on `audit_event` to nothing BEFORE privilege
+checking**, so `UPDATE …; DELETE …;` as `vg_app` exits **0** with the row unchanged. The rule, not the privilege, is what
+protects the audit log from the runtime role. The test now asserts the measured behaviour — a `permission denied` there
+would mean the rule had been dropped and only the privilege was left — and the file header says so.
+
+**4. A CROSS-TENANT REFERENCE IS PERMITTED BY THE SCHEMA, MEASURED RATHER THAN INFERRED.** RLS constrains the tenant of
+the ROW; it says nothing about the tenant of the row that row REFERENCES. Measured: a grant inserted in tenant Q naming
+tenant P's `protected_subject` was **accepted** (exit 0, and tenant Q's own scoped read then saw 1 row). Measured scope
+of the same shape: **0** tenant-scoped tables carry a `(tenant_id, id)` unique or primary key — so a composite foreign
+key is not even expressible today — and **47** foreign keys point from a tenant-scoped table at another tenant-scoped
+table (`authority_grant -> protected_subject`, `request_case -> exposure`, `readback -> external_action`, …).
+**NOT FIXED HERE, AND DELIBERATELY NOT HALF-FIXED**: a per-table application-layer check would cover 1 of 47 paths while
+reading as though the property held, and the plan's own fallback forbids substituting an application filter for a
+missing database control. The correct fix is composite keys plus 47 composite FKs, which is a data-model change, not a
+security-milestone edit; it is carried into M11's blocked-work accounting. **It is also not a violated requirement as
+written**: VG-TENANT-001's acceptance test is "a cross-tenant read returns zero rows at the database layer", which holds,
+and VG-TENANT-002's is "both layers independently reject the same unauthorized access", which also holds. The honest
+statement is narrower than the requirement's first sentence: every ROW is tenant-scoped, every REFERENCE is not. No
+shipped request path is affected yet, because no composition root wires the authority adapter and no route mints a grant
+through it.
+
+**5. THE COLLECTION GUARD'S FAILURE EVIDENCE NAMED NO TEST, AND NOW IT DOES.** The stage's first run with the new suite
+failed with `{"tests":338,"fail":1,…}` and the file it preserves for a non-reproducing failure
+(`.agent/evidence/db/integration-guard.failed.txt`) held only that one line, so the failing suite had to be located by
+re-running ninety seconds of tests. `scripts/count-tests.mjs` now attributes each `<failure>`/`<error>` element to its
+INNERMOST `<testcase>` (the region between one opening tag and the next, which is what keeps a nested failure off its
+parent suite), prints `file :: name` with the first message line, and adds a `failed` array to the JSON summary.
+Verified on a synthetic JUnit document — the parent suite was not attributed, the inner test was, exit 1 — and then on
+the real failure it was written for. Related, and worth stating in the same place: the preserved file is the GUARD's
+output, not the runner's TAP, which is why the count had no name to show; the direct run later in the stage writes the
+TAP, but the stage exits at the guard failure before reaching it. **AND THE SAME CLASS OF DEFECT HAPPENED AGAIN IN THIS
+MILESTONE'S OWN GATE CAPTURE**: pass 1 of `test-unit` failed (the citation guard, below) and pass 2 wrote to the same
+fixed path, so the failing run's raw output was overwritten. The failure's identity is recorded in
+`.agent/evidence/EP-006/M10-gates.txt` and is reproducible by deleting `RECORDED_CITATION_EXCEPTIONS` from the guard, but
+the raw capture is gone and the evidence file says so rather than naming a file that does not exist.
+
+**6. THE PLAN'S "SERVICE-LAYER CHECK DISABLED IN THE TEST HARNESS ONLY" IS SATISFIED BY OMISSION, WHICH IS STRONGER.**
+M10's `cross-tenant-both-layers` item asks for a database-layer query under tenant A that returns zero rows for tenant
+B's data, and for the same to hold with the service-layer check disabled. `tests/integration/cross-tenant-both-layers.
+test.ts` runs the database half as `SELECT count(*) FROM evidence_artifact WHERE id = …` — **the query carries no tenant
+predicate at all**, so the application-layer filter is not disabled, it is absent, and the policy alone returns zero. The
+suite asserts its own premise first (`current_user` is `vg_app`, not `vg_owner`) and proves non-vacuity both ways: the
+owner sees the very row the runtime role refuses, and each server reads its OWN artifact with `200` before being shown
+to refuse the other tenant's.
+
+**7. THE ACCOUNTING FOUND FABRICATED REQUIREMENT IDS IN MY OWN EARLIER WORK, AND A CHECK NOW ENFORCES THE LOOKUP.**
+Building M10's requirement rows meant mapping each ID to the suite that proves it, so I ran the mapping as a check — grep
+every `VG-<AREA>-<NNN>` citation out of the tree and look each one up in `.agent/specs/*.md`. **172 distinct IDs are
+cited; four of them existed in no specification at all**, and three of those were written by me in earlier rounds:
+`VG-SCOPE-020` in eight files (four of them under `src/`), attached to the claim "the local file-backed key provider is
+tests-only" — a claim actually governed by **ADR-006** (`OPEN` in `DECISIONS.md`) and SPEC-002 §4; the `VG-SCOPE` series
+is SPEC-000 §3's ten out-of-scope prohibitions and stops at `VG-SCOPE-010`. `VG-UI-090…093`, cited in `ui/src/main.tsx`
+and `ui/src/lib/telemetry.ts`, is not in SPEC-004 either; the two requirements it meant are `VG-UI-075` (no PII in
+browser telemetry) and `VG-UI-076` (no third-party trackers on PII routes). And `VG-AUTHZ-024`, in the M10 suite written
+minutes earlier, meant `VG-AUTH-024`. All mutable occurrences are corrected to IDs a reader can look up; **three
+occurrences are NOT correctable**: `VG-DATA-013`/`VG-DATA-015` in `db/migrations/0004_policy_and_action.sql` and
+`VG-SCOPE-020` in `db/migrations/0009_retention.sql`, because both migrations are applied and DOD-040 makes an applied
+migration immutable — the runner fails on a changed checksum, so a comment cannot be fixed in place without invalidating
+every prior run's evidence. Those three are named, with their reason, in `tests/architecture/requirement-ids.test.ts`,
+which now enforces the lookup for `src/`, `tests/`, `scripts/`, `db/`, `ui/src/` and the root documents; it asserts its
+own corpus loaded, asserts each exception still names a real citation so the waiver list cannot rot, and — DOD-018 —
+asserts that the checker REPORTS a fabricated citation rather than merely running. A citation to a requirement that does
+not exist is a claim about a requirement that does not exist, which is the defect class DOD-016 and DOD-027 name.
 
 ## 4. Known limitations recorded honestly (not resolved)
 

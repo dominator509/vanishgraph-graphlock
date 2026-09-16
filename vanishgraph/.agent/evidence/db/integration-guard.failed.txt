@@ -1,4 +1,2 @@
-{"tests":327,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":27,"manifestChecked":28,"verdict":"FAIL"}
-test collection guard: FAIL
-  - expected suite produced no results: tests/integration/harness-probe.test.ts
-A suite that silently stops running removes its coverage without any red build.
+{"tests":338,"fail":1,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":29,"manifestChecked":29,"verdict":"FAIL"}
+test collection guard: FAIL - 1 test(s) failed

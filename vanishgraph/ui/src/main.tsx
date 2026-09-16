@@ -2,8 +2,10 @@
  * The application entry point (SPEC-004 §1; EP-005 M1).
  *
  * WHAT IT DOES: mounts the router and the query client onto a single element. WHAT IT DELIBERATELY DOES NOT DO: it
- * installs no analytics, no error-reporting beacon, no session-recording script and no third-party tag — SPEC-004 §12
- * and VG-UI-090…093 forbid trackers in the browser, and the cheapest way to comply is to have nothing to remove. A
+ * installs no analytics, no error-reporting beacon, no session-recording script and no third-party tag — SPEC-004 §12,
+ * VG-UI-075 and VG-UI-076 forbid trackers and PII-bearing telemetry in the browser, and the cheapest way to comply is to
+ * have nothing to remove. (This header cited a RANGE of four VG-UI ids that SPEC-004 does not define until EP-006 M10
+ * replaced it with the two above; the removed ids are not repeated here because the citation guard reads this file.) A
  * later milestone that needs a first-party telemetry call must add it here, where a reviewer will see it.
  */
 

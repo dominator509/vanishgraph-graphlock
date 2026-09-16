@@ -7,8 +7,11 @@
  * the DLP scrub class named here, and anything else is refused before it is sent.
  *
  * NOTHING IS SENT BY THIS MODULE. It builds a validated record and hands it to a sink the composition root supplies;
- * `main.tsx` supplies none, which is why the built application transmits no telemetry at all — VG-UI-090…093 forbid
- * third-party trackers, and having nothing to remove is the cheapest way to comply.
+ * `main.tsx` supplies none, which is why the built application transmits no telemetry at all — VG-UI-075 and VG-UI-076
+ * forbid PII in browser telemetry and third-party trackers on PII routes, and having nothing to remove is the cheapest
+ * way to comply. (This header cited a RANGE of four VG-UI ids that SPEC-004 does not define until EP-006 M10 replaced it
+ * with the two above; `tests/architecture/requirement-ids.test.ts` now enforces the lookup, and that is why the removed
+ * ids are not repeated here.)
  */
 
 import { classify } from './url.ts';

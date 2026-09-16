@@ -6,7 +6,7 @@
  *   2. a wrong key FAILS CLOSED rather than returning garbage;
  *   3. rotation leaves old rows readable via `key_version`.
  *
- * The provider under test is the local file-backed one, which is TESTS ONLY (VG-SCOPE-020). It is
+ * The provider under test is the local file-backed one, which is TESTS ONLY (ADR-006 is OPEN; SPEC-002 §4). It is
  * used here because the managed-KMS adapter is BLOCKED_CREDENTIALS while ADR-006 is OPEN; nothing
  * in this file is evidence about a production KMS, and the final test asserts that the managed
  * adapter refuses rather than pretending.

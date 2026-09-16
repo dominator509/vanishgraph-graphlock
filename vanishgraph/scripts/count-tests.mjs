@@ -69,6 +69,51 @@ const tests = real.length;
 const failures = [...xml.matchAll(/<(failure|error)\b/g)].length;
 const skipped = [...xml.matchAll(/<skipped\b/g)].length;
 
+/** JUnit escapes the message text; decode the few entities the reporter emits so the name is readable. */
+const decodeEntities = (s) =>
+  s
+    .replace(/&#10;/g, ' ')
+    .replace(/&#13;/g, '')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+
+/**
+ * The IDENTITY of each failing test, not just how many failed.
+ *
+ * WHY THIS EXISTS. The guard's failure path printed only a count, and `scripts/test-integration.sh` preserves that
+ * output as the evidence for a failure that does not reproduce. MEASURED (EP-006 M10): the stage failed with
+ * `{"tests":338,"fail":1,…}` and the preserved file `integration-guard.failed.txt` named no test at all, so the
+ * failure had to be reproduced by hand from a suite that runs in ninety seconds. A count is the verdict; a name is
+ * what makes the verdict actionable, and DOD-025 wants evidence a reader can act on.
+ *
+ * The per-case region is the text between one `<testcase>` opening tag and the NEXT one, which is exactly the
+ * non-nested content: a `describe` suite's failure belongs to its inner testcase, and the inner tag IS the next
+ * opening tag, so a nested failure is never attributed to its parent suite.
+ */
+const failureDetails = [];
+{
+  const opens = [...xml.matchAll(/<testcase\b[^>]*>/g)];
+  for (let i = 0; i < opens.length; i += 1) {
+    const start = opens[i].index + opens[i][0].length;
+    const end = i + 1 < opens.length ? opens[i + 1].index : xml.length;
+    const body = xml.slice(start, end);
+    if (!/<(failure|error)\b/.test(body)) continue;
+    const tag = opens[i][0];
+    const name = (tag.match(/\bname="([^"]*)"/) ?? [, ''])[1];
+    const file = norm((tag.match(/\bfile="([^"]*)"/) ?? [, ''])[1]);
+    const message = decodeEntities(
+      (body.match(/<(?:failure|error)\b[^>]*\bmessage="([^"]*)"/) ?? [, ''])[1],
+    )
+      .split('\n')[0]
+      .trim()
+      .slice(0, 300);
+    failureDetails.push({ file, name, message });
+  }
+}
+
 if (tests === 0) {
   if (!/<testsuites?\b/.test(xml)) {
     console.error('test collection guard: FAIL - zero tests were collected');
@@ -124,6 +169,8 @@ process.stdout.write(
     fileArtifactsExcluded: cases.length - real.length,
     filesSeen: new Set(real.map((c) => c.file)).size,
     manifestChecked,
+    // Named so a preserved failing run is diagnosable without a re-run; empty on a green run.
+    failed: failureDetails.map((d) => `${d.file} :: ${d.name}`),
     verdict: problems.length === 0 && failures === 0 ? 'OK' : 'FAIL',
   }) + '\n',
 );
@@ -136,6 +183,14 @@ if (problems.length > 0) {
 }
 if (failures > 0) {
   console.error(`test collection guard: FAIL - ${failures} test(s) failed`);
+  if (failureDetails.length === 0) {
+    // A failure element the region walk could not attribute is reported as such rather than silently omitted.
+    console.error('  (the failing test names could not be attributed from the JUnit document)');
+  }
+  for (const detail of failureDetails) {
+    console.error(`  - ${detail.file} :: ${detail.name}`);
+    if (detail.message.length > 0) console.error(`      ${detail.message}`);
+  }
   process.exit(1);
 }
 if (skipped > 0) {

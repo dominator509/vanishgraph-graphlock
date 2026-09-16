@@ -123,7 +123,18 @@ function main(): number {
         'tests/harness/**/*.test.ts',
         'tests/architecture/**/*.test.ts',
         'tests/contract/**/*.test.ts',
+        // `tests/security/**` RUNS IN THE UNIT STAGE AND NEEDS NO DATABASE, so it belongs in BOTH lists. MEASURED why it
+        // had to be added: nothing in this refresher named that root, so the security suites that EP-006 M1–M9 added
+        // (the scanner self-test, the masking patterns, the negative cases) executed on every unit run while the ledger
+        // that exists to record what was observed never saw them — the same "the evidence kept being produced and its
+        // scope quietly stopped covering part of the system" defect the blackbox note below records.
+        'tests/security/**/*.test.ts',
         'tests/db/**/*.test.ts',
+        // THE INTEGRATION ROOT IS PART OF THE --with-db RUN for the same reason the black-box root is: every suite there
+        // drives real PostgreSQL (through `tests/db/harness.ts` or the real adapters), and EP-006 M10's authority,
+        // cross-tenant and immutability proofs live there. Without this line the ledger would not carry a single row for
+        // them, and DOD-013's cross-tenant claim would keep citing only tests/db/rls.test.ts.
+        'tests/integration/**/*.test.ts',
         // THE BLACK-BOX ROOT IS PART OF THE --with-db RUN, and MEASURED why it must be: it drives the real server over
         // HTTP and creates its own tenant, so it needs PostgreSQL — and without it DOD-011 (black-box acceptance) and
         // DOD-012 (independent readback) had NO executed evidence in this refresher, which is why both rows still read
@@ -135,6 +146,7 @@ function main(): number {
         'tests/harness/**/*.test.ts',
         'tests/architecture/**/*.test.ts',
         'tests/contract/**/*.test.ts',
+        'tests/security/**/*.test.ts',
       ];
 
   if (WITH_DB && (process.env.VG_TEST_DSN_OWNER ?? '') === '') {
@@ -179,7 +191,13 @@ function main(): number {
   });
 
   const kindFor = (suite: string): string => {
+    // EVERY ROOT THAT NEEDS POSTGRES IS `integration`, INCLUDING THE ONES THAT ARE NOT UNDER tests/db/. MEASURED: the
+    // fall-through used to classify `tests/blackbox/**` as `unit` — a real-server, real-database suite labelled as a
+    // pure one — and EP-006 M10's `tests/integration/**` suites would have inherited the same wrong label. The `kind`
+    // field is what a reader uses to tell a claim that needs a service from one that does not.
     if (suite.startsWith('tests/db/')) return 'integration';
+    if (suite.startsWith('tests/integration/')) return 'integration';
+    if (suite.startsWith('tests/blackbox/')) return 'integration';
     if (suite.startsWith('tests/architecture/')) return 'architecture';
     if (suite.startsWith('tests/harness/')) return 'harness';
     return 'unit';
@@ -228,6 +246,17 @@ function main(): number {
   const dbSkip = dbCases.filter((c) => c.status === 'SKIP').length;
 
   /**
+   * THE OTHER ROOT THAT RUNS AGAINST THE SAME DATABASE, COUNTED SEPARATELY.
+   *
+   * `tests/integration/**` was added to this refresher in EP-006 M10. Its figure is reported as its own number rather
+   * than folded into the `tests/db/**` figure, because the sentence above DOD-009 names `tests/db/**` and a total that
+   * silently included another root would be the same overstatement that row was corrected for.
+   */
+  const integrationCases = cases.filter((c) => c.suite.startsWith('tests/integration/'));
+  const integrationSuites = new Set(integrationCases.map((c) => c.suite));
+  const integrationPass = integrationCases.filter((c) => c.status === 'PASS').length;
+
+  /**
    * DOD-013'S TABLE COUNT IS READ FROM THE FILE OF RECORD, NOT TYPED IN.
    *
    * MEASURED DEFECT, corrected here: the string said "all 29 tenant-scoped tables" while
@@ -253,6 +282,8 @@ function main(): number {
       evidence:
         `Database suites run against real PostgreSQL (no substitute anywhere in tests/db/**): ` +
         `${dbPass} tests pass across ${dbSuites.size} files, ${dbSkip} skipped. ` +
+        `Plus ${integrationPass} test(s) across ${integrationSuites.size} file(s) in tests/integration/**, which drive ` +
+        'the same provisioned server through the real adapters and psql. ' +
         'Covered by tests/db/{rls,job-queue,encryption,retention,restore-drill}.test.ts.',
     };
     updates['DOD-013'] = {
@@ -262,7 +293,11 @@ function main(): number {
         `all ${tenantScopedTables} tables listed in db/tenant-scoped-tables.txt, enumerated from ` +
         'pg_class/pg_policies so a new table without isolation fails gate-data. Cross-tenant read ' +
         'returns zero rows as vg_app; cross-tenant write is refused by WITH CHECK. Proven in ' +
-        'tests/db/rls.test.ts and re-asserted by gate-data.sh.',
+        'tests/db/rls.test.ts, re-asserted by gate-data.sh, and extended in EP-006 M10 by ' +
+        'tests/integration/cross-tenant-both-layers.test.ts (the query carries NO tenant predicate, so the policy alone ' +
+        'refuses) and tests/integration/authority-at-execution.test.ts (another tenant’s handle sees no grant). ' +
+        'NOT COVERED by that claim: a cross-tenant REFERENCE, which the schema permits because no tenant-scoped table ' +
+        'carries a (tenant_id, id) key — measured and recorded in ASSUMPTIONS §3.56.',
     };
   }
 

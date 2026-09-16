@@ -1,4 +1,4 @@
-kek_location=external-to-database (not present in the dump; see VG-SCOPE-020)
+kek_location=external-to-database (not present in the dump; see ADR-006 in DECISIONS.md)
 kms_status=BLOCKED_CREDENTIALS (ADR-006 open)
 note=the drill proves the RESTORE path and tombstone reconciliation; it does not claim a
      production key-custody story, because no KMS is configured.

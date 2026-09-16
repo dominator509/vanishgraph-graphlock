@@ -1,8 +1,11 @@
 # Expected integration test manifest (DOD-007 for the database suite).
 #
 # Every path listed here MUST contribute at least one test when `sh scripts/test-integration.sh`
-# runs. The collection guard is invoked with this manifest and VG_TEST_GLOB="tests/db/**/*.test.ts".
-# Removing a line to make the guard pass is gate weakening (DOD-027).
+# runs. The collection guard is invoked with this manifest and
+# VG_TEST_GLOB="tests/db/**/*.test.ts tests/blackbox/**/*.test.ts tests/integration/**/*.test.ts"
+# — the glob is quoted here as it stands in the script (EP-006 M10 widened it; the header previously
+# named only tests/db/**, which is why an integration suite could report zero collected tests while
+# the guard saw nothing wrong). Removing a line to make the guard pass is gate weakening (DOD-027).
 tests/db/encryption.test.ts
 tests/db/job-queue.test.ts
 tests/db/restore-drill.test.ts
@@ -31,3 +34,6 @@ tests/db/webhook-bindings.test.ts
 tests/db/webhook-ingress.test.ts
 tests/blackbox/acceptance.test.ts
 tests/integration/harness-probe.test.ts
+tests/integration/cross-tenant-both-layers.test.ts
+tests/integration/authority-at-execution.test.ts
+tests/integration/evidence-immutability.test.ts

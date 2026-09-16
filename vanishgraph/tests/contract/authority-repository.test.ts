@@ -5,9 +5,12 @@
  * tenant scoping a caller cannot bypass, the conditional revocation that reports a lost race instead of overwriting
  * history, and the reader `verifyAtExecutionTime` requires.
  *
- * IT DOES NOT PROVE PERSISTENCE. No Postgres adapter exists in this repository, and the suite says so rather than
- * implying that a database round-trip has been exercised: the column-level behaviour of a real adapter — and RLS as the
- * second enforcement layer — remain `BLOCKED_PREREQUISITE` on the adapter and on `DATABASE_URL`.
+ * IT DOES NOT PROVE PERSISTENCE, AND SINCE EP-006 M10 THAT IS A DIVISION OF LABOUR RATHER THAN A GAP. A Postgres adapter
+ * now exists (`src/adapters/persistence/authority-repository.ts`) and its column-level behaviour — the round trip, RLS as
+ * the second enforcement layer, and a revocation committed by another connection between the request-start read and the
+ * write — is asserted in `tests/integration/authority-at-execution.test.ts` against a real database. This file stays on
+ * the in-memory implementation because what it is about is the PORT'S SHAPE: those assertions must not need PostgreSQL,
+ * and a suite that ran them through a database could no longer tell a shape violation from a driver error.
  */
 
 import { describe, test } from 'node:test';

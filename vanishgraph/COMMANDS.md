@@ -301,7 +301,7 @@ window resolves to `UNRESOLVED` rather than an invented default, and a shredded 
 PII becomes unrecoverable while its audit events remain.
 
 Both run against the local file-backed provider in `src/adapters/crypto/`, which is
-**tests only** (VG-SCOPE-020). The managed-KMS adapter is `BLOCKED_CREDENTIALS` while
+**tests only** (ADR-006 is OPEN; SPEC-002 §4). The managed-KMS adapter is `BLOCKED_CREDENTIALS` while
 ADR-006 is open and throws on every operation rather than faking success. No command in
 this file configures a production KMS, because none exists yet.
 

@@ -10,10 +10,12 @@
  * adapter implements it under row-level security, and this port's shape is the first of the two layers VG-TENANT-002
  * requires.
  *
- * THE ADAPTER IS NOT WRITTEN YET, AND THAT IS RECORDED RATHER THAN IMPLIED. A Postgres implementation exists in no file
- * of this repository; the contract below is exercised through an in-memory implementation, which proves the SHAPE and the
- * invariants the callers rely on. Writing a Postgres adapter that nothing runs would be stale code, and the ledger row for
- * this milestone says which half is done.
+ * THE ADAPTER WAS WRITTEN IN EP-006 M10, AFTER THE EP-003 DATABASE MADE ITS RECORDED BLOCK OBSOLETE.
+ * `src/adapters/persistence/authority-repository.ts` implements this port against PostgreSQL, and
+ * `tests/integration/authority-at-execution.test.ts` runs it against real rows — including a revocation committed by
+ * another connection between the request-start read and the write. Until M10 this comment said no such file existed and
+ * that the contract below was exercised only through an in-memory implementation; that is no longer true, and the
+ * in-memory implementation remains here for the contract suite, where the port's SHAPE is what is under test.
  */
 
 import type { AuthorityGrant } from '../../application/security/authority-service.ts';

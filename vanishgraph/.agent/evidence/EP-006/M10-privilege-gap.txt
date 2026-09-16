@@ -1,0 +1,94 @@
+# EP-006 M10 — the evidence-artifact privilege gap, measured before and after the revocation
+# repository state: db/privileges.sql with REVOKE UPDATE, DELETE ON evidence_artifact FROM vg_app
+# tenant e87f3356-76d5-4890-b0b7-0196341c5415
+
+--- fixture: tenant + one evidence artifact (as vg_owner, tenant bound transaction-locally)
+exit=0
+              set_config              
+--------------------------------------
+ e87f3356-76d5-4890-b0b7-0196341c5415
+(1 row)
+
+--- BEFORE THE FIX (reproduced): GRANT UPDATE, DELETE ON evidence_artifact TO vg_app
+exit=0
+
+--- BEFORE: has_table_privilege for vg_app
+exit=0
+      ?column?       |      ?column?       
+---------------------+---------------------
+ vg_priv_update=true | vg_priv_delete=true
+(1 row)
+
+--- BEFORE: an UPDATE as vg_app (rolled back so the fixture survives)
+exit=0
+              set_config              
+--------------------------------------
+ e87f3356-76d5-4890-b0b7-0196341c5415
+(1 row)
+
+--- the fix: REVOKE UPDATE, DELETE ON evidence_artifact FROM vg_app
+exit=0
+
+--- AFTER: has_table_privilege for vg_app
+exit=0
+       ?column?       |       ?column?       
+----------------------+----------------------
+ vg_priv_update=false | vg_priv_delete=false
+(1 row)
+
+--- AFTER: the same UPDATE as vg_app
+exit=3
+              set_config              
+--------------------------------------
+ e87f3356-76d5-4890-b0b7-0196341c5415
+(1 row)
+
+psql:C:/tmp/vg-psql-fpARyN/statement.sql:3: ERROR:  permission denied for table evidence_artifact
+--- AFTER: the digest is the stored one, not the tampered value
+exit=0
+              set_config              
+--------------------------------------
+ e87f3356-76d5-4890-b0b7-0196341c5415
+(1 row)
+
+                                  ?column?                                  
+----------------------------------------------------------------------------
+ vg_digest=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+(1 row)
+
+--- the OWNER keeps DELETE, which the retention subsystem SPEC-002 §5 will need
+exit=0
+       ?column?       
+----------------------
+ vg_owner_delete=true
+(1 row)
+
+              set_config              
+--------------------------------------
+ e87f3356-76d5-4890-b0b7-0196341c5415
+(1 row)
+
+  ?column?  
+------------
+ vg_id=7776
+(1 row)
+
+--- AND THE CORRECTION: an audit mutation as vg_app is a NO-OP that exits 0, because the rule rewrites it first
+exit=0
+              set_config              
+--------------------------------------
+ e87f3356-76d5-4890-b0b7-0196341c5415
+(1 row)
+
+--- the audit row after that attempt (actor unchanged, row still present)
+exit=0
+              set_config              
+--------------------------------------
+ e87f3356-76d5-4890-b0b7-0196341c5415
+(1 row)
+
+         ?column?         
+--------------------------
+ vg_audit_actor=m10-probe
+(1 row)
+

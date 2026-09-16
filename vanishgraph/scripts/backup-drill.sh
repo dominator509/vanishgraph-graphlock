@@ -219,7 +219,7 @@ echo "backup drill: dump taken ($(docker exec "$CONTAINER" sh -c 'stat -c %s /tm
 # backup is only useful when the key store is backed up separately. The drill records the key
 # store's identity here so the claim is explicit rather than assumed.
 {
-  echo "kek_location=external-to-database (not present in the dump; see VG-SCOPE-020)"
+  echo "kek_location=external-to-database (not present in the dump; see ADR-006 in DECISIONS.md)"
   echo "kms_status=BLOCKED_CREDENTIALS (ADR-006 open)"
   echo "note=the drill proves the RESTORE path and tombstone reconciliation; it does not claim a"
   echo "     production key-custody story, because no KMS is configured."

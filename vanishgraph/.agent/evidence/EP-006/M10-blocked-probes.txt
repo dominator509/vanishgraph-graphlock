@@ -1,0 +1,20 @@
+EP-006 M10 — the probes behind the BLOCKED_CREDENTIALS rows, run on the final tree.
+
+=== sh scripts/probes/database_url.sh
+exit=1
+  ERROR: DATABASE_URL is unset; see PREFLIGHT.md and .env.example; provision it then re-run; unblocked by EP-003
+=== sh scripts/probes/keycloak.sh
+exit=1
+  ERROR: KEYCLOAK_ISSUER is unset; see PREFLIGHT.md and .env.example; provision it then re-run; unblocked by EP-006
+=== sh scripts/probes/valkey_url.sh
+exit=1
+  ERROR: VALKEY_URL is unset; see PREFLIGHT.md and .env.example; provision it then re-run; unblocked by EP-003
+=== sh scripts/probes/cloud_identity.sh
+exit=1
+  ERROR: CLOUD_WORKLOAD_IDENTITY is unset; see PREFLIGHT.md and .env.example; provision it then re-run; unblocked by EP-009
+=== sh scripts/probes/object_store.sh
+exit=1
+  ERROR: S3_ENDPOINT is unset; see PREFLIGHT.md and .env.example; provision it then re-run; unblocked by EP-003
+=== sh scripts/probes/local_model.sh
+exit=1
+  ERROR: LOCAL_MODEL_ENDPOINT is unset; see PREFLIGHT.md and .env.example; provision it then re-run; unblocked by EP-013

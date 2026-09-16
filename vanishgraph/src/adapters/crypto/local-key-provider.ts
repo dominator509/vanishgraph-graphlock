@@ -12,7 +12,7 @@
  *
  * It exists so that the encryption, rotation and crypto-shred MECHANICS can be executed against
  * real PostgreSQL in tests (RET-5). It must never be selected in a production configuration
- * (VG-SCOPE-020). The KMS adapter that would be production-appropriate is UNIMPLEMENTED and
+ * (ADR-006 is OPEN; SPEC-002 §4). The KMS adapter that would be production-appropriate is UNIMPLEMENTED and
  * recorded BLOCKED_CREDENTIALS, because ADR-006 (cloud/KMS selection) is still OPEN.
  * ==================================================================================
  *
@@ -136,7 +136,7 @@ export class LocalFileKeyProvider implements KeyProvider, ValueHasher {
    * Decrypt `wrapped` back to the DEK.
    *
    * Used by `wrap` to verify the round trip. A real KMS provider would call its API here; this
-   * one holds the KEK locally, which is the property that makes it tests-only (VG-SCOPE-020).
+   * one holds the KEK locally, which is the property that makes it tests-only (ADR-006 is OPEN).
    */
   private unwrapDek(wrapped: Uint8Array, tenantId: TenantId, keyVersion: number): Buffer {
     const buf = Buffer.from(wrapped);
