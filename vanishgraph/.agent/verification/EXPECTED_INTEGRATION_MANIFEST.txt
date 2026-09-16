@@ -30,3 +30,4 @@ tests/db/candidate-records.test.ts
 tests/db/webhook-bindings.test.ts
 tests/db/webhook-ingress.test.ts
 tests/blackbox/acceptance.test.ts
+tests/integration/harness-probe.test.ts

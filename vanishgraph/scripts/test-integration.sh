@@ -109,10 +109,13 @@ grep -q 'rls coverage: ok' .agent/evidence/db/integration-rls.txt \
 MANIFEST=.agent/verification/EXPECTED_INTEGRATION_MANIFEST.txt
 [ -f "$MANIFEST" ] || fail "$MANIFEST is missing; the integration manifest is this stage's contract"
 
-# THE GLOB COVERS BOTH SERVICE-DEPENDENT ROOTS THE MANIFEST NAMES. MEASURED: with only \`tests/db/**\` the guard
-# could not see \`tests/blackbox/**\`, so a black-box suite that silently stopped running would have gone unnoticed —
-# the failure mode DOD-007 exists to catch. The stage already RUNS both roots below; this makes the guard check them.
-VG_TEST_GLOB="tests/db/**/*.test.ts tests/blackbox/**/*.test.ts" VG_EXPECTED_MANIFEST="$MANIFEST" \
+# THE GLOB COVERS EVERY SERVICE-DEPENDENT ROOT THE STAGE RUNS. MEASURED TWICE, AND THE SECOND TIME IS WHY
+# `tests/integration/**` IS HERE: with only `tests/db/**` the guard could not see `tests/blackbox/**`, and with
+# `tests/db/**` plus `tests/blackbox/**` it could not see `tests/integration/**` — so a suite under that root ran
+# (the stage's own `find` collects it) while the guard saw NO RESULTS for it and failed the stage with "expected suite
+# produced no results". That message is correct and its cause was the glob: the guard's rule is that it and the stage
+# name the same roots, so the fix is to name them.
+VG_TEST_GLOB="tests/db/**/*.test.ts tests/blackbox/**/*.test.ts tests/integration/**/*.test.ts" VG_EXPECTED_MANIFEST="$MANIFEST" \
   sh scripts/test-collection-guard.sh >.agent/evidence/db/integration-guard.txt 2>&1 \
   || {
     # PRESERVE THE FAILING RUN BEFORE EXITING. MEASURED GAP this closes: this stage runs the suites TWICE (once
