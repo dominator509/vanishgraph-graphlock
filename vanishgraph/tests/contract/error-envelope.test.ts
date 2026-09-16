@@ -25,6 +25,7 @@ import {
   testSourceQueries,
   testRecipeVerificationKeys,
   testAppealQueries,
+  testControllerResponseQueries,
   testDeadlineQueries,
   testAuditQueries,
   testExposureQueries,
@@ -63,6 +64,7 @@ function testServer(overrides: Partial<ServerDependencies> = {}) {
     exposureQueries: testExposureQueries(),
     transitionQueries: testTransitionQueries(),
     caseQueries: testCaseQueries(),
+    controllerResponseQueries: testControllerResponseQueries(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),

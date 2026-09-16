@@ -33,6 +33,7 @@ import type { ObservationQueries } from '../../src/application/contracts/observa
 import type { ExposureQueries } from '../../src/application/contracts/exposure-queries.ts';
 import type { TransitionQueries } from '../../src/application/contracts/transition-queries.ts';
 import type { CaseQueries } from '../../src/application/contracts/case-queries.ts';
+import type { ControllerResponseQueries } from '../../src/application/contracts/controller-response-queries.ts';
 
 /**
  * The cursor signing secret used by tests.
@@ -335,6 +336,15 @@ export function testExposureQueries(): ExposureQueries {
  * spine works: `tests/db/exposure-transitions.test.ts` walks a real T3/T4 through the domain command and
  * reads the history back from `audit_event`.
  */
+export function testControllerResponseQueries(): ControllerResponseQueries {
+  return {
+    recordControllerResponse: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+    listControllerResponses: async () => [],
+    createEmailThread: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+    caseRowVersion: async () => undefined,
+  };
+}
+
 export function testCaseQueries(): CaseQueries {
   return {
     listCases: async () => [],

@@ -22,5 +22,6 @@ migrate: applying 0021_exposure_observation_defaults.sql
 migrate: applying 0022_case_aggregate.sql
 migrate: applying 0023_unbound_policy_decision.sql
 migrate: applying 0024_reappearance_content_hash.sql
-migrate: applied 24 migration(s); at version 24
+migrate: applying 0025_controller_response_fields.sql
+migrate: applied 25 migration(s); at version 25
 migrate: ok

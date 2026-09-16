@@ -1049,6 +1049,59 @@ convention the seed uses, and which a first version of the test got wrong by que
 fixture's own `T8` row instead of the refusal. Stated here as a property of the schema rather than fixed, because
 the CHECK's job is the integrity of transition facts and `target_id` already links the row.
 
+### 3.31 §5.9: a claim that cannot be a truth state, and the transition the TABLE chooses
+
+**§5.9 implemented (3 routes).** Coverage measured: `55 registered / 50 working of 78`. Migration `0025` adds the
+fields §5.9 requires and corrects a claim made in its first draft.
+
+**1. `controller_response.claimed_outcome` cannot hold the contract's vocabulary.** The column is typed
+`truth_state` — the enum of the eleven canonical states — while §5.9.1's `claimedOutcome` is
+`DELETED | NOT_DELETED | UNSPECIFIED`, none of which is one of them. Its own comment says "claimed_outcome is a
+CLAIM. Nothing in this schema may move a case to a [truth state]" while its TYPE is a truth state, so the column
+could only ever store the collapse VG-VERIFY-004 forbids. `0025` adds `claimed_outcome_token` with a CHECK for the
+three tokens; **the delivered column is left in place and stays NULL**, because a truth state there would assert
+the very thing the field must not assert. `tests/db/controller-responses.test.ts` asserts both: the token is
+stored, and `claimed_outcome::text` is NULL.
+
+**2. THE TRANSITION CODE IS THE TABLE'S DECISION, NOT THE PROSE'S.** §5.9.1 says a REFUSAL "drives T15" and a
+`NO_RESPONSE_TIMEOUT` "drives T13". That is true of the state each is normally recorded from: from
+`ACKNOWLEDGED`, `→ NOT_REMOVABLE` is T15 (guard `lawfulRefusalFinal`); from `REQUEST_SUBMITTED` it is **T13**
+(guard `exemptionRecorded`). Both kinds therefore produce a code DIFFERENT from the one the prose names whenever
+the case is not yet acknowledged. MEASURED: my first test asserted T15 from `REQUEST_SUBMITTED` and got T13 — the
+expectation was wrong, not the code. The port documents the mapping as kind → TARGET STATE, leaves the code to
+SPEC-001 §4.1, and reports only what the machine produced.
+
+**3. A timeout records its own basis; a refusal must be given one.** §5.9.1 requires a lawful recorded
+`refusalBasis` for a `REFUSAL`, and a `NO_RESPONSE_TIMEOUT` "with the timeout basis recorded" — the timeout IS
+the basis, and demanding one from the caller would ask them to explain an absence that is the explanation.
+MEASURED: an earlier version required a basis for both and answered `422 REFUSAL_BASIS_REQUIRED` to a timeout.
+
+**4. `EMAIL_THREAD_DUPLICATE` IS THE STRONGEST GUARANTEE THIS SHAPE ALLOWS, STATED RATHER THAN IMPLIED.** A
+duplicate is a thread sharing a message id with an existing one, so the rule is an array-overlap (`&&`) check
+inside the caller's transaction. No unique constraint can express "no two rows may share an array element", so
+unlike §5.7's one-live-case rule this one CANNOT be pushed into the schema; `0025` adds the GIN index that keeps
+the lookup bounded and says in the same comment that the index does not make the rule atomic.
+
+**5. `deadlineDerived` is always `null`, and §5.9.3 is why.** "Recording a thread MAY derive a `Deadline` from
+the applicable policy version; the API never hard-codes a deadline duration." No specification or table declares
+a controller-response window — `jurisdiction_policy.rules` is a list of rule CODES, not durations — so there is
+nothing to derive, and inventing a duration is exactly what that sentence forbids. The field is present and null
+rather than omitted, so a client can tell "no deadline was derived" from "the field is missing".
+
+**6. A CLAIMED DEFECT I HAD TO RETRACT BEFORE IT SHIPPED.** The first draft of `0025` also "repaired"
+`email_thread.message_ids`, asserting a fifth instance of the vacuous-array class §3.6 records
+(`array_length(…, 1) >= 1` passing for `'{}'`). Applying it failed with "constraint does not exist", and reading
+`0010_repair_vacuous_array_checks.sql:37-39` showed it was ALREADY repaired there with `cardinality()`. The claim
+was inferred from the original `CREATE TABLE` instead of checked against the current schema — the same failure of
+method as §3.12's negative search, and the lesson is the same: **a claimed defect is evidence only after the
+schema as it stands has been read, not after the first migration that mentions the table.**
+
+**7. The test-wiring churn is now the FIRST task of the next round, with a number.** Adding one required port to
+`ServerDependencies` has forced edits at 12–16 sites in EIGHT consecutive rounds (§5.3, §5.14, §5.13, §5.15,
+§5.10/§5.11, §5.5, §5.7, §5.9). §3.25 recorded the debt and deferred it; deferring it a third time would be the
+choice to keep paying it. Next round: `testServerDependencies(overrides)` in `tests/contract/server-support.ts`,
+with every call site converted, so a new port costs ONE edit.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

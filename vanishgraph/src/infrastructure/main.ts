@@ -34,6 +34,7 @@ import { PostgresObservationQueries } from '../adapters/persistence/observations
 import { PostgresExposureQueries } from '../adapters/persistence/exposures.ts';
 import { PostgresTransitionQueries } from '../adapters/persistence/transitions.ts';
 import { PostgresCaseQueries } from '../adapters/persistence/cases.ts';
+import { PostgresControllerResponseQueries } from '../adapters/persistence/controller-responses.ts';
 import { findRoute } from '../http/openapi/registry.ts';
 import { parseDsn } from '../adapters/../infrastructure/database/psql.ts';
 
@@ -198,6 +199,8 @@ async function main(): Promise<number> {
     // The 5.7 case aggregate. It receives the SAME verification keys as the 5.3 recipe routes, because
     // 5.7.4 reports the outcome of a real signature verification rather than the presence of a signature.
     caseQueries: new PostgresCaseQueries({ recipeVerificationKeys: recipeVerificationKeysFromEnvironment() }),
+    // The 5.9 controller-response and email-thread model.
+    controllerResponseQueries: new PostgresControllerResponseQueries(),
     idempotency: {
       // The durable store is PostgreSQL (SPEC-003 §4.2): the effect must survive a process restart,
       // so an in-memory store would defeat the mechanism it implements.

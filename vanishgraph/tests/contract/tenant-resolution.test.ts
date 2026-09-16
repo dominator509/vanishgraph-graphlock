@@ -32,6 +32,7 @@ import {
   testSourceQueries,
   testRecipeVerificationKeys,
   testAppealQueries,
+  testControllerResponseQueries,
   testDeadlineQueries,
   testAuditQueries,
   testExposureQueries,
@@ -69,6 +70,7 @@ function serverWith(options: {
     exposureQueries: testExposureQueries(),
     transitionQueries: testTransitionQueries(),
     caseQueries: testCaseQueries(),
+    controllerResponseQueries: testControllerResponseQueries(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),
@@ -255,6 +257,7 @@ describe('tenancy is required by the server type, so it cannot be forgotten', ()
     exposureQueries: testExposureQueries(),
     transitionQueries: testTransitionQueries(),
     caseQueries: testCaseQueries(),
+    controllerResponseQueries: testControllerResponseQueries(),
     };
     assert.ok(deps.identity !== undefined);
     assert.ok(deps.tenancy !== undefined);

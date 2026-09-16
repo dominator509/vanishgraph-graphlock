@@ -42,7 +42,8 @@ import type { AuditQueries } from '../../src/application/contracts/audit-queries
 const TENANT_A = '11111111-1111-4111-8111-111111111111';
 const RANGE_QS = 'from=2026-08-01T00:00:00.000Z&to=2026-08-02T00:00:00.000Z';
 
-import { testSubjectQueries, testSourceQueries, testAppealQueries, testDeadlineQueries, testRecipeVerificationKeys } from './server-support.ts';
+import { testSubjectQueries, testSourceQueries, testAppealQueries, testControllerResponseQueries,
+  testDeadlineQueries, testRecipeVerificationKeys } from './server-support.ts';
 
 function serverWith(options: { scopes?: readonly string[]; queries?: AuditQueries } = {}): VgFastify {
   return buildServer({
@@ -70,6 +71,7 @@ function serverWith(options: { scopes?: readonly string[]; queries?: AuditQuerie
     exposureQueries: testExposureQueries(),
     transitionQueries: testTransitionQueries(),
     caseQueries: testCaseQueries(),
+    controllerResponseQueries: testControllerResponseQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
   });
 }

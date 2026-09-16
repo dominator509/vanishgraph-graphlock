@@ -22,6 +22,7 @@ import { buildServer, type VgFastify } from '../../src/http/server.ts';
 import {
   testAppealQueries,
   testAuditQueries,
+  testControllerResponseQueries,
   testDeadlineQueries,
   testExposureQueries,
   testIdentity,
@@ -125,6 +126,7 @@ function serverWith(
     exposureQueries: testExposureQueries(),
     transitionQueries: testTransitionQueries(),
     caseQueries: testCaseQueries(),
+    controllerResponseQueries: testControllerResponseQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
   });
   return { app, calls: recorded.calls };

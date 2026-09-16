@@ -23,6 +23,7 @@ import assert from 'node:assert/strict';
 import { buildServer, type VgFastify } from '../../src/http/server.ts';
 import {
   testAppealQueries,
+  testControllerResponseQueries,
   testDeadlineQueries,
   testAuditQueries,
   testExposureQueries,
@@ -139,6 +140,7 @@ function serverWith(
     exposureQueries: testExposureQueries(),
     transitionQueries: testTransitionQueries(),
     caseQueries: testCaseQueries(),
+    controllerResponseQueries: testControllerResponseQueries(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),
@@ -360,6 +362,7 @@ describe('§5.14 follows §4.1 for idempotency and §3.2 for step-up, from the r
     exposureQueries: testExposureQueries(),
     transitionQueries: testTransitionQueries(),
     caseQueries: testCaseQueries(),
+    controllerResponseQueries: testControllerResponseQueries(),
         health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 's', ok: true })] },
       });
       const response = await app.inject({ method, url, headers: { authorization: `Bearer ${TEST_TOKEN}` } });

@@ -25,6 +25,7 @@ import { buildServer, type VgFastify } from '../../src/http/server.ts';
 import {
   testAppealQueries,
   testAuditQueries,
+  testControllerResponseQueries,
   testDeadlineQueries,
   testExposureQueries,
   testIdentity,
@@ -69,6 +70,7 @@ function app(): VgFastify {
     exposureQueries: testExposureQueries(),
     transitionQueries: testTransitionQueries(),
     caseQueries: testCaseQueries(),
+    controllerResponseQueries: testControllerResponseQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
   });
 }
@@ -179,6 +181,7 @@ describe('§5.5 is declared as the registry says it is', () => {
       exposureQueries: testExposureQueries(),
       transitionQueries: testTransitionQueries(),
     caseQueries: testCaseQueries(),
+    controllerResponseQueries: testControllerResponseQueries(),
       health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
     });
     const response = await call(server, 'POST', `/v1/exposures/${EXPOSURE_ID}/match-assessments`, {

@@ -24,6 +24,7 @@ import assert from 'node:assert/strict';
 import { buildServer, type VgFastify } from '../../src/http/server.ts';
 import {
   testAppealQueries,
+  testControllerResponseQueries,
   testDeadlineQueries,
   testAuditQueries,
   testExposureQueries,
@@ -151,6 +152,7 @@ function serverWith(options: {
     exposureQueries: testExposureQueries(),
     transitionQueries: testTransitionQueries(),
     caseQueries: testCaseQueries(),
+    controllerResponseQueries: testControllerResponseQueries(),
     subjectQueries: {
       listSubjects: async () => [],
       getSubjectDetail: async () => undefined,

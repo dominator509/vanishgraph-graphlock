@@ -24,6 +24,7 @@ import {
   testAppealQueries,
   testAuditQueries,
   testCaseQueries,
+  testControllerResponseQueries,
   testDeadlineQueries,
   testExposureQueries,
   testIdentity,
@@ -68,6 +69,7 @@ function app(scopes: readonly string[] = SCOPES): VgFastify {
     exposureQueries: testExposureQueries(),
     transitionQueries: testTransitionQueries(),
     caseQueries: testCaseQueries(),
+    controllerResponseQueries: testControllerResponseQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
   });
 }

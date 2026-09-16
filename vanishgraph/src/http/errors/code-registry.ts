@@ -289,6 +289,18 @@ export const ERROR_CODE_REGISTRY: readonly ErrorCodeSpec[] = Object.freeze([
   { domainCode: 'INVALID_REQUEST', wireCode: 'PRIOR_REMOVED_EVENT_NOT_FOUND', status: 422, retryable: false,
     message: 'The referenced prior removal event does not resolve for this exposure.' },
 
+  // SPEC-003 §5.9.1/§5.9.3. `CLAIMED_OUTCOME_UNSUPPORTED` is the code that keeps VG-VERIFY-004 enforceable at
+  // the boundary: a controller's CLAIM may not be expressed as one of the system's truth states, so a caller
+  // offering `VERIFIED_REMOVED` as a claim is refused rather than mapped onto one.
+  { domainCode: 'INVALID_REQUEST', wireCode: 'REFUSAL_BASIS_REQUIRED', status: 422, retryable: false,
+    message: 'A refusal must name the basis the controller gave.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'CLAIMED_OUTCOME_UNSUPPORTED', status: 422, retryable: false,
+    message: 'A controller’s claim cannot be expressed as a truth state.' },
+  { domainCode: 'EMAIL_THREAD_DUPLICATE', wireCode: 'EMAIL_THREAD_DUPLICATE', status: 409, retryable: false,
+    message: 'A thread with one of these message ids is already recorded for this case.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'MESSAGE_ID_MALFORMED', status: 422, retryable: false,
+    message: 'A message id must be an RFC 5322 msg-id of the form <local@domain>.' },
+
   // SPEC-003 §5.7.4/§5.7.5 / §8.2's 422 list.
   { domainCode: 'INVALID_REQUEST', wireCode: 'POLICY_DECISION_INCOMPLETE', status: 422, retryable: false,
     message: 'The policy decision is missing one of the four fields a decision must carry.' },

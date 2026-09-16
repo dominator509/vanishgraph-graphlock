@@ -28,6 +28,7 @@ import { auditRoutes } from './routes/audit.ts';
 import { observationRoutes } from './routes/observations.ts';
 import { exposureRoutes } from './routes/exposures.ts';
 import { caseRoutes } from './routes/cases.ts';
+import { controllerResponseRoutes } from './routes/controller-responses.ts';
 import type { SubjectQueries } from '../application/contracts/subject-queries.ts';
 import type { RecipeVerificationKeys, SourceQueries } from '../application/contracts/source-queries.ts';
 import type { AppealQueries } from '../application/contracts/appeal-queries.ts';
@@ -37,6 +38,7 @@ import type { ObservationQueries } from '../application/contracts/observation-qu
 import type { ExposureQueries } from '../application/contracts/exposure-queries.ts';
 import type { TransitionQueries } from '../application/contracts/transition-queries.ts';
 import type { CaseQueries } from '../application/contracts/case-queries.ts';
+import type { ControllerResponseQueries } from '../application/contracts/controller-response-queries.ts';
 import { installCorrelation } from './plugins/correlation.ts';
 import { installErrorHandler } from './plugins/error-handler.ts';
 import { installIdentity, type IdentityPluginOptions } from './plugins/identity.ts';
@@ -149,6 +151,8 @@ export interface ServerDependencies {
    * `actionCount` or of the next deadline.
    */
   readonly caseQueries: CaseQueries;
+  /** Controller responses and email threads (SPEC-003 §5.9): one write, one read, one record. */
+  readonly controllerResponseQueries: ControllerResponseQueries;
   readonly logLevel?: string;
 }
 
@@ -223,6 +227,7 @@ export function buildServer(deps: ServerDependencies): VgFastify {
 
   // The SPEC-003 5.10.2/5.10.3/5.11.2/5.11.3 reads.
   app.register(observationRoutes, { sessionSecret: deps.sessionSecret, queries: deps.observationQueries });
+  app.register(controllerResponseRoutes, { queries: deps.controllerResponseQueries });
   app.register(caseRoutes, {
     sessionSecret: deps.sessionSecret,
     queries: deps.caseQueries,

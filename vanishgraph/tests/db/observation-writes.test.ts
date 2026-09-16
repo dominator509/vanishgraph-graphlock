@@ -34,6 +34,7 @@ import { PostgresObservationQueries } from '../../src/adapters/persistence/obser
 import { PostgresExposureQueries } from '../../src/adapters/persistence/exposures.ts';
 import { PostgresTransitionQueries } from '../../src/adapters/persistence/transitions.ts';
 import { PostgresCaseQueries } from '../../src/adapters/persistence/cases.ts';
+import { PostgresControllerResponseQueries } from '../../src/adapters/persistence/controller-responses.ts';
 import { PostgresAuditQueries } from '../../src/adapters/persistence/audit-queries.ts';
 import { PostgresDeadlineQueries } from '../../src/adapters/persistence/deadlines.ts';
 import { PostgresAppealQueries } from '../../src/adapters/persistence/appeals.ts';
@@ -97,6 +98,7 @@ function serverFor(tenantId: string, scopes: readonly string[] = SCOPES): VgFast
     exposureQueries: new PostgresExposureQueries(),
     transitionQueries: new PostgresTransitionQueries(),
     caseQueries: new PostgresCaseQueries({ recipeVerificationKeys: { publicKeysByRef: new Map() } }),
+    controllerResponseQueries: new PostgresControllerResponseQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
   });
 }

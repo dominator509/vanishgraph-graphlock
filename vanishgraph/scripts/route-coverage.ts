@@ -117,6 +117,12 @@ const app = buildServer({
     lastTransitionForCase: async () => undefined,
   },
   // The §5.7 case aggregate. Not-found answers: this probe only enumerates routes.
+  controllerResponseQueries: {
+    recordControllerResponse: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+    listControllerResponses: async () => [],
+    createEmailThread: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+    caseRowVersion: async () => undefined,
+  },
   caseQueries: {
     listCases: async () => [],
     getCaseDetail: async () => undefined,
