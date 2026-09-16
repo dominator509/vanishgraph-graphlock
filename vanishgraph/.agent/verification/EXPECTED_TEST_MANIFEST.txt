@@ -32,3 +32,4 @@ tests/contract/observation-routes.test.ts
 tests/contract/exposure-routes.test.ts
 tests/contract/case-routes.test.ts
 tests/contract/controller-response-routes.test.ts
+tests/contract/action-routes.test.ts

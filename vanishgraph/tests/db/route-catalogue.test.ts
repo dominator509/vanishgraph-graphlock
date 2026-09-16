@@ -30,6 +30,7 @@ import { PostgresExposureQueries } from '../../src/adapters/persistence/exposure
 import { PostgresTransitionQueries } from '../../src/adapters/persistence/transitions.ts';
 import { PostgresCaseQueries } from '../../src/adapters/persistence/cases.ts';
 import { PostgresControllerResponseQueries } from '../../src/adapters/persistence/controller-responses.ts';
+import { PostgresActionQueries } from '../../src/adapters/persistence/actions.ts';
 import { parseDsn } from '../../src/infrastructure/database/psql.ts';
 
 const TENANT_A = '11111111-1111-4111-8111-111111111111';
@@ -93,6 +94,7 @@ function serverFor(
     transitionQueries: new PostgresTransitionQueries(),
     caseQueries: new PostgresCaseQueries({ recipeVerificationKeys: { publicKeysByRef: new Map() } }),
     controllerResponseQueries: new PostgresControllerResponseQueries(),
+    actionQueries: new PostgresActionQueries({ recipeVerificationKeys: { publicKeysByRef: new Map() } }),
     health: {
       startedAt: new Date(),
       now: () => new Date(),

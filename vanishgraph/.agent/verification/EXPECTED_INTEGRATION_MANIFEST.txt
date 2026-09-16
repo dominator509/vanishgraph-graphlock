@@ -21,3 +21,4 @@ tests/db/exposure-transitions.test.ts
 tests/db/case-lifecycle.test.ts
 tests/db/observation-writes.test.ts
 tests/db/controller-responses.test.ts
+tests/db/action-records.test.ts

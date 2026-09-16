@@ -301,6 +301,22 @@ export const ERROR_CODE_REGISTRY: readonly ErrorCodeSpec[] = Object.freeze([
   { domainCode: 'INVALID_REQUEST', wireCode: 'MESSAGE_ID_MALFORMED', status: 422, retryable: false,
     message: 'A message id must be an RFC 5322 msg-id of the form <local@domain>.' },
 
+  // SPEC-003 §5.8's list. §5.8.3 refuses a reconciliation of an action that was never ambiguous; §5.8.2 refuses a
+  // payload field the egress allowlist does not name (`DATA_EGRESS_MATRIX.md` states default deny and enumerates no
+  // fields, so the allowlist is a declared set in the adapter) and a disabled recipe.
+  { domainCode: 'AMBIGUOUS_EXTERNAL_EFFECT', wireCode: 'ACTION_NOT_AMBIGUOUS', status: 409, retryable: false,
+    message: 'This action is not ambiguous, so there is nothing to reconcile.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'PAYLOAD_FIELD_NOT_ALLOWLISTED', status: 422, retryable: false,
+    message: 'A payload field is not on the egress allowlist for this channel.' },
+  { domainCode: 'RECIPE_DISABLED', wireCode: 'RECIPE_DISABLED', status: 409, retryable: false,
+    message: 'The recipe is disabled and may not authorise an external effect.' },
+  // §5.8.2 refuses a body naming a channel other than the policy decision's, and any unused higher-priority
+  // channel must be recorded as unavailable with a reason (VG-CHANNEL-001).
+  { domainCode: 'CHANNEL_PRIORITY_VIOLATION', wireCode: 'CHANNEL_PRIORITY_VIOLATION', status: 409, retryable: false,
+    message: 'A higher-priority channel was available and not recorded as unavailable.' },
+  { domainCode: 'STRICT_LANE_REQUIRED', wireCode: 'STRICT_LANE_REQUIRED', status: 422, retryable: false,
+    message: 'This subject requires a strict, human-reviewed lane.' },
+
   // SPEC-003 §5.7.4/§5.7.5 / §8.2's 422 list.
   { domainCode: 'INVALID_REQUEST', wireCode: 'POLICY_DECISION_INCOMPLETE', status: 422, retryable: false,
     message: 'The policy decision is missing one of the four fields a decision must carry.' },

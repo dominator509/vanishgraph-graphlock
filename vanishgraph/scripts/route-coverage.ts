@@ -132,6 +132,17 @@ const app = buildServer({
     guardedUpdate: async () => ({ ok: false, reason: 'NOT_FOUND' }),
     recordHumanGate: async () => ({ ok: false, reason: 'NOT_FOUND' }),
   },
+  // The §5.8 action model. Not-found answers: this probe only enumerates routes.
+  actionQueries: {
+    caseExists: async () => false,
+    listActions: async () => [],
+    getActionDetail: async () => undefined,
+    actionRowVersion: async () => undefined,
+    listMailPieces: async () => [],
+    executeAction: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+    recordReconciliation: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+    requestReadback: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+  },
   // The §5.10/§5.11 read model. Empty: this probe only enumerates routes.
   observationQueries: {
     caseExists: async () => false,
@@ -224,11 +235,14 @@ const extra = [...have].filter((key) => !want.has(key) && key.startsWith('/v1'))
  * (`ASSUMPTIONS.md` §3.26 item 4 records the same lesson from a different direction).
  *
  * THE RULE, and its limits, stated so the number can be judged rather than trusted: a handler is counted as
- * a STUB when its body refuses with `DEPENDENCY_UNAVAILABLE` **and** contains no success path
- * (`reply.code(2…)`). That is a static approximation. It under-reports in one direction — a handler that
- * succeeds on one input and refuses on another counts as working, which is correct, because it does do
- * something — and it cannot see a handler that refuses with a different code for a dependency reason. It is
- * deliberately conservative: it never claims MORE coverage than the registered count, only less.
+ * a STUB when its body refuses with `DEPENDENCY_UNAVAILABLE` **and** contains no success path. A success path is
+ * either an explicit `reply.code(2…)` or a returned `{ status: 2xx }` literal — the second was added after §5.8.2
+ * was reported as a stub: its handler refuses a real submission with `DEPENDENCY_UNAVAILABLE` (no channel
+ * transport exists) while its `dryRun` path is a complete success, and the route returns its status through the
+ * idempotency wrapper rather than through `reply.code`. The heuristic cannot see a handler that succeeds only on
+ * inputs it does not mention, so it is deliberately conservative — it never claims MORE coverage than the
+ * registered count, only less — and a FALSE stub is as dishonest as a false success, which is why §5.8.2's dry
+ * run is now recognised rather than silently mislabelled.
  */
 function stubbedRoutes(): readonly { readonly route: string; readonly reason: string }[] {
   const out: { route: string; reason: string }[] = [];
@@ -247,6 +261,7 @@ function stubbedRoutes(): readonly { readonly route: string; readonly reason: st
       const body = declaration === -1 ? rest : rest.slice(declaration);
       if (!body.includes('DEPENDENCY_UNAVAILABLE')) continue;
       if (/reply\.code\(\s*2/.test(body)) continue;
+      if (/status:\s*2\d\d\b/.test(body)) continue;
       const reason = /DEPENDENCY_UNAVAILABLE',\s*\{\s*reason:\s*'([^']*)'/.exec(body)?.[1] ?? 'unspecified';
       out.push({
         route: `${method} ${template.replace(/:([A-Za-z_][A-Za-z0-9_]*)/g, '{$1}')}`,

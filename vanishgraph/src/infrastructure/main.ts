@@ -35,6 +35,7 @@ import { PostgresExposureQueries } from '../adapters/persistence/exposures.ts';
 import { PostgresTransitionQueries } from '../adapters/persistence/transitions.ts';
 import { PostgresCaseQueries } from '../adapters/persistence/cases.ts';
 import { PostgresControllerResponseQueries } from '../adapters/persistence/controller-responses.ts';
+import { PostgresActionQueries } from '../adapters/persistence/actions.ts';
 import { findRoute } from '../http/openapi/registry.ts';
 import { parseDsn } from '../adapters/../infrastructure/database/psql.ts';
 
@@ -201,6 +202,9 @@ async function main(): Promise<number> {
     caseQueries: new PostgresCaseQueries({ recipeVerificationKeys: recipeVerificationKeysFromEnvironment() }),
     // The 5.9 controller-response and email-thread model.
     controllerResponseQueries: new PostgresControllerResponseQueries(),
+    // The 5.8 action model. It receives the recipe verification keys for the same reason 5.7's guards do: the
+    // execution route reports whether the recipe's signature VERIFIED, not merely that bytes are present.
+    actionQueries: new PostgresActionQueries({ recipeVerificationKeys: recipeVerificationKeysFromEnvironment() }),
     idempotency: {
       // The durable store is PostgreSQL (SPEC-003 §4.2): the effect must survive a process restart,
       // so an in-memory store would defeat the mechanism it implements.

@@ -35,6 +35,7 @@ import type { ExposureQueries } from '../../src/application/contracts/exposure-q
 import type { TransitionQueries } from '../../src/application/contracts/transition-queries.ts';
 import type { CaseQueries } from '../../src/application/contracts/case-queries.ts';
 import type { ControllerResponseQueries } from '../../src/application/contracts/controller-response-queries.ts';
+import type { ActionQueries } from '../../src/application/contracts/action-queries.ts';
 
 /**
  * The cursor signing secret used by tests.
@@ -388,6 +389,19 @@ export function testTransitionQueries(): TransitionQueries {
  * asserts exactly what it asserted before. `tests/db/**` keeps its explicit real adapters, because asserting
  * persistence has no honest default.
  */
+export function testActionQueries(): ActionQueries {
+  return {
+    caseExists: async () => false,
+    listActions: async () => [],
+    getActionDetail: async () => undefined,
+    actionRowVersion: async () => undefined,
+    listMailPieces: async () => [],
+    executeAction: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+    recordReconciliation: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+    requestReadback: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+  };
+}
+
 export function testServerDependencies(overrides: Partial<ServerDependencies> = {}): ServerDependencies {
   return {
     version: '0.0.0-test',
@@ -408,6 +422,7 @@ export function testServerDependencies(overrides: Partial<ServerDependencies> = 
     transitionQueries: testTransitionQueries(),
     caseQueries: testCaseQueries(),
     controllerResponseQueries: testControllerResponseQueries(),
+    actionQueries: testActionQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
     ...overrides,
   };

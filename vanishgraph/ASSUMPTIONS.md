@@ -1102,6 +1102,58 @@ schema as it stands has been read, not after the first migration that mentions t
 choice to keep paying it. Next round: `testServerDependencies(overrides)` in `tests/contract/server-support.ts`,
 with every call site converted, so a new port costs ONE edit.
 
+### 3.32 §5.8: a route that cannot perform its effect, three database rules that corrected me, and an instrument that lied
+
+**§5.8 implemented (6 routes).** Coverage measured: `61 registered / 56 working of 78`. Migrations `0026`
+(`reconciliation`, `readback`, action recipe/template columns, mail-piece evidence columns) and `0027`
+(`external_action.status` widened, `.acting_path_id` added).
+
+**1. §5.8.2 EVALUATES EVERY GUARD AND THEN REFUSES THE EFFECT, AND THAT IS THE HONEST STATE OF THIS
+REPOSITORY.** No channel transport exists — no provider adapter, no certified-mail API, no SMTP binding — so a
+real submission answers `503 DEPENDENCY_UNAVAILABLE` naming the channel, and the `dryRun` path §5.8.2 defines
+("guard evaluation and payload validation are performed and reported, and no external effect is produced and no
+state changes") is implemented in full and answers `200`. The guards are evaluated BEFORE the transport refusal
+so a request that is illegal on its own terms gets its own code. **This route, and only this one, remains
+unable to do what its name says**; the other five are complete. Claiming otherwise would be the one failure
+VG-ACTION-001 exists to prevent, and the test asserts refusal AND dry-run TOGETHER so neither can regress alone.
+
+**2. THE EGRESS FIELD ALLOWLIST HAS NO NORMATIVE SOURCE, SO IT IS A DECLARED SET.** `DATA_EGRESS_MATRIX.md`
+states the rule ("default deny for `CUSTOMER_PII`, `HIGH_RISK_PII`, `IDENTITY_DOCUMENT` and `AUTH_SECRET`; use
+opaque IDs, local models and redaction first") and enumerates no field names. `EGRESS_FIELD_ALLOWLIST` in the
+adapter is therefore a CHOICE — the smallest set that can express §5.8.2's own example — and everything else is
+`422 PAYLOAD_FIELD_NOT_ALLOWLISTED`, the fail-closed direction the matrix asks for. The NAME is allowlisted, not
+the value: an allowlisted field carrying something that looks like an address is refused too.
+
+**3. THREE THINGS THE DATABASE KNEW AND I DID NOT.** (a) `external_action.status` admitted only
+`PREPARED | SUBMITTED | AMBIGUOUS | REFUSED`, so §5.8.3's `actionOutcome: "FAILED"` was unrepresentable — `0027`
+WIDENS the CHECK rather than replacing any token, because rows written under the old vocabulary must stay
+writable-by-repair. (b) Nothing recorded WHICH PATH ACTED, so §5.8.4's "refuse an observation path that is the
+same path as the acting path" had nothing to compare against; `0027` adds `acting_path_id`, and an action whose
+path is not recorded reports `independenceCheckedAgainst: null` rather than claiming an independence nobody
+verified. (c) **`external_action_check` refused my first INDETERMINATE reconciliation**: the rule is
+`CHECK (status <> 'AMBIGUOUS' OR ambiguous)` — "an ambiguous result must be reconcilable, never silent"
+(VG-ACTION-002) — and my branch cleared `ambiguous` while leaving the outcome unknown. The constraint was right:
+an INDETERMINATE finding has NOT established what happened, so the action stays ambiguous and re-reconcilable,
+and what gets recorded is the escalation.
+
+**4. A LIST CURSOR BUILT FROM A NULLABLE COLUMN.** Both new list routes ordered by `created_at` and minted their
+cursor from `submittedAt` / `sentAt` — both nullable — so a cursor for an action that was prepared but never
+submitted (or a mail piece that was never sent) carried an empty string and page 2 failed with a database error
+inside a `500`. MEASURED on the mail-piece walk, whose pieces have no `sent_at` at all. The rows now carry an
+explicit `cursorValue` populated from the ORDERING key, stripped before the body is sent.
+
+**5. A LIST ROUTE INFERRED ITS RESOURCE'S EXISTENCE FROM A NON-EMPTY LIST.** Both list routes checked the case
+by asking whether it had actions, so an existing case with no actions answered `404` — the opposite of the rule
+that an empty list is a true statement about a resource that exists (SPEC-006 H-9). The port gained
+`caseExists`, asserted directly.
+
+**6. THE COVERAGE INSTRUMENT MISLABELLED A WORKING ROUTE, AND A FALSE STUB IS AS DISHONEST AS A FALSE SUCCESS.**
+`scripts/route-coverage.ts` calls a handler a stub when it refuses with `DEPENDENCY_UNAVAILABLE` and shows no
+success path, and it only recognised `reply.code(2…)` — while §5.8.2 returns its status through the idempotency
+wrapper as `{ status: 200 | 201 }`. The route was reported as an unconditional refusal when its dry run
+succeeds. The detector now recognises a returned `status: 2xx` literal too, and §5.8.2 counts as working with the
+five genuine stubs still named.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

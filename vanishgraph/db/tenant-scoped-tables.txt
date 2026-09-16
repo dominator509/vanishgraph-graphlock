@@ -31,7 +31,9 @@ policy_decision
 protected_subject
 provider_transport_run
 reappearance
+reconciliation   # carries tenant_id; a reconciliation names a case, an action and a piece of evidence
 removal_recipe
+readback         # carries tenant_id; a readback request names a case, an action and (once answered) evidence
 repair_capsule
 request_case
 source
