@@ -12,6 +12,7 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { classForPath, installStepUp } from '../../src/http/plugins/step-up.ts';
 import { join, resolve } from 'node:path';
 
 import {
@@ -163,5 +164,108 @@ describe('the external-write class produces no external effect when it refuses (
     const decision = checkStepUp('EXTERNAL_WRITE_EXECUTE_OR_AUTHORISE', { acr: STEP_UP_ACR, authTime: NOW - 10 }, clock);
     if (decision.ok) dispatch();
     assert.equal(dispatches, 1);
+  });
+});
+
+describe('the binding refuses before the handler runs (EP-006 M5)', () => {
+  test('every path shape the registry uses maps to its class, and an ungated path maps to none', () => {
+    assert.equal(classForPath('POST', '/v1/authority-grants'), 'AUTHORITY_GRANT_MINT_OR_EXPAND');
+    assert.equal(classForPath('POST', '/v1/cases/cas_1/external-actions'), 'EXTERNAL_WRITE_EXECUTE_OR_AUTHORISE');
+    assert.equal(classForPath('GET', '/v1/evidence-artifacts/ev_1/content'), 'EXTERNAL_WRITE_EXECUTE_OR_AUTHORISE');
+    assert.equal(classForPath('POST', '/v1/subjects/sub_1/identifiers'), 'EXTERNAL_WRITE_EXECUTE_OR_AUTHORISE');
+    assert.equal(classForPath('POST', '/v1/cases/cas_1/mail-pieces'), 'CERTIFIED_MAIL_GENERATE');
+    assert.equal(classForPath('POST', '/v1/cases/cas_1/appeal-escalations'), 'ESCALATION_OR_REGULATOR_PACKET_APPROVE');
+    assert.equal(classForPath('POST', '/v1/support/sessions'), 'SUPPORT_BREAK_GLASS_ENTER');
+    assert.equal(classForPath('PATCH', '/v1/admin/tenant'), 'TENANT_POLICY_SOURCE_RECIPE_CHANGE');
+    // A READ OF THE SAME RESOURCE IS NOT THE GATED OPERATION, which is what keeps the mapping from over-reaching.
+    assert.equal(classForPath('GET', '/v1/authority-grants'), undefined);
+    assert.equal(classForPath('GET', '/v1/cases/cas_1/external-actions'), undefined);
+    assert.equal(classForPath('GET', '/v1/admin/tenant'), undefined);
+    assert.equal(classForPath('GET', '/v1/cases'), undefined);
+    // Every declared class is reachable by at least one path shape, so no class is declared and unreachable.
+    const reachable = new Set(
+      [
+        ['POST', '/v1/authority-grants'],
+        ['POST', '/v1/cases/cas_1/external-actions'],
+        ['POST', '/v1/cases/cas_1/mail-pieces'],
+        ['POST', '/v1/cases/cas_1/appeal-escalations'],
+        ['POST', '/v1/support/sessions'],
+        ['PATCH', '/v1/admin/tenant'],
+      ].map(([method, path]) => classForPath(method ?? '', path ?? '')),
+    );
+    for (const stepUpClass of CLASSES) {
+      assert.equal(reachable.has(stepUpClass), true, `${stepUpClass} is declared but no path shape reaches it`);
+    }
+  });
+
+  test('a base-level session is refused at the preHandler, so the handler never dispatches', () => {
+    // THE HOOK IS DRIVEN DIRECTLY WITH A REQUEST SHAPE, and the suite says what that proves: the binding's decision and
+    // its order relative to the handler. Real route wiring is asserted by the API contract suite, which serves these
+    // paths through Fastify.
+    let dispatches = 0;
+    const refused: { code: string; detail: string }[] = [];
+    const hooks: ((request: unknown, reply: unknown, done: () => void) => void)[] = [];
+    const app = { addHook: (_name: string, hook: (request: unknown, reply: unknown, done: () => void) => void) => hooks.push(hook) };
+    installStepUp(app as never, {
+      clock,
+      classForRoute: classForPath,
+      refuse: (_request, _reply, code, detail) => refused.push({ code, detail }),
+    });
+    assert.equal(hooks.length, 1, 'the plugin registers exactly one preHandler');
+
+    hooks[0]?.(
+      { method: 'POST', url: '/v1/cases/cas_1/external-actions', routeOptions: { url: '/v1/cases/cas_1/external-actions' }, identityClaims: { acr: 'urn:vg:loa:1', auth_time: NOW - 1 } },
+      {},
+      () => {
+        dispatches += 1;
+      },
+    );
+    assert.equal(refused.length, 1);
+    assert.equal(refused[0]?.code, 'STEP_UP_REQUIRED');
+    assert.match(refused[0]?.detail ?? '', /requires acr urn:vg:loa:step-up/);
+    assert.equal(dispatches, 0, 'the handler must not run for a refused step-up');
+
+    // A FRESH STEP-UP PROCEEDS THROUGH THE SAME HOOK, so the refusal was about the step-up and not about the path.
+    hooks[0]?.(
+      { method: 'POST', url: '/v1/cases/cas_1/external-actions', routeOptions: { url: '/v1/cases/cas_1/external-actions' }, identityClaims: { acr: STEP_UP_ACR, auth_time: NOW - 30 } },
+      {},
+      () => {
+        dispatches += 1;
+      },
+    );
+    assert.equal(refused.length, 1, 'no second refusal');
+    assert.equal(dispatches, 1, 'the admitted request reaches the handler');
+  });
+
+  test('a request with no verified claims is refused rather than assumed to hold a step-up', () => {
+    const refused: string[] = [];
+    const hooks: ((request: unknown, reply: unknown, done: () => void) => void)[] = [];
+    installStepUp({ addHook: (_name: string, hook: (request: unknown, reply: unknown, done: () => void) => void) => hooks.push(hook) } as never, {
+      clock,
+      classForRoute: classForPath,
+      refuse: (_request, _reply, code) => refused.push(code),
+    });
+    let dispatched = 0;
+    hooks[0]?.({ method: 'POST', url: '/v1/authority-grants', routeOptions: { url: '/v1/authority-grants' } }, {}, () => {
+      dispatched += 1;
+    });
+    assert.deepEqual(refused, ['STEP_UP_REQUIRED']);
+    assert.equal(dispatched, 0);
+  });
+
+  test('an ungated route passes the hook untouched', () => {
+    const hooks: ((request: unknown, reply: unknown, done: () => void) => void)[] = [];
+    installStepUp({ addHook: (_name: string, hook: (request: unknown, reply: unknown, done: () => void) => void) => hooks.push(hook) } as never, {
+      clock,
+      classForRoute: classForPath,
+      refuse: () => {
+        throw new Error('an ungated route must not be refused');
+      },
+    });
+    let dispatched = 0;
+    hooks[0]?.({ method: 'GET', url: '/v1/cases', routeOptions: { url: '/v1/cases' } }, {}, () => {
+      dispatched += 1;
+    });
+    assert.equal(dispatched, 1);
   });
 });
