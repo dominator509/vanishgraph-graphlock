@@ -100,6 +100,20 @@ export class PostgresTenantRunner implements TenantTransactionRunner {
     try {
       await client.query('BEGIN');
       await client.query('SELECT set_config($1, $2, true)', [setting, value]);
+      // THE TENANT IS PINNED TO THE NIL UUID, and the reason is a MEASURED Postgres behaviour rather than a
+      // precaution. `set_config(..., is_local => true)` reverts at COMMIT to the value the connection held when the
+      // transaction began — and for a custom GUC that was never set, that reversion leaves an EMPTY STRING, not
+      // NULL. MEASURED with a probe against this very runner: after one `withTenantTransaction`, a later capability
+      // transaction on the same pooled connection reports `app.tenant_id = ''`, so the tenant policy's
+      // `current_setting('app.tenant_id', true)::uuid` raises `invalid input syntax for type uuid: ""` instead of
+      // returning no rows. Binding the nil UUID — which `tenant(id)` can never hold, since ids are
+      // `gen_random_uuid()` — makes every tenant-scoped table read as EMPTY through this transaction, which is the
+      // fail-closed answer the capability lookup needs. The general hazard for any future code path that queries a
+      // tenant-scoped table without binding a tenant is recorded in ASSUMPTIONS §3.43.
+      await client.query('SELECT set_config($1, $2, true)', [
+        'app.tenant_id',
+        '00000000-0000-0000-0000-000000000000',
+      ]);
       await client.query(`SET LOCAL statement_timeout = ${String(this.statementTimeoutMs)}`);
       const tx: TenantTransaction = {
         query: async <R = unknown>(text: string, params?: readonly unknown[]): Promise<{ rows: R[] }> => {

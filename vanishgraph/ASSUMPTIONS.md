@@ -1702,6 +1702,69 @@ version of that assertion never executed. (b) `asTenant` appends its own `COMMIT
 `;` swallows it and fails with "syntax error at or near COMMIT" — the harness rule recorded in earlier rounds, applied
 here to a new query.
 
+### 3.43 §6 ingress wired end to end, and a Postgres behaviour that made the lookup throw
+
+**The three §6 routes are now implemented and tested**: capability resolution → signature verification over the raw
+bytes → replay claim → taint scan → one dispatch → the response recorded against the event id. New:
+`src/http/routes/webhook-ingress.ts`, `src/http/webhooks/verify.ts` (last round),
+`src/application/contracts/webhook-deliveries.ts`, `src/adapters/persistence/webhook-deliveries.ts`,
+the identity plugin's ingress exemption, and `tests/db/webhook-ingress.test.ts` 6/6. The three routes carry no bearer
+token and are **not** in the SPEC-003 §5 registry (`WEBHOOK_ROUTES` is a separate list), so `route-coverage`'s
+78-route denominator is unchanged.
+
+**1. THE INGRESS WAS UNREACHABLE UNTIL THE BEARER PLUGIN EXEMPTED IT.** MEASURED: every delivery answered
+`401 TOKEN_MISSING`, because the identity plugin authenticated every path. §6 opens with "Webhook ingress is the only
+unauthenticated-by-bearer write surface" — a provider has no bearer token to send. `UNAUTHENTICATED_PREFIXES` now
+carries `/v1/webhooks/` as a SEPARATE constant with its own reason, because the two exemptions are not comparable:
+the health routes require no credential at all, while the ingress requires three others (an HMAC over the raw bytes
+with a secret resolved from the capability's binding, a single-use nonce, and a stable event id), each enforced in the
+route and each asserted by the suite.
+
+**2. A MEASURED POSTGRES BEHAVIOUR: AFTER A TENANT TRANSACTION, A POOLED CONNECTION CARRIES `app.tenant_id = ''`,
+NOT NULL.** `set_config(..., is_local => true)` reverts at COMMIT to the value the connection held at BEGIN, and for
+a custom GUC that was never set that reversion leaves an EMPTY STRING. MEASURED with a probe against this runner:
+immediately `NULL`, and `''` after one `withTenantTransaction`. The consequence is a latent hazard for any code path
+that queries a tenant-scoped table without binding a tenant first: the tenant policy's
+`current_setting('app.tenant_id', true)::uuid` raises `invalid input syntax for type uuid: ""` instead of returning
+zero rows — **a cast error where the design promises a fail-closed empty result**. It surfaced here because the
+capability lookup is the first path in the service that queries before a tenant exists (the symptom was a `500` on
+every delivery after the first). `withCapabilityTransaction` now pins `app.tenant_id` to the **nil UUID**, which
+`tenant(id)` can never hold, so every tenant-scoped read through it is empty — the answer the lookup needs. The
+general hazard is NOT fixed for future code paths, and the honest fix (making the policy's cast `nullif(…, '')`)
+cannot be applied without a new migration altering 35 policies, since applied migrations are immutable (DOD-040) and
+the generator's template would rewrite them.
+
+**3. THE VERIFICATION ORDER CAUGHT ITS OWN BUG, AND THE PIPELINE CAUGHT MY FIXTURE.** Two measured corrections of my
+own in this round: the case fixture started at `MATCH_CONFIRMED`, which §5.9.1's guarded command legitimately refuses
+(`409 WEBHOOK_CASE_STATE_CONFLICT`, and the adapter records the refusal instead of applying a transition), so the
+fixture moved to `REQUEST_SUBMITTED`; and `src/http/routes/webhook-ingress.ts` first imported
+`capabilityTokenHash` and `ReplayUnavailableError` FROM ADAPTERS — `scripts/import-boundary.sh` failed with "http must
+not import adapters or infrastructure", and both symbols moved into their ports, where they belong: hashing a token is
+part of what a capability IS, and "the store could not answer" is part of the port's vocabulary.
+
+**4. WHAT THE SUITE PROVES, and what it cannot.** Proven: a signed delivery is accepted and its effect is applied
+(the case reaches `ACKNOWLEDGED`, one `controller_response` row); a replayed nonce is `409` ONCE with no second
+effect, and a repeated event id returns the STORED response with `X-VG-Webhook-Replayed: true`; tainted control fields
+(`legalBasis`, `channel`, `truthState`, `budgetOverride`, `idempotencyKey`) are ignored, audited by NAME, and their
+VALUES do not reach the audit payload; a tampered body, a stale timestamp, an unknown capability and an unresolvable
+secret are each their own refusal and none of them records a response; the transport routes update
+`provider_transport_run.outcome` and `mail_piece`, return `truthStateChanged: false`, and leave the case state
+unchanged. NOT proven: the Valkey replay binding against a real coordination store (`VALKEY_URL` is
+`BLOCKED_CREDENTIALS`), and any secret store — **this composition has none**, so `resolveSecret` throws and every
+delivery is refused `503` naming the gap. The suite injects a secret and the file replay store; in the running
+service the ingress therefore accepts nothing until a secret manager is configured, which is the honest state.
+
+**5. AN UNEXPLAINED FAILURE, AND THE EVIDENCE GAP THAT LOST ITS NAME.** One full `test-integration.sh` run reported
+`{"tests":321,"fail":1,"verdict":"FAIL"}` and the next three runs — six further executions of the same suite set, since
+the stage runs them once inside the collection guard and once directly — passed with 321/321. **I do not know which
+test failed, and I am not going to guess.** The reason it is unknowable is a defect in the evidence trail worth fixing
+on its own: both runs write to FIXED paths (`integration-guard.txt`, `integration-run.txt`), so the next run erases
+the previous one's output, and the guard's summary line carries counts without a name. The script now COPIES the
+failing run to `integration-guard.failed.txt` before exiting, so the runner's own output — which names the failing
+test — survives. Until that failure is reproduced, the honest statement is: **one integration execution out of eight
+failed once, cause unknown; three subsequent full runs were green.** A flake in this stage is a real risk (the suites
+share a database and run concurrently), and it is recorded rather than dismissed.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

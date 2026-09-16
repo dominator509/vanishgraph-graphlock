@@ -21,10 +21,8 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 
 import { PostgresTenantRunner } from '../../src/adapters/persistence/postgres-runner.ts';
-import {
-  PostgresWebhookBindingQueries,
-  capabilityTokenHash,
-} from '../../src/adapters/persistence/webhook-bindings.ts';
+import { PostgresWebhookBindingQueries } from '../../src/adapters/persistence/webhook-bindings.ts';
+import { capabilityTokenHash } from '../../src/application/contracts/webhook-bindings.ts';
 import { appDsn, asTenant, exec, ownerDsn, withoutTenant } from './harness.ts';
 
 const TENANT_A = randomUUID();

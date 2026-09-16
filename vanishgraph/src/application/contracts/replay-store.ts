@@ -56,6 +56,23 @@ export interface ReplayStore {
 /** §6.2's TTL, in seconds. */
 export const REPLAY_TTL_SECONDS = 3600;
 
+/**
+ * The store could not answer, so the delivery must be REFUSED (§6.2's fail-closed rule).
+ *
+ * DECLARED IN THE CONTRACT, NOT IN AN ADAPTER, because the route has to catch it and `src/http/**` may not import an
+ * adapter (the code law). MEASURED: the first version of the ingress imported this class from
+ * `adapters/coordination/replay-store.ts` and `scripts/import-boundary.sh` failed with "http must not import adapters
+ * or infrastructure". The class is part of the port's vocabulary — a store that cannot answer is a case the caller
+ * must handle — so it is declared beside the interface it belongs to.
+ */
+export class ReplayUnavailableError extends Error {
+  readonly code = 'DEPENDENCY_UNAVAILABLE' as const;
+  constructor(reason: string) {
+    super(`replay store unavailable: ${reason}`);
+    this.name = 'ReplayUnavailableError';
+  }
+}
+
 /** Whether a recorded instant is still inside the window. Exported because both adapters must agree on it. */
 export function isLive(recordedAtMs: number, nowMs: number): boolean {
   return nowMs - recordedAtMs < REPLAY_TTL_SECONDS * 1000;

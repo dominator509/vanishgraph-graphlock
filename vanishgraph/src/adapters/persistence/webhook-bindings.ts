@@ -11,8 +11,6 @@
  * "unknown" would tell a prober that a token once existed.
  */
 
-import { createHash } from 'node:crypto';
-
 import type { WebhookBinding, WebhookBindingQueries } from '../../application/contracts/webhook-bindings.ts';
 import type { TenantTransactionRunner } from '../../http/plugins/tenancy.ts';
 
@@ -74,7 +72,3 @@ export class PostgresWebhookBindingQueries implements WebhookBindingQueries {
   }
 }
 
-/** SHA-256 of a capability token, lowercase hex — the only form the table stores. */
-export function capabilityTokenHash(token: string): string {
-  return createHash('sha256').update(token, 'utf8').digest('hex');
-}

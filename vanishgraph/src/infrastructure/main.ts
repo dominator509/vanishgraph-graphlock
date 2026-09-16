@@ -35,12 +35,17 @@ import { PostgresObservationQueries } from '../adapters/persistence/observations
 import { PostgresExposureQueries } from '../adapters/persistence/exposures.ts';
 import { PostgresTransitionQueries } from '../adapters/persistence/transitions.ts';
 import { PostgresCaseQueries } from '../adapters/persistence/cases.ts';
-import { PostgresControllerResponseQueries } from '../adapters/persistence/controller-responses.ts';
 import { PostgresActionQueries } from '../adapters/persistence/actions.ts';
 import { PostgresPolicyQueries } from '../adapters/persistence/policies.ts';
 import { PostgresCoverageQueries } from '../adapters/persistence/coverage.ts';
 import { PostgresEvidenceQueries } from '../adapters/persistence/evidence.ts';
 import { PostgresDiscoveryQueries } from '../adapters/persistence/discovery.ts';
+import { PostgresWebhookBindingQueries } from '../adapters/persistence/webhook-bindings.ts';
+import { PostgresWebhookDeliveryCommands } from '../adapters/persistence/webhook-deliveries.ts';
+import { FileReplayStore } from '../adapters/coordination/replay-store.ts';
+import { PostgresControllerResponseQueries } from '../adapters/persistence/controller-responses.ts';
+import { join as joinPath } from 'node:path';
+import { tmpdir as tmpDirectory } from 'node:os';
 import { findRoute } from '../http/openapi/registry.ts';
 import { parseDsn } from '../adapters/../infrastructure/database/psql.ts';
 
@@ -218,6 +223,25 @@ async function main(): Promise<number> {
     coverageQueries: new PostgresCoverageQueries(),
     evidenceQueries: new PostgresEvidenceQueries(),
     discoveryQueries: new PostgresDiscoveryQueries(),
+    // The SPEC-003 §6 ingress. The replay binding is the FILE store M7 authorises when no coordination store is
+    // provisioned (VALKEY_URL is BLOCKED_CREDENTIALS): durable, append-only, and shared across processes — never an
+    // in-memory map, which M7 prohibits and which would stop protecting the moment a second process ran.
+    webhookBindings: new PostgresWebhookBindingQueries(),
+    webhookDeliveries: new PostgresWebhookDeliveryCommands({
+      runner,
+      controllerResponses: new PostgresControllerResponseQueries(),
+    }),
+    replayStore: new FileReplayStore({
+      path: process.env['VG_REPLAY_LOG'] ?? joinPath(tmpDirectory(), 'vanishgraph-webhook-replay.log'),
+    }),
+    // NO SECRET STORE IS CONFIGURED, so every delivery is refused `503` with a reason that names the gap: a webhook
+    // whose shared secret cannot be resolved cannot be verified, and accepting it unverified is the one thing the
+    // signature exists to prevent.
+    resolveSecret: async (secretName: string) => {
+      throw new Error(
+        `no secret resolver is configured for ${secretName}: webhook secrets must come from a secret manager (VG-SEC-002)`,
+      );
+    },
     idempotency: {
       // The durable store is PostgreSQL (SPEC-003 §4.2): the effect must survive a process restart,
       // so an in-memory store would defeat the mechanism it implements.

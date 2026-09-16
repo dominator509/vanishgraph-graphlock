@@ -29,7 +29,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { verifyWebhook, webhookSignature } from '../../src/http/webhooks/verify.ts';
-import { FileReplayStore, ReplayUnavailableError, ValkeyReplayStore } from '../../src/adapters/coordination/replay-store.ts';
+import { FileReplayStore, ValkeyReplayStore } from '../../src/adapters/coordination/replay-store.ts';
+import { ReplayUnavailableError } from '../../src/application/contracts/replay-store.ts';
 import { isLive, REPLAY_TTL_SECONDS } from '../../src/application/contracts/replay-store.ts';
 import { WEBHOOK_MAX_BODY_BYTES } from '../../src/http/plugins/raw-body.ts';
 

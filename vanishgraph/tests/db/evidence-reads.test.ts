@@ -24,7 +24,7 @@ import assert from 'node:assert/strict';
 import { randomUUID, createHash } from 'node:crypto';
 
 import { buildServer, type VgFastify } from '../../src/http/server.ts';
-import { testIdentity, TEST_SESSION_SECRET, TEST_TOKEN, testServerDependencies } from '../contract/server-support.ts';
+import { testIdentity, TEST_SESSION_SECRET, TEST_TOKEN, testServerDependencies, testWebhookDependencies } from '../contract/server-support.ts';
 import { PostgresTenantRunner } from '../../src/adapters/persistence/postgres-runner.ts';
 import { PostgresEvidenceQueries } from '../../src/adapters/persistence/evidence.ts';
 import { PostgresDiscoveryQueries } from '../../src/adapters/persistence/discovery.ts';
@@ -53,6 +53,7 @@ function buildApp(tenantId: string, scopes: readonly string[] = SCOPES): VgFasti
       sessionSecret: TEST_SESSION_SECRET,
       evidenceQueries: new PostgresEvidenceQueries(),
     discoveryQueries: new PostgresDiscoveryQueries(),
+    ...testWebhookDependencies(),
     }),
   );
 }

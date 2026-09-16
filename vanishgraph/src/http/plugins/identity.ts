@@ -58,10 +58,34 @@ export const UNAUTHENTICATED_PATHS: readonly string[] = [
   '/v1/startup',
 ];
 
-/** True when `path` is one of the four public health routes, ignoring a query string. */
+/**
+ * The webhook ingress prefix, exempted from bearer authentication and NOT from authentication itself.
+ *
+ * MEASURED, and the ingress was unreachable without it: §6 opens with "Webhook ingress is the only
+ * unauthenticated-by-bearer write surface", so a bearer plugin that ran on these paths answered
+ * `401 TOKEN_MISSING` to every delivery — a provider has no bearer token to send. §6 replaces the
+ * bearer credential with THREE others, each enforced in the route rather than here: an HMAC-SHA256
+ * signature over the raw bytes with a secret resolved from the capability's binding, a single-use
+ * nonce, and a stable event id. The two exemptions are therefore not comparable, which is why this is
+ * a separate constant with its own reason rather than an entry in the list above:
+ *
+ *   * the health routes require NO credential, because an orchestrator that had one would defeat the
+ *     purpose of a liveness probe;
+ *   * the ingress requires a DIFFERENT credential, and a delivery that fails it is refused before any
+ *     work happens (`scripts/reality-gate.sh` and `tests/db/webhook-ingress.test.ts` both assert the
+ *     refusals).
+ *
+ * A PREFIX, unlike the exact list above, because §6's third route carries a variable path segment
+ * (`{providerKeyId}`, `{mailProviderKeyId}`, `{controllerCallbackToken}`) — the value is the
+ * capability, so no fixed path list can name it.
+ */
+export const UNAUTHENTICATED_PREFIXES: readonly string[] = ['/v1/webhooks/'];
+
+/** True when `path` needs no bearer token: one of the four public health routes, or the webhook ingress. */
 export function isUnauthenticatedPath(path: string): boolean {
   const withoutQuery = path.split('?')[0] ?? path;
-  return UNAUTHENTICATED_PATHS.includes(withoutQuery);
+  if (UNAUTHENTICATED_PATHS.includes(withoutQuery)) return true;
+  return UNAUTHENTICATED_PREFIXES.some((prefix) => withoutQuery.startsWith(prefix));
 }
 
 export function installIdentity(app: FastifyInstance, options: IdentityPluginOptions): void {

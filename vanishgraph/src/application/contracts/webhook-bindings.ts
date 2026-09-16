@@ -12,7 +12,21 @@
  * capability from a wrong one.
  */
 
+import { createHash } from 'node:crypto';
+
 import type { TenantTransactionRunner } from '../../http/plugins/tenancy.ts';
+
+/**
+ * SHA-256 of a capability token, lowercase hex — the only form the table stores.
+ *
+ * DECLARED HERE, NOT IN THE ADAPTER, because the HTTP route needs it and `src/http/**` may not import an adapter
+ * (the code law, enforced by `scripts/import-boundary.sh` — MEASURED: the first version of the ingress imported this
+ * from `adapters/persistence/webhook-bindings.ts` and the boundary gate failed). Hashing a token is not persistence
+ * and not SQL; it is part of what a capability IS, so it belongs with the port.
+ */
+export function capabilityTokenHash(token: string): string {
+  return createHash('sha256').update(token, 'utf8').digest('hex');
+}
 
 /** What a resolved capability says. Never the token, never the secret. */
 export interface WebhookBinding {

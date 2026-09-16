@@ -20,16 +20,8 @@ import { appendFileSync, existsSync, mkdirSync, openSync, closeSync, readFileSyn
 import { dirname } from 'node:path';
 
 import type { ReplayDecision, ReplayStore } from '../../application/contracts/replay-store.ts';
-import { REPLAY_TTL_SECONDS, isLive } from '../../application/contracts/replay-store.ts';
+import { REPLAY_TTL_SECONDS, isLive, ReplayUnavailableError } from '../../application/contracts/replay-store.ts';
 
-/** The ingestion's own failure, so a route can tell it apart from a malformed delivery. */
-export class ReplayUnavailableError extends Error {
-  readonly code = 'DEPENDENCY_UNAVAILABLE' as const;
-  constructor(reason: string) {
-    super(`replay store unavailable: ${reason}`);
-    this.name = 'ReplayUnavailableError';
-  }
-}
 
 interface FileRecord {
   readonly key: string;

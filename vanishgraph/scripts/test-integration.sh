@@ -111,7 +111,16 @@ MANIFEST=.agent/verification/EXPECTED_INTEGRATION_MANIFEST.txt
 
 VG_TEST_GLOB="tests/db/**/*.test.ts" VG_EXPECTED_MANIFEST="$MANIFEST" \
   sh scripts/test-collection-guard.sh >.agent/evidence/db/integration-guard.txt 2>&1 \
-  || { cat .agent/evidence/db/integration-guard.txt >&2; fail "the integration collection guard failed"; }
+  || {
+    # PRESERVE THE FAILING RUN BEFORE EXITING. MEASURED GAP this closes: this stage runs the suites TWICE (once
+    # inside the guard, once directly below), and both write to FIXED paths — so a single failure that does not
+    # reproduce is erased by the next run, leaving only "fail 1" with no name. A flake whose identity is lost cannot
+    # be investigated, and an unexplained failure is worse than a known one. The copy keeps the runner's own output,
+    # which names the failing test.
+    cp .agent/evidence/db/integration-guard.txt .agent/evidence/db/integration-guard.failed.txt
+    cat .agent/evidence/db/integration-guard.txt >&2
+    fail "the integration collection guard failed; the failing run is preserved at .agent/evidence/db/integration-guard.failed.txt"
+  }
 grep -qx 'test collection guard: ok' .agent/evidence/db/integration-guard.txt \
   || { cat .agent/evidence/db/integration-guard.txt >&2; fail "the collection guard did not print its sentinel"; }
 grep -E '^\{"tests":' .agent/evidence/db/integration-guard.txt | tail -n 1

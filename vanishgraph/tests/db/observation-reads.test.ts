@@ -29,7 +29,7 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 
 import { buildServer, type VgFastify } from '../../src/http/server.ts';
-import { testIdentity, TEST_SESSION_SECRET, TEST_TOKEN } from '../contract/server-support.ts';
+import { testIdentity, TEST_SESSION_SECRET, TEST_TOKEN, testWebhookDependencies } from '../contract/server-support.ts';
 import { PostgresTenantRunner } from '../../src/adapters/persistence/postgres-runner.ts';
 import { PostgresObservationQueries } from '../../src/adapters/persistence/observations.ts';
 import { PostgresExposureQueries } from '../../src/adapters/persistence/exposures.ts';
@@ -103,6 +103,7 @@ function serverFor(tenantId: string, scopes: readonly string[] = ['vg.observatio
     coverageQueries: new PostgresCoverageQueries(),
     evidenceQueries: new PostgresEvidenceQueries(),
     discoveryQueries: new PostgresDiscoveryQueries(),
+    ...testWebhookDependencies(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
   });
 }

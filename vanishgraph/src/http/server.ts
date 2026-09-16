@@ -34,6 +34,7 @@ import { policyRoutes } from './routes/policies.ts';
 import { coverageRoutes } from './routes/coverage.ts';
 import { evidenceRoutes } from './routes/evidence.ts';
 import { discoveryRoutes } from './routes/discovery.ts';
+import { webhookIngressRoutes } from './routes/webhook-ingress.ts';
 import type { SubjectQueries } from '../application/contracts/subject-queries.ts';
 import type { SubjectCommands } from '../application/contracts/subject-commands.ts';
 import type { RecipeVerificationKeys, SourceQueries } from '../application/contracts/source-queries.ts';
@@ -50,6 +51,9 @@ import type { PolicyQueries } from '../application/contracts/policy-queries.ts';
 import type { CoverageQueries } from '../application/contracts/coverage-queries.ts';
 import type { EvidenceQueries } from '../application/contracts/evidence-queries.ts';
 import type { DiscoveryQueries } from '../application/contracts/discovery-queries.ts';
+import type { WebhookBindingQueries } from '../application/contracts/webhook-bindings.ts';
+import type { WebhookDeliveryCommands } from '../application/contracts/webhook-deliveries.ts';
+import type { ReplayStore } from '../application/contracts/replay-store.ts';
 import { installCorrelation } from './plugins/correlation.ts';
 import { installErrorHandler } from './plugins/error-handler.ts';
 import { installIdentity, type IdentityPluginOptions } from './plugins/identity.ts';
@@ -175,6 +179,14 @@ export interface ServerDependencies {
   readonly coverageQueries: CoverageQueries;
   readonly evidenceQueries: EvidenceQueries;
   readonly discoveryQueries: DiscoveryQueries;
+  /**
+   * The SPEC-003 §6 ingress. Separate ports because its shape is different: the tenant is discovered DURING the
+   * request, so these take a runner and a tenant rather than a bound transaction.
+   */
+  readonly webhookBindings: WebhookBindingQueries;
+  readonly webhookDeliveries: WebhookDeliveryCommands;
+  readonly replayStore: ReplayStore;
+  readonly resolveSecret: (secretName: string) => Promise<string>;
   readonly logLevel?: string;
 }
 
@@ -263,6 +275,14 @@ export function buildServer(deps: ServerDependencies): VgFastify {
   app.register(evidenceRoutes, { queries: deps.evidenceQueries });
   // The SPEC-003 5.4 group: two reads over what the domain models, and three routes that name the model no
   // specification defines.
+  // The SPEC-003 §6 ingress: capability resolution, signature verification, replay claim, taint scan, dispatch.
+  app.register(webhookIngressRoutes, {
+    bindings: deps.webhookBindings,
+    replay: deps.replayStore,
+    deliveries: deps.webhookDeliveries,
+    runner: deps.tenancy.runner,
+    resolveSecret: deps.resolveSecret,
+  });
   app.register(discoveryRoutes, {
     queries: deps.discoveryQueries,
     subjects: deps.subjectQueries,

@@ -36,7 +36,7 @@ import {
   testIdentity,
   TEST_SESSION_SECRET,
   TEST_TOKEN,
-} from '../contract/server-support.ts';
+  testWebhookDependencies,} from '../contract/server-support.ts';
 import { PostgresTenantRunner } from '../../src/adapters/persistence/postgres-runner.ts';
 import { PostgresSourceQueries, canonicalRecipePayload } from '../../src/adapters/persistence/sources.ts';
 import { PostgresAppealQueries } from '../../src/adapters/persistence/appeals.ts';
@@ -122,6 +122,7 @@ function serverFor(tenantId: string, scopes: readonly string[], authTimeAgeSecon
     coverageQueries: new PostgresCoverageQueries(),
     evidenceQueries: new PostgresEvidenceQueries(),
     discoveryQueries: new PostgresDiscoveryQueries(),
+    ...testWebhookDependencies(),
     subjectQueries: { ...testSubjectQueriesStub },
     subjectCommands: {
       createSubject: async () => ({ ok: false, reason: 'EVIDENCE_NOT_FOUND' }),

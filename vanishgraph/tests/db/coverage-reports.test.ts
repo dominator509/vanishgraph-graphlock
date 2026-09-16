@@ -35,6 +35,7 @@ import {
   TEST_TOKEN,
   testIdentity,
   testServerDependencies,
+  testWebhookDependencies,
 } from '../contract/server-support.ts';
 import { appDsn, exec, ownerDsn } from './harness.ts';
 
@@ -64,6 +65,7 @@ function buildApp(tenantId: string, scopes: readonly string[] = SCOPES): VgFasti
       coverageQueries: new PostgresCoverageQueries(),
     evidenceQueries: new PostgresEvidenceQueries(),
     discoveryQueries: new PostgresDiscoveryQueries(),
+    ...testWebhookDependencies(),
     }),
   );
 }

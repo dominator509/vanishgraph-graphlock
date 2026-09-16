@@ -41,6 +41,9 @@ import type { PolicyQueries } from '../../src/application/contracts/policy-queri
 import type { CoverageQueries } from '../../src/application/contracts/coverage-queries.ts';
 import type { EvidenceQueries } from '../../src/application/contracts/evidence-queries.ts';
 import type { DiscoveryQueries } from '../../src/application/contracts/discovery-queries.ts';
+import type { WebhookBindingQueries } from '../../src/application/contracts/webhook-bindings.ts';
+import type { WebhookDeliveryCommands } from '../../src/application/contracts/webhook-deliveries.ts';
+import type { ReplayStore } from '../../src/application/contracts/replay-store.ts';
 import { EFFECTIVENESS_CAVEATS } from '../../src/application/contracts/coverage-queries.ts';
 
 /**
@@ -220,6 +223,39 @@ export function testEvidenceQueries(): EvidenceQueries {
   return {
     getEvidenceArtifact: async () => undefined,
     listCaseEvidenceArtifacts: async () => undefined,
+  };
+}
+
+/**
+ * The §6 ingress dependencies, as doubles for suites that do NOT exercise the ingress.
+ *
+ * THE REPLAY DOUBLE HAS NO MEMORY ON PURPOSE: it answers `NEW` every time and stores nothing. A suite that does not
+ * test replay protection must not acquire a passing replay assertion from a Map — M7 prohibits an in-memory replay
+ * store precisely because a process-local one stops protecting the moment a second process runs, and a double that
+ * LOOKED like a store would make the real one look tested.
+ */
+export function testWebhookDependencies(): {
+  readonly webhookBindings: WebhookBindingQueries;
+  readonly webhookDeliveries: WebhookDeliveryCommands;
+  readonly replayStore: ReplayStore;
+  readonly resolveSecret: (secretName: string) => Promise<string>;
+} {
+  return {
+    webhookBindings: {
+      resolveControllerToken: async () => undefined,
+      resolveProviderKey: async () => undefined,
+    },
+    webhookDeliveries: {
+      recordControllerResponse: async () => ({ ok: false, reason: 'CASE_NOT_FOUND' }),
+      recordTransportFact: async () => ({ found: false }),
+      recordMailDelivery: async () => ({ found: false }),
+      auditIgnoredControlFields: async () => {},
+    },
+    replayStore: {
+      begin: async () => ({ kind: 'NEW' as const }),
+      complete: async () => {},
+    },
+    resolveSecret: async () => 'test-webhook-secret-not-a-real-credential',
   };
 }
 
@@ -533,6 +569,7 @@ export function testServerDependencies(overrides: Partial<ServerDependencies> = 
     coverageQueries: testCoverageQueries(),
     evidenceQueries: testEvidenceQueries(),
     discoveryQueries: testDiscoveryQueries(),
+    ...testWebhookDependencies(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
     ...overrides,
   };

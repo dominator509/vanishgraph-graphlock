@@ -18,7 +18,7 @@ import { test, describe, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { buildServer, type VgFastify } from '../../src/http/server.ts';
-import { testIdempotency, testIdentity, TEST_SESSION_SECRET, TEST_TOKEN } from '../contract/server-support.ts';
+import { testIdempotency, testIdentity, TEST_SESSION_SECRET, TEST_TOKEN, testWebhookDependencies } from '../contract/server-support.ts';
 import { PostgresTenantRunner } from '../../src/adapters/persistence/postgres-runner.ts';
 import { PostgresSubjectQueries } from '../../src/adapters/persistence/subjects.ts';
 import { PostgresSubjectCommands } from '../../src/adapters/persistence/subject-commands.ts';
@@ -105,6 +105,7 @@ function serverFor(
     coverageQueries: new PostgresCoverageQueries(),
     evidenceQueries: new PostgresEvidenceQueries(),
     discoveryQueries: new PostgresDiscoveryQueries(),
+    ...testWebhookDependencies(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),

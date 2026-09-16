@@ -161,6 +161,21 @@ const app = buildServer({
     caseRowVersion: async () => undefined,
   },
   // The §5.16 coverage and metric model. Zero denominator, so the stub reports `ratio: null` rather than a rate.
+  webhookBindings: {
+    resolveControllerToken: async () => undefined,
+    resolveProviderKey: async () => undefined,
+  },
+  webhookDeliveries: {
+    recordControllerResponse: async () => ({ ok: false, reason: 'CASE_NOT_FOUND' }),
+    recordTransportFact: async () => ({ found: false }),
+    recordMailDelivery: async () => ({ found: false }),
+    auditIgnoredControlFields: async () => {},
+  },
+  replayStore: {
+    begin: async () => ({ kind: 'NEW' }),
+    complete: async () => {},
+  },
+  resolveSecret: async () => 'coverage-probe-secret',
   discoveryQueries: {
     listCandidateRecords: async () => ({
       rows: [],
