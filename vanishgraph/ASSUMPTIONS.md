@@ -2334,6 +2334,62 @@ does not exist.
 `gate-ui: ok`; `typecheck: ok`; `lint: ok`; `format-check: ok`; `import boundary: ok`; `reality gate: ok`;
 `copy lint gate: ok`. The human-gate request's digest was refreshed for the fourth time.
 
+### 3.54 EP-005 M7: the URL guard, the telemetry catalogue and redaction — and a conflict the guard created with itself
+
+**1. THE URL GUARD REFUSED THE APPLICATION'S OWN ROUTES, AND THE FIX IS THE PLAN'S OWN FALLBACK MADE CONCRETE.**
+VG-UI-083's class (g) — an `Identifier` value held for a subject, matched by digest comparison — cannot be checked in a
+browser without the encrypted store, and the plan forbids shipping that store to make the check possible. My first
+implementation refused identifier-SHAPED values in EVERY position, and the suite immediately showed what that means:
+`path('console', 'cases', '<uuid>')` threw, because a case identifier is a UUID. A keyset cursor is an opaque token too.
+So the module now distinguishes positions honestly: **a path segment IS the route's identifier by construction**, so an
+identifier-shaped segment is permitted there; **a query value must be declared as an opaque reference** (`ref(...)`) and
+anything else identifier-shaped is refused; `history.state` and `document.title` are strict with no exemptions. A caller
+smuggling a subject's identifier has to write `ref(...)` in the source, where a reviewer sees it — which is the
+difference between a check and a shrug.
+
+**2. THE SUITE FOUND THAT THE API CLIENT WAS A SECOND URL BUILDER.** `ui/src/api/portal.ts` had its own
+`URLSearchParams` helper from M5, and the M7 rule "the URL builder is the only place a path or query is constructed"
+flagged it. It now builds every request through `lib/url.ts`, with identifiers and cursors passed as `ref(...)`. A second
+builder is a second place a PII value can reach a URL without passing the pattern set — that is exactly why the rule
+exists, and it was my own M5 code that violated it.
+
+**3. TWO PATTERN DEFECTS FOUND BY THE FIXTURES, BOTH IN MY OWN PATTERNS.**
+(a) The postal class matched only `street|road|avenue|lane|drive|way|boulevard|close|court`, so its own fixture
+("742 Evergreen Terrace") was not detected. The suffix list is now longer and declared — a class whose fixture it cannot
+detect is a class that does not work.
+(b) The date-of-birth class tested the FOLDED value for both the numeric and the long form, and folding turns
+`1980-03-03` into `1980 03 03`, so the numeric form stopped matching. The numeric pattern now runs against the raw value
+and the long form against the folded one.
+
+**4. A FORBIDDEN SYNONYM IN MY OWN ENUM, CAUGHT BY THE COPY GATE.** The pattern classes declared
+`enforcedBy: 'client' | 'server'`, and `client` is a SPEC-000 §4 synonym: the gate flagged it as an identifier in six
+places. The enum values are now `'browser' | 'server'`, and the distinction the enum carries is unchanged — six classes
+the browser can honestly check, two the API must check.
+
+**5. THE TWO SERVER-ENFORCED CLASSES ARE DECLARED, NOT FAKED.** Classes (g) and (h) need the encrypted identifier store
+and the recorded artefact content. The suite asserts that the pattern set DECLARES them as server-enforced, that the
+browser still refuses identifier-shaped values where no reference belongs, and that the browser's class list is exactly
+the six it can honestly check. Claiming a digest comparison the browser never performed would be the fabrication
+VG-UI-083's required negative case names.
+
+**6. WHAT M7 BUILT, AND ONE THING IT DID NOT.** Built and asserted: `ui/src/lib/url.ts` (eight declared classes, fixture
+coverage self-test, the only builder), `ui/src/lib/telemetry.ts` (closed catalogue, per-parameter egress classes, unknown
+event and undeclared parameter refused, PII refused even in an enum parameter), `ui/src/components/evidence/PiiRedactor.tsx`
+(masked by default with no unmasked value in any attribute, reveal REQUIRES a recording callback, `DigestDisplay` copies
+only the digest), and a CSP meta element in `ui/index.html` (`script-src 'self'`, `form-action 'self'`, no wildcard, no
+`unsafe-eval`, the single `style-src 'unsafe-inline'` relaxation named rather than hidden). **NOT BUILT: the plan's
+`tests/ui/privacy.spec.ts`** — the browser-level crawl asserting no PII pattern in `location.href`, `history.state` or
+`document.title`, the external-origin capture, the post-sign-out back-navigation assertion and the clipboard inspection.
+The credential-free assertions are green and the browser-level crawl is recorded as REMAINING rather than claimed; the
+CSP header a deployment must send is likewise recorded as a deployment action, because a meta element cannot govern
+response headers.
+
+**7. MILESTONE EVIDENCE (all re-run after the last edit).** `tests/contract/pii-url.test.ts` **15 tests, 15 pass**;
+`test-unit: ok` (**836 tests, 836 pass, 0 fail**); `test collection guard: ok`; `sh scripts/test-e2e.sh` →
+**`end-to-end tests: ok`, 31 browser tests passed**; `gate-ui: ok`; `typecheck: ok`; `lint: ok`; `format-check: ok`;
+`import boundary: ok`; `reality gate: ok`; `copy lint gate: ok` (112 files, 0 hits). The human-gate request's digest was
+refreshed for the fifth time.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

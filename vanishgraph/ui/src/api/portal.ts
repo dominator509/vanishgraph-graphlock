@@ -25,6 +25,7 @@
  */
 
 import type { TruthStateToken } from '../copy/truth-state.ts';
+import { path as urlPath, query as urlQuery, ref } from '../lib/url.ts';
 import { PortalClient, portalClient } from './client.ts';
 import { TransportFailure } from './errors.ts';
 import type {
@@ -275,46 +276,44 @@ export interface PortalApi {
 
 /** Build the portal API over a client. The default export uses the application's own client. */
 export function createPortalApi(transport: PortalClient = portalClient): PortalApi {
-  const query = (params: Readonly<Record<string, string | number | undefined>>): string => {
-    const search = new URLSearchParams();
-    for (const [key, value] of Object.entries(params)) {
-      if (value !== undefined) search.set(key, String(value));
-    }
-    const text = search.toString();
-    return text.length === 0 ? '' : `?${text}`;
-  };
+  // THE QUERY STRING IS BUILT BY THE ONE URL BUILDER (SPEC-004 §12 VG-UI-083). MEASURED: this module had its own
+  // `URLSearchParams` helper, which the M7 suite caught as "a UI module builds its own query string" — and a second
+  // builder is a second place a PII value can reach a URL without passing the pattern set. Identifiers and cursors are
+  // declared as opaque references, which is what lets the shared builder permit them while refusing everything else.
+  const withQuery = (routePath: string, params: Readonly<Record<string, string | number | import('../lib/url.ts').OpaqueRef | undefined>>): string =>
+    `${routePath}${urlQuery(params)}`;
 
   return {
     subject: async (subjectId) =>
-      (await transport.get(`/subjects/${subjectId}`, (body) => asRecord('GET /subjects/{id}', body))).body as unknown as WireSubject,
+      (await transport.get(urlPath('subjects', subjectId), (body) => asRecord('GET /subjects/{id}', body))).body as unknown as WireSubject,
 
     authorityGrants: async (subjectId) =>
       (
-        await transport.get(`/subjects/${subjectId}/authority-grants`, (body) =>
+        await transport.get(urlPath('subjects', subjectId, 'authority-grants'), (body) =>
           asCollection('GET /subjects/{id}/authority-grants', body, (raw) => asRecord('grant', raw) as unknown as WireAuthorityGrant),
         )
       ).body.data,
 
     exposures: async ({ limit = 25, cursor = null }) =>
       (
-        await transport.get(`/exposures${query({ limit, cursor: cursor ?? undefined })}`, (body) =>
+        await transport.get(withQuery(urlPath('exposures'), { limit, cursor: cursor === null ? undefined : ref(cursor) }), (body) =>
           asCollection('GET /exposures', body, (raw) => toExposureView('GET /exposures row', raw)),
         )
       ).body,
 
     exposure: async (exposureId) => {
-      const result = await transport.get(`/exposures/${exposureId}`, (body) => toExposureView('GET /exposures/{id}', body));
+      const result = await transport.get(urlPath('exposures', exposureId), (body) => toExposureView('GET /exposures/{id}', body));
       return { exposure: result.body, etag: result.etag };
     },
 
     caseDetail: async (caseId) => {
-      const result = await transport.get(`/cases/${caseId}`, (body) => toCaseView('GET /cases/{id}', body));
+      const result = await transport.get(urlPath('cases', caseId), (body) => toCaseView('GET /cases/{id}', body));
       return { detail: result.body, etag: result.etag };
     },
 
     timeline: async (caseId) =>
       (
-        await transport.get(`/cases/${caseId}/timeline`, (body) =>
+        await transport.get(urlPath('cases', caseId, 'timeline'), (body) =>
           asCollection('GET /cases/{id}/timeline', body, (raw) => {
             const record = asRecord('timeline row', raw);
             return {
@@ -331,7 +330,7 @@ export function createPortalApi(transport: PortalClient = portalClient): PortalA
 
     deadlines: async (caseId) =>
       (
-        await transport.get(`/cases/${caseId}/deadlines`, (body) =>
+        await transport.get(urlPath('cases', caseId, 'deadlines'), (body) =>
           asCollection('GET /cases/{id}/deadlines', body, (raw) => {
             const record = asRecord('deadline row', raw);
             const derived = asRecord('deadline.derivedFrom', record['derivedFrom']);
@@ -350,7 +349,7 @@ export function createPortalApi(transport: PortalClient = portalClient): PortalA
 
     controllerResponses: async (caseId) =>
       (
-        await transport.get(`/cases/${caseId}/controller-responses`, (body) =>
+        await transport.get(urlPath('cases', caseId, 'controller-responses'), (body) =>
           asCollection('GET /cases/{id}/controller-responses', body, (raw) => {
             const record = asRecord('controller response row', raw);
             return {
@@ -367,7 +366,7 @@ export function createPortalApi(transport: PortalClient = portalClient): PortalA
       ).body.data,
 
     evidence: async (evidenceArtifactId) => {
-      const result = await transport.get(`/evidence-artifacts/${evidenceArtifactId}`, (body) => {
+      const result = await transport.get(urlPath('evidence-artifacts', evidenceArtifactId), (body) => {
         const record = asRecord('GET /evidence-artifacts/{id}', body);
         return {
           evidenceArtifactId: asString('evidence.evidenceArtifactId', record['evidenceArtifactId']),
@@ -407,7 +406,7 @@ export function createPortalApi(transport: PortalClient = portalClient): PortalA
 
     discoveryRun: async (discoveryRunId) =>
       (
-        await transport.get(`/discovery-runs/${discoveryRunId}`, (body) => {
+        await transport.get(urlPath('discovery-runs', discoveryRunId), (body) => {
           const record = asRecord('GET /discovery-runs/{id}', body);
           const coverage = asRecord('discoveryRun.coverage', record['coverage']);
           const bounds = asRecord('discoveryRun.coverage.coverageBounds', coverage['coverageBounds']);
@@ -432,7 +431,7 @@ export function createPortalApi(transport: PortalClient = portalClient): PortalA
 
     assessExposure: async (exposureId, input) => {
       const result = await transport.post(
-        `/exposures/${exposureId}/match-assessments`,
+        urlPath('exposures', exposureId, 'match-assessments'),
         {
           idempotencyKey: input.idempotencyKey,
           ifMatch: input.ifMatch,
@@ -460,7 +459,7 @@ export function createPortalApi(transport: PortalClient = portalClient): PortalA
 
     createAppealEscalation: async (caseId, input) => {
       const result = await transport.post(
-        `/cases/${caseId}/appeal-escalations`,
+        urlPath('cases', caseId, 'appeal-escalations'),
         {
           idempotencyKey: input.idempotencyKey,
           ifMatch: input.ifMatch,
@@ -481,5 +480,6 @@ export function createPortalApi(transport: PortalClient = portalClient): PortalA
 
 /** The application's API, constructed once. */
 export const portalApi: PortalApi = createPortalApi();
+
 
 

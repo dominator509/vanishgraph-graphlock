@@ -16,6 +16,19 @@
       VG-UI-005 keeps PII out of URLs, and this keeps the URL itself from travelling.
     -->
     <meta name="referrer" content="same-origin" />
+    <!--
+      THE CONTENT SECURITY POLICY, DECLARED IN THE ONLY PLACE A STATIC BUNDLE CAN DECLARE ONE (VG-UI-076). No wildcard
+      host, no `unsafe-eval`, no third-party origin: `script-src 'self'` means a tracker cannot be added by injecting a
+      tag, and `form-action 'self'` means a form cannot post a subject's record to another origin. A DEPLOYMENT MUST ALSO
+      SEND THIS AS A HEADER — a meta element cannot govern responses the server emits, and `frame-ancestors` is ignored
+      in meta by specification — so the header is recorded as a deployment action in COMMANDS.md rather than claimed
+      here. `style-src 'self' 'unsafe-inline'` is present because React and Vite emit inline style attributes; it is
+      called out rather than hidden, and it is the only relaxation in the policy.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; form-action 'self'; base-uri 'self'; object-src 'none'; frame-src 'none'"
+    />
     <title>VanishGraph</title>
   </head>
   <body>
