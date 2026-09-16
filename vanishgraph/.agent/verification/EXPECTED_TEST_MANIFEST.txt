@@ -55,3 +55,4 @@ tests/contract/auditor-readonly.test.ts
 tests/contract/pii-url.test.ts
 tests/contract/scope-catalogue.test.ts
 tests/security/masking-patterns.test.ts
+tests/contract/mfa-enforcement.test.ts
