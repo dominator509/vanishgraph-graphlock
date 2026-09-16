@@ -1581,6 +1581,43 @@ The repair is to make rule 1 positional (flag `truthState` only inside a request
 scanner STILL catches a genuine request-schema violation; that is a repair rather than a weakening, and it is the
 first task of the next round. No part of `.agent/reality-*` or the pattern files is involved.
 
+### 3.40 The handler scan is repaired: `gate-api` is green, and the rule now means what its doc says
+
+**`gate-api.sh` PASSES**, after failing for several milestone commits (recorded in §3.39 item 7). The repair is in
+`scripts/scan-truth-state-input.ts`, and it took THREE measured corrections because the first two were still wrong:
+
+1. **A bare line match became a positional check.** Rule 1 was `if (/truthState\s*:/ .test(line))` — it flagged any
+   occurrence anywhere, including the RESPONSE literals its own doc comment calls legitimate.
+2. **Per-line brace counting was not enough.** The first positional version counted braces one line at a time, so a
+   line INSIDE a multi-line template literal — this repository builds SQL that way — had its `${…}` interpolations
+   and its quoted `'{}'::jsonb` literals read as STRUCTURE. Depth drifted, an input block never closed, and the six
+   original false positives survived the "fix". Brace and string state now persist across lines, which is the only
+   form that works for template literals.
+3. **`body:` means a request schema only inside a `schema:` option.** MEASURED, second round: with a bare `body:` key
+   the scan still failed on `return { status: 201, body: { … truthState: outcome.truthState … } }` — the RESPONSE
+   payload the idempotent-write helper returns, which appears throughout `src/http`. A hit now requires BOTH an open
+   `schema:` block and a request-side key inside it, which is exactly what the doc comment always described.
+
+**A SECOND CHECK WAS ADDED, BECAUSE THE FIRST ONE PROTECTS ALMOST NOTHING HERE.** MEASURED: no route in `src/http`
+declares a Fastify `schema:` option at all — `schema:` appears only in the scanner's own prose and in the query
+parser's parameter name — because bodies are parsed by hand. A rule that only inspects `schema:` blocks would
+therefore pass every file while a handler could still write `body['truthState']`. The scan now ALSO refuses a
+request-input READ (`body.truthState`, `query['truthState']`, `request.params.truthState`), matched on ACCESS only,
+so it cannot fire on a response literal or a helper parameter. Rule 2 was extended the same way: a state-named path
+is caught in BOTH forms it is declared in — a registry `path:` entry and a direct `app.get('/…')` registration —
+because MEASURED, with only the registry form, `app.get('/v1/things/MATCH_CONFIRMED', handler)` was missed.
+
+**THE RULE IS NOW BACKED BY A TEST THAT PROVES BOTH DIRECTIONS.** `tests/harness/truth-state-scan.test.ts` runs the
+scan against FIXTURE TREES (the scanner gained `--root <dir>` for this): a `schema: { body: { properties: {
+truthState } } }` declaration FAILS, each spelling of a request-input read FAILS, each path form FAILS, an EMPTY tree
+FAILS (a scan that reads no files has verified nothing), and the exact shapes that caused the false positives — a
+response literal, a helper parameter, a function signature — PASS. The real tree passes with its evidence line:
+`31 http file(s) scanned, 2 input-schema block(s), 0 violations`.
+
+**THIS IS A REPAIR, NOT A RELAXATION, AND THE DIFFERENCE IS TESTABLE.** Nothing was added to `.agent/reality-*` or
+`.agent/reality-patterns`; the rule's stated intent is unchanged and now enforced; and the fixture that fails on a
+genuine declaration is what distinguishes "the scan is fixed" from "the scan was quietened".
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

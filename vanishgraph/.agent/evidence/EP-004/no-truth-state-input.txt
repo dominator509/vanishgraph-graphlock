@@ -1,16 +1,1 @@
-scan-truth-state-input: FAIL - a route accepts a truth state as input
-  src/http/routes/appeals.ts:87  a request schema declares truthState as an input property (SM-6)
-    function caseEtag(precondition: { readonly truthState: string; readonly updatedAtMs: number }): string {
-  src/http/routes/cases.ts:223  a request schema declares truthState as an input property (SM-6)
-    truthState: outcome.truthState,
-  src/http/routes/cases.ts:339  a request schema declares truthState as an input property (SM-6)
-    truthState: outcome.truthState,
-  src/http/routes/cases.ts:423  a request schema declares truthState as an input property (SM-6)
-    truthState: outcome.truthState,
-  src/http/routes/deadlines.ts:80  a request schema declares truthState as an input property (SM-6)
-    function caseEtag(context: { readonly truthState: string; readonly updatedAtMs: number }): string {
-  src/http/routes/preconditions.ts:32  a request schema declares truthState as an input property (SM-6)
-    export function etagFor(truthState: string, epochMillis: number): string {
-
-SPEC-003 §5.0: "No route accepts a truth state as input." A truth state is the
-output of a guarded domain command (SPEC-001 SM-6), never a client assertion.
+scan-truth-state-input: 31 http file(s) scanned, 2 input-schema block(s), 0 violations

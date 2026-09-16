@@ -7,11 +7,24 @@
  * from the domain side. This script is the build-time expression of that rule, because a
  * code-review convention cannot hold the product's central safety property (EP-004 decision D5).
  *
- * WHAT IT CHECKS, over `src/http/**`:
- *   1. No JSON-schema property named `truthState` inside a `schema: { body | querystring | params
- *      | headers }` block — that would let a caller assert a state.
+ * WHAT IT CHECKS, over the scanned root:
+ *   1. No JSON-schema property named `truthState` inside a REQUEST-side schema block — a `body:`,
+ *      `querystring:`, `params:` or `headers:` object, including a `properties:` block inside one.
+ *      That would let a caller assert a state.
  *   2. No route path segment naming a truth state.
- *   3. No `schema`-typed route option whose declared properties are truth-state names.
+ *   3. The number of input-schema blocks is reported, so the gate has evidence the rule had
+ *      something to look at rather than passing over an empty match.
+ *
+ * RULE 1 IS POSITIONAL, AND IT WAS NOT BEFORE. MEASURED DEFECT this corrects: the rule was
+ * `if (/truthState\s*:/ .test(line))` — a bare line match that flagged ANY occurrence anywhere in
+ * `src/http/**`, including the RESPONSE literals the rule's own doc comment says are legitimate
+ * (`truthState: outcome.truthState`), a helper's parameter type, and a function signature. Six such
+ * hits kept `gate-api.sh` red for several milestone commits, and since every hit was in a file this
+ * repository had already accepted, the gate could not be told apart from a broken one. The rule now
+ * tracks REQUEST-side blocks by brace depth and flags a `truthState` property only inside one, which
+ * is what the doc comment above always claimed. It is a REPAIR, not a relaxation: a `truthState`
+ * property in a body/querystring/params/headers schema is still a violation, and
+ * `tests/harness/truth-state-scan.test.ts` proves both directions against fixture trees.
  *
  * COMMENTS ARE STRIPPED FIRST, and correctly: the previous implementation used a line-based
  * `sed`, which cannot remove a multi-line block comment, so the scan matched the words "schema"
@@ -19,6 +32,10 @@
  *
  * Exits 0 when clean, 1 with the offending locations otherwise. Prints a one-line summary on
  * success so the gate has evidence it actually ran over files.
+ *
+ * Usage: `node scripts/scan-truth-state-input.ts [--root <dir>]`. The optional root exists so a
+ * test can point the scan at a FIXTURE tree and assert that a real violation still fails — the
+ * property that a scan with no way to demonstrate a failure cannot be trusted to have one.
  */
 
 import { readdirSync, readFileSync, statSync } from 'node:fs';
@@ -113,6 +130,81 @@ interface Violation {
   readonly excerpt: string;
 }
 
+/**
+ * Count braces ACROSS A WHOLE FILE, tracking string context between lines, and report for each line whether a
+ * REQUEST-side schema is open at its start.
+ *
+ * PER-LINE COUNTING WAS NOT ENOUGH, and MEASURED: the first positional version counted braces on each line in
+ * isolation, so a line INSIDE a multi-line template literal — this repository builds SQL that way — had its `${…}`
+ * interpolations and its quoted `'{}'::jsonb` literals read as structure. Depth drifted, an input block never
+ * closed, and the six original false positives survived the "fix". String state, including backtick templates,
+ * therefore has to persist from one line to the next, which is what this function does.
+ *
+ * AND A REQUEST SCHEMA IS `schema: { body: … }`, NOT ANY `body:`. MEASURED, second round: with a bare `body:` key
+ * this scan still failed on `return { status: 201, body: { … truthState: outcome.truthState … } }` — the RESPONSE
+ * payload this repository's idempotent-write helper returns. `body:` means a request schema only inside a
+ * `schema:` option, so both are tracked and a hit needs BOTH.
+ */
+function analyseLines(code: string): { readonly text: string; readonly inputOpenAtStart: boolean }[] {
+  const out: { text: string; inputOpenAtStart: boolean }[] = [];
+  const schemaDepths: number[] = [];
+  const inputDepths: number[] = [];
+  let depth = 0;
+  let quote: string | null = null;
+
+  for (const text of code.split('\n')) {
+    out.push({ text, inputOpenAtStart: schemaDepths.length > 0 && inputDepths.length > 0 });
+    const depthAtLineStart = depth;
+    const opensSchema = SCHEMA_OPTION.test(text);
+    const opensInput = INPUT_SCHEMA_KEY.test(text);
+
+    for (let i = 0; i < text.length; i += 1) {
+      const ch = text[i] ?? '';
+      if (quote !== null) {
+        if (ch === '\\') {
+          i += 1;
+          continue;
+        }
+        if (ch === quote) quote = null;
+        continue;
+      }
+      if (ch === "'" || ch === '"' || ch === '`') {
+        quote = ch;
+        continue;
+      }
+      if (ch === '{') depth += 1;
+      else if (ch === '}') depth -= 1;
+    }
+
+    // A block opened on this line began at the depth the line STARTED with; a block that also closed on this line is
+    // popped immediately, and the one-line form is handled by the caller's explicit ordering check.
+    if (opensSchema) schemaDepths.push(depthAtLineStart);
+    if (opensInput) inputDepths.push(depthAtLineStart);
+    while (schemaDepths.length > 0 && depth <= (schemaDepths[schemaDepths.length - 1] ?? 0)) schemaDepths.pop();
+    while (inputDepths.length > 0 && depth <= (inputDepths[inputDepths.length - 1] ?? 0)) inputDepths.pop();
+  }
+  return out;
+}
+
+/** A Fastify `schema:` route option — the only place a request schema is declared. */
+const SCHEMA_OPTION = /\bschema\s*:\s*\{/;
+/** The keys that introduce a REQUEST-side schema. A `truthState` property inside one is the violation. */
+const INPUT_SCHEMA_KEY = /\b(?:body|querystring|params|headers)\s*:\s*\{/;
+/** A truth-state property of any spelling the contract uses. */
+const TRUTH_STATE_PROPERTY = /truthState\s*:/;
+/**
+ * A handler READING a truth state out of request input.
+ *
+ * THE SECOND HALF OF THE RULE, and the half that protects THIS codebase: no route here declares a Fastify `schema:`
+ * option at all (measured — `schema:` appears in `src/http` only in this script's own prose and in the query-filter
+ * parser's parameter name), because bodies are parsed by hand. So a rule that only inspected `schema:` blocks would
+ * pass every file while a handler could still do `body['truthState']`. This matches request-input ACCESS only:
+ * `body.truthState`, `query['truthState']`, `request.params.truthState` and the like — never a response literal and
+ * never a helper's parameter, which is what keeps it from repeating the defect it exists to fix.
+ */
+const TRUTH_STATE_INPUT_READ =
+  /\b(?:body|query|querystring|params|headers)\s*(?:\.\s*truthState\b|\[\s*['"`]truthState['"`]\s*\])/;
+
 function tsFiles(dir: string): string[] {
   const out: string[] = [];
   let entries: string[];
@@ -133,9 +225,13 @@ function tsFiles(dir: string): string[] {
 }
 
 function main(): number {
-  const files = tsFiles(HTTP_ROOT);
+  // `--root` exists for the test that proves the rule can still FAIL. It is a path, never a pattern, so it cannot
+  // widen the scan to a tree nobody reviewed.
+  const rootFlag = process.argv.indexOf('--root');
+  const root = rootFlag === -1 ? HTTP_ROOT : resolve(process.argv[rootFlag + 1] ?? HTTP_ROOT);
+  const files = tsFiles(root);
   if (files.length === 0) {
-    console.error('scan-truth-state-input: FAIL - no TypeScript files found under src/http');
+    console.error(`scan-truth-state-input: FAIL - no TypeScript files found under ${root}`);
     return 1;
   }
 
@@ -145,15 +241,23 @@ function main(): number {
   for (const file of files) {
     const raw = readFileSync(file, 'utf8');
     const code = stripComments(raw);
-    const lines = code.split('\n');
     const shownPath = relative(PROJECT_ROOT, file).replace(/\\/g, '/');
 
-    lines.forEach((line, index) => {
+    analyseLines(code).forEach(({ text: line, inputOpenAtStart }, index) => {
       const lineNo = index + 1;
+      const keyMatch = INPUT_SCHEMA_KEY.exec(line);
+      const propertyMatch = TRUTH_STATE_PROPERTY.exec(line);
 
-      // 1. A truth state named as a schema property. `truthState` is the field name SPEC-003 §5
-      //    uses in RESPONSES; appearing inside a request-schema input position is the violation.
-      if (/truthState\s*:/.test(line)) {
+      // 1. A truth state named as a property of a REQUEST schema.
+      //
+      //    INSIDE AN OPEN INPUT BLOCK, or on the same line as the keys that open one and AFTER them — the second case
+      //    catches the one-line form `schema: { body: { type: 'object', properties: { truthState: … } } }`, the first
+      //    catches a multi-line schema including its `properties:` block.
+      const afterKeyOnSameLine =
+        keyMatch !== null &&
+        propertyMatch !== null &&
+        (propertyMatch.index ?? 0) > (keyMatch.index ?? 0);
+      if (propertyMatch !== null && (inputOpenAtStart || afterKeyOnSameLine)) {
         violations.push({
           file: shownPath,
           line: lineNo,
@@ -162,9 +266,28 @@ function main(): number {
         });
       }
 
-      // 2. A route path carrying a truth state as a parameter.
+      // 1b. A handler reading a truth state OUT OF request input — the form this codebase can actually commit,
+      //     because it parses bodies by hand rather than declaring a schema.
+      if (TRUTH_STATE_INPUT_READ.test(line)) {
+        violations.push({
+          file: shownPath,
+          line: lineNo,
+          reason: 'a handler reads truthState from request input (SM-6)',
+          excerpt: line.trim().slice(0, 120),
+        });
+      }
+
+      // 2. A route path carrying a truth state as a parameter — in EITHER of the two forms a path is declared here:
+      //    the registry's `path: '…'` entry, and a direct `app.get('/…')` registration. MEASURED: with only the
+      //    first form the rule missed `app.get('/v1/things/MATCH_CONFIRMED', handler)`, which is why the test's
+      //    fixture uses a registration rather than trusting the registry to be the only place a path appears.
       for (const state of TRUTH_STATES) {
-        if (new RegExp(`path\\s*:\\s*['"\`][^'"\`]*${state}`, 'i').test(line)) {
+        const declared = new RegExp(`path\\s*:\\s*['"\`][^'"\`]*${state}`, 'i').test(line);
+        const registered = new RegExp(
+          `\\bapp\\s*\\.\\s*(?:get|post|patch|put|delete|all)\\s*\\(\\s*['"\`][^'"\`]*${state}`,
+          'i',
+        ).test(line);
+        if (declared || registered) {
           violations.push({
             file: shownPath,
             line: lineNo,

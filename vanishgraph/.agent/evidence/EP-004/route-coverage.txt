@@ -1,15 +1,9 @@
-route coverage: 27 of 78 registry routes have a handler
-route coverage: 51 registry route(s) not yet implemented:
-  §5.4: 5 route(s)
-  §5.5: 5 route(s)
-  §5.6: 4 route(s)
-  §5.7: 6 route(s)
-  §5.8: 6 route(s)
-  §5.9: 3 route(s)
-  §5.10: 3 route(s)
-  §5.11: 3 route(s)
-  §5.12: 5 route(s)
-  §5.13: 3 route(s)
-  §5.14: 3 route(s)
-  §5.15: 2 route(s)
-  §5.16: 3 route(s)
+route coverage: 78 of 78 registry routes have a handler
+route coverage: 72 of 78 registry routes have a handler that is not an unconditional refusal
+route coverage: 6 registered route(s) refuse unconditionally:
+  - POST /v1/discovery-runs — unspecified
+  - GET /v1/discovery-runs — unspecified
+  - POST /v1/evidence-artifacts — artifact upload requires a multipart/form-data parser (Fastify 5 does not parse multipart without a plugin) and an EvidenceStore implementation; neither is present
+  - GET /v1/evidence-artifacts/{evidenceArtifactId}/content — artifact content requires an EvidenceStore implementation, and the port as declared carries no tenant scope, so a digest-keyed store could not isolate tenants
+  - POST /v1/evidence-artifacts/{evidenceArtifactId}/integrity-checks — a fresh digest verification requires an EvidenceStore to recompute SHA-256 over the stored bytes; no store is configured, and reporting the STORED digest as "recomputed" would be a verification that verified nothing
+  - POST /v1/subjects/{subjectId}/identifiers — identifier capture requires a durable key provider: ADR-006 (managed KMS) is open, the KeyProvider port exposes no encrypt operation, and no code persists tenant_key
