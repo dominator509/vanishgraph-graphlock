@@ -85,6 +85,23 @@ any verdict change. The first failing output is preserved, never overwritten.
 - All-skipped and shrunk collections fail.
 - Removal of a manifest line requires an ADR.
 
+## Evidence capture rules (EP-007 M1)
+
+- **A capture written to a fixed path carries a completion marker on every exit path.** MEASURED: the executor
+  killed `scripts/coverage-gate.sh` at its 600-second command cap while the gate was mid-run, and because that gate
+  truncates its capture at the start and appends one block per layer, the file it left behind was a fragment that was
+  indistinguishable from a finished capture — and it was tracked by git, so a later reader or any accounting that
+  hashed it would have been reading a fragment as a whole. The gate now ends every path with
+  `coverage gate: complete verdict=…` or `coverage gate: interrupted: …`, and a capture without one is by construction
+  an interrupted run.
+- **A stage or gate that runs longer than the harness command cap is started as a background job, not inline.** The
+  same measurement is the reason: an inline run that is killed leaves partial evidence, whereas a background job
+  finishes and its output can be read afterwards.
+- **A failing run is preserved before a second run can overwrite it**, and the preserved copy must be the runner's own
+  output rather than a summary that names no test (`scripts/count-tests.mjs` attributes each failure to its innermost
+  test for exactly this reason).
+- **Evidence is regenerated, never edited.** A capture that has been hand-modified is not evidence.
+
 ## Mutation sensitivity (DOD-018)
 
 At least one controlled defect exists for every critical feature listed in
