@@ -74,3 +74,4 @@ tests/contract/ssrf-controls.test.ts
 tests/contract/ssrf-fetch-guard.test.ts
 tests/contract/ssrf-fetch-guard.test.ts
 tests/contract/webhook-signature-replay.test.ts
+tests/security/negative-cases.test.ts
