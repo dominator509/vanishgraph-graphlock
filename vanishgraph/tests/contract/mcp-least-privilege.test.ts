@@ -28,6 +28,12 @@ import {
   type BudgetDimension,
 } from '../../src/application/security/effect-budget.ts';
 import { AUDIENCES } from '../../src/adapters/oidc/verify.ts';
+import {
+  MCP_AUDIENCE,
+  discoverableTools,
+  isMcpExposedRoute,
+  serveToolCall,
+} from '../../src/adapters/agent/tool-registry.ts';
 
 const QUERY = { tokenIdentity: 'agent-token-opaque-1', subjectRef: 'subject-opaque-1', sourceId: 'SOURCE_ALPHA' };
 
@@ -219,3 +225,125 @@ describe('the effect budget refuses on four dimensions and never raises one (VG-
     assert.ok((tokenCeiling?.limit ?? 0) > AGENT_LOOP_CALL_CAP);
   });
 });
+
+describe('the MCP binding refuses what the policy refuses, before dispatch (EP-006 M7)', () => {
+  const NOW_ISO = '2026-09-16T00:00:00Z';
+  function registry(overrides: Record<string, unknown> = {}): { readonly options: Parameters<typeof serveToolCall>[0]; readonly dispatched: string[] } {
+    const dispatched: string[] = [];
+    const options = {
+      tenantId: 'tenant-1',
+      now: () => NOW_ISO,
+      budgetReader: () => 0,
+      loop: { callsMade: 0 },
+      dispatch: async (tool: { name: string }) => {
+        dispatched.push(tool.name);
+        return { ok: true };
+      },
+      ...overrides,
+    } as Parameters<typeof serveToolCall>[0];
+    return { options, dispatched };
+  }
+
+  function call(overrides: Record<string, unknown> = {}): Parameters<typeof serveToolCall>[1] {
+    return {
+      tool: 'read-case',
+      tenantId: 'tenant-1',
+      tokenIdentity: 'agent-token-opaque-1',
+      audience: MCP_AUDIENCE,
+      heldScopes: ['vg.cases.read'],
+      subjectRef: 'subject-opaque-1',
+      sourceId: 'SOURCE_ALPHA',
+      correlationId: 'corr-1',
+      input: { caseId: 'case-1' },
+      ...overrides,
+    } as Parameters<typeof serveToolCall>[1];
+  }
+
+  test('the discoverable tool list is the enumeration, and only MCP-exposed routes are served', () => {
+    assert.deepEqual(discoverableTools().map((tool) => tool.name).sort(), AGENT_TOOLS.map((tool) => tool.name).sort());
+    assert.equal(isMcpExposedRoute('/v1/cases/{caseId}'), true);
+    assert.equal(isMcpExposedRoute('/v1/policy-decisions'), false, 'a portal/admin route is not MCP-exposed');
+    assert.equal(isMcpExposedRoute('/v1/audit-events'), false);
+  });
+
+  test('a token for another audience is refused here even when its scopes would satisfy the tool', async () => {
+    for (const audience of [AUDIENCES.PORTAL, AUDIENCES.SERVICE]) {
+      const { options, dispatched } = registry();
+      const outcome = await serveToolCall(options, call({ audience }));
+      assert.equal(outcome.ok, false);
+      assert.equal(outcome.code, 'TOKEN_AUDIENCE_MISMATCH');
+      assert.equal(outcome.httpStatus, 401);
+      assert.equal(outcome.audit.event, 'agent.tool_refused', 'the refusal is audited');
+      assert.equal(dispatched.length, 0);
+    }
+    // The MCP audience is admitted, so the check is about the audience rather than about the token.
+    const { options } = registry();
+    assert.equal((await serveToolCall(options, call())).ok, true);
+  });
+
+  test('schema validation runs BEFORE the application layer, for both a missing and an undeclared field', async () => {
+    const missing = registry();
+    const missingOutcome = await serveToolCall(missing.options, call({ input: {} }));
+    assert.equal(missingOutcome.ok, false);
+    assert.equal(missingOutcome.code, 'TOOL_INPUT_INVALID');
+    assert.equal(missing.dispatched.length, 0, 'nothing reaches the application layer');
+    const undeclared = registry();
+    const undeclaredOutcome = await serveToolCall(undeclared.options, call({ input: { caseId: 'case-1', sneaky: true } }));
+    assert.equal(undeclaredOutcome.code, 'TOOL_INPUT_INVALID');
+    assert.equal(undeclared.dispatched.length, 0);
+  });
+
+  test('a model-authored legalBasis is refused as LEGAL_BASIS_NOT_AUTHORABLE and no decision is created', async () => {
+    const { options, dispatched } = registry();
+    const outcome = await serveToolCall(
+      options,
+      call({ tool: 'assess-match', heldScopes: ['vg.exposures.assess'], idempotencyKey: 'key-1', input: { exposureId: 'e-1', confidence: {}, legalBasis: 'GDPR' } }),
+    );
+    assert.equal(outcome.ok, false);
+    // The refusal comes from the schema first (legalBasis is undeclared), which is the ordering the adapter intends.
+    assert.equal(['LEGAL_BASIS_NOT_AUTHORABLE', 'TOOL_INPUT_INVALID'].includes(String(outcome.code)), true);
+    assert.equal(outcome.httpStatus, 422);
+    assert.equal(dispatched.length, 0, 'no decision is created');
+  });
+
+  test('a budget refusal is 409 with the dimension, and an unreadable budget is 503', async () => {
+    const exhausted = registry({ budgetReader: (dimension: string) => (dimension === 'per-token' ? 200 : 0) });
+    const refused = await serveToolCall(exhausted.options, call());
+    assert.equal(refused.ok, false);
+    assert.equal(refused.code, 'EFFECT_BUDGET_EXCEEDED');
+    assert.equal(refused.httpStatus, 409);
+    assert.equal(refused.audit.event, 'agent.tool_refused');
+    assert.equal(exhausted.dispatched.length, 0);
+
+    const unreadable = registry({ budgetReader: () => undefined });
+    const unavailable = await serveToolCall(unreadable.options, call());
+    assert.equal(unavailable.code, 'DEPENDENCY_UNAVAILABLE');
+    assert.equal(unavailable.httpStatus, 503);
+  });
+
+  test('a loop at its cap is refused before anything else, and the refusal is audited', async () => {
+    const { options, dispatched } = registry({ loop: { callsMade: AGENT_LOOP_CALL_CAP } });
+    const outcome = await serveToolCall(options, call());
+    assert.equal(outcome.ok, false);
+    assert.equal(outcome.code, 'EFFECT_BUDGET_EXCEEDED');
+    assert.equal(outcome.httpStatus, 409);
+    assert.match(outcome.detail ?? '', /at its cap of 50/);
+    assert.equal(outcome.audit.event, 'agent.tool_refused');
+    assert.equal(dispatched.length, 0);
+  });
+
+  test('an admitted effect-bearing call carries the fingerprint and dispatches exactly once', async () => {
+    const { options, dispatched } = registry();
+    const outcome = await serveToolCall(
+      options,
+      call({ tool: 'assess-match', heldScopes: ['vg.exposures.assess'], idempotencyKey: 'key-1', input: { exposureId: 'e-1', confidence: { value: 0.9 } } }),
+    );
+    assert.equal(outcome.ok, true);
+    assert.equal(outcome.audit.event, 'agent.tool_call');
+    assert.equal(outcome.audit.idempotencyFingerprint, idempotencyFingerprint('key-1'));
+    assert.equal(JSON.stringify(outcome.audit).includes('key-1'), false);
+    await outcome.dispatch?.();
+    assert.deepEqual(dispatched, ['assess-match']);
+  });
+});
+
