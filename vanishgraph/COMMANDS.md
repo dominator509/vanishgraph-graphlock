@@ -145,6 +145,28 @@ identifiers", so SEMANTIC error messages — sentences shown to a human — are 
 construction, and the wording rules for what a user READS are the UI-copy rules EP-005 M2
 applies through this same script.
 
+### The security node (EP-006)
+
+`sh scripts/gate-security.sh` (`gate-security: ok`) is this node's gate. It verifies what can be verified without a
+provisioned Keycloak realm, PostgreSQL, Valkey or KMS: that the security modules type-check, that the layer import
+boundary holds, that the scope vocabulary and role bundles are closed and equal to the specification, that the
+credential-free security suites pass, and that no SPEC-006 §8 masking pattern exists in a gate script. **It prints an
+`UNVERIFIED-BY-THIS-GATE` block on every run**, probing `KEYCLOAK_ISSUER`, `DATABASE_URL`, `VALKEY_URL` and
+`CLOUD_WORKLOAD_IDENTITY` and recording each as `BLOCKED_CREDENTIALS` when the probe exits non-zero, plus the RLS second
+layer as `BLOCKED_PREREQUISITE` and the two human gates as `EXTERNAL_REQUIRED`.
+
+`sh scripts/security-check.sh` (`security check: ok`) runs the security stage in four steps: the secret scan, the
+security contract suites (`tests/security/**` and the scope catalogue), the SSRF target-classification suite (arriving
+with M9, and reported as `BLOCKED_PREREQUISITE` until then), and the masking-pattern scan. It fails closed and names what
+it could not run.
+
+`sh scripts/secret-scan.sh` (`secret scan: ok`) scans every tracked file except the lockfile and itself for private-key
+headers, AWS access-key ids, real JSON Web Tokens and credential-shaped assignments, and refuses to report a clean scan
+over too small a tree.
+
+The credential probes that produce every `BLOCKED_CREDENTIALS` row are declared in `PREFLIGHT.md`:
+`sh scripts/probes/keycloak.sh`, `sh scripts/probes/database_url.sh`, `sh scripts/probes/valkey_url.sh`,
+`sh scripts/probes/cloud_identity.sh`, `sh scripts/probes/local_model.sh`. Each names its variable and exits non-zero.
 ### The portal (EP-005)
 
 `sh scripts/gate-ui.sh` (gate-ui: ok, node EP-005) is this node's gate. It verifies what can be

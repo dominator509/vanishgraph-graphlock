@@ -53,3 +53,4 @@ tests/contract/portal-surfaces.test.ts
 tests/contract/surface-ownership.test.ts
 tests/contract/auditor-readonly.test.ts
 tests/contract/pii-url.test.ts
+tests/contract/scope-catalogue.test.ts
