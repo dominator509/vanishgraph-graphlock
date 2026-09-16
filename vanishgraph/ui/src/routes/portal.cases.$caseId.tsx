@@ -22,7 +22,10 @@ import { useQuery } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
 
 import { portalApi } from '../api/portal.ts';
+import { AppealEscalationPanel } from '../components/portal/AlertsAndAppeals.tsx';
+import { ControllerResponseList, DeadlineList, TransitionList } from '../components/portal/CaseDetail.tsx';
 import { PortalRoute } from '../components/portal/PortalRoute.tsx';
+import { TruthTimeline } from '../components/truth/TruthTimeline.tsx';
 
 export function Page_portal_cases__caseId_(): React.JSX.Element {
   const params = useParams({ strict: false }) as { readonly caseId?: string };
@@ -31,8 +34,12 @@ export function Page_portal_cases__caseId_(): React.JSX.Element {
     queryKey: ['portal', 'case', caseId],
     queryFn: async () => {
       const { detail } = await portalApi.caseDetail(caseId);
-      const [timeline, deadlines] = await Promise.all([portalApi.timeline(caseId), portalApi.deadlines(caseId)]);
-      return { detail, timeline, deadlines };
+      const [timeline, deadlines, controllerResponses] = await Promise.all([
+        portalApi.timeline(caseId),
+        portalApi.deadlines(caseId),
+        portalApi.controllerResponses(caseId),
+      ]);
+      return { detail, timeline, deadlines, controllerResponses };
     },
     enabled: caseId.length > 0,
   });
@@ -62,14 +69,45 @@ export function Page_portal_cases__caseId_(): React.JSX.Element {
             : null,
       }}
       ready={(data) => (
-        <dl>
-          <dt>State</dt>
-          <dd data-case-state={data.detail.truthState}>{data.detail.truthState}</dd>
-          <dt>Timeline events</dt>
-          <dd data-case-timeline-count={String(data.timeline.length)}>{data.timeline.length}</dd>
-          <dt>Deadlines</dt>
-          <dd data-case-deadline-count={String(data.deadlines.length)}>{data.deadlines.length}</dd>
-        </dl>
+        <>
+          {/* THE TRANSITION PAIRS ARE DERIVED, AND THE DERIVATION IS RENDERED RATHER THAN ASSUMED: this endpoint returns
+              the state each event recorded, not a from/to pair or a transition code, so the list says exactly that. */}
+          <TransitionList
+            derivation="These steps are derived from the events recorded with this case: each pair shows the state one event recorded and the state the next event recorded. This endpoint does not return a transition code, so none is shown."
+            transitions={data.timeline.slice(1).map((row, index) => {
+              const previous = data.timeline[index];
+              return {
+                from: previous?.truthStateAfter ?? data.detail.truthState,
+                to: row.truthStateAfter,
+                transitionCode: null,
+                // The evidence name is the event's own kind, which is what the audit recorded alongside the change.
+                evidenceName: row.kind,
+                at: row.at,
+              };
+            })}
+          />
+          <TruthTimeline
+            label="Case history, oldest first"
+            timeZone="UTC"
+            events={data.timeline.map((row) => ({
+              eventId: row.refId,
+              occurredAt: row.at,
+              actorReference: row.correlationId,
+              eventName: row.summary,
+              state: row.truthStateAfter,
+            }))}
+          />
+          <DeadlineList deadlines={data.deadlines} />
+          <ControllerResponseList responses={data.controllerResponses} />
+          {/* THE APPEAL SURFACE IS MOUNTED ON THE CASE IT BELONGS TO: an escalation is per-case, and this is the route
+              that has the case's evidence list and its version for the conditional write. The `/portal/requests` route
+              remains the subject-scoped entry point and renders the configuration gap until a subject can be resolved. */}
+          <AppealEscalationPanel
+            caseId={caseId}
+            evidenceArtifactIds={data.detail.evidenceArtifactIds}
+            ifMatch={`"${data.detail.truthState}:${data.detail.updatedAt}"`}
+          />
+        </>
       )}
     />
   );

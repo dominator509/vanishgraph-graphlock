@@ -2223,6 +2223,60 @@ browser tests passed**; `gate-ui: ok`; `typecheck: ok`; `lint: ok`; `format-chec
 surfaces (transition list, deadline list, controller-response rendering labelled as a claim), the §7 alerts and appeal
 surfaces, and their assertions.
 
+### 3.52 EP-005 M5 part three: the case-detail and appeal surfaces, and a measurement defect in my own tooling
+
+**1. M5 IS CLOSED AGAINST ITS DECLARED ACCEPTANCE, WITH TWO LIMITATIONS NAMED IN THE CLOSE-OUT ITSELF.**
+The plan's EXPECT is "the portal inventory suite passes; `copy lint gate: ok`; `gate-ui: ok`", and all three hold:
+`tests/contract/portal-surfaces.test.ts` is **29/29**, the copy gate reports **106 files scanned, 0 hits**, and
+`gate-ui: ok`. What the milestone's §4/§5/§6/§7 jobs now have behind them:
+(a) §4's onboarding disclosure step — mounted;
+(b) §5's exposure review — built and asserted, mounted through the subject-scoped route, whose data is unreachable;
+(c) §6's case detail — `TransitionList`, `DeadlineList` and `ControllerResponseList` built, asserted and MOUNTED on
+`/portal/cases/[caseId]` together with `TruthTimeline`, which now renders the case's own events;
+(d) §7's appeal — `AppealEscalationForm` built and asserted, and `AppealEscalationPanel` mounts it on the case it
+belongs to with a real `POST` that carries a STABLE idempotency key held in a ref (a key regenerated per attempt would
+defeat the at-most-once guarantee the header exists for) and renders the SERVER's own `externalEffect` answer;
+(e) §11's limitations page and the eleven-state legend — mounted.
+
+**2. THE TWO LIMITATIONS, STATED RATHER THAN FOLDED AWAY.**
+(a) **`/portal/alerts` and `/portal/requests` render the configuration gap, not the surfaces.** Both are subject-scoped,
+and the subject comes from a session that needs `KEYCLOAK_ISSUER`, which is unprovisioned. Their surfaces exist and are
+asserted; they are not mounted, because rendering them would mean rendering an empty alert list or an empty request
+list, which reads as a claim about the subject's data that this deployment cannot make.
+(b) **THE ALERTS SURFACE CANNOT BE MOUNTED ANYWHERE, AND THE REASON IS A CONTRACT GAP RATHER THAN AN OMISSION.**
+SPEC-003 §5.11.3's response is described in one sentence and **names no row field at all** — not the reappearance id,
+not the date, not the link to the prior event. The surface's props were therefore taken from §5.11.1's `201` body, and
+validating a §5.11.3 LIST would mean inventing field names, which is the thing this milestone refused to do three times
+elsewhere. It is recorded here so the next reader knows the surface is waiting on a specification, not on time.
+
+**3. THE FIRST ASSERTION OF THE TRANSITION LIST FAILED, AND IT WAS THE COMPONENT THAT WAS RIGHT.**
+`TransitionList` renders two `TruthStateBadge` instances, and the first version passed the scope to the `to` badge only.
+`VERIFIED_REMOVED` on the `from` side requires a scope under §2.4, so the badge REFUSED to render and the suite failed
+with the badge's own sentence. Both badges now carry the scope, and the fixture that would previously have passed now
+carries one too: **the refusal is the feature**, and a transition list that rendered an unscoped `VERIFIED_REMOVED` on
+either side would be stating an unqualified fact about one Source and one window.
+
+**4. A MEASUREMENT DEFECT IN MY OWN TOOLING, RECORDED BECAUSE IT COULD HAVE PRODUCED A FALSE PASS.**
+Several times in this node I read `$LASTEXITCODE` after a pipeline like `npx tsc ... | Select-Object -First 10` and
+reported `ui-exit=0`. **`Select-Object -First N` stops the upstream command early**, so the exit code it leaves behind is
+not the compiler's: on the run that produced the syntax error in `AlertsAndAppeals.tsx`, tsc reported ten errors and the
+same command printed `ui-exit=0`. Nothing was misreported — every pass I claimed was also confirmed by a gate script
+(`typecheck.sh`, `gate-ui.sh`) whose sentinel is the actual evidence — but the shortcut is unreliable and is recorded as
+such: **a pass is claimed from a gate's sentinel, never from an exit code read after a truncated pipeline.**
+
+**5. MILESTONE EVIDENCE (all re-run after the last edit).** `tests/contract/portal-surfaces.test.ts` **29 tests, 29
+pass, 0 fail**; `test-unit: ok` (**810 tests, 810 pass, 0 fail**); `test collection guard: ok`;
+`sh scripts/test-e2e.sh` → **`end-to-end tests: ok`, 28 browser tests passed** against the rebuilt artefact;
+`gate-ui: ok`; `typecheck: ok`; `lint: ok`; `format-check: ok`; `import boundary: ok`; `reality gate: ok`;
+`copy lint gate: ok` (106 files, 0 hits). The human-gate request's artefact digest was updated to the new build and the
+stale-request guard has now fired three times in this node.
+
+**6. WHAT M5 DOES NOT PROVE, CARRIED FORWARD RATHER THAN CLOSED.** The portal has never rendered a real response: every
+surface is asserted against fixtures and against the contract, and the routes that need data render either the
+configuration gap or a transport error on this machine. The five keyboard flows remain `BLOCKED_CREDENTIALS`. When
+`DATABASE_URL`, `VALKEY_URL` and `KEYCLOAK_ISSUER` are provisioned, the first honest test of these surfaces is a real
+response — and the fixtures must not be mistaken for that test.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

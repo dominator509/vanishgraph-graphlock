@@ -53,6 +53,12 @@ const ExposureReviewList = (await loadComponent<{ ExposureReviewList: Component 
   .ExposureReviewList;
 const TruthStateLegend = (await loadComponent<{ TruthStateLegend: Component }>('components/portal/TruthStateLegend.tsx'))
   .TruthStateLegend;
+const CaseDetail = await loadComponent<{ TransitionList: Component; DeadlineList: Component; ControllerResponseList: Component }>(
+  'components/portal/CaseDetail.tsx',
+);
+const AlertsAndAppeals = await loadComponent<{ ReappearanceAlerts: Component; AppealEscalationForm: Component }>(
+  'components/portal/AlertsAndAppeals.tsx',
+);
 
 // ---------------------------------------------------------------------------------------------------------------
 // Fixtures: test-only, shaped as SPEC-003 declares
@@ -446,6 +452,225 @@ describe('exposure review: provenance, no bulk control, bounded rejection, discl
     );
     assert.match(accessibleText(one(doc, '[data-exposure-quarantine]')), /quarantined alias and is not being acted on/);
     assert.match(accessibleText(one(doc, '[data-exposure-taint]')), /carries a taint: a prior subject denied this record/);
+  });
+});
+
+describe('case detail: transitions, deadlines and claims (VG-UI-012/036/037)', () => {
+  test('a state change renders as two badges with from, to, evidence and the transition code', () => {
+    const doc = renderToDocument(
+      h(CaseDetail.TransitionList, {
+        transitions: [
+          {
+            from: 'ACKNOWLEDGED',
+            to: 'VERIFIED_REMOVED',
+            transitionCode: 'T11',
+            evidenceName: 'VerificationObservation',
+            at: '2026-09-05T09:30:00Z',
+            scope: { sourceId: 'SOURCE_ALPHA', windowDays: 30 },
+          },
+          {
+            from: 'VERIFIED_REMOVED',
+            to: 'REAPPEARED',
+            transitionCode: 'T14',
+            evidenceName: 'VerificationObservation',
+            at: '2026-09-11T10:45:00Z',
+            // The `from` state requires a scope too, and the badge refuses without one (§2.4).
+            scope: { sourceId: 'SOURCE_ALPHA', windowDays: 30 },
+          },
+        ],
+      }),
+    );
+    const rows = all(doc, '[data-transition-row]');
+    assert.equal(rows.length, 2, 'VG-UI-036: both transitions render, not only the current state');
+    assert.equal(rows[0]?.getAttribute('data-transition-from'), 'ACKNOWLEDGED');
+    assert.equal(rows[0]?.getAttribute('data-transition-to'), 'VERIFIED_REMOVED');
+    const text = accessibleText(rows[0] ?? null);
+    assert.match(text, /Acknowledged — not deleted/);
+    assert.match(text, /Verified not found at this Source · Source: SOURCE_ALPHA · window 30d/);
+    assert.match(text, /Evidence: VerificationObservation/);
+    assert.match(text, /Transition T11/);
+    assert.equal(rows[1]?.getAttribute('data-transition-to'), 'REAPPEARED');
+  });
+
+  test('a transition without a reported code says so instead of inventing one', () => {
+    const doc = renderToDocument(
+      h(CaseDetail.TransitionList, {
+        derivation: 'derived from the events recorded with this case',
+        transitions: [
+          {
+            from: 'REQUEST_SUBMITTED',
+            to: 'ACKNOWLEDGED',
+            transitionCode: null,
+            evidenceName: 'ControllerResponse',
+            at: '2026-09-03T00:00:00Z',
+          },
+        ],
+      }),
+    );
+    assert.equal(one(doc, '[data-transition-code]').getAttribute('data-transition-code'), 'not-reported');
+    assert.match(accessibleText(one(doc, '[data-transition-code]')), /did not report a transition code/);
+    assert.match(accessibleText(one(doc, '[data-transition-derivation]')), /derived from the events recorded/);
+  });
+
+  test('a deadline is a date with its policy source, and never a countdown (VG-UI-037/065)', () => {
+    const doc = renderToDocument(
+      h(CaseDetail.DeadlineList, {
+        deadlines: [
+          {
+            deadlineId: 'dl-1',
+            kind: 'CONTROLLER_RESPONSE',
+            dueAt: '2026-10-01T00:00:00Z',
+            policyVersion: 'policy-2026-08-01',
+            ruleCode: 'RULE-30D',
+            state: 'OPEN',
+            overdueSeconds: 0,
+          },
+          {
+            deadlineId: 'dl-2',
+            kind: 'APPEAL_WINDOW',
+            dueAt: '2026-09-01T00:00:00Z',
+            policyVersion: 'policy-2026-08-01',
+            ruleCode: 'RULE-14D',
+            state: 'BREACHED',
+            overdueSeconds: 86_400,
+          },
+        ],
+      }),
+    );
+    const text = accessibleText(one(doc, '[data-deadline-list]'));
+    assert.match(text, /policy version policy-2026-08-01, rule RULE-30D/);
+    assert.match(text, /a fact about the record, not a request for you to act sooner/);
+    // NO URGENCY CHANNEL: no timer role, no countdown text, no "days left".
+    assert.equal(all(doc, '[role="timer"], [role="progressbar"]').length, 0);
+    for (const phrase of [/days? left/i, /urgent/i, /act now/i, /expires? in/i, /hurry/i]) {
+      assert.equal(phrase.test(text), false, `deadline copy uses urgency: ${String(phrase)}`);
+    }
+  });
+
+  test('a controller response is rendered as a claim, and the flag is rendered with it (VG-UI-012)', () => {
+    const doc = renderToDocument(
+      h(CaseDetail.ControllerResponseList, {
+        responses: [{ controllerResponseId: 'cr-1', claimedOutcome: 'the record was deleted', claimedOutcomeIsObservation: false }],
+      }),
+    );
+    const row = one(doc, '[data-controller-response-row]');
+    assert.equal(row.getAttribute('data-claimed-outcome-is-observation'), 'false');
+    const text = accessibleText(row);
+    assert.match(text, /The controller claimed: the record was deleted/);
+    assert.match(text, /This is a claim: it has not been verified by an independent observation of the Source\./);
+    // NOT ACCEPTED AS AN OUTCOME: nothing here says the case was satisfied, completed or resolved.
+    for (const phrase of [/\bsatisfied\b/i, /\bcompleted\b/i, /\bresolved\b/i]) {
+      assert.equal(phrase.test(text), false, `claim copy accepts the claim: ${String(phrase)}`);
+    }
+  });
+
+  test('NEGATIVE CASE: a row claiming an observation is presented as a contract defect, not as verified', () => {
+    const doc = renderToDocument(
+      h(CaseDetail.ControllerResponseList, { responses: [{ claimedOutcome: 'x', claimedOutcomeIsObservation: true }] }),
+    );
+    assert.match(accessibleText(one(doc, '[data-controller-claim-is-observation]')), /contradicts the contract/);
+    assert.equal(all(doc, '[data-controller-claim-not-observation]').length, 0);
+  });
+});
+
+describe('alerts and appeals (VG-UI-041…044)', () => {
+  function alert(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+    return {
+      reappearanceId: 're-1',
+      observedAt: '2026-09-11T10:45:00Z',
+      priorRemovedEventId: 'evt-removed-1',
+      priorTruthState: 'VERIFIED_REMOVED',
+      priorWindowDays: 30,
+      sourceId: 'SOURCE_ALPHA',
+      reentry: {
+        requiresFreshAuthority: true,
+        requiresFreshPolicyDecision: true,
+        requiresFreshRecipe: false,
+        preservesPriorEvidence: true,
+      },
+      ...overrides,
+    };
+  }
+
+  test('an alert renders its linked prior verified event and the re-entry requirements', () => {
+    const doc = renderToDocument(h(AlertsAndAppeals.ReappearanceAlerts, { alerts: [alert()] }));
+    const row = one(doc, '[data-alert-row]');
+    const text = accessibleText(row);
+    assert.equal(one(row, '[data-truth-state]').getAttribute('data-truth-state'), 'REAPPEARED');
+    assert.equal(accessibleText(one(row, '[data-alert-prior-event]')), 'evt-removed-1');
+    assert.equal(accessibleText(one(row, '[data-alert-prior-state]')), 'VERIFIED_REMOVED');
+    assert.match(text, /within a new observation window/);
+    assert.match(text, /current authority, a current policy decision/);
+    assert.match(text, /the evidence recorded earlier is kept/);
+    // THE EARLIER VERIFICATION IS NOT BLAMED (VG-UI-043).
+    for (const phrase of [/failed/i, /was wrong/i, /mistake/i, /should have/i, /missed/i]) {
+      assert.equal(phrase.test(text), false, `alert copy blames the earlier verification: ${String(phrase)}`);
+    }
+  });
+
+  test('NEGATIVE CASE: an alert with no linked prior VERIFIED_REMOVED event is refused', () => {
+    assert.throws(
+      () => renderToHtml(h(AlertsAndAppeals.ReappearanceAlerts, { alerts: [alert({ priorRemovedEventId: null })] })),
+      /no linked prior VERIFIED_REMOVED event/,
+    );
+    assert.throws(
+      () => renderToHtml(h(AlertsAndAppeals.ReappearanceAlerts, { alerts: [alert({ priorTruthState: null })] })),
+      /no linked prior VERIFIED_REMOVED event/,
+    );
+  });
+
+  test('the appeal form states that creation sends nothing and that counsel review is pending', () => {
+    const doc = renderToDocument(
+      h(AlertsAndAppeals.AppealEscalationForm, {
+        caseId: 'case-1',
+        kinds: ['CONTROLLER_APPEAL', 'REGULATOR_COMPLAINT'],
+        availableArtifactIds: ['ev-1', 'ev-2'],
+        templateVersion: 'appeal-template-v3',
+        selectedArtifactIds: ['ev-1'],
+        onSelect: () => undefined,
+        onSubmit: () => undefined,
+      }),
+    );
+    const text = accessibleText(one(doc, '[data-appeal-escalation]'));
+    assert.match(text, /Creating this request sends nothing to the controller or to anyone else\./);
+    assert.match(text, /A counsel review is pending/);
+    assert.match(text, /1 of 2 selected: ev-1/);
+    assert.equal(one(doc, '[data-appeal-submit]').tagName, 'BUTTON');
+    assert.equal(one(doc, '[data-appeal-external-effect]').getAttribute('data-appeal-external-effect'), 'false');
+  });
+
+  test('the appeal form refuses to offer submission with no attached evidence, naming what is missing', () => {
+    const doc = renderToDocument(
+      h(AlertsAndAppeals.AppealEscalationForm, {
+        caseId: 'case-1',
+        kinds: ['CONTROLLER_APPEAL'],
+        availableArtifactIds: [],
+        templateVersion: 'appeal-template-v3',
+        selectedArtifactIds: [],
+        onSubmit: () => undefined,
+      }),
+    );
+    assert.equal(all(doc, '[data-appeal-submit]').length, 0, 'SPEC-003 §5.14.1 refuses an escalation with no artifact');
+    assert.match(accessibleText(one(doc, '[data-appeal-blocked]')), /at least one attached evidence artifact/);
+    assert.match(accessibleText(one(doc, '[data-appeal-artifacts]')), /refuses an escalation with none/);
+  });
+
+  test('the appeal surface offers no bypass and no state-change control', () => {
+    const doc = renderToDocument(
+      h(AlertsAndAppeals.AppealEscalationForm, {
+        caseId: 'case-1',
+        kinds: ['CONTROLLER_APPEAL'],
+        availableArtifactIds: ['ev-1'],
+        templateVersion: 'appeal-template-v3',
+        selectedArtifactIds: ['ev-1'],
+        onSelect: () => undefined,
+        onSubmit: () => undefined,
+      }),
+    );
+    const inventory = controlInventory(doc);
+    const names = inventory.map((control) => control.name);
+    assert.ok(names.some((name) => name.includes('Ask for a human review')), `inventory: ${names.join(' | ')}`);
+    assert.deepEqual(stateChangeClaims(inventory), []);
   });
 });
 

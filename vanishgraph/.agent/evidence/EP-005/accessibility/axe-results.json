@@ -15,7 +15,7 @@
   },
   "target": {
     "artefact": "ui/dist (vite build output, served by vite preview)",
-    "indexHtmlSha256": "228777def00ed6c8cf338cf09303bc5f7df22f0b2249c90384effea3ea6fa1f7"
+    "indexHtmlSha256": "c1da7264cbe4d2cfc3da709c7b8c65a4b245e92a8bd67c02b333d57db3d4aa55"
   },
   "routes": [
     {
