@@ -32,7 +32,15 @@ export function parseDsn(value: string): Dsn {
   try {
     url = new URL(value);
   } catch {
-    throw new Error(`harness ERROR: not a valid DSN URL: ${value.replace(/:[^:@/]*@/, ':***@')}`);
+    // THE VALUE IS WITHHELD, NOT REDACTED BY PATTERN, AND THAT IS A MEASURED FIX (EP-007 M1). The previous version
+    // echoed the value with `:password@` masked — which masks nothing at all when the DSN is malformed in the very way
+    // that made it unparseable. MEASURED: `parseDsn("not a url at all <password>")` returned an error whose message
+    // contained the password verbatim, and a gate prints these messages into evidence logs. A caller that needs to know
+    // WHICH variable was malformed already has its name (`requireDsn` in tests/db/harness.ts prints it).
+    throw new Error(
+      `harness ERROR: not a valid DSN URL (${String(value.length)} characters; the value is withheld because a ` +
+        'malformed DSN may carry a credential, and masking by pattern cannot be trusted on a value that does not parse)',
+    );
   }
   if (url.protocol !== 'postgres:' && url.protocol !== 'postgresql:') {
     throw new Error(`harness ERROR: DSN must use postgres:// (got ${url.protocol}//)`);

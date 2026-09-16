@@ -38,6 +38,7 @@ a milestone that needs a new one must add it here in the same change.
 | `sh scripts/test-collection-guard.sh` | `test collection guard: ok` |
 | `sh scripts/test-integration.sh` | `test-integration: ok` |
 | `sh scripts/test-e2e.sh` | `test-e2e: ok` |
+| `sh scripts/coverage-gate.sh` | `coverage: ok` |
 | `sh scripts/build.sh` | `build: ok` |
 | `sh scripts/artifact-identity.sh` | `artifact identity: ok` |
 | `sh scripts/smoke-test.sh` | `smoke test: ok` |

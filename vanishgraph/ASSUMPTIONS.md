@@ -2536,6 +2536,76 @@ own corpus loaded, asserts each exception still names a real citation so the wai
 asserts that the checker REPORTS a fabricated citation rather than merely running. A citation to a requirement that does
 not exist is a claim about a requirement that does not exist, which is the defect class DOD-016 and DOD-027 name.
 
+### 3.57 EP-007 M1: the coverage gate exists and enforces, six of seven layers pass, and the ui layer does NOT
+
+**1. THE GATE LANDED AND IT CAN FAIL, WHICH WAS PROVEN BY IT FAILING.** `scripts/coverage-gate.sh` measures each layer
+with Node's built-in coverage (`--test-coverage-include` scoped to one layer per run, because the reporter prints
+per-file percentages and no counts, so a per-layer aggregate can only come from a per-layer run), compares three metrics
+with `config/testing/coverage-thresholds.json`, and prints `coverage: ok` only when every layer meets every target.
+`TESTING.md` now carries the normative targets and a test asserts the document and the configuration are identical, so
+lowering a target requires editing a specification and its test (DOD-027). `COMMANDS.md` declares the command and its
+sentinel. Discovery is recorded in `.agent/evidence/EP-007/M1-discovery.txt`.
+
+**2. MEASURED ON THE FINAL TREE, six of the seven layers pass and one does not:**
+
+| layer | lines | branches | functions | targets |
+|---|---|---|---|---|
+| domain | 95.19 | 92.12 | 95.20 | 90/85/95 PASS |
+| application | 99.35 | 95.67 | 93.94 | 85/80/90 PASS |
+| adapters | 93.34 | 78.34 | 93.19 | 75/70/80 PASS |
+| http | 78.36 | 73.49 | 75.20 | 70/65/75 PASS |
+| mcp | 95.26 | 85.71 | 90.91 | 70/65/75 PASS |
+| infrastructure | 69.69 | 62.96 | 80.95 | 60/55/65 PASS |
+| **ui** | **71.56** | **85.21** | **54.17** | **70/65/75 FAIL (functions, by 20.83 points)** |
+
+**3. THE ui LAYER IS THE ONE FAILURE, AND THE REASON IS INSTRUMENTAL AS WELL AS REAL.** Two facts, both measured:
+(a) the layer's required test kind per the plan's own layer table is *browser E2E through the real entry point*, and
+Node's built-in coverage cannot instrument a Playwright run — so `tests/ui/**.spec.ts`, which drives all 25 declared
+routes, contributes **nothing** to this number; (b) the Node-renderable half is genuinely thin: the contract suites mount
+the shared components and a few surfaces, and component event handlers and conditional renderers that only the browser
+suite exercises are uncounted. The gate now PRINTS that bound rather than implying the figure is the layer's whole proof
+(the `ui` entry carries a `note` the gate emits with the result). **The target was not lowered and the milestone was not
+marked passed.** Raising the number means either rendering every surface in Node with fixtures, or collecting V8 coverage
+from the browser stage — the second is what the plan's own layer table implies, and it is the larger piece of work.
+
+**4. FOUR PRODUCT DEFECTS WERE FOUND BY THIS MILESTONE'S OWN TESTS, AND ALL FOUR ARE FIXED.** The measured-coverage work
+started by asking which of the domain's functions were never called, and the answer was most of `errors.ts`: the sweep
+that produced `tests/contract/domain-error-taxonomy.test.ts` compared all 22 error classes against SPEC-006 §5.3's
+catalogue and found, beyond the missing calls, four real disagreements:
+
+* **Two wrong domain codes.** `PermissionUnclear` declared `PERMISSION_UNCLEAR` where §5.3 row 9 says
+  `PERMISSION_CLASS_UNCLEAR`, and `TenantViolation` declared `TENANT_VIOLATION` where row 16 says
+  `TENANT_SCOPE_VIOLATION` (and marks it AUDIT-ONLY: the client must see `404 RESOURCE_NOT_FOUND`).
+* **A missing classification member.** §5.3 classifies four of these classes as `OUTCOME`, while this file's own header
+  names three kinds and `ErrorClassification` had two members — so `BudgetExceeded` was recorded as `SYSTEM_ERROR`, i.e.
+  an exhausted budget reported as broken infrastructure. `OUTCOME` is now a member and the four classes carry it.
+* **Five more classifications that disagreed with the catalogue's `Cat` column** (`AuthorityExpired`, `AuthorityMissing`,
+  `AuthorityScopeViolation`, `RecipeStale`, `PermissionUnclear` said candidate failure where §5.3 says system error;
+  `AmbiguousExternalEffect` said the reverse). All seven now match, and the suite reads the column out of the
+  specification rather than restating it.
+* **A credential echoed in an error message.** `parseDsn`'s malformed-URL branch masked `:password@` by pattern and
+  otherwise echoed the value — MEASURED: `parseDsn("not a url at all <password>")` returned an error whose message
+  contained the password, on a path whose messages the gates print into evidence logs. The value is now withheld
+  entirely, with its length reported instead.
+
+**5. THREE MEASUREMENT DEFECTS IN THE GATE ITSELF, EACH FOUND BY DISBELIEVING A NUMBER.** (a) With shell globbing active
+the `for` loop that builds the include arguments expanded `src/domain/**` to one subdirectory, and the layer reported
+`100.00/100.00/100.00` because the six files it measured are type-only modules with no executable lines — `set -f` now
+covers the whole layer body, not just the `node` call. (b) A mistyped include pattern matches nothing, and the runner
+then prints an empty table with `all files | 100.00` **and exits 0** — the gate now asserts a non-zero test count and at
+least one file row before it reads any percentage. (c) The `ui` layer's mirror directory carries the process id, so with
+one child process per test file the same module is measured in several mirrors at once and each partial measurement
+dilutes the aggregate; `isolation: none` is now a per-layer option and the ui layer uses it. **A gate whose number can
+be manufactured is worse than no gate**, which is why each of these is recorded with the number it produced.
+
+**6. WHAT M1 DID NOT DO, AND THE STATE IT LEAVES.** `scripts/coverage-gate.sh` is not wired into `gate-test-hardening.sh`
+(that gate is M7's) and is not part of `verify.sh`'s stage list. The milestone is therefore **not** marked `MILESTONE_PASS`:
+its deliverable exists, six layers meet their targets, and the seventh does not. The three new suites it added
+(`tests/contract/domain-error-taxonomy.test.ts`, `tests/contract/http-request-boundary.test.ts`,
+`tests/harness/coverage-config.test.ts`, `tests/harness/psql-runner.test.ts`) are registered in the unit manifest and
+pass; the coverage work they enabled raised the domain layer from 88.80 to 95.20 functions and the http layer from 74.39
+to 75.20.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

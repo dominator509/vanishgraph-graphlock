@@ -19,6 +19,8 @@ tests/domain/illegal-transitions.test.ts
 tests/harness/gate-scripts.test.ts
 tests/harness/truth-state-scan.test.ts
 tests/harness/rls-migration-shape.test.ts
+tests/harness/coverage-config.test.ts
+tests/harness/psql-runner.test.ts
 tests/contract/route-registry.test.ts
 tests/contract/error-envelope.test.ts
 tests/contract/error-mapping-parity.test.ts

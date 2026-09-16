@@ -17,6 +17,99 @@ Or else: the item remains INCOMPLETE, BLOCKED, or NO_GO; it is never promoted by
 - provider-authorized transports only
 - manual production deployment only
 
+## Test pyramid and layer ownership
+
+| Layer | Suite location | Required test kinds | Real dependency required |
+|---|---|---|---|
+| `domain` | `tests/domain/` | unit, boundary, invariant, state-transition, negative | no (pure, standard library only) |
+| `application` | `tests/application/` | unit with port doubles, command precondition, idempotency | no |
+| `adapters` | `tests/adapters/`, `tests/integration/` | contract, integration against production-type dependencies | yes |
+| `http` / `ui` / `mcp` | `tests/api/`, `tests/e2e/` | contract, black-box acceptance, browser E2E through the real entry point | yes |
+| `infrastructure` | `tests/infrastructure/`, `tests/release/` | composition, smoke, artifact-bound acceptance | yes, exact artifact |
+
+## Coverage targets (DOD-008)
+
+Targets are enforced per layer by `scripts/coverage-gate.sh`. Line coverage is measured over
+the layer's own sources; generated, vendored, and type-only files are excluded, and every
+exclusion carries a reason in the coverage configuration. Lowering a target requires a
+specification change and a recorded rationale; lowering a target to obtain a pass is
+prohibited (DOD-027).
+
+```json
+{
+  "targets": {
+    "domain":         { "lines": 90, "branches": 85, "functions": 95 },
+    "application":    { "lines": 85, "branches": 80, "functions": 90 },
+    "adapters":       { "lines": 75, "branches": 70, "functions": 80 },
+    "http":           { "lines": 70, "branches": 65, "functions": 75 },
+    "ui":             { "lines": 70, "branches": 65, "functions": 75 },
+    "mcp":            { "lines": 70, "branches": 65, "functions": 75 },
+    "infrastructure": { "lines": 60, "branches": 55, "functions": 65 }
+  }
+}
+```
+
+Coverage is a floor, not a proof: a covered line with no assertion is not evidence (DOD-008),
+and mutation sensitivity (DOD-018) is what shows a suite observes the behaviour it claims.
+
+## Test-double zone (DOD-010)
+
+Doubles are legal **only** in: `tests/**`. Within `tests/**`, doubles are further restricted:
+
+| Directory | Doubles permitted | Rationale |
+|---|---|---|
+| `tests/domain/`, `tests/application/` | yes, including in-memory ports | pure logic; the port is the seam |
+| `tests/adapters/`, `tests/integration/` | allowed only for a dependency that is genuinely absent, and then the row is `SIMULATED` | at least one production-type dependency run is required |
+| `tests/e2e/`, `tests/live-fire/`, `tests/release/` | **no doubles of any kind** | these suites are the acceptance boundary |
+| `src/**` | **no doubles, ever** | a double in a production path is DOD-020 |
+
+A double is never the sole evidence for a claim in
+`.agent/verification/CLAIM_TO_RELEASE_TRACEABILITY.csv`; a claim resting on a double is
+`SIMULATED` and cannot satisfy a release gate. `Clock` and `IdGenerator` are injected ports
+(SPEC-001 §5) and are not doubles of the thing under test.
+
+## Flaky-test policy (DOD-006)
+
+A flaky test is a defect in the product, the test, the environment, or the oracle until
+explained. Retry-until-green is prohibited. The permitted resolutions are exactly: fix the
+defect; fix the oracle with a recorded reason; or delete the test with an ADR that names what
+it was protecting and what now protects it. `scripts/flake-guard.sh` runs each suite
+`flakeRuns` times (default 5, `config/testing/flake-runs.json`) with a fixed seed and fails on
+any verdict change. The first failing output is preserved, never overwritten.
+
+## Collection rules (DOD-007)
+
+- Zero collected tests is an `ERROR`, never a pass.
+- Every path in `.agent/verification/EXPECTED_TEST_MANIFEST.txt` must contribute at least one
+  collected test.
+- All-skipped and shrunk collections fail.
+- Removal of a manifest line requires an ADR.
+
+## Mutation sensitivity (DOD-018)
+
+At least one controlled defect exists for every critical feature listed in
+`.agent/verification/MUTATION_CATALOG.md`, and the mapped test must **fail** while the defect
+is present and pass after restoration. A mutation that does not change any observed verdict
+means the mapped test is non-discriminating and its pass proves nothing.
+
+### Where this repository's actual layout differs from the table above (EP-007 M1)
+
+The layer table and the coverage configuration are the specification of intent. The layout this
+repository actually has is narrower, and the difference is recorded here rather than implied:
+
+- `tests/application/`, `tests/adapters/`, `tests/api/`, `tests/e2e/`, `tests/infrastructure/` and
+  `tests/release/` **do not exist**. The roots in use are `tests/domain`, `tests/harness`,
+  `tests/architecture`, `tests/contract`, `tests/security`, `tests/db`, `tests/integration`,
+  `tests/blackbox`, `tests/ui`. EP-003 and EP-004 chose `tests/db` and `tests/contract` before this
+  table was written, and renaming the roots now would invalidate every recorded evidence path.
+- `config/testing/coverage-thresholds.json` therefore carries a `layers` binding that names, per
+  layer, the sources measured and the suites that measure them, each with its basis. That binding
+  is normative for `scripts/coverage-gate.sh`; this table is not.
+- There is no `src/mcp` directory: the MCP tool surface is `src/adapters/agent`, and the coverage
+  binding names it as the `mcp` layer and excludes it from `adapters` so one file is not counted in
+  two layers.
+
+
 ---
 
 ## Test suite layout (binding)

@@ -1,0 +1,5 @@
+{
+  "$comment": "Flaky-test policy configuration (DOD-006; EP-007 M1/M5). scripts/flake-guard.sh runs each suite flakeRuns times with a fixed seed and fails on any verdict change. Retry-until-green is prohibited: a flaky test is a defect in the product, the test, the environment or the oracle until explained, and the permitted resolutions are fixed the defect, fix the oracle with a recorded reason, or delete the test with an ADR naming what it protected and what protects it now.",
+  "flakeRuns": 5,
+  "seed": "vg-flake-1"
+}

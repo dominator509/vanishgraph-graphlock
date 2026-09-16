@@ -17,8 +17,18 @@
  * typed error that names the violated rule, leaving state unchanged.
  */
 
-/** The three-way classification from SPEC-006. */
-export type ErrorClassification = 'CANDIDATE_FAILURE' | 'SYSTEM_ERROR';
+/**
+ * The three-way classification from SPEC-006.
+ *
+ * `OUTCOME` WAS MISSING FROM THIS UNION UNTIL EP-007 M1, WHILE THE HEADER ABOVE NAMED THREE CATEGORIES AND SPEC-006 §6.1
+ * CLASSIFIES FOUR OF THESE CLASSES AS `OUTCOME` — `NoLawfulBasis`, `BudgetExceeded`, `HumanGateRequired` and
+ * `ObservationWindowNotMet`. The type had two members, so those four could only be recorded as a candidate failure or as
+ * our own breakage; `BudgetExceeded` was in fact recorded as `SYSTEM_ERROR`, i.e. an exhausted budget was reported as
+ * broken infrastructure, which is the conflation this file's own header calls a defect. The member is added, the four
+ * classes carry it, and `tests/contract/domain-error-taxonomy.test.ts` asserts every class's classification against
+ * §6.1's column so the two cannot drift again.
+ */
+export type ErrorClassification = 'OUTCOME' | 'CANDIDATE_FAILURE' | 'SYSTEM_ERROR';
 
 /** Base class for every domain error. Never carries PII (VG-SEC-002). */
 export abstract class DomainError extends Error {
@@ -68,7 +78,10 @@ export class GuardNotSatisfied extends DomainError {
 /** VG-AUTHZ-001 / VG-AUTH-024: no valid grant at execution time. */
 export class AuthorityExpired extends DomainError {
   readonly code = 'AUTHORITY_EXPIRED';
-  readonly classification: ErrorClassification = 'CANDIDATE_FAILURE';
+  // SPEC-006 §5.3 row 2 puts this class in kind C (`SYS`). It read `CANDIDATE_FAILURE` until EP-007 M1, when a sweep
+  // over all 22 classes compared each one's classification with the catalogue's `Cat` column and found five that
+  // disagreed with it.
+  readonly classification: ErrorClassification = 'SYSTEM_ERROR';
   readonly retryable = false;
 
   constructor(grantId: string, at: string) {
@@ -78,7 +91,7 @@ export class AuthorityExpired extends DomainError {
 
 export class AuthorityMissing extends DomainError {
   readonly code = 'AUTHORITY_MISSING';
-  readonly classification: ErrorClassification = 'CANDIDATE_FAILURE';
+  readonly classification: ErrorClassification = 'SYSTEM_ERROR';
   readonly retryable = false;
 
   constructor(subjectId: string) {
@@ -89,7 +102,7 @@ export class AuthorityMissing extends DomainError {
 /** VG-AUTHZ-004 / VG-AUTH-025: action falls outside the grant's declared scope. */
 export class AuthorityScopeViolation extends DomainError {
   readonly code = 'AUTHORITY_SCOPE_VIOLATION';
-  readonly classification: ErrorClassification = 'CANDIDATE_FAILURE';
+  readonly classification: ErrorClassification = 'SYSTEM_ERROR';
   readonly retryable = false;
 
   constructor(grantId: string, requiredScope: string, heldScopes: readonly string[]) {
@@ -117,7 +130,7 @@ export class PolicyUnresolved extends DomainError {
  */
 export class NoLawfulBasis extends DomainError {
   readonly code = 'NO_LAWFUL_BASIS';
-  readonly classification: ErrorClassification = 'CANDIDATE_FAILURE';
+  readonly classification: ErrorClassification = 'OUTCOME';
   readonly retryable = false;
 
   constructor(jurisdiction: string, reason: string) {
@@ -128,7 +141,7 @@ export class NoLawfulBasis extends DomainError {
 /** VG-CHANNEL-003: a stale recipe must never write. */
 export class RecipeStale extends DomainError {
   readonly code = 'RECIPE_STALE';
-  readonly classification: ErrorClassification = 'CANDIDATE_FAILURE';
+  readonly classification: ErrorClassification = 'SYSTEM_ERROR';
   readonly retryable = false;
 
   constructor(recipeId: string, freshnessAt: string, now: string) {
@@ -148,10 +161,19 @@ export class RecipeUnsigned extends DomainError {
   }
 }
 
-/** VG-CHANNEL-002: permission class unclear or prohibited means no write, ever. */
+/**
+ * VG-CHANNEL-002: permission class unclear or prohibited means no write, ever.
+ *
+ * THE CODE IS `PERMISSION_CLASS_UNCLEAR`, NOT `PERMISSION_UNCLEAR`, AND THAT IS SPEC-006 §6.1 ROW 9'S OWN WORDING —
+ * corrected in EP-007 M1 after a coverage-driven taxonomy sweep compared all 22 domain codes against that table and
+ * found this one and `TenantViolation` disagreeing with it. The wire code the row maps to is `SOURCE_PERMISSION_UNCLEAR`
+ * at 409, and `src/http/errors/code-registry.ts` carries that mapping under this domain code.  (An unrelated internal
+ * verdict string of the same old name exists in `src/adapters/persistence/sources.ts` for a permission check's result;
+ * it is not an error code and is not affected.)
+ */
 export class PermissionUnclear extends DomainError {
-  readonly code = 'PERMISSION_UNCLEAR';
-  readonly classification: ErrorClassification = 'CANDIDATE_FAILURE';
+  readonly code = 'PERMISSION_CLASS_UNCLEAR';
+  readonly classification: ErrorClassification = 'SYSTEM_ERROR';
   readonly retryable = false;
 
   constructor(sourceId: string, permissionClass: string) {
@@ -182,7 +204,9 @@ export class IdempotencyConflict extends DomainError {
  */
 export class AmbiguousExternalEffect extends DomainError {
   readonly code = 'AMBIGUOUS_EXTERNAL_EFFECT';
-  readonly classification: ErrorClassification = 'SYSTEM_ERROR';
+  // SPEC-006 §5.3 row 11 puts this class in kind B (`CF`), with Rty `N (reconcile)`: the outside world did not
+  // cooperate and a retry could duplicate a certified letter. It read `SYSTEM_ERROR` until EP-007 M1's sweep.
+  readonly classification: ErrorClassification = 'CANDIDATE_FAILURE';
   readonly retryable = false;
 
   constructor(actionId: string) {
@@ -193,7 +217,9 @@ export class AmbiguousExternalEffect extends DomainError {
 /** VG-ACTION-005: effect budget exhausted for this subject/source/window. */
 export class BudgetExceeded extends DomainError {
   readonly code = 'BUDGET_EXCEEDED';
-  readonly classification: ErrorClassification = 'SYSTEM_ERROR';
+  // SPEC-006 §6.1 row 12 classifies this as OUTCOME, and it was `SYSTEM_ERROR` until EP-007 M1 — which reported a
+  // policy limit being reached as broken infrastructure, the conflation this file's header calls a defect.
+  readonly classification: ErrorClassification = 'OUTCOME';
   readonly retryable = false;
 
   constructor(scope: string, limit: number) {
@@ -234,9 +260,17 @@ export class DigestMismatch extends DomainError {
   }
 }
 
-/** VG-TENANT-001: an operation crossed a tenant boundary. */
+/**
+ * VG-TENANT-001: an operation crossed a tenant boundary.
+ *
+ * THE CODE IS `TENANT_SCOPE_VIOLATION` (SPEC-006 §6.1 row 16), NOT `TENANT_VIOLATION`, AND THAT ROW ALSO MAKES IT
+ * AUDIT-ONLY: the client receives `404 RESOURCE_NOT_FOUND` with a body identical to a genuinely absent resource, so
+ * this code must never reach a response body (SPEC-006 H-9, SPEC-003 VG-API-012). Corrected in EP-007 M1 by the same
+ * taxonomy sweep that corrected `PermissionUnclear`. This class is constructed nowhere in `src/` today — measured — so
+ * the code is a declaration the sweep now pins rather than a path anything throws.
+ */
 export class TenantViolation extends DomainError {
-  readonly code = 'TENANT_VIOLATION';
+  readonly code = 'TENANT_SCOPE_VIOLATION';
   readonly classification: ErrorClassification = 'SYSTEM_ERROR';
   readonly retryable = false;
 
@@ -266,7 +300,7 @@ export class ObservationNotIndependent extends DomainError {
 /** VG-VERIFY-002: the required observation window has not elapsed. */
 export class ObservationWindowNotMet extends DomainError {
   readonly code = 'OBSERVATION_WINDOW_NOT_MET';
-  readonly classification: ErrorClassification = 'CANDIDATE_FAILURE';
+  readonly classification: ErrorClassification = 'OUTCOME';
   readonly retryable = true;
 
   constructor(requiredMs: number, elapsedMs: number) {
@@ -298,7 +332,7 @@ export class VerificationMethodMismatch extends DomainError {
  */
 export class HumanGateRequired extends DomainError {
   readonly code = 'HUMAN_GATE_REQUIRED';
-  readonly classification: ErrorClassification = 'CANDIDATE_FAILURE';
+  readonly classification: ErrorClassification = 'OUTCOME';
   readonly retryable = false;
 
   constructor(reason: string, gateKind: string) {
