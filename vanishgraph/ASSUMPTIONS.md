@@ -1618,6 +1618,47 @@ response literal, a helper parameter, a function signature — PASS. The real tr
 `.agent/reality-patterns`; the rule's stated intent is unchanged and now enforced; and the fixture that fails on a
 genuine declaration is what distinguishes "the scan is fixed" from "the scan was quietened".
 
+### 3.41 §6 webhook ingress: the verification core, a durable replay claim, and what is still missing
+
+**Implemented this round: the signature verifier, the replay store (both bindings), and the raw-body capture — with
+the suite the execplan names.** `src/http/webhooks/verify.ts`, `src/adapters/coordination/replay-store.ts`,
+`src/http/plugins/raw-body.ts`, `tests/contract/webhook-verification.test.ts` 14/14. **The three §6 ROUTES ARE NOT
+YET WIRED**, and that is stated here rather than left to be discovered: the verifier and the store are the security
+core and they are complete and tested, but nothing yet connects them to a Fastify route, a capability token, or a
+domain command. That is the next round's work.
+
+**1. THE SIGNATURE COVERS THE RAW BYTES, AND THE SUITE PROVES IT THE HARD WAY.** A tampered body is rejected — and so
+is a body **re-serialised from the same parsed value**, which is the case a re-parsing verifier would accept. The
+test asserts the fixture actually differs in bytes, then asserts the original bytes still verify with the same
+headers, so a rejection cannot be mistaken for a broken fixture. This is why `verifyWebhook` takes a `Buffer` and
+never a parsed value, and why the capture plugin hands the SAME bytes on to Fastify's JSON parser.
+
+**2. A MEASURED DEFECT IN MY OWN STORE: THE LOG WAS READ OLDEST-FIRST.** An event id has TWO records — the claim
+written by `begin` and the response written by `complete` — and scanning forward found the CLAIM, so a redelivery
+reported the default `200` instead of the `202` the original produced. MEASURED by the suite (actual 200, expected
+202). The log is now read newest-first, which is the only reading an append-only log supports.
+
+**3. THE DURABLE FALLBACK IS A FILE, AND THE TEST USES THE REAL FILE.** M7's clause permits "a durable append-only
+file with an exclusive lock for the credential-free contract path" and prohibits a process-local `Map`. The suite
+therefore opens a SECOND STORE over the same file and asserts the claim is still seen — the property a `Map` cannot
+have — plus expiry (a claim older than 3600 s no longer blocks), key separation (`(providerKeyId, nonce)` means two
+providers sharing a nonce do not collide), and fail-closed behaviour when the log cannot be read (a directory where
+the file should be yields `ReplayUnavailableError`, never a `NEW`).
+
+**4. THE VALKEY BINDING IS TESTED THROUGH ITS COMMAND INTERFACE, AND THAT IS A LIMIT RATHER THAN A CHOICE.**
+`VALKEY_URL` is not provisioned (`BLOCKED_CREDENTIALS`), so **no test in this repository has ever spoken to a real
+coordination store**. The binding's claim is the `SET NX` itself — so there is no read-then-write window for two
+deliveries to interleave in — and a command failure raises, which the route will map to `503`. The double used in the
+suite is a scripted interface, not a store, and calling that "Valkey tested" would be exactly the substitution the
+honesty rules forbid.
+
+**5. THE REFUSAL ORDER IS THE CONTRACT'S, AND EACH STEP IS A DIFFERENT OPERATOR PROBLEM.** resolve key → ±300 s
+window (a FUTURE-dated delivery is outside it too) → nonce shape (16–128 chars, closed alphabet) → `v1=<64 lowercase
+hex>` shape then a constant-time comparison of equal-length digests → event id, refused as `MISSING_REQUIRED_HEADER`
+because §6.1 says the ingress refuses rather than guessing an identity it cannot promise idempotency against. The
+suite asserts the ORDER by constructing deliveries that violate several rules at once and checking which code comes
+back.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a
