@@ -1,0 +1,6 @@
+double boundary guard - 2026-09-16T23:58:30Z
+allowlist: .agent/evidence/doubles/allowlist.txt (2 entries)
+double boundary scan: src/** imports no test module; 2 file(s) carry a double-shaped declaration, all 2 explained by an allowlist entry; the allowlist matches exactly what it names
+NOTE ON THE LIMIT: this is a NAME scan. A double named something ordinary is invisible to it, and the file
+that would be one — src/adapters/crypto/local-key-provider.ts — is justified in ASSUMPTIONS §3.8 and in its
+own header rather than allowlisted here, because it is a real provider with a real bound, not a double.
