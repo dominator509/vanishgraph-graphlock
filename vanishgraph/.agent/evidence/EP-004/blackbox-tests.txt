@@ -1,0 +1,16 @@
+▶ the API through its public interface only
+  ✔ a subject is created, read back, and listed — with the canary appearing only where it belongs (686.689ms)
+  ✔ a subject that does not exist is 404 for every read, and no error body carries a canary (40.6677ms)
+  ✔ INDEPENDENT READBACK (DOD-012) through the audit stream and the transition record (10.543ms)
+  ✔ the route non-goals are 404 and create nothing (VG-API-074, SPEC-003 §10) (1157.4ms)
+  ✔ BLOCKED_CREDENTIALS and blocked dependencies are named, not worked around (550.2808ms)
+  ✔ NO CANARY APPEARS IN ANY RESPONSE, ERROR BODY OR LOG LINE IT DID NOT BELONG TO (DOD-013) (0.4873ms)
+✔ the API through its public interface only (2447.6231ms)
+ℹ tests 6
+ℹ suites 1
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3582.5817

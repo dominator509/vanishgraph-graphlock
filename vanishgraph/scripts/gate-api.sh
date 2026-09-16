@@ -78,12 +78,28 @@ collected=$(printf '%s\n' "$out" | sed -n 's/^ℹ tests \([0-9]*\)$/\1/p' | head
 
 # ---------------------------------------------------------------------------------------------
 # 5. The black-box suite, when this node has produced one. Its absence is reported, not hidden.
+#
+#    IT NEEDS POSTGRESQL, and MEASURED: running it without the DSNs made this gate fail with "black-box acceptance
+#    tests failed" — an environmental limitation reported as a product defect, which is the misreport DOD-032 names.
+#    The suite creates a tenant and reads its own subject back through HTTP; there is no credential-free way to do
+#    that, and substituting a stub for the database would invalidate the black-box claim (DOD-011). So the run is
+#    guarded on the DSN and its absence is reported in the BLOCKED_CREDENTIALS block below, exactly as this gate
+#    treats every other credential-dependent path.
 # ---------------------------------------------------------------------------------------------
 if [ -d tests/blackbox ] && [ -n "$(find tests/blackbox -name '*.test.ts' 2>/dev/null)" ]; then
-  out=$(node --test "tests/blackbox/**/*.test.ts" 2>&1) || { printf '%s\n' "$out" >&2; fail "black-box acceptance tests failed"; }
-  printf '%s\n' "$out" > .agent/evidence/EP-004/blackbox-tests.txt
-  printf '%s\n' "$out" | grep -E '^# (tests|pass|fail) ' | sed 's/^/gate-api: blackbox /' || true
+  blackbox_blocked=0
+  if [ -n "${VG_TEST_DSN_OWNER:-}" ] && [ -n "${VG_TEST_DSN_APP:-}" ]; then
+    out=$(node --test "tests/blackbox/**/*.test.ts" 2>&1) || { printf '%s\n' "$out" >&2; fail "black-box acceptance tests failed"; }
+    printf '%s\n' "$out" > .agent/evidence/EP-004/blackbox-tests.txt
+    printf '%s\n' "$out" | grep -E '^# (tests|pass|fail) ' | sed 's/^/gate-api: blackbox /' || true
+  else
+    # RECORDED IN THE BLOCKED LIST ITSELF, so a reader of the gate's output sees WHICH suite did not run and why,
+    # rather than a gate that silently skipped it.
+    blackbox_blocked=1
+    echo "gate-api: NOTE - tests/blackbox/** needs PostgreSQL (VG_TEST_DSN_OWNER/VG_TEST_DSN_APP unset): NOT run here"
+  fi
 else
+  blackbox_blocked=1
   echo "gate-api: NOTE - tests/blackbox/** does not exist yet; black-box acceptance is NOT verified by this run"
 fi
 
@@ -107,6 +123,10 @@ for pair in "DATABASE_URL:scripts/probes/database_url.sh" \
     echo "${name}: BLOCKED_CREDENTIALS (probe: sh ${probe})" >> "$blocked"
   fi
 done
+if [ "${blackbox_blocked:-1}" = "1" ]; then
+  echo "  - tests/blackbox/**: BLOCKED_CREDENTIALS (needs VG_TEST_DSN_OWNER/VG_TEST_DSN_APP)"
+  echo "tests/blackbox/**: BLOCKED_CREDENTIALS (needs VG_TEST_DSN_OWNER/VG_TEST_DSN_APP)" >> "$blocked"
+fi
 
 # The nuance that must not be lost: PostgreSQL IS provisioned and reachable, proven by EP-003's
 # gate-data; what is absent is the exported DATABASE_URL variable these probes read. Reporting

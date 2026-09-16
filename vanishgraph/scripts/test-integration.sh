@@ -109,7 +109,10 @@ grep -q 'rls coverage: ok' .agent/evidence/db/integration-rls.txt \
 MANIFEST=.agent/verification/EXPECTED_INTEGRATION_MANIFEST.txt
 [ -f "$MANIFEST" ] || fail "$MANIFEST is missing; the integration manifest is this stage's contract"
 
-VG_TEST_GLOB="tests/db/**/*.test.ts" VG_EXPECTED_MANIFEST="$MANIFEST" \
+# THE GLOB COVERS BOTH SERVICE-DEPENDENT ROOTS THE MANIFEST NAMES. MEASURED: with only \`tests/db/**\` the guard
+# could not see \`tests/blackbox/**\`, so a black-box suite that silently stopped running would have gone unnoticed —
+# the failure mode DOD-007 exists to catch. The stage already RUNS both roots below; this makes the guard check them.
+VG_TEST_GLOB="tests/db/**/*.test.ts tests/blackbox/**/*.test.ts" VG_EXPECTED_MANIFEST="$MANIFEST" \
   sh scripts/test-collection-guard.sh >.agent/evidence/db/integration-guard.txt 2>&1 \
   || {
     # PRESERVE THE FAILING RUN BEFORE EXITING. MEASURED GAP this closes: this stage runs the suites TWICE (once

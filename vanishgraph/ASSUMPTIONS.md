@@ -1817,6 +1817,50 @@ drives the real server over HTTP with runtime canaries, which is DOD-011/012/013
 suite exists, "the API's vocabulary is clean" is proven and "the API behaves correctly through its public interface"
 is not.
 
+### 3.45 The black-box suite exists, and it found that §5.1.1 accepted a body field meant to bypass a human gate
+
+**EP-004 M8 is now complete on its own terms**: the OpenAPI document and the vocabulary gate (last round) plus
+`tests/blackbox/acceptance.test.ts` 6/6 with runtime canaries, independent readback through two public channels, and
+the route non-goal negative cases. The suite runs in the integration stage; the stage's collection guard now covers
+`tests/blackbox/**` as well as `tests/db/**`, because with only the db glob a black-box suite that silently stopped
+running would have gone unnoticed — the failure mode DOD-007 exists to catch.
+
+**1. THE DEFECT IT FOUND, WHICH IS THE REASON A BLACK-BOX SUITE IS NOT CEREMONY.** A creation body carrying
+`bypassHumanGate: true` was **ACCEPTED** and the subject was created. The field had no effect — nothing read it — but
+§10's non-goals name that field by hand, and §2.6's rule for QUERY parameters ("a typo cannot silently widen a result
+set") was not applied to bodies at all: the handler read the fields it knew and ignored the rest. A caller that sends
+`skipVerification` must be told it means nothing here, not left to believe it worked. §5.1.1 now refuses an undeclared
+body field with `422 SCHEMA_VALIDATION_FAILED` naming the FIELD and never its value. **The same leniency remains in
+every other hand-parsed write route** — §5.1.4, §5.2.1, §5.2.3 and the rest read known fields and ignore unknown ones —
+and that is recorded here rather than fixed quietly in one place: the honest next step is a shared body-strictness
+helper applied route by route, and until then a caller can still send a meaningless field to those routes and receive
+a success.
+
+**2. THE CANARIES, AND THE HONEST LIMIT OF WHAT THEY PROVE.** Four values are generated at run time (a `displayRef`, a
+reserved-domain local part, a digit string, an `AUTH_SECRET`-shaped token), written to
+`.agent/evidence/EP-004/blackbox-canaries.txt` with their source, and swept for in every response body, error body and
+captured log line. `displayRef` is EXCLUDED from the sweep and the reason is stated in the test: §5.1.2/§5.1.3 return
+it by design, so finding it is the contract rather than a leak. The remaining three were **never sent in a body in this
+suite**, so their absence is a weaker statement than it looks — the suite says so in the test rather than implying a
+stronger result, and sending a canary through a route that persists free text (an alias value, a controller-response
+`bodyRef`) is the honest extension for a later round.
+
+**3. INDEPENDENT READBACK (DOD-012) IS REACHABLE, THROUGH TWO PUBLIC CHANNELS.** `GET /v1/audit-events` returned the
+`RegisterSubject` row for the subject this suite created, and the audit stream carries no `displayRef` — a second
+channel that both confirms the write and shows the trail is opaque. The suite reads NO table to decide any result and
+imports NO route module (verified by search: the only production imports are the composition root, the test dependency
+builder, the adapters, and the route REGISTRY for idempotency requirements); the tenant it writes into is its own,
+minted per run, because creating subjects in the seeded tenant would change what every other suite observes.
+
+**4. THE NEGATIVE CASES ARE ASSERTED, NOT ASSUMED.** `/subjects`, `/v1/subjects/export`, `/v1/export` and
+`/v2/subjects` answer non-2xx; and the four bypass fields are now refused with nothing created — the suite asserts the
+subject LIST is unchanged across the attempts, which is the part that makes "creates nothing" testable from outside.
+
+**5. THE BLOCKED CASE IS NAMED IN THE SUITE ITSELF.** §5.12.1 answers `503` — no multipart parser, no `EvidenceStore`
+— so `422 EVIDENCE_DIGEST_MISMATCH` cannot be produced today; the suite asserts the refusal so the gap stays visible
+instead of leaving an untested promise in the plan. The webhook ingress is exercised with a real secret in
+`tests/db/webhook-ingress.test.ts`, because this suite has no secret store either.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

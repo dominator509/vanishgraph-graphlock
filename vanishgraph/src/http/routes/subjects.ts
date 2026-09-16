@@ -186,6 +186,28 @@ function subjectFilters(filter: Readonly<Record<string, unknown>>): {
   return out;
 }
 
+
+/**
+ * Refuse a body field the route does not declare (SPEC-003 §10, VG-API-074).
+ *
+ * MEASURED DEFECT this corrects, found by the black-box suite: a creation body carrying `bypassHumanGate: true` was
+ * ACCEPTED and the subject was created, because the handler reads the fields it knows and never looks at the rest.
+ * The field had no effect — nothing acted on it — but "the API ignores what it does not understand" is exactly the
+ * rule §2.6 refuses to apply to QUERY parameters ("a typo cannot silently widen a result set"), and §10's non-goals
+ * name these four fields by hand (`bypassHumanGate`, `force`, `skipVerification`, `overridePolicy`). A caller that
+ * sends one must be told it means nothing here, not left to believe it worked.
+ *
+ * THE BODY IS NOT ECHOED. The refusal names the FIELD and never its value, because a body carries personal data and
+ * §8.3 keeps request values out of responses.
+ */
+function rejectUndeclaredBodyFields(body: Record<string, unknown>, declared: readonly string[]): void {
+  for (const key of Object.keys(body)) {
+    if (!declared.includes(key)) {
+      throw apiError('SCHEMA_VALIDATION_FAILED', { field: key });
+    }
+  }
+}
+
 export function subjectRoutes(app: FastifyInstance, options: SubjectRouteOptions): void {
   const secret = options.sessionSecret;
   const queries = options.queries;
@@ -560,6 +582,9 @@ export function subjectRoutes(app: FastifyInstance, options: SubjectRouteOptions
   app.post('/v1/subjects', async (request, reply) => {
     const h = beginHandler(request, reply);
     const body = (request.body ?? {}) as Record<string, unknown>;
+    // DECLARED FIELDS ONLY. §5.1.1's request is exactly these four; anything else is a misunderstanding of the
+    // contract, and §10 names four of the shapes it must never be.
+    rejectUndeclaredBodyFields(body, ['displayRef', 'jurisdiction', 'isMinor', 'authorityGrant']);
 
     const displayRef = requiredText(body, 'displayRef', 64);
     const jurisdiction = requiredText(body, 'jurisdiction', 6);
