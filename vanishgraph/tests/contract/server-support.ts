@@ -40,6 +40,7 @@ import type { ActionQueries } from '../../src/application/contracts/action-queri
 import type { PolicyQueries } from '../../src/application/contracts/policy-queries.ts';
 import type { CoverageQueries } from '../../src/application/contracts/coverage-queries.ts';
 import type { EvidenceQueries } from '../../src/application/contracts/evidence-queries.ts';
+import type { DiscoveryQueries } from '../../src/application/contracts/discovery-queries.ts';
 import { EFFECTIVENESS_CAVEATS } from '../../src/application/contracts/coverage-queries.ts';
 
 /**
@@ -182,6 +183,16 @@ export function testTenancy(): TestTenancy {
  * A creation stub that SUCCEEDED would let a contract test assert a 201 for a request whose authority rules were
  * never evaluated; refusing is the honest default for a suite that is not about subject creation.
  */
+export function testDiscoveryQueries(): DiscoveryQueries {
+  return {
+    listCandidateRecords: async () => ({
+      rows: [],
+      coverage: { applies: false, sourcesAttempted: null, sourcesTotal: null, complete: null },
+    }),
+    getSourceRecord: async () => undefined,
+  };
+}
+
 export function testEvidenceQueries(): EvidenceQueries {
   return {
     getEvidenceArtifact: async () => undefined,
@@ -498,6 +509,7 @@ export function testServerDependencies(overrides: Partial<ServerDependencies> = 
     policyQueries: testPolicyQueries(),
     coverageQueries: testCoverageQueries(),
     evidenceQueries: testEvidenceQueries(),
+    discoveryQueries: testDiscoveryQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
     ...overrides,
   };

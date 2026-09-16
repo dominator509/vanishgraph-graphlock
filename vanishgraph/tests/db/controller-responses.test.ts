@@ -27,6 +27,7 @@ import { PostgresActionQueries } from '../../src/adapters/persistence/actions.ts
 import { PostgresPolicyQueries } from '../../src/adapters/persistence/policies.ts';
 import { PostgresCoverageQueries } from '../../src/adapters/persistence/coverage.ts';
 import { PostgresEvidenceQueries } from '../../src/adapters/persistence/evidence.ts';
+import { PostgresDiscoveryQueries } from '../../src/adapters/persistence/discovery.ts';
 import { PostgresCaseQueries } from '../../src/adapters/persistence/cases.ts';
 import { PostgresObservationQueries } from '../../src/adapters/persistence/observations.ts';
 import { PostgresExposureQueries } from '../../src/adapters/persistence/exposures.ts';
@@ -93,6 +94,7 @@ function serverFor(tenantId: string, scopes: readonly string[] = SCOPES): VgFast
     policyQueries: new PostgresPolicyQueries(),
     coverageQueries: new PostgresCoverageQueries(),
     evidenceQueries: new PostgresEvidenceQueries(),
+    discoveryQueries: new PostgresDiscoveryQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
   });
 }

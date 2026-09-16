@@ -35,6 +35,7 @@ import { PostgresActionQueries } from '../../src/adapters/persistence/actions.ts
 import { PostgresPolicyQueries } from '../../src/adapters/persistence/policies.ts';
 import { PostgresCoverageQueries } from '../../src/adapters/persistence/coverage.ts';
 import { PostgresEvidenceQueries } from '../../src/adapters/persistence/evidence.ts';
+import { PostgresDiscoveryQueries } from '../../src/adapters/persistence/discovery.ts';
 import { parseDsn } from '../../src/infrastructure/database/psql.ts';
 
 const TENANT_A = '11111111-1111-4111-8111-111111111111';
@@ -103,6 +104,7 @@ function serverFor(
     policyQueries: new PostgresPolicyQueries(),
     coverageQueries: new PostgresCoverageQueries(),
     evidenceQueries: new PostgresEvidenceQueries(),
+    discoveryQueries: new PostgresDiscoveryQueries(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),

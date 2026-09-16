@@ -188,6 +188,32 @@ export const DISCOVERY_RUNS_QUERY: QuerySchema = {
   truthStateFilterable: false,
 };
 
+/**
+ * `GET /v1/subjects/{subjectId}/candidate-records` (SPEC-003 §5.4.4) — the candidate-record listing.
+ *
+ * `assessmentState`'s four tokens are §5.4.4's, declared here verbatim. TWO OF THEM ARE UNPRODUCIBLE, and the
+ * declaration does not hide that: the adapter derives the state from the linked exposure's truth state, and the
+ * eleven SPEC-000 §5 tokens include neither `MATCH_DISPROVED` nor `QUARANTINED`, so a filter on either can only
+ * return an empty page. Refusing the tokens instead would be this declaration overruling the contract; returning
+ * the empty page is what the data honestly supports, and ASSUMPTIONS §3.39 records the gap.
+ */
+export const CANDIDATE_RECORDS_QUERY: QuerySchema = {
+  paginated: true,
+  parameters: {
+    ...PAGINATION,
+    sourceId: { type: 'string' },
+    assessmentState: {
+      type: 'enum',
+      values: ['UNASSESSED', 'MATCH_CONFIRMED', 'MATCH_DISPROVED', 'QUARANTINED'],
+    },
+  },
+  // §5.4.4: `sort ∈ observedAt|contentHash` (default `observedAt:desc`).
+  sortFields: ['observedAt', 'contentHash'],
+  defaultSort: 'observedAt:desc',
+  timeFilterable: true,
+  truthStateFilterable: false,
+};
+
 /** `GET /v1/reappearances` (SPEC-003 §5.11.2). */
 /**
  * `GET /v1/reappearances` (SPEC-003 §5.11.2).

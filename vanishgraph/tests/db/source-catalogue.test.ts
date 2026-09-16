@@ -51,6 +51,7 @@ import { PostgresActionQueries } from '../../src/adapters/persistence/actions.ts
 import { PostgresPolicyQueries } from '../../src/adapters/persistence/policies.ts';
 import { PostgresCoverageQueries } from '../../src/adapters/persistence/coverage.ts';
 import { PostgresEvidenceQueries } from '../../src/adapters/persistence/evidence.ts';
+import { PostgresDiscoveryQueries } from '../../src/adapters/persistence/discovery.ts';
 import { PostgresIdempotencyStore } from '../../src/adapters/idempotency/postgres-store.ts';
 import { findRoute } from '../../src/http/openapi/registry.ts';
 import { appDsn, asTenant, exec } from './harness.ts';
@@ -120,6 +121,7 @@ function serverFor(tenantId: string, scopes: readonly string[], authTimeAgeSecon
     policyQueries: new PostgresPolicyQueries(),
     coverageQueries: new PostgresCoverageQueries(),
     evidenceQueries: new PostgresEvidenceQueries(),
+    discoveryQueries: new PostgresDiscoveryQueries(),
     subjectQueries: { ...testSubjectQueriesStub },
     subjectCommands: {
       createSubject: async () => ({ ok: false, reason: 'EVIDENCE_NOT_FOUND' }),

@@ -40,6 +40,7 @@ import { PostgresActionQueries } from '../adapters/persistence/actions.ts';
 import { PostgresPolicyQueries } from '../adapters/persistence/policies.ts';
 import { PostgresCoverageQueries } from '../adapters/persistence/coverage.ts';
 import { PostgresEvidenceQueries } from '../adapters/persistence/evidence.ts';
+import { PostgresDiscoveryQueries } from '../adapters/persistence/discovery.ts';
 import { findRoute } from '../http/openapi/registry.ts';
 import { parseDsn } from '../adapters/../infrastructure/database/psql.ts';
 
@@ -216,6 +217,7 @@ async function main(): Promise<number> {
     // the routes read the table of record, and ASSUMPTIONS §3.34 states that in full.
     coverageQueries: new PostgresCoverageQueries(),
     evidenceQueries: new PostgresEvidenceQueries(),
+    discoveryQueries: new PostgresDiscoveryQueries(),
     idempotency: {
       // The durable store is PostgreSQL (SPEC-003 §4.2): the effect must survive a process restart,
       // so an in-memory store would defeat the mechanism it implements.

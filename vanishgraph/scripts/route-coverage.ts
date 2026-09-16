@@ -158,6 +158,13 @@ const app = buildServer({
     caseRowVersion: async () => undefined,
   },
   // The §5.16 coverage and metric model. Zero denominator, so the stub reports `ratio: null` rather than a rate.
+  discoveryQueries: {
+    listCandidateRecords: async () => ({
+      rows: [],
+      coverage: { applies: false, sourcesAttempted: null, sourcesTotal: null, complete: null },
+    }),
+    getSourceRecord: async () => undefined,
+  },
   evidenceQueries: {
     getEvidenceArtifact: async () => undefined,
     listCaseEvidenceArtifacts: async () => undefined,

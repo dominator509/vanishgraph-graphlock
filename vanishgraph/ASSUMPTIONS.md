@@ -1502,6 +1502,65 @@ exists to prevent.
 has no update, replace or delete path for artifact content; the contract suite asserts that no `PATCH`/`PUT`/
 `DELETE` registry row exists on the artifact paths, so the field cannot become a false claim without a test failing.
 
+### 3.39 §5.4: the last five routes, two of them implementable and three blocked by a model no spec defines
+
+**§5.4.4 (candidate records) and §5.4.5 (source-record metadata) implemented; §5.4.1–§5.4.3 exist as handlers naming
+the specification gap.** Coverage measured: **78 of 78 registry routes now have a handler**, 72 of them working, with
+**6 unconditional refusals** — and every one of the six is a dependency this repository does not have, or a model no
+specification defines. That means **EP-004 M6's route catalogue is COMPLETE in the sense that no registry entry is
+unhandled**, while six routes cannot yet perform their declared effect; the honest accounting of those six is what
+M9's blocked-work section is for. Tests: `tests/db/candidate-records.test.ts` 8/8,
+`tests/contract/discovery-routes.test.ts` 7/7, unit 660/660, integration 307/307 across 24 files.
+
+**1. `DiscoveryRun` IS DEFINED BY NO SPECIFICATION, AND THAT IS THE REFUSAL'S WORDING.** SPEC-001 §2 is the
+authoritative domain model: it lists `SourceRecord`, `Exposure` and the rest, and no run. A search of `.agent/specs`
+finds the identifier `DiscoveryRun` in NO file — no lifecycle, no per-source attempt record, no table. §5.4.2's own
+`runState` vocabulary (`ACCEPTED|RUNNING|COMPLETED|COMPLETED_PARTIAL|FAILED|HUMAN_REQUIRED`) therefore has nowhere to
+live, and the `DISCOVERY_RUNS_QUERY` declaration that already exists for that route offers a DIFFERENT vocabulary
+(`PENDING|RUNNING|SUCCEEDED|FAILED`) — the drift §3.34 item 7 recorded, now visible at the route. Writing the
+aggregate would be this node authoring the domain on the specification's behalf, so the three routes refuse with a
+reason that names the gap.
+
+**2. THE TWO IMPLEMENTED ROUTES READ WHAT THE DOMAIN ACTUALLY MODELS, AND THREE FIELDS ARE REPORTED AS NULL.** The
+records come from `source_record` joined to the subject's exposures; the coverage block §5.4.4 makes mandatory comes
+from `coverage_report`. `discoveryRunId`, `taintReason` and `assessmentState` have no column and no place in
+SPEC-001 §2's `SourceRecord` (`id, sourceId, rawRef, observedAt, contentHash, taint`), so:
+(a) `discoveryRunId` is always `null`; (b) `taintReason` is §5.4.5's own token when the boolean taint flag is set and
+`null` otherwise; (c) `assessmentState` is DERIVED from the linked exposure's truth state — `UNASSESSED` for no
+exposure or `DISCOVERED_CANDIDATE`, `MATCH_CONFIRMED` for anything past it. **`MATCH_DISPROVED` and `QUARANTINED`
+ARE UNREACHABLE**: no SPEC-000 §5 truth state corresponds to either, so the contract's four-token vocabulary is two
+tokens wider than the domain can express, and a filter on them can only return an empty page. Refusing those tokens
+at the boundary would be this route overruling the contract, so they are accepted and the gap is recorded.
+
+**3. A MEASURED DEFECT IN MY OWN FIRST QUERY: THE LISTING RETURNED EVERY RECORD IN THE TENANT.** The subject
+predicate sat in a `LEFT JOIN`'s ON clause, so the join only decided whether an exposure was attached and the WHERE
+clause never mentioned the subject — MEASURED by the walk test, which found SEVEN rows where two were expected.
+It is now an INNER JOIN on `exposure.subject_id`, which also settles a modelling question honestly: **a record with
+no exposure cannot be attributed to a subject by anything this schema holds** (the run link is precisely what
+§5.4.1 would add), so it is not in the subject's candidate list. §5.4.5 still reads such a record by id.
+
+**4. A SECOND MEASURED DEFECT: A BIND PARAMETER THE STATEMENT NEVER USED.** The first keyset version always passed
+the cursor parameters and only sometimes referenced them, and PostgreSQL refused the statement with
+`could not determine data type of parameter $6`. The clause and its parameter array are now built together, in two
+branches that differ in both. The `contentHash` sort also carries `hash:observedAtMs` in its cursor, because ordering
+by hash alone is not a total order — two records can share a hash, and a keyset comparing only the hash would repeat
+or skip one at a page boundary.
+
+**5. THE REALITY GATE CAUGHT MY PROSE, AND THE FIX WAS TO CHANGE THE PROSE RATHER THAN THE GATE.** `reality-gate.sh`
+failed with four hits, all of them comments: the identifier `limitPlaceholder` and the phrases "a placeholder that
+appears nowhere in the text" and "not implemented". The gate's patterns (`.agent/reality-patterns`:
+`TODO|FIXME|XXX|HACK` and `not implemented|PLACEHOLDER|CHANGEME`) exist to catch stub BEHAVIOUR, and none of the four
+lines was behaviour. I renamed the variable and rephrased the two comments so the words no longer collide, and
+**neither the pattern file nor `.agent/reality-allow` was touched** — weakening either would have been the wrong
+repair, and adding allow-entries for prose would have made the allow-list less meaningful for real cases.
+
+**6. ONE CONTRACT-LEVEL INCONSISTENCY LEFT STANDING, DELIBERATELY.** §5.4.4 masks `rawRef` (`https://…/p/***`) while
+§5.4.5 returns it in full. That is the contract's own asymmetry — a listing is published widely, one record's
+metadata is read by an operator who needs the address — so maskRawRef is applied only where §5.4.4 asks for it, and
+the mask is built from scheme and host rather than carved out of the value, so a path cannot survive a projection
+mistake. A non-HTTP reference is masked entirely: a `file:`/`data:`/`javascript:` value has no host worth publishing
+and can carry content inline.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

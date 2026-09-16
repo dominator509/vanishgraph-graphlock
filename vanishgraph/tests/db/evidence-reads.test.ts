@@ -27,6 +27,7 @@ import { buildServer, type VgFastify } from '../../src/http/server.ts';
 import { testIdentity, TEST_SESSION_SECRET, TEST_TOKEN, testServerDependencies } from '../contract/server-support.ts';
 import { PostgresTenantRunner } from '../../src/adapters/persistence/postgres-runner.ts';
 import { PostgresEvidenceQueries } from '../../src/adapters/persistence/evidence.ts';
+import { PostgresDiscoveryQueries } from '../../src/adapters/persistence/discovery.ts';
 import { PostgresIdempotencyStore } from '../../src/adapters/idempotency/postgres-store.ts';
 import { findRoute } from '../../src/http/openapi/registry.ts';
 import { appDsn, exec, ownerDsn } from './harness.ts';
@@ -51,6 +52,7 @@ function buildApp(tenantId: string, scopes: readonly string[] = SCOPES): VgFasti
       },
       sessionSecret: TEST_SESSION_SECRET,
       evidenceQueries: new PostgresEvidenceQueries(),
+    discoveryQueries: new PostgresDiscoveryQueries(),
     }),
   );
 }

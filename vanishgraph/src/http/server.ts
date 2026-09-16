@@ -33,6 +33,7 @@ import { actionRoutes } from './routes/actions.ts';
 import { policyRoutes } from './routes/policies.ts';
 import { coverageRoutes } from './routes/coverage.ts';
 import { evidenceRoutes } from './routes/evidence.ts';
+import { discoveryRoutes } from './routes/discovery.ts';
 import type { SubjectQueries } from '../application/contracts/subject-queries.ts';
 import type { SubjectCommands } from '../application/contracts/subject-commands.ts';
 import type { RecipeVerificationKeys, SourceQueries } from '../application/contracts/source-queries.ts';
@@ -48,6 +49,7 @@ import type { ActionQueries } from '../application/contracts/action-queries.ts';
 import type { PolicyQueries } from '../application/contracts/policy-queries.ts';
 import type { CoverageQueries } from '../application/contracts/coverage-queries.ts';
 import type { EvidenceQueries } from '../application/contracts/evidence-queries.ts';
+import type { DiscoveryQueries } from '../application/contracts/discovery-queries.ts';
 import { installCorrelation } from './plugins/correlation.ts';
 import { installErrorHandler } from './plugins/error-handler.ts';
 import { installIdentity, type IdentityPluginOptions } from './plugins/identity.ts';
@@ -172,6 +174,7 @@ export interface ServerDependencies {
   readonly policyQueries: PolicyQueries;
   readonly coverageQueries: CoverageQueries;
   readonly evidenceQueries: EvidenceQueries;
+  readonly discoveryQueries: DiscoveryQueries;
   readonly logLevel?: string;
 }
 
@@ -258,6 +261,13 @@ export function buildServer(deps: ServerDependencies): VgFastify {
   app.register(coverageRoutes, { sessionSecret: deps.sessionSecret, queries: deps.coverageQueries });
   // The SPEC-003 5.12 group: two reads, and three routes that name the dependency they lack.
   app.register(evidenceRoutes, { queries: deps.evidenceQueries });
+  // The SPEC-003 5.4 group: two reads over what the domain models, and three routes that name the model no
+  // specification defines.
+  app.register(discoveryRoutes, {
+    queries: deps.discoveryQueries,
+    subjects: deps.subjectQueries,
+    sessionSecret: deps.sessionSecret,
+  });
   app.register(caseRoutes, {
     sessionSecret: deps.sessionSecret,
     queries: deps.caseQueries,

@@ -26,6 +26,7 @@ import { randomUUID } from 'node:crypto';
 import { buildServer, type VgFastify } from '../../src/http/server.ts';
 import { PostgresCoverageQueries } from '../../src/adapters/persistence/coverage.ts';
 import { PostgresEvidenceQueries } from '../../src/adapters/persistence/evidence.ts';
+import { PostgresDiscoveryQueries } from '../../src/adapters/persistence/discovery.ts';
 import { PostgresTenantRunner } from '../../src/adapters/persistence/postgres-runner.ts';
 import { PostgresIdempotencyStore } from '../../src/adapters/idempotency/postgres-store.ts';
 import { findRoute } from '../../src/http/openapi/registry.ts';
@@ -62,6 +63,7 @@ function buildApp(tenantId: string, scopes: readonly string[] = SCOPES): VgFasti
       sessionSecret: TEST_SESSION_SECRET,
       coverageQueries: new PostgresCoverageQueries(),
     evidenceQueries: new PostgresEvidenceQueries(),
+    discoveryQueries: new PostgresDiscoveryQueries(),
     }),
   );
 }
