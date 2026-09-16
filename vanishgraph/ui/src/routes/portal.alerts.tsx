@@ -1,23 +1,27 @@
 /**
- * /portal/alerts — Subject portal (SPEC-004 §1, VG-UI-004).
+ * /portal/alerts — Subject portal (SPEC-004 §1, §7; EP-005 M5).
  *
- * PURPOSE: `Reappearance` alerts and re-removal
- * NON-GOALS, from the surface's own row: No bulk campaign tooling, no queue operations, no tenant configuration, no audit export, no control that advances a truth state.
+ * PURPOSE: Reappearance alerts for this subject
  *
- * EP-005 M1 creates this module so the route tree and the manifest are complete and comparable to the specification;
- * the surface's behaviour arrives in the milestones that own it (M5 portal, M6 console/admin/auditor). Until then the
- * page renders its declared purpose and NO control — an empty shell with a control would be a worse lie than an
- * explicit one, because a rendered control is a promise this node has not kept.
+ * THE SUBJECT-SCOPED ROUTES CANNOT REQUEST ANYTHING IN THIS DEPLOYMENT, AND THEY SAY SO RATHER THAN SPINNING.
+ * An alert list rendered without data would read as "nothing reappeared", which is exactly the false reassurance
+ * VG-UI-041/043 exist to prevent: reappearance alerts are only rendered for a true reappearance carrying a linked prior
+ * `VERIFIED_REMOVED` event, and a deployment that cannot read them must say so instead of showing an empty list.
+ *
+ * THE RULE THE SURFACE WILL ENFORCE IS RECORDED HERE SO IT IS NOT LOST: an alert renders only with its linked prior
+ * verified event, the earlier verification is never blamed, and the re-removal path preserves the prior history.
  */
 
-import { PageShell } from '../components/PageShell.tsx';
+import { SubjectScopedGap } from '../components/portal/PortalRoute.tsx';
 
 export function Page_portal_alerts(): React.JSX.Element {
   return (
-    <PageShell
-      surface="Subject portal"
+    <SubjectScopedGap
       path="/portal/alerts"
-      purpose="`Reappearance` alerts and re-removal"
+      surface="Subject portal"
+      purpose="Reappearance alerts for this subject"
+      region="New activity"
+      operation="loading your alerts"
     />
   );
 }

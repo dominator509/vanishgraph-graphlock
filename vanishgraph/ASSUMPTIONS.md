@@ -2161,6 +2161,68 @@ reduced motion, 320px reflow); `gate-ui: ok` (now including `tsc -p tsconfig.ui-
 `lint: ok`; `format-check: ok`; `import boundary: ok`; `reality gate: ok`; `test-unit: ok` (**769 tests, 769 pass, 0
 fail**); `test collection guard: ok` (43 files seen, 42 manifest entries); `copy lint gate: ok`.
 
+### 3.51 EP-005 M5, part one: the portal is WIRED AND PARTIAL, and this section says exactly which parts
+
+**THE MILESTONE IS NOT FINISHED, AND IT IS RECORDED AS PARTIAL RATHER THAN PASSED.** M5's goal is that `/portal` and its
+eight sibling routes implement their §4/§5/§6/§7 jobs. Three of those four sections are covered: §4's onboarding
+disclosure step, §5's exposure review, and §11's limitations page with the legend. **§6's case detail (the `<from> → <to>`
+transition list, the deadline list and the controller-response rendering) and §7's alerts and appeal surfaces are NOT
+built**, and the ledger row for this part says so. What exists is wired, asserted, and honest about the data it cannot
+reach:
+
+* **the nine `/portal` routes now render a real region with a real state**, through one shared `PortalRoute` and one
+  pure mapping (`regionStateOf`): pending → loading, 401/403 → access-denied, 404 → error (for a resource) or empty (for
+  a collection), a `HUMAN_GATE` timeline row → human-gate, incomplete coverage → partial-coverage, otherwise ready. The
+  inventory suite asserts that every declared §1 route renders exactly one region with its own path as its heading;
+* **five subject-scoped routes render a SYSTEM ERROR naming the configuration gap**, not an empty list and not a
+  spinner: `/v1` is subject-scoped, the subject comes from the session, and `KEYCLOAK_ISSUER` is unprovisioned. An empty
+  list would read as "nothing was found about you" — a claim this deployment cannot make — and a spinner would claim a
+  request is in flight when none was sent. SPEC-006 §2.1 rule 3 is why this is an ERROR and not an access denial: a
+  missing identity provider is a system configuration gap, not a reader who lacks a role;
+* **two parameterised routes make real requests** (`/portal/cases/[caseId]` and its evidence route) and reach
+  `regionStateOf` through their own query, so a 401 renders access-denied with no case data and a transport failure
+  renders an error whose correlation identifier says that none was returned.
+
+**THREE VALUES THE UI REFUSES TO INVENT, EACH NOW RENDERED AS AN EXPLICIT ABSENCE.** The API contract does not carry
+everything SPEC-004 requires beside a figure, and in each case the component renders the absence instead of a plausible
+value:
+(a) **the confidence threshold** is `policyThresholdApplied` on the §5.5.3 assessment response ONLY, so a row read from
+the §5.5.1 list has none — `ConfidenceBasis` accepts `number | null` and says "against a policy threshold this response
+did not state";
+(b) **the declared catalogue version** is required beside every coverage figure by SPEC-004 §3 and declared NOWHERE in
+SPEC-003 §5.4.3's coverage block — `CoverageRun.catalogueVersion` is `string | null` and the element renders "not
+declared in this response";
+(c) **`ErrorState`'s correlation identifier** is `string | null`, because a failure that happens before a request is
+sent has no API response and therefore no identifier, and inventing one would send a reader to support with a reference
+that resolves to nothing.
+Each of these is a WIDENING of a component written in M3/M4, made in the milestone that met the contract that forced it,
+and each keeps the element present so the mandatory part of the rule is not dropped.
+
+**THE COPY GATE FOUND THREE IDENTIFIER DEFECTS IN THE NEW CODE, AND ONE WAS FIXED BY ALLOWLIST.** `ifMatch` (RFC 9110's
+header, camelCase) is now allowlisted BY EXACT NAME with a reason, joining `if-match`; `requestAppeal` became
+`createAppealEscalation`, `confirmMatch` became `assessExposure`, and a local parameter named `client` became
+`transport`, because `request`, `match` and `client` are SPEC-000 §4 synonyms and a rename was available in each case.
+The gate's own count moved from 45 to 46 allowlisted entries, which is why the copy suite's "two exceptions" assertion
+covers `UI_ALLOWLIST` only — the wire-vocabulary allowlist is a different list with a different rule.
+
+**THE BLOCKED-FLOW RECORDS MOVED WITH THE BLOCKER, WHICH IS THE POINT OF ASSERTING ABSENCE.** M4 recorded the five
+keyboard flows as `BLOCKED_PREREQUISITE` by asserting that no controls existed; M5 built the surfaces, so that
+assertion would now fail, and the five records were rewritten to assert the CURRENT reason (the data boundary) and the
+absence of each flow's TERMINAL control. A record that kept the old wording would have passed forever on a stale
+sentence.
+
+**AND ONE THING THE SUITE CANNOT DO, SAID PLAINLY.** The two parameterised routes call `useParams`, which needs a router
+context this DOM harness does not provide, so the inventory asserts them structurally (they delegate to `PortalRoute`
+and declare their own path) and relies on the BROWSER suite, which navigates all 25 routes with a real router, for the
+rendered evidence. The test says which check ran; a silent skip would read as a pass.
+
+**MILESTONE EVIDENCE (all re-run after the last edit):** `test-unit: ok` (**800 tests, 800 pass, 0 fail**);
+`test collection guard: ok` (43 files seen, 42 manifest entries); `sh scripts/test-e2e.sh` → **`end-to-end tests: ok`, 28
+browser tests passed**; `gate-ui: ok`; `typecheck: ok`; `lint: ok`; `format-check: ok`; `import boundary: ok`;
+`reality gate: ok`; `copy lint gate: ok` (102 files scanned, 0 hits). **STILL TO DO IN M5:** the §6 case-detail
+surfaces (transition list, deadline list, controller-response rendering labelled as a claim), the §7 alerts and appeal
+surfaces, and their assertions.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

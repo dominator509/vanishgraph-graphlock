@@ -171,7 +171,7 @@ dd { margin: 0; }
 
 .vg-confidence { border: 1px solid var(--vg-border); border-radius: var(--vg-radius); padding: var(--vg-space-2); }
 .vg-confidence__entries { list-style: none; padding-inline-start: 0; }
-.vg-confidence__contribution { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.vg-confidence__weight { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 
 .vg-timeline__list { padding-inline-start: var(--vg-space-4); }
 .vg-timeline__row { margin-block: var(--vg-space-2); }
@@ -197,3 +197,4 @@ dd { margin: 0; }
     transition: none;
   }
 }
+

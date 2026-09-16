@@ -25,8 +25,16 @@ export type RetryCapability =
 export interface ErrorStateProps {
   /** The failed operation in plain language, e.g. "loading the case queue". */
   readonly operation: string;
-  /** The correlation identifier, selectable so a reader can copy it into a support message. */
-  readonly correlationId: string;
+  /**
+   * The correlation identifier, selectable so a reader can copy it into a support message — or `null` when the failure
+   * produced none.
+   *
+   * `null` IS A MEASURED CASE (EP-005 M5): a failure that happens BEFORE a request is sent (this deployment has no
+   * identity provider configured) has no API response and therefore no correlation identifier. Rendering a made-up
+   * identifier would send a reader to support with a reference that resolves to nothing, so the element states the
+   * absence instead.
+   */
+  readonly correlationId: string | null;
   readonly retry: RetryCapability;
   /** A truth state that reached this component by mistake; refused rather than rendered (SPEC-006 §2.1 rule 1). */
   readonly outcomeState?: string | undefined;
@@ -50,11 +58,20 @@ export function ErrorState({
     <div className="vg-error" role="alert" data-error-state="true" data-error-operation={operation}>
       <h3 className="vg-error__heading">{`We could not finish ${operation}`}</h3>
       <p className="vg-error__message">
-        {'This is a problem on our side, not a result about your data. Reference '}
-        <span className="vg-error__correlation" data-error-correlation="true">
-          {correlationId}
-        </span>
-        {'.'}
+        {'This is a problem on our side, not a result about your data. '}
+        {correlationId === null ? (
+          <span data-error-correlation="true" data-error-correlation-absent="true">
+            This failure happened before a request was sent, so there is no reference number for it.
+          </span>
+        ) : (
+          <>
+            {'Reference '}
+            <span className="vg-error__correlation" data-error-correlation="true">
+              {correlationId}
+            </span>
+            {'.'}
+          </>
+        )}
       </p>
       {retry.kind === 'idempotent' ? (
         <p className="vg-error__retry">

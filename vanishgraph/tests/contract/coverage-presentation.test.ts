@@ -266,9 +266,9 @@ describe('partial coverage is labelled above what it affects (VG-UI-017/022/050)
 
 describe('confidence is never a bare number (VG-UI-019)', () => {
   const basis = [
-    { feature: 'record-name-match', contribution: 0.42 },
-    { feature: 'address-match', contribution: 0.3 },
-    { feature: 'record-age-decay', contribution: -0.18 },
+    { feature: 'record-name-match', weight: 0.42 },
+    { feature: 'address-match', weight: 0.3 },
+    { feature: 'record-age-decay', weight: -0.18 },
   ];
 
   test('the score renders as a decimal with every basis entry and the policy threshold', () => {
@@ -580,3 +580,4 @@ describe('conflated metrics are rendered as separate labelled units (VG-UI-013/0
     assert.equal(one(figures[1] ?? doc, '[data-metric-part="denominator"]').textContent, '500');
   });
 });
+

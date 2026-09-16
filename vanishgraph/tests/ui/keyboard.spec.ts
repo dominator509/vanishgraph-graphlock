@@ -21,6 +21,8 @@ import { visitableRoutes } from './support.ts';
 
 const FIRST = '/portal';
 const SECOND = '/portal/authority';
+/** A visibly placeholder identifier, used to open the parameterised routes in the flow records below. */
+const NIL = '00000000-0000-0000-0000-000000000000';
 
 /**
  * A client-side navigation, as the router sees one: a new history entry followed by `popstate`. Both calls are the
@@ -111,21 +113,78 @@ test.describe('focus management (VG-UI-059)', () => {
 });
 
 test.describe('the five keyboard-only flows: recorded, not claimed (VG-UI-060)', () => {
-  const FLOWS: readonly { readonly flow: string; readonly milestone: string; readonly missing: string }[] = [
-    { flow: 'onboarding', milestone: 'M5', missing: 'the onboarding form and the identity-verification gate' },
-    { flow: 'exposure review', milestone: 'M5', missing: 'the exposure list with its confirm and reject controls' },
-    { flow: 'evidence reveal', milestone: 'M5', missing: 'the evidence region and its audited reveal control' },
-    { flow: 'appeal request', milestone: 'M5/M6', missing: 'the appeal form and its submission control' },
-    { flow: 'queue filtering', milestone: 'M6', missing: 'the console queue and its filter controls' },
+  /**
+   * Each flow, the route that carries it, and what it is waiting for.
+   *
+   * THE BLOCKER MOVED IN M5, AND THE RECORD MOVED WITH IT. Before M5 the flows were blocked because the surfaces did not
+   * exist and the test asserted that no controls were rendered at all. M5 built the surfaces, so the block is now the
+   * DATA BOUNDARY: `/v1` is not provisioned (no identity provider, so no session subject) and the API is not running
+   * behind the preview server. Each test asserts the CURRENT reason and the absence of the flow's TERMINAL control, so
+   * the record fails the day the blocker changes rather than passing forever on a stale sentence.
+   */
+  const FLOWS: readonly {
+    readonly flow: string;
+    readonly route: string;
+    readonly blocked: string;
+    readonly terminal: RegExp;
+    readonly regionState: readonly string[];
+  }[] = [
+    {
+      flow: 'onboarding',
+      route: '/portal/onboarding',
+      blocked: 'identity verification needs an identity provider (KEYCLOAK_ISSUER is unprovisioned)',
+      terminal: /verif|confirm your identity/i,
+      // Step 1 is real and complete; the flow stops where identity verification would begin.
+      regionState: ['ready'],
+    },
+    {
+      flow: 'exposure review',
+      route: '/portal/exposures',
+      blocked: 'the records are /v1 data scoped to a session subject',
+      terminal: /confirm this record is about me/i,
+      regionState: ['error', 'access-denied'],
+    },
+    {
+      flow: 'evidence reveal',
+      route: `/portal/cases/${NIL}/evidence/${NIL}`,
+      blocked: 'the evidence read is /v1 data and the API is not reachable from the preview server',
+      terminal: /reveal|show the content/i,
+      regionState: ['error', 'access-denied'],
+    },
+    {
+      flow: 'appeal request',
+      route: '/portal/requests',
+      blocked: 'an appeal needs a case, which is /v1 data scoped to a session subject',
+      terminal: /appeal|escalate/i,
+      regionState: ['error', 'access-denied'],
+    },
+    {
+      flow: 'queue filtering',
+      route: '/console/queue',
+      blocked: 'the console surface is M6',
+      terminal: /filter/i,
+      // The console routes are still M1 shells: they render a heading and no region at all, which is the honest state of
+      // a milestone that has not run yet, and this row fails once M6 adds the surface without completing the flow here.
+      regionState: [],
+    },
   ];
 
-  for (const { flow, milestone, missing } of FLOWS) {
-    test(`BLOCKED_PREREQUISITE ${flow}: ${missing} (${milestone})`, async ({ page }) => {
-      await page.goto('/portal/onboarding');
-      const controls = await page.evaluate(
-        () => document.querySelectorAll('form, input, select, textarea, button').length,
-      );
-      expect(controls, `${flow} cannot be keyboard-completed yet: ${missing} does not exist (${milestone})`).toBe(0);
+  for (const { flow, route, blocked, terminal, regionState } of FLOWS) {
+    test(`BLOCKED_CREDENTIALS ${flow}: ${blocked}`, async ({ page }) => {
+      await page.goto(route);
+      // THE HEADING IS THE DECLARED PATH, NOT THE URL: `/portal/cases/[caseId]/…` is what SPEC-004 §1 declares and
+      // what the page shell renders, so comparing it to the concrete URL would assert the opposite of the rule.
+      await expect(page.locator('[data-page-heading]')).toHaveText(/^\/(portal|console)\//);
+      const regions = page.locator('[data-region]');
+      if (regionState.length === 0) {
+        await expect(regions, `${flow}: expected no data region yet (${blocked})`).toHaveCount(0);
+      } else {
+        await expect(regions).toHaveCount(1);
+        const state = (await regions.getAttribute('data-region-state')) ?? '';
+        expect(regionState, `${flow}: region state is ${state}`).toContain(state);
+      }
+      // THE TERMINAL CONTROL IS ABSENT, which is what makes the flow impossible rather than merely untested.
+      await expect(page.getByRole('button', { name: terminal })).toHaveCount(0);
     });
   }
 });

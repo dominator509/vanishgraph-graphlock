@@ -15,7 +15,7 @@
   },
   "target": {
     "artefact": "ui/dist (vite build output, served by vite preview)",
-    "indexHtmlSha256": "8888d78cebac6dfe13d638dc69cc2a6b2f4bea3646e6523e22a3243d0815e9c7"
+    "indexHtmlSha256": "228777def00ed6c8cf338cf09303bc5f7df22f0b2249c90384effea3ea6fa1f7"
   },
   "routes": [
     {
@@ -150,73 +150,73 @@
       "declared": "/portal",
       "url": "/portal",
       "violations": [],
-      "passes": 8,
+      "passes": 17,
       "incomplete": 0,
-      "inapplicable": 55
+      "inapplicable": 46
     },
     {
       "declared": "/portal/alerts",
       "url": "/portal/alerts",
       "violations": [],
-      "passes": 8,
+      "passes": 17,
       "incomplete": 0,
-      "inapplicable": 55
+      "inapplicable": 46
     },
     {
       "declared": "/portal/authority",
       "url": "/portal/authority",
       "violations": [],
-      "passes": 8,
+      "passes": 17,
       "incomplete": 0,
-      "inapplicable": 55
+      "inapplicable": 46
     },
     {
       "declared": "/portal/cases/[caseId]",
       "url": "/portal/cases/00000000-0000-0000-0000-000000000000",
       "violations": [],
-      "passes": 8,
+      "passes": 19,
       "incomplete": 0,
-      "inapplicable": 55
+      "inapplicable": 44
     },
     {
       "declared": "/portal/cases/[caseId]/evidence/[evidenceId]",
       "url": "/portal/cases/00000000-0000-0000-0000-000000000000/evidence/00000000-0000-0000-0000-000000000000",
       "violations": [],
-      "passes": 8,
+      "passes": 19,
       "incomplete": 0,
-      "inapplicable": 55
+      "inapplicable": 44
     },
     {
       "declared": "/portal/exposures",
       "url": "/portal/exposures",
       "violations": [],
-      "passes": 8,
+      "passes": 17,
       "incomplete": 0,
-      "inapplicable": 55
+      "inapplicable": 46
     },
     {
       "declared": "/portal/limitations",
       "url": "/portal/limitations",
       "violations": [],
-      "passes": 13,
-      "incomplete": 0,
-      "inapplicable": 50
+      "passes": 16,
+      "incomplete": 1,
+      "inapplicable": 47
     },
     {
       "declared": "/portal/onboarding",
       "url": "/portal/onboarding",
       "violations": [],
-      "passes": 8,
+      "passes": 22,
       "incomplete": 0,
-      "inapplicable": 55
+      "inapplicable": 41
     },
     {
       "declared": "/portal/requests",
       "url": "/portal/requests",
       "violations": [],
-      "passes": 8,
+      "passes": 17,
       "incomplete": 0,
-      "inapplicable": 55
+      "inapplicable": 46
     }
   ],
   "totals": {

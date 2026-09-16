@@ -4,8 +4,8 @@
   "verdict": "EXTERNAL_REQUIRED",
   "externalPartyRole": "accessibility practitioner",
   "requestEvidencePath": ".agent/evidence/EP-005/accessibility/per-criterion-report.md",
-  "requestedArtifactDigest": "sha256:8888d78cebac6dfe13d638dc69cc2a6b2f4bea3646e6523e22a3243d0815e9c7",
-  "requestedArtifact": "ui/dist — the Vite build output of the portal (entry document digest above; assets index-CjMJHlkm.css and index-BjXpAgx9.js). Rebuilt from the revision under review; the digest is asserted against the built artefact by tests/ui/a11y.spec.ts, so a stale request fails rather than passing silently — MEASURED: it did exactly that on the first run after the focus-management fix rebuilt the bundle, which is why the value here is the digest of the current build.",
+  "requestedArtifactDigest": "sha256:228777def00ed6c8cf338cf09303bc5f7df22f0b2249c90384effea3ea6fa1f7",
+  "requestedArtifact": "ui/dist — the Vite build output of the portal (entry document digest above; assets index-Cgk_pGaQ.css and index-C-af_3aG.js), as built at EP-005 M5 when the portal surfaces were wired. The digest is asserted against the built artefact by tests/ui/a11y.spec.ts, so a stale request fails rather than passing silently — MEASURED twice: it did exactly that after the M4 focus fix and again after the M5 wiring rebuilt the bundle.",
   "criteria": [
     "1.4.4 Resize Text",
     "3.3.8 Accessible Authentication (Minimum)",
