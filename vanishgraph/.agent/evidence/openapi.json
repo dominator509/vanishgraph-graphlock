@@ -1,0 +1,2816 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "VanishGraph",
+    "version": "0.1.0",
+    "description": "Generated from the route registry. Body schemas are deliberately absent: this codebase validates request bodies by hand, and a generated schema would be a second source of truth for shapes the handlers enforce."
+  },
+  "paths": {
+    "/v1/appeal-escalations/{appealEscalationId}": {
+      "get": {
+        "operationId": "5.14.3",
+        "summary": "5.14.3 — 5.14",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.cases.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.14.3 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/audit-events": {
+      "get": {
+        "operationId": "5.15.1",
+        "summary": "5.15.1 — 5.15",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.audit.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [
+          "VG-SEC-002",
+          "VG-EVIDENCE-003"
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetKind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "targetId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "correlationId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "at:asc",
+                "at:desc",
+                "id:asc",
+                "id:desc"
+              ]
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "5.15.1 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/audit-events/{auditEventId}": {
+      "get": {
+        "operationId": "5.15.2",
+        "summary": "5.15.2 — 5.15",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.audit.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.15.2 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/authority-grants/{authorityGrantId}/revocations": {
+      "post": {
+        "operationId": "5.2.3",
+        "summary": "5.2.3 — 5.2",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.authority.write"
+            ]
+          }
+        ],
+        "x-vg-step-up": true,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [
+          "VG-AUTHZ-001",
+          "VG-REAPPEAR-002",
+          "SPEC-001 §4.2"
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "5.2.3 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/cases": {
+      "post": {
+        "operationId": "5.7.1",
+        "summary": "5.7.1 — 5.7",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.cases.write"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [
+          "VG-POLICY-002"
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "5.7.1 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      },
+      "get": {
+        "operationId": "5.7.2",
+        "summary": "5.7.2 — 5.7",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.cases.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "subjectId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "authorityGrantState",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "VALID",
+                "EXPIRED",
+                "REVOKED",
+                "NONE"
+              ]
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "createdAt:asc",
+                "createdAt:desc",
+                "updatedAt:asc",
+                "updatedAt:desc",
+                "truthState:asc",
+                "truthState:desc"
+              ]
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "5.7.2 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/cases/{caseId}": {
+      "get": {
+        "operationId": "5.7.3",
+        "summary": "5.7.3 — 5.7",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.cases.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.7.3 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "5.7.4",
+        "summary": "5.7.4 — 5.7",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.cases.write"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [
+          "SPEC-001 §4.1"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.7.4 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/cases/{caseId}/appeal-escalations": {
+      "post": {
+        "operationId": "5.14.1",
+        "summary": "5.14.1 — 5.14",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.appeal.write"
+            ]
+          }
+        ],
+        "x-vg-step-up": true,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [
+          "VG-CHANNEL-001",
+          "VG-SCOPE-005",
+          "SPEC-000 §8"
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "5.14.1 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      },
+      "get": {
+        "operationId": "5.14.2",
+        "summary": "5.14.2 — 5.14",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.cases.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.14.2 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/cases/{caseId}/controller-responses": {
+      "post": {
+        "operationId": "5.9.1",
+        "summary": "5.9.1 — 5.9",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.cases.write"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [
+          "VG-VERIFY-004",
+          "SPEC-001 §3.4",
+          "SPEC-000 §5.1",
+          "SPEC-000 §7.6"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.9.1 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      },
+      "get": {
+        "operationId": "5.9.2",
+        "summary": "5.9.2 — 5.9",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.cases.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.9.2 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/cases/{caseId}/deadlines": {
+      "get": {
+        "operationId": "5.13.1",
+        "summary": "5.13.1 — 5.13",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.cases.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [
+          "VG-POLICY-001",
+          "SPEC-001 §3.4"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.13.1 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      },
+      "post": {
+        "operationId": "5.13.2",
+        "summary": "5.13.2 — 5.13",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.cases.write"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "5.13.2 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/cases/{caseId}/email-threads": {
+      "post": {
+        "operationId": "5.9.3",
+        "summary": "5.9.3 — 5.9",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.cases.write"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [
+          "SPEC-001 §3.4"
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "5.9.3 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/cases/{caseId}/evidence-artifacts": {
+      "get": {
+        "operationId": "5.12.5",
+        "summary": "5.12.5 — 5.12",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.evidence.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.12.5 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/cases/{caseId}/external-actions": {
+      "get": {
+        "operationId": "5.8.1",
+        "summary": "5.8.1 — 5.8",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.actions.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.8.1 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      },
+      "post": {
+        "operationId": "5.8.2",
+        "summary": "5.8.2 — 5.8",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.actions.execute"
+            ]
+          }
+        ],
+        "x-vg-step-up": true,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [
+          "VG-ACTION-001",
+          "VG-EGRESS-001",
+          "VG-AUTHZ-001",
+          "VG-CHANNEL-003",
+          "VG-CHANNEL-002",
+          "VG-CHANNEL-001",
+          "VG-ACTION-005",
+          "VG-POLICY-004",
+          "VG-ACTION-004",
+          "SPEC-001 §4.2"
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "5.8.2 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/cases/{caseId}/human-gates": {
+      "post": {
+        "operationId": "5.7.5",
+        "summary": "5.7.5 — 5.7",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.cases.write"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [
+          "VG-OBS-002",
+          "VG-DISC-004",
+          "SPEC-001 §4.3"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.7.5 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/cases/{caseId}/mail-pieces": {
+      "get": {
+        "operationId": "5.8.6",
+        "summary": "5.8.6 — 5.8",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.actions.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [
+          "VG-ACTION-004"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.8.6 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/cases/{caseId}/policy-decisions": {
+      "post": {
+        "operationId": "5.6.1",
+        "summary": "5.6.1 — 5.6",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.policy.write"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [
+          "VG-POLICY-002",
+          "VG-POLICY-001",
+          "VG-CHANNEL-001",
+          "VG-POLICY-004"
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "5.6.1 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      },
+      "get": {
+        "operationId": "5.6.2",
+        "summary": "5.6.2 — 5.6",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.policy.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.6.2 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/cases/{caseId}/timeline": {
+      "get": {
+        "operationId": "5.7.6",
+        "summary": "5.7.6 — 5.7",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.cases.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [
+          "VG-EVIDENCE-003"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.7.6 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/cases/{caseId}/verification-observations": {
+      "post": {
+        "operationId": "5.10.1",
+        "summary": "5.10.1 — 5.10",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.observations.write"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [
+          "VG-VERIFY-004",
+          "VG-VERIFY-001",
+          "VG-VERIFY-002",
+          "VG-VERIFY-003",
+          "SPEC-001 §4.2",
+          "SPEC-000 §5.1"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.10.1 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      },
+      "get": {
+        "operationId": "5.10.2",
+        "summary": "5.10.2 — 5.10",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.observations.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.10.2 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/coverage-reports": {
+      "get": {
+        "operationId": "5.16.1",
+        "summary": "5.16.1 — 5.16",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.coverage.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "subjectId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "discoveryRunId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "generatedAt:asc",
+                "generatedAt:desc"
+              ]
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "5.16.1 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/coverage-reports/{coverageReportId}": {
+      "get": {
+        "operationId": "5.16.2",
+        "summary": "5.16.2 — 5.16",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.coverage.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [
+          "VG-DISC-002",
+          "SPEC-000 §7.1",
+          "SPEC-000 §7.4"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.16.2 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/deadlines/{deadlineId}/satisfaction": {
+      "post": {
+        "operationId": "5.13.3",
+        "summary": "5.13.3 — 5.13",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.cases.write"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.13.3 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/discovery-runs": {
+      "post": {
+        "operationId": "5.4.1",
+        "summary": "5.4.1 — 5.4",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.discovery.run"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [
+          "VG-DISC-001"
+        ],
+        "parameters": [],
+        "responses": {
+          "202": {
+            "description": "5.4.1 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      },
+      "get": {
+        "operationId": "5.4.2",
+        "summary": "5.4.2 — 5.4",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.discovery.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.4.2 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/discovery-runs/{discoveryRunId}": {
+      "get": {
+        "operationId": "5.4.3",
+        "summary": "5.4.3 — 5.4",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.discovery.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.4.3 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/evidence-artifacts": {
+      "post": {
+        "operationId": "5.12.1",
+        "summary": "5.12.1 — 5.12",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.evidence.write"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [
+          "VG-EVIDENCE-001"
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "5.12.1 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/evidence-artifacts/{evidenceArtifactId}": {
+      "get": {
+        "operationId": "5.12.2",
+        "summary": "5.12.2 — 5.12",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.evidence.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [
+          "VG-EVIDENCE-002"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.12.2 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/evidence-artifacts/{evidenceArtifactId}/content": {
+      "get": {
+        "operationId": "5.12.3",
+        "summary": "5.12.3 — 5.12",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.evidence.read_content"
+            ]
+          }
+        ],
+        "x-vg-step-up": true,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [
+          "VG-EVIDENCE-001"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.12.3 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/evidence-artifacts/{evidenceArtifactId}/integrity-checks": {
+      "post": {
+        "operationId": "5.12.4",
+        "summary": "5.12.4 — 5.12",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.evidence.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [
+          "VG-EVIDENCE-001"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.12.4 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/exposures": {
+      "get": {
+        "operationId": "5.5.1",
+        "summary": "5.5.1 — 5.5",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.exposures.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [
+          "VG-IDENT-003",
+          "SPEC-001 §2",
+          "SPEC-000 §5"
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "subjectId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "minConfidence",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "observedAt:asc",
+                "observedAt:desc",
+                "confidence:asc",
+                "confidence:desc",
+                "truthState:asc",
+                "truthState:desc"
+              ]
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "5.5.1 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/exposures/{exposureId}": {
+      "get": {
+        "operationId": "5.5.2",
+        "summary": "5.5.2 — 5.5",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.exposures.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [
+          "SPEC-000 §5"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.5.2 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/exposures/{exposureId}/disproofs": {
+      "post": {
+        "operationId": "5.5.4",
+        "summary": "5.5.4 — 5.5",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.exposures.assess"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [
+          "VG-DISC-002",
+          "SPEC-000 §5.1",
+          "SPEC-001 §4.2"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.5.4 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/exposures/{exposureId}/match-assessments": {
+      "post": {
+        "operationId": "5.5.3",
+        "summary": "5.5.3 — 5.5",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.exposures.assess"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [
+          "VG-IDENT-003",
+          "VG-IDENT-004"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.5.3 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/exposures/{exposureId}/reappearances": {
+      "post": {
+        "operationId": "5.11.1",
+        "summary": "5.11.1 — 5.11",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.observations.write"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [
+          "VG-REAPPEAR-001",
+          "VG-REAPPEAR-002",
+          "SPEC-001 §4.1"
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "5.11.1 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      },
+      "get": {
+        "operationId": "5.11.3",
+        "summary": "5.11.3 — 5.11",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.observations.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.11.3 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/exposures/{exposureId}/transitions": {
+      "get": {
+        "operationId": "5.5.5",
+        "summary": "5.5.5 — 5.5",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.exposures.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [
+          "SPEC-001 §4.1"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.5.5 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/external-actions/{externalActionId}": {
+      "get": {
+        "operationId": "5.8.5",
+        "summary": "5.8.5 — 5.8",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.actions.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.8.5 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/external-actions/{externalActionId}/readback": {
+      "post": {
+        "operationId": "5.8.4",
+        "summary": "5.8.4 — 5.8",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.actions.execute"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [
+          "VG-ACTION-003",
+          "VG-VERIFY-001"
+        ],
+        "parameters": [],
+        "responses": {
+          "202": {
+            "description": "5.8.4 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/external-actions/{externalActionId}/reconciliations": {
+      "post": {
+        "operationId": "5.8.3",
+        "summary": "5.8.3 — 5.8",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.actions.execute"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [
+          "VG-ACTION-002",
+          "SPEC-001 §4.1",
+          "SPEC-001 §4.2"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.8.3 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/health": {
+      "get": {
+        "operationId": "5.17.1",
+        "summary": "5.17.1 — 5.17",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "none",
+        "x-vg-serves": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.17.1 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/jurisdiction-policies": {
+      "get": {
+        "operationId": "5.6.4",
+        "summary": "5.6.4 — 5.6",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.policy.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [
+          "VG-POLICY-001"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.6.4 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/live": {
+      "get": {
+        "operationId": "5.17.3",
+        "summary": "5.17.3 — 5.17",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "none",
+        "x-vg-serves": [
+          "VG-OBS-023"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.17.3 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/metrics/removal-effectiveness": {
+      "get": {
+        "operationId": "5.16.3",
+        "summary": "5.16.3 — 5.16",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.coverage.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [
+          "VG-OBS-002",
+          "SPEC-000 §5.1",
+          "SPEC-000 §7.6"
+        ],
+        "parameters": [
+          {
+            "name": "subjectId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "groupBy",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "none",
+                "source",
+                "jurisdiction",
+                "channel"
+              ]
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "5.16.3 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/policy-decisions/{policyDecisionId}": {
+      "get": {
+        "operationId": "5.6.3",
+        "summary": "5.6.3 — 5.6",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.policy.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.6.3 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/ready": {
+      "get": {
+        "operationId": "5.17.2",
+        "summary": "5.17.2 — 5.17",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "none",
+        "x-vg-serves": [
+          "VG-OPS-001",
+          "VG-OBS-025",
+          "SPEC-007 §7",
+          "SPEC-007 §7.2"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.17.2 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/reappearances": {
+      "get": {
+        "operationId": "5.11.2",
+        "summary": "5.11.2 — 5.11",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.observations.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "subjectId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reEntryState",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING_REENTRY",
+                "REENTERED",
+                "NOT_REMOVABLE"
+              ]
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "observedAt:asc",
+                "observedAt:desc"
+              ]
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "5.11.2 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/recipes/{recipeId}": {
+      "get": {
+        "operationId": "5.3.9",
+        "summary": "5.3.9 — 5.3",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.sources.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.3.9 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/recipes/{recipeId}/enablement": {
+      "post": {
+        "operationId": "5.3.10",
+        "summary": "5.3.10 — 5.3",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.recipes.write"
+            ]
+          }
+        ],
+        "x-vg-step-up": true,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [
+          "VG-CHANNEL-002",
+          "VG-CHANNEL-003"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.3.10 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/source-records/{sourceRecordId}": {
+      "get": {
+        "operationId": "5.4.5",
+        "summary": "5.4.5 — 5.4",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.discovery.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [
+          "VG-SEC-001"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.4.5 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/sources": {
+      "get": {
+        "operationId": "5.3.1",
+        "summary": "5.3.1 — 5.3",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.sources.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [
+          "VG-CHANNEL-002",
+          "VG-CHANNEL-003"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.3.1 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      },
+      "post": {
+        "operationId": "5.3.2",
+        "summary": "5.3.2 — 5.3",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.sources.write"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "class",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "jurisdiction",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "permissionClass",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "READ_ONLY",
+                "WRITE_PERMITTED",
+                "WRITE_UNCLEAR",
+                "PROHIBITED"
+              ]
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "name:asc",
+                "name:desc",
+                "freshnessAt:asc",
+                "freshnessAt:desc"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "5.3.2 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/sources/{sourceId}": {
+      "get": {
+        "operationId": "5.3.3",
+        "summary": "5.3.3 — 5.3",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.sources.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.3.3 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/sources/{sourceId}/catalog-entries": {
+      "get": {
+        "operationId": "5.3.5",
+        "summary": "5.3.5 — 5.3",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.sources.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [
+          "VG-DISC-002"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.3.5 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      },
+      "post": {
+        "operationId": "5.3.6",
+        "summary": "5.3.6 — 5.3",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.sources.write"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "5.3.6 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/sources/{sourceId}/permission-class": {
+      "patch": {
+        "operationId": "5.3.4",
+        "summary": "5.3.4 — 5.3",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.sources.write"
+            ]
+          }
+        ],
+        "x-vg-step-up": true,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [
+          "VG-CHANNEL-002"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.3.4 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/sources/{sourceId}/recipes": {
+      "post": {
+        "operationId": "5.3.7",
+        "summary": "5.3.7 — 5.3",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.recipes.write"
+            ]
+          }
+        ],
+        "x-vg-step-up": true,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [
+          "VG-CHANNEL-003"
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "5.3.7 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      },
+      "get": {
+        "operationId": "5.3.8",
+        "summary": "5.3.8 — 5.3",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.sources.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [
+          "VG-REAPPEAR-002"
+        ],
+        "parameters": [
+          {
+            "name": "enabled",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fresh",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "version:asc",
+                "version:desc",
+                "freshnessAt:asc",
+                "freshnessAt:desc"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "5.3.8 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/startup": {
+      "get": {
+        "operationId": "5.17.4",
+        "summary": "5.17.4 — 5.17",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "none",
+        "x-vg-serves": [
+          "SPEC-007 §7.1"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.17.4 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/subjects": {
+      "post": {
+        "operationId": "5.1.1",
+        "summary": "5.1.1 — 5.1",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.subjects.write"
+            ]
+          }
+        ],
+        "x-vg-step-up": true,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [
+          "VG-IDENT-001",
+          "VG-AUTHZ-001",
+          "VG-POLICY-004",
+          "VG-API-023",
+          "VG-AUTHZ-002",
+          "VG-API-017",
+          "SPEC-005 §4"
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "5.1.1 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      },
+      "get": {
+        "operationId": "5.1.2",
+        "summary": "5.1.2 — 5.1",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.subjects.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "jurisdiction",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "isMinor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "authorityState",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "VALID",
+                "EXPIRED",
+                "REVOKED",
+                "NONE"
+              ]
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "createdAt:asc",
+                "createdAt:desc",
+                "displayRef:asc",
+                "displayRef:desc"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "5.1.2 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/subjects/{subjectId}": {
+      "get": {
+        "operationId": "5.1.3",
+        "summary": "5.1.3 — 5.1",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.subjects.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.1.3 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "5.1.4",
+        "summary": "5.1.4 — 5.1",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.subjects.write"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [
+          "VG-POLICY-002",
+          "VG-POLICY-004"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.1.4 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/subjects/{subjectId}/aliases": {
+      "post": {
+        "operationId": "5.1.5",
+        "summary": "5.1.5 — 5.1",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.subjects.write"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [
+          "VG-IDENT-002"
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "5.1.5 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      },
+      "get": {
+        "operationId": "5.1.6",
+        "summary": "5.1.6 — 5.1",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.subjects.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [],
+        "x-vg-conditional": [
+          {
+            "parameter": "includeValue",
+            "when": "true",
+            "scopes": [
+              "vg.pii.reveal"
+            ],
+            "stepUp": true
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.1.6 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/subjects/{subjectId}/authority-grants": {
+      "post": {
+        "operationId": "5.2.1",
+        "summary": "5.2.1 — 5.2",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.authority.write"
+            ]
+          }
+        ],
+        "x-vg-step-up": true,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [
+          "VG-AUTHZ-001",
+          "VG-AUTHZ-002",
+          "VG-IDENT-001",
+          "VG-AUTHZ-014",
+          "VG-AUTH-032",
+          "VG-AUTHZ-016",
+          "VG-POLICY-001",
+          "SPEC-005 §3",
+          "SPEC-005 §4",
+          "SPEC-000 §8",
+          "SPEC-005 §11"
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "5.2.1 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      },
+      "get": {
+        "operationId": "5.2.2",
+        "summary": "5.2.2 — 5.2",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.authority.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.2.2 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/subjects/{subjectId}/candidate-records": {
+      "get": {
+        "operationId": "5.4.4",
+        "summary": "5.4.4 — 5.4",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.exposures.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [
+          "VG-IDENT-004",
+          "VG-DISC-002",
+          "SPEC-000 §7.1"
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sourceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "assessmentState",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "UNASSESSED",
+                "MATCH_CONFIRMED",
+                "MATCH_DISPROVED",
+                "QUARANTINED"
+              ]
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "observedAt:asc",
+                "observedAt:desc",
+                "contentHash:asc",
+                "contentHash:desc"
+              ]
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "5.4.4 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/subjects/{subjectId}/identifiers": {
+      "post": {
+        "operationId": "5.1.7",
+        "summary": "5.1.7 — 5.1",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.subjects.write"
+            ]
+          }
+        ],
+        "x-vg-step-up": true,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [
+          "VG-SEC-002",
+          "SPEC-001 §3"
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "5.1.7 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      },
+      "get": {
+        "operationId": "5.1.8",
+        "summary": "5.1.8 — 5.1",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.subjects.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [],
+        "x-vg-conditional": [
+          {
+            "parameter": "includeValue",
+            "when": "true",
+            "scopes": [
+              "vg.pii.reveal"
+            ],
+            "stepUp": true
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.1.8 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/subjects/{subjectId}/location-history": {
+      "get": {
+        "operationId": "5.1.9",
+        "summary": "5.1.9 — 5.1",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.subjects.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.1.9 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      },
+      "post": {
+        "operationId": "5.1.10",
+        "summary": "5.1.10 — 5.1",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.subjects.write"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "required",
+        "x-vg-serves": [
+          "SPEC-001 §2"
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "5.1.10 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/verification-observations/{verificationObservationId}": {
+      "get": {
+        "operationId": "5.10.3",
+        "summary": "5.10.3 — 5.10",
+        "security": [
+          {
+            "bearerAuth": [
+              "vg.observations.read"
+            ]
+          }
+        ],
+        "x-vg-step-up": false,
+        "x-vg-idempotency": "optional",
+        "x-vg-serves": [],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "5.10.3 success"
+          },
+          "default": {
+            "description": "Error envelope (SPEC-003 §8)"
+          }
+        }
+      }
+    },
+    "/v1/webhooks/controller-callbacks/{controllerCallbackToken}": {
+      "post": {
+        "operationId": "6.1",
+        "summary": "6.1 — webhook ingress",
+        "x-vg-authentication": "signature+capability",
+        "responses": {
+          "202": {
+            "description": "accepted"
+          },
+          "default": {
+            "description": "Error envelope"
+          }
+        }
+      }
+    },
+    "/v1/webhooks/mail-tracking/{mailProviderKeyId}": {
+      "post": {
+        "operationId": "6.3",
+        "summary": "6.3 — webhook ingress",
+        "x-vg-authentication": "signature+capability",
+        "responses": {
+          "202": {
+            "description": "accepted"
+          },
+          "default": {
+            "description": "Error envelope"
+          }
+        }
+      }
+    },
+    "/v1/webhooks/provider-callbacks/{providerKeyId}": {
+      "post": {
+        "operationId": "6.2",
+        "summary": "6.2 — webhook ingress",
+        "x-vg-authentication": "signature+capability",
+        "responses": {
+          "202": {
+            "description": "accepted"
+          },
+          "default": {
+            "description": "Error envelope"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Scopes are the closed §3.3 vocabulary: vg.actions.execute, vg.actions.read, vg.appeal.write, vg.audit.read, vg.authority.read, vg.authority.write, vg.cases.read, vg.cases.write, vg.coverage.read, vg.discovery.read, vg.discovery.run, vg.evidence.read, vg.evidence.read_content, vg.evidence.write, vg.exposures.assess, vg.exposures.read, vg.observations.read, vg.observations.write, vg.pii.reveal, vg.policy.read, vg.policy.write, vg.recipes.write, vg.sources.read, vg.sources.write, vg.subjects.read, vg.subjects.write"
+      }
+    }
+  }
+}

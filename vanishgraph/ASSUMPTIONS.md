@@ -1765,6 +1765,58 @@ test — survives. Until that failure is reproduced, the honest statement is: **
 failed once, cause unknown; three subsequent full runs were green.** A flake in this stage is a real risk (the suites
 share a database and run concurrently), and it is recorded rather than dismissed.
 
+### 3.44 The vocabulary gate exists and is green, and what is still missing from M8
+
+**Delivered this round: the OpenAPI document, the vocabulary gate, and the command SPEC-004 VG-UI-080 requires.**
+`src/http/openapi/document.ts` (generated from `ROUTES` + `WEBHOOK_ROUTES`), `scripts/openapi-document.ts` (the CLI that
+writes `.agent/evidence/openapi.json`), `scripts/copy-lint-gate.ts` + `scripts/copy-lint-gate.sh`
+(`copy lint gate: ok`, added to `COMMANDS.md`), and `tests/contract/vocabulary-gate.test.ts` 5/5. **The black-box
+acceptance suite M8 also requires — runtime canaries, independent readback, the route non-goal negative cases and the
+tampered-upload case — IS NOT WRITTEN YET**, so M8 is partial; it is the next round's work.
+
+**1. THE GATE SCANS IDENTIFIERS, NOT PROSE, AND IT TOOK SIX MEASURED CORRECTIONS TO GET THERE.** The first version
+scanned every quoted string and immediately flagged the SEMANTIC error messages — `'No jurisdiction policy resolves
+for this request.'`, `'The supplied digest does not match the received content.'` — which are sentences shown to a
+human. SPEC-000 §4 forbids these synonyms "used as production identifiers", so prose is out of scope by construction.
+Each correction came from a real hit: property keys had to be read from a string-blanked copy (an error MESSAGE
+containing a colon produced a `provider` "key"); template-literal interpolations had to be read at all (`` `${row.permissionClass}` ``
+was invisible); the routes' own path parameters had to have their braces stripped (`{providerKeyId}` judged as
+`{providerKeyId}` matched nothing in the allowlist); a dotted read had to be judged by its LAST SEGMENT ONLY
+(`result.evaluation.signatureVerified` was flagged on the local variable `result`); and SHORTHAND OBJECT MEMBERS had
+to be scanned (`return { clientId }` is a wire field that the `name:` pattern cannot see — the fixture in the test
+proves that rule works). Import lists are skipped: a name bound from another module is not a field this module puts on
+the wire, and the first version flagged `import { epochMillisFromIfMatch }`.
+
+**2. THE ALLOWLIST IS EXACT-NAME-ONLY AND EVERY ENTRY CARRIES A REASON, INCLUDING FORTY-FIVE OF THEM.** An entry
+without a reason fails the gate (VG-UI-080), and the reason is the review record. Two things this exposed: the
+forbidden list and the CONTRACT collide in both directions — `provider` (§5.8.6's mail-piece field), `target`
+(§5.15.1's nested audit object), `readbackRequestId` (§5.8.5), `requestSubmitted` (§5.16.3),
+`eligibleConfirmedMatchDenominator` (§5.16.3), `finding` (§5.8.3), `checks`/`failedCheck` (§5.6.1/§8.3),
+`nonce` (§6.1) and `if-match` (RFC 9110) are all NAMED BY THE SPECIFICATIONS, so renaming them would be this gate
+overruling the contract — and the SPEC-003 §5.3 source-permission family (`permissionClass`, `permissionEvidenceUrl`,
+`permissionCheckedAt`, `permissionWindowSeconds`) is a different concept from the consent sense SPEC-000 §4 forbids.
+Each is allowlisted individually rather than by prefix, because a prefix is how an allowlist grows teeth nobody gave
+it.
+
+**3. THE GATE FOUND ONE REAL DEFECT IN MY OWN EARLIER WORK.** `case-queries.ts` exposed
+`verificationObservations: { count, latestFinding }` — a field I invented, containing a synonym SPEC-000 §4 forbids,
+and named by NO specification (verified by searching the specs for `latestFinding`, `latestKind`, `latestOutcome`: all
+three are absent). It is now `latestMethod`, which is what the field actually carries. That is the gate doing its job
+on the first run, and it is the reason the gate exists rather than a style preference.
+
+**4. THE DOCUMENT IS DELIBERATELY PARTIAL, AND SAYS SO.** MEASURED: this codebase declares no JSON Schemas at all —
+`schema:` appears in `src/http` only in prose and in the query parser's parameter name — because bodies are parsed and
+validated by hand. A generated document that invented body schemas would be a SECOND source of truth for shapes the
+handlers enforce, and the second source is the one that drifts. The document therefore carries what IS declared
+(paths, methods, scopes, step-up, idempotency, success status and the query parameters where a `QuerySchema` exists)
+and its own `info.description` states the omission. The gate scans the document AND the declarations beside it, which
+is where body field names live.
+
+**5. THE PUBLIC ROUTE'S SHAPE IS NOT YET ASSERTED BY A BLACK-BOX SUITE.** The gate proves the vocabulary; nothing yet
+drives the real server over HTTP with runtime canaries, which is DOD-011/012/013's actual requirement. Until that
+suite exists, "the API's vocabulary is clean" is proven and "the API behaves correctly through its public interface"
+is not.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

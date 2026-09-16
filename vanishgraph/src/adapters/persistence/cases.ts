@@ -578,7 +578,7 @@ export class PostgresCaseQueries implements CaseQueries {
       },
       verificationObservations: {
         count: observations.rows[0]?.count ?? 0,
-        latestFinding: observations.rows[0]?.latest ?? null,
+        latestMethod: observations.rows[0]?.latest ?? null,
       },
       externalActions: { count: actions.rows[0]?.count ?? 0, latestOutcome: actions.rows[0]?.latest ?? null },
     };

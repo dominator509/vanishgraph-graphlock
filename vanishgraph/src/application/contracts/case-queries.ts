@@ -79,7 +79,7 @@ export interface CaseDetail extends CaseListRow {
   readonly recipe: CaseRecipe | null;
   readonly deadlines: readonly CaseNextDeadline[];
   readonly controllerResponses: { readonly count: number; readonly latestKind: string | null };
-  readonly verificationObservations: { readonly count: number; readonly latestFinding: string | null };
+  readonly verificationObservations: { readonly count: number; readonly latestMethod: string | null };
   readonly externalActions: { readonly count: number; readonly latestOutcome: string | null };
 }
 

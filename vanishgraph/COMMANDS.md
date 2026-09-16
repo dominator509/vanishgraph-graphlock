@@ -128,6 +128,24 @@ prints a `UNVERIFIED-BY-THIS-GATE` block naming each credential-dependent path i
 exercise. It reports those as `BLOCKED_CREDENTIALS`; it never reports them as passing and
 never substitutes a stub for one (EP-004 decision D4).
 
+`sh scripts/copy-lint-gate.sh` (copy lint gate: ok, added by EP-004 M8, consumed by EP-005 M2)
+is the vocabulary gate SPEC-003 VG-API-067 and SPEC-004 VG-UI-080…083 require. It regenerates
+the OpenAPI document from the route registry, then scans the document, the registry, the route
+modules, the DTOs and the application ports for SPEC-000 §4's forbidden synonyms used as
+production identifiers — `client`, `target`, `victim`, `match`, `finding`, `score`, `request`,
+`submission`, `file`, `job`, `task`, `check` and the rest — plus the ad-hoc status tokens
+`DONE`, `COMPLETE`, `SUCCESS`, `REMOVED`. Two tokens are allowlisted **by exact name only**:
+`X-Request-Id` and `requestId`, which SPEC-003 §7.3 sanctions as HTTP call tracing; every other
+`request*` identifier fails. Allowlist entries carry a reason, and an entry without one fails the
+gate (VG-UI-080). A hit prints the file, line and token and exits non-zero; a scan that read no
+files also fails, because a gate that read nothing has verified nothing. **A hit is a defect to
+fix, never a baseline to accept** (SPEC-006 §8 row 8).
+
+The gate scans IDENTIFIERS, not prose: SPEC-000 §4 forbids these synonyms "used as production
+identifiers", so SEMANTIC error messages — sentences shown to a human — are out of its scope by
+construction, and the wording rules for what a user READS are the UI-copy rules EP-005 M2
+applies through this same script.
+
 ### The service
 
 `node src/infrastructure/main.ts` (serve, `npm run serve`) starts the `/v1` listener. It lives in
