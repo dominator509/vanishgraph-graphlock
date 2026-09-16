@@ -1,0 +1,4 @@
+{"tests":327,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":27,"manifestChecked":28,"verdict":"FAIL"}
+test collection guard: FAIL
+  - expected suite produced no results: tests/integration/cross-tenant-both-layers.test.ts
+A suite that silently stops running removes its coverage without any red build.
