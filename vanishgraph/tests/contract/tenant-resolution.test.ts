@@ -41,6 +41,7 @@ import {
   testTransitionQueries,
   TEST_SESSION_SECRET,
   TEST_TOKEN,
+  testServerDependencies,
 } from './server-support.ts';
 import { TenantId } from '../../src/domain/identifiers.ts';
 
@@ -52,31 +53,16 @@ function serverWith(options: {
   tenancy?: ReturnType<typeof testTenancy>;
 } = {}) {
   const tenancy = options.tenancy ?? testTenancy();
-  const app = buildServer({
-    version: '0.0.0-test',
-    commit: 'test',
-    logLevel: 'silent',
+  const app = buildServer(testServerDependencies({
     identity: testIdentity({ tenantId: options.tenantId ?? TENANT_A }),
     tenancy: tenancy.runner,
     idempotency: testIdempotency(),
-    sessionSecret: TEST_SESSION_SECRET,
-    subjectQueries: testSubjectQueries(),
-    sourceQueries: testSourceQueries(),
-    recipeVerificationKeys: testRecipeVerificationKeys(),
-    appealQueries: testAppealQueries(),
-    deadlineQueries: testDeadlineQueries(),
-    auditQueries: testAuditQueries(),
-    observationQueries: testObservationQueries(),
-    exposureQueries: testExposureQueries(),
-    transitionQueries: testTransitionQueries(),
-    caseQueries: testCaseQueries(),
-    controllerResponseQueries: testControllerResponseQueries(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),
       probes: [async () => ({ name: 'stub', ok: true })],
     },
-  });
+  }));
   return { app, tenancy };
 }
 
@@ -262,13 +248,12 @@ describe('tenancy is required by the server type, so it cannot be forgotten', ()
     assert.ok(deps.identity !== undefined);
     assert.ok(deps.tenancy !== undefined);
     // A server built with them starts; one without them does not compile. That is the guarantee.
-    const app = buildServer({
+    const app = buildServer(testServerDependencies({
       version: 't',
       commit: 't',
-      logLevel: 'silent',
       health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 's', ok: true })] },
       ...deps,
-    });
+    }));
     assert.ok(app !== undefined);
     void app.close();
   });

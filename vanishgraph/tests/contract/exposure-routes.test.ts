@@ -23,21 +23,10 @@ import assert from 'node:assert/strict';
 
 import { buildServer, type VgFastify } from '../../src/http/server.ts';
 import {
-  testAppealQueries,
-  testAuditQueries,
-  testControllerResponseQueries,
-  testDeadlineQueries,
-  testExposureQueries,
   testIdentity,
-  testObservationQueries,
-  testRecipeVerificationKeys,
-  testSourceQueries,
-  testSubjectQueries,
   testTenancy,
-  testCaseQueries,
-  testTransitionQueries,
-  TEST_SESSION_SECRET,
   TEST_TOKEN,
+  testServerDependencies,
 } from './server-support.ts';
 import { ROUTES, findRoute } from '../../src/http/openapi/registry.ts';
 import { EXPOSURES_QUERY } from '../../src/http/query/filters.ts';
@@ -49,30 +38,15 @@ const SCOPES = ['vg.exposures.read', 'vg.exposures.assess'];
 
 function app(): VgFastify {
   const tenancy = testTenancy();
-  return buildServer({
-    version: '0.0.0-test',
-    commit: 'test',
-    logLevel: 'silent',
+  return buildServer(testServerDependencies({
     identity: testIdentity({ tenantId: TENANT_A, scopes: SCOPES }),
     tenancy: tenancy.runner,
     idempotency: {
       store: { begin: async () => ({ state: 'NEW' as const }), complete: async () => {}, abandon: async () => {} },
       requirementFor: (method, routeTemplate) => findRoute(method, routeTemplate)?.idempotency,
     },
-    sessionSecret: TEST_SESSION_SECRET,
-    subjectQueries: testSubjectQueries(),
-    sourceQueries: testSourceQueries(),
-    recipeVerificationKeys: testRecipeVerificationKeys(),
-    appealQueries: testAppealQueries(),
-    deadlineQueries: testDeadlineQueries(),
-    auditQueries: testAuditQueries(),
-    observationQueries: testObservationQueries(),
-    exposureQueries: testExposureQueries(),
-    transitionQueries: testTransitionQueries(),
-    caseQueries: testCaseQueries(),
-    controllerResponseQueries: testControllerResponseQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
-  });
+  }));
 }
 
 interface Injected {
@@ -160,30 +134,15 @@ describe('§5.5 is declared as the registry says it is', () => {
   });
 
   test('a caller without the assess scope is refused 403 on both writes', async () => {
-    const server = buildServer({
-      version: '0.0.0-test',
-      commit: 'test',
-      logLevel: 'silent',
+    const server = buildServer(testServerDependencies({
       identity: testIdentity({ tenantId: TENANT_A, scopes: ['vg.exposures.read'] }),
       tenancy: testTenancy().runner,
       idempotency: {
         store: { begin: async () => ({ state: 'NEW' as const }), complete: async () => {}, abandon: async () => {} },
         requirementFor: (method, routeTemplate) => findRoute(method, routeTemplate)?.idempotency,
       },
-      sessionSecret: TEST_SESSION_SECRET,
-      subjectQueries: testSubjectQueries(),
-      sourceQueries: testSourceQueries(),
-      recipeVerificationKeys: testRecipeVerificationKeys(),
-      appealQueries: testAppealQueries(),
-      deadlineQueries: testDeadlineQueries(),
-      auditQueries: testAuditQueries(),
-      observationQueries: testObservationQueries(),
-      exposureQueries: testExposureQueries(),
-      transitionQueries: testTransitionQueries(),
-    caseQueries: testCaseQueries(),
-    controllerResponseQueries: testControllerResponseQueries(),
       health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
-    });
+    }));
     const response = await call(server, 'POST', `/v1/exposures/${EXPOSURE_ID}/match-assessments`, {
       headers: { 'if-match': '"DISCOVERED_CANDIDATE:1"' },
       body: { confidence: VALID_CONFIDENCE, method: 'FEATURE_SET_V1' },

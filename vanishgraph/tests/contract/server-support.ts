@@ -17,6 +17,7 @@
  * against a real database, where EP-003 already puts it.
  */
 
+import type { ServerDependencies } from '../../src/http/server.ts';
 import type { IdentityPluginOptions } from '../../src/http/plugins/identity.ts';
 import type { TenancyPluginOptions, TenantTransaction } from '../../src/http/plugins/tenancy.ts';
 import type { VerifyResult } from '../../src/adapters/oidc/verify.ts';
@@ -369,5 +370,45 @@ export function testTransitionQueries(): TransitionQueries {
     listTransitionsForExposure: async () => [],
     listTransitionsForCase: async () => [],
     lastTransitionForCase: async () => undefined,
+  };
+}
+
+/**
+ * A COMPLETE set of server dependencies, with every port defaulted to the honest stub above.
+ *
+ * WHY THIS EXISTS, WITH A NUMBER. `ServerDependencies` requires every port, deliberately - an optional port is a
+ * configuration in which a route crashes at runtime, which is EP-004 M3's decision and is not weakened here. The
+ * cost of that decision has been paid at every port addition: adding ONE required port forced edits at 12-16 call
+ * sites in EIGHT consecutive rounds (5.3, 5.14, 5.13, 5.15, 5.10/5.11, 5.5, 5.7, 5.9), because each suite listed
+ * every port it did not care about. With this builder a suite names only what it is ABOUT, and a new port costs
+ * ONE edit - here.
+ *
+ * WHAT IT DOES NOT DO: it does not weaken the contract, and it does not pretend a stub is persistence. Every
+ * default is the same empty/not-found answer the suites used to pass by hand, so a suite converted to this builder
+ * asserts exactly what it asserted before. `tests/db/**` keeps its explicit real adapters, because asserting
+ * persistence has no honest default.
+ */
+export function testServerDependencies(overrides: Partial<ServerDependencies> = {}): ServerDependencies {
+  return {
+    version: '0.0.0-test',
+    commit: 'test',
+    logLevel: 'silent',
+    identity: testIdentity(),
+    tenancy: testTenancy().runner,
+    idempotency: testIdempotency(),
+    sessionSecret: TEST_SESSION_SECRET,
+    subjectQueries: testSubjectQueries(),
+    sourceQueries: testSourceQueries(),
+    recipeVerificationKeys: testRecipeVerificationKeys(),
+    appealQueries: testAppealQueries(),
+    deadlineQueries: testDeadlineQueries(),
+    auditQueries: testAuditQueries(),
+    observationQueries: testObservationQueries(),
+    exposureQueries: testExposureQueries(),
+    transitionQueries: testTransitionQueries(),
+    caseQueries: testCaseQueries(),
+    controllerResponseQueries: testControllerResponseQueries(),
+    health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
+    ...overrides,
   };
 }

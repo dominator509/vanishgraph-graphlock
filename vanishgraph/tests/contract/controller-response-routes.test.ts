@@ -18,21 +18,10 @@ import assert from 'node:assert/strict';
 
 import { buildServer, type VgFastify } from '../../src/http/server.ts';
 import {
-  testAppealQueries,
-  testAuditQueries,
-  testCaseQueries,
-  testControllerResponseQueries,
-  testDeadlineQueries,
-  testExposureQueries,
   testIdentity,
-  testObservationQueries,
-  testRecipeVerificationKeys,
-  testSourceQueries,
-  testSubjectQueries,
   testTenancy,
-  testTransitionQueries,
-  TEST_SESSION_SECRET,
   TEST_TOKEN,
+  testServerDependencies,
 } from './server-support.ts';
 import { ROUTES, findRoute } from '../../src/http/openapi/registry.ts';
 import { isErrorCode } from '../../src/http/errors/code-registry.ts';
@@ -48,30 +37,15 @@ const SCOPES = ['vg.cases.read', 'vg.cases.write'];
 
 function app(scopes: readonly string[] = SCOPES): VgFastify {
   const tenancy = testTenancy();
-  return buildServer({
-    version: '0.0.0-test',
-    commit: 'test',
-    logLevel: 'silent',
+  return buildServer(testServerDependencies({
     identity: testIdentity({ tenantId: TENANT_A, scopes }),
     tenancy: tenancy.runner,
     idempotency: {
       store: { begin: async () => ({ state: 'NEW' as const }), complete: async () => {}, abandon: async () => {} },
       requirementFor: (method, routeTemplate) => findRoute(method, routeTemplate)?.idempotency,
     },
-    sessionSecret: TEST_SESSION_SECRET,
-    subjectQueries: testSubjectQueries(),
-    sourceQueries: testSourceQueries(),
-    recipeVerificationKeys: testRecipeVerificationKeys(),
-    appealQueries: testAppealQueries(),
-    deadlineQueries: testDeadlineQueries(),
-    auditQueries: testAuditQueries(),
-    observationQueries: testObservationQueries(),
-    exposureQueries: testExposureQueries(),
-    transitionQueries: testTransitionQueries(),
-    caseQueries: testCaseQueries(),
-    controllerResponseQueries: testControllerResponseQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
-  });
+  }));
 }
 
 interface Injected {

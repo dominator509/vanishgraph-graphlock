@@ -23,18 +23,10 @@ import assert from 'node:assert/strict';
 
 import { buildServer, type VgFastify } from '../../src/http/server.ts';
 import {
-  testAppealQueries,
-  testControllerResponseQueries,
-  testDeadlineQueries,
-  testAuditQueries,
-  testExposureQueries,
-  testObservationQueries,
-  testCaseQueries,
-  testTransitionQueries,
   testIdentity,
   testTenancy,
-  TEST_SESSION_SECRET,
   TEST_TOKEN,
+  testServerDependencies,
 } from './server-support.ts';
 import { ROUTES, findRoute } from '../../src/http/openapi/registry.ts';
 import { isErrorCode } from '../../src/http/errors/code-registry.ts';
@@ -122,10 +114,7 @@ function serverWith(options: {
 } = {}): { app: VgFastify; calls: string[] } {
   const recorded = recordingSourceQueries();
   const tenancy = testTenancy();
-  const app = buildServer({
-    version: '0.0.0-test',
-    commit: 'test',
-    logLevel: 'silent',
+  const app = buildServer(testServerDependencies({
     identity: testIdentity({
       tenantId: TENANT_A,
       scopes: options.scopes ?? ['vg.sources.read', 'vg.sources.write', 'vg.recipes.write'],
@@ -142,17 +131,8 @@ function serverWith(options: {
       },
       requirementFor: (method, routeTemplate) => findRoute(method, routeTemplate)?.idempotency,
     },
-    sessionSecret: TEST_SESSION_SECRET,
     sourceQueries: options.port ?? recorded.port,
     recipeVerificationKeys: NO_KEYS,
-    appealQueries: testAppealQueries(),
-    deadlineQueries: testDeadlineQueries(),
-    auditQueries: testAuditQueries(),
-    observationQueries: testObservationQueries(),
-    exposureQueries: testExposureQueries(),
-    transitionQueries: testTransitionQueries(),
-    caseQueries: testCaseQueries(),
-    controllerResponseQueries: testControllerResponseQueries(),
     subjectQueries: {
       listSubjects: async () => [],
       getSubjectDetail: async () => undefined,
@@ -175,7 +155,7 @@ function serverWith(options: {
       now: () => new Date(),
       probes: [async () => ({ name: 'stub', ok: true })],
     },
-  });
+  }));
   return { app, calls: recorded.calls };
 }
 

@@ -22,18 +22,10 @@ import assert from 'node:assert/strict';
 
 import { buildServer, type VgFastify } from '../../src/http/server.ts';
 import {
-  testAppealQueries,
-  testControllerResponseQueries,
-  testDeadlineQueries,
-  testAuditQueries,
-  testExposureQueries,
-  testObservationQueries,
-  testCaseQueries,
-  testTransitionQueries,
   testIdentity,
   testTenancy,
-  TEST_SESSION_SECRET,
   TEST_TOKEN,
+  testServerDependencies,
 } from './server-support.ts';
 import { ROUTES, findRoute } from '../../src/http/openapi/registry.ts';
 import { isErrorCode } from '../../src/http/errors/code-registry.ts';
@@ -81,10 +73,7 @@ function serverWith(
   options: { scopes?: readonly string[]; authTimeAgeSeconds?: number } = {},
 ): { app: VgFastify; calls: string[] } {
   const recorded = recordingAppealQueries();
-  const app = buildServer({
-    version: '0.0.0-test',
-    commit: 'test',
-    logLevel: 'silent',
+  const app = buildServer(testServerDependencies({
     identity: testIdentity({
       tenantId: TENANT_A,
       scopes: options.scopes ?? ['vg.cases.read', 'vg.appeal.write'],
@@ -101,7 +90,6 @@ function serverWith(
       },
       requirementFor: (method, routeTemplate) => findRoute(method, routeTemplate)?.idempotency,
     },
-    sessionSecret: TEST_SESSION_SECRET,
     subjectQueries: {
       listSubjects: async () => [],
       getSubjectDetail: async () => undefined,
@@ -134,19 +122,12 @@ function serverWith(
     },
     recipeVerificationKeys: { publicKeysByRef: new Map<string, string>() },
     appealQueries: options.scopes === undefined ? recorded.port : recorded.port,
-    deadlineQueries: testDeadlineQueries(),
-    auditQueries: testAuditQueries(),
-    observationQueries: testObservationQueries(),
-    exposureQueries: testExposureQueries(),
-    transitionQueries: testTransitionQueries(),
-    caseQueries: testCaseQueries(),
-    controllerResponseQueries: testControllerResponseQueries(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),
       probes: [async () => ({ name: 'stub', ok: true })],
     },
-  });
+  }));
   return { app, calls: recorded.calls };
 }
 
@@ -341,30 +322,18 @@ describe('§5.14 follows §4.1 for idempotency and §3.2 for step-up, from the r
       ['GET', `/v1/cases/${CASE_ID}/appeal-escalations`],
       ['GET', `/v1/appeal-escalations/${ESCALATION_ID}`],
     ] as const) {
-      const app = buildServer({
-        version: '0.0.0-test',
-        commit: 'test',
-        logLevel: 'silent',
+      const app = buildServer(testServerDependencies({
         identity: testIdentity({ tenantId: TENANT_A, scopes: ['vg.cases.read'], authTimeAgeSeconds: 3600 }),
         tenancy: testTenancy().runner,
         idempotency: {
           store: { begin: async () => ({ state: 'NEW' as const }), complete: async () => {}, abandon: async () => {} },
           requirementFor: (m, t) => findRoute(m, t)?.idempotency,
         },
-        sessionSecret: TEST_SESSION_SECRET,
         subjectQueries: testAppealQueriesSubjectStub(),
         sourceQueries: testAppealQueriesSourceStub(),
         recipeVerificationKeys: { publicKeysByRef: new Map<string, string>() },
-        appealQueries: testAppealQueries(),
-        deadlineQueries: testDeadlineQueries(),
-    auditQueries: testAuditQueries(),
-    observationQueries: testObservationQueries(),
-    exposureQueries: testExposureQueries(),
-    transitionQueries: testTransitionQueries(),
-    caseQueries: testCaseQueries(),
-    controllerResponseQueries: testControllerResponseQueries(),
         health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 's', ok: true })] },
-      });
+      }));
       const response = await app.inject({ method, url, headers: { authorization: `Bearer ${TEST_TOKEN}` } });
       // A stale authentication must NOT be refused here: these routes are reads, and §5.14.2/§5.14.3 mark
       // them Optional with no step-up. A 403 would mean a read inherited a write's control.

@@ -25,13 +25,9 @@ import { buildServer, type VgFastify } from '../../src/http/server.ts';
 import {
   testAuditQueries,
   testIdentity,
-  testExposureQueries,
-  testObservationQueries,
-  testCaseQueries,
-  testTransitionQueries,
   testTenancy,
-  TEST_SESSION_SECRET,
   TEST_TOKEN,
+  testServerDependencies,
 } from './server-support.ts';
 import { ROUTES, findRoute } from '../../src/http/openapi/registry.ts';
 import { isErrorCode } from '../../src/http/errors/code-registry.ts';
@@ -42,14 +38,8 @@ import type { AuditQueries } from '../../src/application/contracts/audit-queries
 const TENANT_A = '11111111-1111-4111-8111-111111111111';
 const RANGE_QS = 'from=2026-08-01T00:00:00.000Z&to=2026-08-02T00:00:00.000Z';
 
-import { testSubjectQueries, testSourceQueries, testAppealQueries, testControllerResponseQueries,
-  testDeadlineQueries, testRecipeVerificationKeys } from './server-support.ts';
-
 function serverWith(options: { scopes?: readonly string[]; queries?: AuditQueries } = {}): VgFastify {
-  return buildServer({
-    version: '0.0.0-test',
-    commit: 'test',
-    logLevel: 'silent',
+  return buildServer(testServerDependencies({
     identity: testIdentity({ tenantId: TENANT_A, scopes: options.scopes ?? ['vg.audit.read'] }),
     tenancy: testTenancy().runner,
     idempotency: {
@@ -60,20 +50,9 @@ function serverWith(options: { scopes?: readonly string[]; queries?: AuditQuerie
       },
       requirementFor: (method, routeTemplate) => findRoute(method, routeTemplate)?.idempotency,
     },
-    sessionSecret: TEST_SESSION_SECRET,
-    subjectQueries: testSubjectQueries(),
-    sourceQueries: testSourceQueries(),
-    recipeVerificationKeys: testRecipeVerificationKeys(),
-    appealQueries: testAppealQueries(),
-    deadlineQueries: testDeadlineQueries(),
     auditQueries: options.queries ?? testAuditQueries(),
-    observationQueries: testObservationQueries(),
-    exposureQueries: testExposureQueries(),
-    transitionQueries: testTransitionQueries(),
-    caseQueries: testCaseQueries(),
-    controllerResponseQueries: testControllerResponseQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
-  });
+  }));
 }
 
 async function get(app: VgFastify, url: string): Promise<{ status: number; code: unknown; json: Record<string, unknown> }> {

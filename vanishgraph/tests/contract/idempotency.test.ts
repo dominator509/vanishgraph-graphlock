@@ -25,20 +25,9 @@ import { buildServer } from '../../src/http/server.ts';
 import { canonicalise, fingerprintOf, validateIdempotencyKey } from '../../src/http/plugins/idempotency.ts';
 import {
   testIdentity,
-  testSubjectQueries,
-  testSourceQueries,
-  testRecipeVerificationKeys,
-  testAppealQueries,
-  testControllerResponseQueries,
-  testDeadlineQueries,
-  testAuditQueries,
-  testExposureQueries,
-  testObservationQueries,
-  testCaseQueries,
-  testTransitionQueries,
   testTenancy,
-  TEST_SESSION_SECRET,
   TEST_TOKEN,
+  testServerDependencies,
 } from './server-support.ts';
 import { recordingStore, type RecordingIdempotencyStore } from './idempotency-support.ts';
 import type { IdempotencyRequirement } from '../../src/http/plugins/idempotency.ts';
@@ -59,10 +48,7 @@ function effectServer(options: {
   failWith?: Error;
 }) {
   const requirement = options.requirement ?? 'required';
-  const app = buildServer({
-    version: '0.0.0-test',
-    commit: 'test',
-    logLevel: 'silent',
+  const app = buildServer(testServerDependencies({
     identity: testIdentity({ tenantId: options.tenantId ?? TENANT_A }),
     tenancy: testTenancy().runner,
     idempotency: {
@@ -70,24 +56,12 @@ function effectServer(options: {
       requirementFor: (method, routeTemplate) =>
         method === 'POST' && routeTemplate === '/__test/effect' ? requirement : undefined,
     },
-    sessionSecret: TEST_SESSION_SECRET,
-    subjectQueries: testSubjectQueries(),
-    sourceQueries: testSourceQueries(),
-    recipeVerificationKeys: testRecipeVerificationKeys(),
-    appealQueries: testAppealQueries(),
-    deadlineQueries: testDeadlineQueries(),
-    auditQueries: testAuditQueries(),
-    observationQueries: testObservationQueries(),
-    exposureQueries: testExposureQueries(),
-    transitionQueries: testTransitionQueries(),
-    caseQueries: testCaseQueries(),
-    controllerResponseQueries: testControllerResponseQueries(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),
       probes: [async () => ({ name: 'stub', ok: true })],
     },
-  });
+  }));
 
   app.post('/__test/effect', async (request, reply) => {
     const { withIdempotency } = await import('../../src/http/plugins/idempotency.ts');
@@ -454,7 +428,7 @@ describe('a pre-effect failure releases the key so the caller can retry', () => 
     const store = recordingStore();
     let effects = 0;
     let shouldFail = true;
-    const app = buildServer({
+    const app = buildServer(testServerDependencies({
       version: 't', commit: 't', logLevel: 'silent',
       identity: testIdentity(),
       tenancy: testTenancy().runner,
@@ -462,20 +436,8 @@ describe('a pre-effect failure releases the key so the caller can retry', () => 
         store,
         requirementFor: (m, r) => (m === 'POST' && r === '/__test/effect' ? 'required' : undefined),
       },
-      sessionSecret: TEST_SESSION_SECRET,
-      subjectQueries: testSubjectQueries(),
-    sourceQueries: testSourceQueries(),
-    recipeVerificationKeys: testRecipeVerificationKeys(),
-    appealQueries: testAppealQueries(),
-    deadlineQueries: testDeadlineQueries(),
-    auditQueries: testAuditQueries(),
-    observationQueries: testObservationQueries(),
-    exposureQueries: testExposureQueries(),
-    transitionQueries: testTransitionQueries(),
-    caseQueries: testCaseQueries(),
-    controllerResponseQueries: testControllerResponseQueries(),
       health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 's', ok: true })] },
-    });
+    }));
     const { withIdempotency } = await import('../../src/http/plugins/idempotency.ts');
     app.post('/__test/effect', async (request, reply) =>
       withIdempotency(

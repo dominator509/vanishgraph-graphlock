@@ -20,20 +20,10 @@ import assert from 'node:assert/strict';
 
 import { buildServer, type VgFastify } from '../../src/http/server.ts';
 import {
-  testAppealQueries,
-  testAuditQueries,
-  testControllerResponseQueries,
-  testDeadlineQueries,
-  testExposureQueries,
   testIdentity,
-  testRecipeVerificationKeys,
-  testSourceQueries,
-  testSubjectQueries,
   testTenancy,
-  testCaseQueries,
-  testTransitionQueries,
-  TEST_SESSION_SECRET,
   TEST_TOKEN,
+  testServerDependencies,
 } from './server-support.ts';
 import { ROUTES, findRoute } from '../../src/http/openapi/registry.ts';
 import { isErrorCode } from '../../src/http/errors/code-registry.ts';
@@ -97,10 +87,7 @@ function serverWith(
   options: { scopes?: readonly string[]; authTimeAgeSeconds?: number; port?: ObservationQueries } = {},
 ): { app: VgFastify; calls: string[] } {
   const recorded = recordingObservationQueries();
-  const app = buildServer({
-    version: '0.0.0-test',
-    commit: 'test',
-    logLevel: 'silent',
+  const app = buildServer(testServerDependencies({
     identity: testIdentity({
       tenantId: TENANT_A,
       scopes: options.scopes ?? ['vg.observations.read'],
@@ -115,20 +102,9 @@ function serverWith(
       },
       requirementFor: (method, routeTemplate) => findRoute(method, routeTemplate)?.idempotency,
     },
-    sessionSecret: TEST_SESSION_SECRET,
-    subjectQueries: testSubjectQueries(),
-    sourceQueries: testSourceQueries(),
-    recipeVerificationKeys: testRecipeVerificationKeys(),
-    appealQueries: testAppealQueries(),
-    deadlineQueries: testDeadlineQueries(),
-    auditQueries: testAuditQueries(),
     observationQueries: options.port ?? recorded.port,
-    exposureQueries: testExposureQueries(),
-    transitionQueries: testTransitionQueries(),
-    caseQueries: testCaseQueries(),
-    controllerResponseQueries: testControllerResponseQueries(),
     health: { startedAt: new Date(), now: () => new Date(), probes: [async () => ({ name: 'stub', ok: true })] },
-  });
+  }));
   return { app, calls: recorded.calls };
 }
 

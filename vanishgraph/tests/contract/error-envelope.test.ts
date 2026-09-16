@@ -21,19 +21,8 @@ import {
   testIdempotency,
   testIdentity,
   testTenancy,
-  testSubjectQueries,
-  testSourceQueries,
-  testRecipeVerificationKeys,
-  testAppealQueries,
-  testControllerResponseQueries,
-  testDeadlineQueries,
-  testAuditQueries,
-  testExposureQueries,
-  testObservationQueries,
-  testCaseQueries,
-  testTransitionQueries,
-  TEST_SESSION_SECRET,
   TEST_TOKEN,
+  testServerDependencies,
 } from './server-support.ts';
 import { apiError } from '../../src/http/plugins/error-handler.ts';
 import {
@@ -46,32 +35,17 @@ import {
 function testServer(overrides: Partial<ServerDependencies> = {}) {
   // Identity and tenancy are REQUIRED by ServerDependencies (EP-004 M3): an optional authentication
   // plugin would be a configuration in which every route is unauthenticated.
-  return buildServer({
-    version: '0.0.0-test',
-    commit: 'test',
-    logLevel: 'silent',
+  return buildServer(testServerDependencies({
     identity: testIdentity(),
     tenancy: testTenancy().runner,
     idempotency: testIdempotency(),
-    sessionSecret: TEST_SESSION_SECRET,
-    subjectQueries: testSubjectQueries(),
-    sourceQueries: testSourceQueries(),
-    recipeVerificationKeys: testRecipeVerificationKeys(),
-    appealQueries: testAppealQueries(),
-    deadlineQueries: testDeadlineQueries(),
-    auditQueries: testAuditQueries(),
-    observationQueries: testObservationQueries(),
-    exposureQueries: testExposureQueries(),
-    transitionQueries: testTransitionQueries(),
-    caseQueries: testCaseQueries(),
-    controllerResponseQueries: testControllerResponseQueries(),
     health: {
       startedAt: new Date(),
       now: () => new Date(),
       probes: [async () => ({ name: 'stub', ok: true })],
     },
     ...overrides,
-  });
+  }));
 }
 
 interface Envelope {
