@@ -1,0 +1,73 @@
+/**
+ * Truth-state colour tokens (SPEC-004 §2.3; VG-UI-058).
+ *
+ * TEXT COLOUR IS ALWAYS --vg-ink-900 so label contrast is ≥ 4.5:1 BY CONSTRUCTION: the state hue is carried by a 2px
+ * inline-start border plus a tinted fill, never by the text colour. That is what makes the palette safe for a reader
+ * who cannot distinguish the hues — the glyph and the machine value are the other two non-colour channels, and all
+ * three are mandatory (§2.4, VG-UI-057).
+ *
+ * THE VALUES ARE THE SPECIFICATION'S, transcribed one for one. Changing a hue here without changing §2.3 is drift, and
+ * the copy suite asserts the variable NAME per state rather than the value.
+ */
+:root {
+  --vg-state-candidate: #6B7280;
+  --vg-state-candidate-tint: #EFF1F4;
+  --vg-state-confirmed: #1D4ED8;
+  --vg-state-confirmed-tint: #E8EEFD;
+  --vg-state-ready: #0E7490;
+  --vg-state-ready-tint: #E6F4F7;
+  --vg-state-submitted: #0369A1;
+  --vg-state-submitted-tint: #E7F1FA;
+  --vg-state-acknowledged: #6D28D9;
+  --vg-state-acknowledged-tint: #F1EBF9;
+  --vg-state-verified: #15803D;
+  --vg-state-verified-tint: #E9F6EC;
+  --vg-state-delisted: #4D7C0F;
+  --vg-state-delisted-tint: #F0F7E3;
+  --vg-state-absent: #374151;
+  --vg-state-absent-tint: #ECEEF1;
+  --vg-state-notremovable: #B45309;
+  --vg-state-notremovable-tint: #FDF3E3;
+  --vg-state-human: #A16207;
+  --vg-state-human-tint: #FBF3DC;
+  --vg-state-reappeared: #B91C1C;
+  --vg-state-reappeared-tint: #FBE9E9;
+  --vg-ink-900: #111827;
+}
+
+.vg-truth-badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.375rem;
+  border-inline-start: 2px solid currentColor;
+  padding: 0.125rem 0.375rem;
+  color: var(--vg-ink-900);
+  /* The tint fill is applied per group below rather than per state so a state without a rule still has contrast. */
+  background: var(--vg-state-candidate-tint);
+}
+
+.vg-truth-badge--uncounted { background: var(--vg-state-candidate-tint); }
+.vg-truth-badge--confirmed { background: var(--vg-state-confirmed-tint); }
+.vg-truth-badge--ready { background: var(--vg-state-ready-tint); }
+.vg-truth-badge--submitted { background: var(--vg-state-submitted-tint); }
+.vg-truth-badge--acknowledged { background: var(--vg-state-acknowledged-tint); }
+.vg-truth-badge--verified { background: var(--vg-state-verified-tint); }
+.vg-truth-badge--delisted { background: var(--vg-state-delisted-tint); }
+.vg-truth-badge--absent { background: var(--vg-state-absent-tint); }
+.vg-truth-badge--notremovable { background: var(--vg-state-notremovable-tint); }
+.vg-truth-badge--human { background: var(--vg-state-human-tint); }
+.vg-truth-badge--reappeared { background: var(--vg-state-reappeared-tint); }
+
+.vg-truth-badge__glyph { font-variant-emoji: text; }
+/* The machine value is MONOSPACE and visible: a reader must be able to cross-check the exact token. */
+.vg-truth-badge__machine {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8125rem;
+}
+
+.vg-state-qualifier {
+  /* No truncation, no clamp, no line-height trick that hides the second sentence. */
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}

@@ -19,12 +19,20 @@ cd "$(dirname "$0")/.."
 command -v node >/dev/null 2>&1 || { echo "gate-ui: FAIL - node is required but not found" >&2; exit 1; }
 
 [ -f ui/src/route-manifest.json ] || { echo "gate-ui: FAIL - route manifest is missing; run npm run build:web" >&2; exit 1; }
+# THE CANONICAL TRUTH-STATE MAPPING, required from M2 onward. The plan's sketch required it in M1, when M1 was the
+# milestone that would CREATE it; requiring a file in the milestone that creates it makes that milestone fail. M2 owns
+# the file and adds the precondition here.
+[ -f ui/src/copy/truth-state.ts ] || { echo "gate-ui: FAIL - the canonical truth-state mapping is missing" >&2; exit 1; }
 [ -d ui/src/routes ] || { echo "gate-ui: FAIL - the route directory is missing" >&2; exit 1; }
 
 npx --no-install tsc -p tsconfig.ui.json --noEmit || { echo "gate-ui: FAIL - UI typecheck failed" >&2; exit 1; }
 sh scripts/import-boundary.sh || { echo "gate-ui: FAIL - layer import boundary violated" >&2; exit 1; }
 
 node --test "tests/contract/**/*.test.ts" || { echo "gate-ui: FAIL - UI contract suites failed" >&2; exit 1; }
+
+# THE COPY RULES ARE PART OF THIS NODE'S VERIFICATION (VG-UI-080…083), run here as well as by their own command so a
+# vocabulary regression fails the node gate rather than only the standalone gate an author might not run.
+sh scripts/copy-lint-gate.sh || { echo "gate-ui: FAIL - the copy-lint/vocabulary gate failed" >&2; exit 1; }
 
 # THE MANIFEST MUST MATCH THE TREE, and the equality against SPEC-004 is asserted by the contract suite above; this
 # re-emits it so a STALE committed file is caught here rather than by a reviewer reading a diff.

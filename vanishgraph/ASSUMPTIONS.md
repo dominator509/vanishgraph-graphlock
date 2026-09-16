@@ -1949,6 +1949,45 @@ no suite yet, and a stage that ran nothing must not print a sentinel. The runner
 tested by its own behaviour: a missing browser would be `BLOCKED_ENVIRONMENT`, no suites is `FAIL`, and the sentinel
 appears only after the suites pass against the built bundle.
 
+### 3.48 EP-005 M2: one canonical truth-state vocabulary, and a copy gate that was measured to be silent before it was trusted
+
+**1. THE ELEVEN STATES HAVE EXACTLY ONE SOURCE IN THE UI, AND A TEST PROVES IT EQUALS THE SPEC.**
+`ui/src/copy/truth-state.ts` holds the canonical mapping (`TRUTH_STATE_COPY`, `TRUTH_STATE_TOKENS`, `scopeSuffix`). The
+`ui/src/**` layer may not import `src/domain|adapters|http|infrastructure`, so the UI cannot reuse the server's state
+list by import; duplicating the vocabulary would let the two drift silently. `tests/contract/truth-state-copy.test.ts`
+therefore reads the SPEC text and asserts equality against the UI module's own table rather than trusting a hand-copied
+comment: all eleven states present, no extra state, and each qualifier string equal to the spec's. `TEST_LEDGER`
+records the same suite. Measured now: `tests/contract/truth-state-copy.test.ts` + `tests/contract/vocabulary-ui.test.ts`
+together **16 tests, 16 pass, 0 fail**.
+
+**2. THE SERVICE-SCOPE STATEMENT IS RENDERED FROM THE SPEC'S OWN WORDS, AND THE EQUALITY IS ASSERTED.**
+`ui/src/copy/service-scope.ts` exports `SERVICE_SCOPE_STATEMENT`, and a test asserts it is byte-equal to the §11 block
+quote. `ui/src/routes/portal.limitations.tsx` renders that constant instead of paraphrasing it, so the limitation the
+operator reads is the limitation the spec wrote. A paraphrase here would be the most damaging possible copy defect: it
+would narrow a scope statement without anyone noticing.
+
+**3. THE COPY LINT GATE FOUND A REAL DEFECT IN ITSELF, AND THAT IS THE REASON IT IS NOW TRUSTWORTHY.**
+The gate's quoted-string scan was guarded by a regex alternation containing a bare `^`, which matches at every position;
+the guard was therefore always true and the scan was effectively disabled from the moment it was written. It passed
+because it was incapable of failing. The M8 fixture (a check that the detector fires on a planted string) is what
+exposed it; the guard is now anchored (`/^\.\.?\//`). **A gate that has never been observed to fail is not evidence.**
+The gate was then extended with `PERMANENT_CLAIM_PHRASES` (16 phrases banned by §14 VG-UI-082) and with an `UI_ALLOWLIST`
+that has exactly two entries, each carrying a token, an owner, and a reason — an allowlist without an owner is a
+suppression list. It scans both UI source and the built bundle. Measured now: `copy lint gate: 82 file(s) scanned,
+51 forbidden token(s), 45 allowlisted by exact name, 0 hits` → `copy lint gate: ok`.
+
+**4. THE GATE ALSO FLAGGED FRAMEWORK VOCABULARY, WHICH IS A FALSE POSITIVE AND WAS FIXED AS ONE.**
+`react-dom/client`, `queryClient` and `epochMillisFromIfMatch` are identifiers, not operator-facing copy; the gate now
+skips module specifiers and extends `NON_WIRE_NAMES`. The distinction the gate enforces is "text a human reads" versus
+"text the code is made of", and widening the exclusion was the correct fix rather than weakening the phrase list.
+
+**5. MILESTONE EVIDENCE (this round, all re-run after the last edit).**
+`gate-ui: ok` (including `copy-lint-gate.sh` and the required `ui/src/copy/truth-state.ts` presence check);
+`lint: ok`; `format-check: ok`; `import boundary: ok`; `reality gate: ok`; `test-unit: ok` (**712 tests, 712 pass,
+0 fail**); `tsc -p tsconfig.ui.json` clean; `npm run build:web` produced a 326.20 kB bundle; the 25-route manifest was
+re-emitted. `scripts/test-e2e.sh` still reports `FAIL` for the reason in §3.47.5(c): `tests/e2e/` holds no suite yet, and
+a stage that ran nothing must not print a sentinel.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

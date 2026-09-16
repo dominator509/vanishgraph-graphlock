@@ -41,5 +41,7 @@ tests/contract/subject-command-routes.test.ts
 tests/contract/evidence-routes.test.ts
 tests/contract/vocabulary-gate.test.ts
 tests/contract/route-manifest.test.ts
+tests/contract/truth-state-copy.test.ts
+tests/contract/vocabulary-ui.test.ts
 tests/contract/discovery-routes.test.ts
 tests/contract/webhook-verification.test.ts

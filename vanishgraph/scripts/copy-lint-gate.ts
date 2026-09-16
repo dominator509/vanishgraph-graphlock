@@ -149,7 +149,84 @@ const SPEC_PERMISSION_ALLOWLIST: readonly { readonly token: string; readonly rea
  */
 export const NON_WIRE_NAMES: readonly string[] = [
   'request', 'reply', 'payload', 'rawBody', 'tx', 'input', 'options', 'context', 'params', 'query', 'body', 'headers',
+  // THE UI FRAMEWORK'S HANDLES, same rule as Fastify's: a local cache object in the bootstrap is not a field on the
+  // wire. MEASURED: `queryClient` was flagged for containing the forbidden word "client", and `react-dom/client` for
+  // being a module specifier — both are framework vocabulary, and neither is a name this product publishes.
+  'queryClient', 'QueryClient', 'QueryClientProvider',
 ];
+
+
+/**
+ * §14 VG-UI-082's permanent-claim list, transcribed from SPEC-004 §14 as CASE-INSENSITIVE PHRASES.
+ *
+ * THESE ARE NOT SYNONYMS, THEY ARE CLAIMS, and that is why they are checked over VISIBLE STRINGS rather than over
+ * identifiers: "removed from the internet" is a sentence a marketing page would like to print, and the specification
+ * forbids it in a heading, a `<title>`, a meta description, an empty state and a message template alike. A gate that
+ * only read body text would miss the three places where a claim travels furthest after leaving the application.
+ *
+ * `tests/contract/vocabulary-ui.test.ts` carries the same list and FAILS if the two disagree, so the rule cannot live
+ * in two places and drift.
+ */
+export const PERMANENT_CLAIM_PHRASES: readonly string[] = [
+  'removed from the internet',
+  'delete you from the internet',
+  'permanently deleted',
+  'permanent deletion',
+  'deleted everywhere',
+  'erased from the web',
+  'guaranteed removal',
+  'guaranteed deleted',
+  '100% removed',
+  'fully removed',
+  'completely removed',
+  'removed from all sites',
+  'removed from all sources',
+  'we delete your data',
+  'gone forever',
+  'never comes back',
+];
+
+/**
+ * The TWO §0.3 exceptions, each with an OWNER and a REASON (VG-UI-008, VG-UI-081).
+ *
+ * §0.3 records exactly two narrowly-scoped exceptions to the vocabulary rule, and it names what they do NOT permit:
+ * `PermissionClass` is a value object referenced by its exact name, but the bare noun *permission* is never a synonym
+ * for `AuthorityGrant`; and `provider-permitted` / `ProviderTransportRun` are defined terms, but the bare noun
+ * *provider* is never a synonym for `Source`. The bare nouns are therefore NOT allowlisted — asserted by the UI
+ * contract suite — and every entry here carries an owner, because an exception nobody owns is one nobody reviews.
+ */
+export const UI_ALLOWLIST: readonly { readonly token: string; readonly owner: string; readonly reason: string }[] = [
+  {
+    token: 'PermissionClass',
+    owner: 'SPEC-001 §2 (value object); SPEC-004 §0.3 exception 1',
+    reason: 'the value object is referenced by its exact name, and the bare noun permission is never a synonym for AuthorityGrant',
+  },
+  {
+    token: 'ProviderTransportRun',
+    owner: 'SPEC-001 §3.5 (entity); SPEC-004 §0.3 exception 2',
+    reason: 'an exact defined term for the official-transport record, and the bare noun provider is never used to mean a Source',
+  },
+];
+
+/** The UI surfaces the copy rules cover: the source tree, the HTML shell, and the built bundle when it exists. */
+function uiFiles(root: string): string[] {
+  const out = filesUnder(join(root, 'ui', 'src'), ['.ts', '.tsx', '.css']);
+  const shell = join(root, 'ui', 'index.html');
+  try {
+    statSync(shell);
+    out.push(shell);
+  } catch {
+    // No shell is not an error here: the identifier scan below still runs over the sources.
+  }
+  // THE BUILT BUNDLE IS SCANNED WHEN IT EXISTS: a build step is where a string could be transformed into one nobody
+  // reviewed, and the plan requires the gate to run over built output (VG-UI-080).
+  try {
+    out.push(...filesUnder(join(root, 'ui', 'dist'), ['.js', '.html']));
+  } catch {
+    // Not built yet: the check is narrower, and the gate's summary line reports how many files it read.
+  }
+  return out;
+}
 
 interface Hit {
   readonly file: string;
@@ -262,6 +339,14 @@ function identifiersOn(line: string): string[] {
   }
   for (const match of line.matchAll(/['"`]([^'"`\n]+)['"`]/g)) {
     const value = match[1] ?? '';
+    // A MODULE SPECIFIER IS A PATH, NOT A NAME. `react-dom/client`, `@tanstack/react-query` and `./router.ts` are
+    // locations; treating their segments as identifiers flagged the framework itself.
+    // ANCHORED ALTERNATIVES ONLY. MEASURED DEFECT, caught by the M8 fixture: the first version wrote `(^|\.\.?\/)`, and
+    // `^` matches the EMPTY STRING at position zero — so the guard was true for EVERY string and the quoted-string scan
+    // silently stopped scanning anything. A bare ^ inside an alternation is not "starts with", it is "always".
+    if ((/^\.\.?\//.test(value) || value.startsWith('@') || /^[a-z][a-z0-9-]*\//.test(value)) && !value.startsWith('/')) {
+      continue;
+    }
     // A string WITH whitespace is prose. The only exception is a route path, whose segments are identifiers.
     if (/\s/.test(value)) {
       if (value.startsWith('/')) out.push(...pathCandidates(value));
@@ -385,7 +470,9 @@ function main(): number {
     ...filesUnder(join(root, 'src', 'http', 'routes'), ['.ts']),
     ...filesUnder(join(root, 'src', 'http', 'dto'), ['.ts']),
     ...filesUnder(join(root, 'src', 'application', 'contracts'), ['.ts']),
-    ...filesUnder(join(root, 'apps', 'web', 'src'), ['.ts', '.tsx']),
+    // THE UI TREE IS PART OF THE VOCABULARY SURFACE (VG-UI-081 checks component names, props, test ids, data-* hooks
+    // and route segments), and it was missing from the first version of this gate because no UI existed yet.
+    ...filesUnder(join(root, 'ui', 'src'), ['.ts', '.tsx']),
   ];
   // The generated document is scanned as an ARTEFACT: it is what a client reads.
   const documentPath = join(root, '.agent', 'evidence', 'openapi.json');
@@ -409,6 +496,37 @@ function main(): number {
       continue;
     }
     hits.push(...scanSource(file, relative(root, file).replace(/\\/g, '/')));
+  }
+
+  // THE PERMANENT-CLAIM PASS runs over the UI surfaces — sources, the HTML shell and the built bundle — because these
+  // are CLAIMS rather than identifiers, and a claim in a `<title>` or a meta description is exactly what VG-UI-082
+  // exists to catch.
+  const claimHits: { readonly file: string; readonly line: number; readonly phrase: string }[] = [];
+  for (const file of uiFiles(root)) {
+    const raw = readFileSync(file, 'utf8');
+    raw.split('\n').forEach((line, index) => {
+      const lowered = line.toLowerCase();
+      for (const phrase of PERMANENT_CLAIM_PHRASES) {
+        if (lowered.includes(phrase)) {
+          claimHits.push({
+            file: relative(root, file).replace(/\\/g, '/'),
+            line: index + 1,
+            phrase,
+          });
+        }
+      }
+    });
+  }
+
+  if (claimHits.length > 0) {
+    console.error('copy lint gate: FAIL - a permanent claim appears in UI copy (VG-UI-082):');
+    for (const hit of claimHits) {
+      console.error(`  ${hit.file}:${String(hit.line)}  phrase "${hit.phrase}"`);
+    }
+    console.error('');
+    console.error('SPEC-004 §14 lists these phrases as forbidden in visible strings, headings, <title>, meta');
+    console.error('descriptions, empty states and message templates. Remove the claim or state what was verified.');
+    return 1;
   }
 
   if (hits.length > 0) {
