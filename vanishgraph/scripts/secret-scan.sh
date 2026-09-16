@@ -32,7 +32,13 @@ done
 #   * an AWS access key id;
 #   * a JSON Web Token (three base64url segments) — a real token, not a placeholder;
 #   * an assignment of a non-empty, non-placeholder value to a name that says secret/password/token/key.
-PATTERNS='-----BEGIN [A-Z ]*PRIVATE KEY-----|AKIA[0-9A-Z]{16}|eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}|(SECRET|PASSWORD|PASSWD|TOKEN|API_KEY|CLIENT_SECRET)[[:space:]]*[:=][[:space:]]*["'"'"']?[A-Za-z0-9/+_-]{12,}'
+# TWO QUOTING NOTES, BOTH MEASURED. The pattern is in DOUBLE quotes so that a single quote inside the character class
+# (`[\"']?`, for an assignment whose value is quoted either way) does not terminate the string — MEASURED: the first
+# version used single quotes with a shell dance around that character, and a reader (the self-test in
+# `tests/security/secret-scan-self-test.test.ts`) could not extract the pattern without truncating it. And the whitespace
+# class is the POSIX spelling because `grep -E` needs it; the self-test translates that ONE construct for JavaScript and
+# asserts no other POSIX class appears.
+PATTERNS="-----BEGIN [A-Z ]*PRIVATE KEY-----|AKIA[0-9A-Z]{16}|eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}|(SECRET|PASSWORD|PASSWD|TOKEN|API_KEY|CLIENT_SECRET)[[:space:]]*[:=][[:space:]]*[\"']?[A-Za-z0-9/+_-]{12,}"
 
 hits=$(grep -nIE "$PATTERNS" $files 2>/dev/null | grep -vE '(example|EXAMPLE|placeholder|PLACEHOLDER|SENTINEL|sentinel|redacted|REDACTED|<[A-Z_]+>|\$\{|\$\(|xxx|XXX|your-|YOUR_)' || true)
 

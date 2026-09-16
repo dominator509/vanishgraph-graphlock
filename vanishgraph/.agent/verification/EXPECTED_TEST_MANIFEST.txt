@@ -69,3 +69,4 @@ tests/contract/rate-limit-abuse.test.ts
 tests/contract/mcp-least-privilege.test.ts
 tests/contract/egress-and-redaction.test.ts
 tests/contract/secret-handling.test.ts
+tests/security/secret-scan-self-test.test.ts
