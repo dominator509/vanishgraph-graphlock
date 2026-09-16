@@ -206,26 +206,60 @@ function main(): number {
   const dodPath = join(STATE_DIR, 'DOD_STATUS.jsonl');
   const dodLines = readFileSync(dodPath, 'utf8').split('\n').filter((l) => l.trim().length > 0);
 
-  const passCount = cases.filter((c) => c.status === 'PASS').length;
-  const skipCount = cases.filter((c) => c.status === 'SKIP').length;
+  /**
+   * DOD-009 IS ABOUT THE DATABASE SUITES, SO IT MUST COUNT THE DATABASE SUITES.
+   *
+   * MEASURED DEFECT, corrected here: this row previously reported `passCount`/`suitesSeen.size` over
+   * EVERY suite this script ran — domain, harness, architecture and contract included — while its text
+   * said "Database suites run against real PostgreSQL (no substitute anywhere in tests/db/**)". On the
+   * refresh after the §5.6 group it read "846 tests pass across 48 suites" when the database root alone
+   * was 261 tests across 20 files. That is evidence overstating what it covers, in the one row whose
+   * subject is the database, and it is the failure DOD-027 exists to catch. The counts are now scoped to
+   * `tests/db/**`.
+   */
+  const dbCases = cases.filter((c) => c.suite.startsWith('tests/db/'));
+  const dbSuites = new Set(dbCases.map((c) => c.suite));
+  const dbPass = dbCases.filter((c) => c.status === 'PASS').length;
+  const dbSkip = dbCases.filter((c) => c.status === 'SKIP').length;
 
-  const updates: Record<string, { status: string; evidence: string }> = {
-    'DOD-009': {
+  /**
+   * DOD-013'S TABLE COUNT IS READ FROM THE FILE OF RECORD, NOT TYPED IN.
+   *
+   * MEASURED DEFECT, corrected here: the string said "all 29 tenant-scoped tables" while
+   * `db/tenant-scoped-tables.txt` listed 33 and `scripts/check-rls-coverage.sh` printed 33. A number
+   * copied into prose goes stale the first time a migration adds a table, and a stale number inside an
+   * evidence line is a false claim about a measurement. Reading the list makes the sentence wrong only
+   * if the list is wrong.
+   */
+  const tenantScopedTables = readFileSync(join(PROJECT_ROOT, 'db', 'tenant-scoped-tables.txt'), 'utf8')
+    .split('\n')
+    .filter((l) => l.trim().length > 0 && !l.trim().startsWith('#')).length;
+
+  const updates: Record<string, { status: string; evidence: string }> = {};
+
+  // DOD-009 and DOD-013 are BOTH database claims, so both are written only when the database suites
+  // actually ran. A run without --with-db has no database evidence at all, and a database row updated
+  // from it would be a claim with nothing behind it — the reason DOD-009 previously read "846 tests
+  // across 48 suites" (every suite this script runs, including domain and contract) for a row whose
+  // subject is `tests/db/**`, whose real figure was 261 tests across 20 files.
+  if (WITH_DB) {
+    updates['DOD-009'] = {
       status: 'PASS',
       evidence:
         `Database suites run against real PostgreSQL (no substitute anywhere in tests/db/**): ` +
-        `${passCount} tests pass across ${suitesSeen.size} suites, ${skipCount} skipped. ` +
+        `${dbPass} tests pass across ${dbSuites.size} files, ${dbSkip} skipped. ` +
         'Covered by tests/db/{rls,job-queue,encryption,retention,restore-drill}.test.ts.',
-    },
-    'DOD-013': {
+    };
+    updates['DOD-013'] = {
       status: 'PASS',
       evidence:
         'Tenant isolation asserted at the database layer: RLS enabled AND forced with a policy on ' +
-        'all 29 tenant-scoped tables, enumerated from pg_class/pg_policies so a new table without ' +
-        'isolation fails gate-data. Cross-tenant read returns zero rows as vg_app; cross-tenant ' +
-        'write is refused by WITH CHECK. Proven in tests/db/rls.test.ts and re-asserted by gate-data.sh.',
-    },
-  };
+        `all ${tenantScopedTables} tables listed in db/tenant-scoped-tables.txt, enumerated from ` +
+        'pg_class/pg_policies so a new table without isolation fails gate-data. Cross-tenant read ' +
+        'returns zero rows as vg_app; cross-tenant write is refused by WITH CHECK. Proven in ' +
+        'tests/db/rls.test.ts and re-asserted by gate-data.sh.',
+    };
+  }
 
   if (WITH_DB) {
     updates['DOD-016'] = {
