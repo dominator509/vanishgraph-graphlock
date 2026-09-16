@@ -39,7 +39,11 @@ cd "$(dirname "$0")/.."
 
 command -v node >/dev/null 2>&1 || { echo "test collection guard: FAIL - node is required but not found" >&2; exit 1; }
 
-GLOB="${VG_TEST_GLOB:-tests/domain/**/*.test.ts tests/harness/**/*.test.ts tests/architecture/**/*.test.ts tests/contract/**/*.test.ts}"
+# `tests/security/**` IS IN THE DEFAULT SET FROM EP-006 M1, because the unit stage already runs it and this guard's own rule is
+# that the guard and the stage it guards must name the same roots. MEASURED: after the security suite was added to the
+# manifest and NOT to this glob, the guard failed with "expected suite produced no results" while `test-unit.sh` was
+# running it and passing — the two disagreed about what the unit suite is, which is the defect this file exists to prevent.
+GLOB="${VG_TEST_GLOB:-tests/domain/**/*.test.ts tests/harness/**/*.test.ts tests/architecture/**/*.test.ts tests/contract/**/*.test.ts tests/security/**/*.test.ts}"
 MANIFEST="${VG_EXPECTED_MANIFEST:-.agent/verification/EXPECTED_TEST_MANIFEST.txt}"
 
 [ -f "$MANIFEST" ] || { echo "test collection guard: FAIL - expected-test manifest $MANIFEST is missing" >&2; exit 1; }
@@ -52,3 +56,4 @@ node --test --test-reporter=junit $GLOB \
   | VG_EXPECTED_MANIFEST="$MANIFEST" node scripts/count-tests.mjs
 
 echo "test collection guard: ok"
+
