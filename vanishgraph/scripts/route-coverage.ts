@@ -45,6 +45,10 @@ const app = buildServer({
     requirementFor: () => undefined,
   },
   sessionSecret: 'coverage-probe-not-a-real-secret',
+  subjectCommands: {
+    createSubject: async () => ({ ok: false, reason: 'EVIDENCE_NOT_FOUND' }),
+    updateSubject: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+  },
   subjectQueries: {
     listSubjects: async () => [],
     getSubjectDetail: async () => undefined,

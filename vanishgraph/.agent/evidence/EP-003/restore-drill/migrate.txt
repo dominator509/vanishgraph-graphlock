@@ -27,6 +27,7 @@ migrate: applying 0026_action_records.sql
 migrate: applying 0027_action_status_and_path.sql
 migrate: applying 0028_policy_version_label.sql
 migrate: applying 0029_coverage_report.sql
-migrate: applied 29 migration(s); at version 29
+migrate: applying 0030_subject_contact_preference.sql
+migrate: applied 30 migration(s); at version 30
 migrate: ok
 migrate: ok

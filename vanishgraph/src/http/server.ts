@@ -33,6 +33,7 @@ import { actionRoutes } from './routes/actions.ts';
 import { policyRoutes } from './routes/policies.ts';
 import { coverageRoutes } from './routes/coverage.ts';
 import type { SubjectQueries } from '../application/contracts/subject-queries.ts';
+import type { SubjectCommands } from '../application/contracts/subject-commands.ts';
 import type { RecipeVerificationKeys, SourceQueries } from '../application/contracts/source-queries.ts';
 import type { AppealQueries } from '../application/contracts/appeal-queries.ts';
 import type { DeadlineQueries } from '../application/contracts/deadline-queries.ts';
@@ -106,6 +107,7 @@ export interface ServerDependencies {
    * adapter; the composition root supplies the PostgreSQL implementation.
    */
   readonly subjectQueries: SubjectQueries;
+  readonly subjectCommands: SubjectCommands;
   /**
    * The source catalogue and recipe read/write model (SPEC-003 §5.3). Injected as a port for the same
    * reason as `subjectQueries`.
@@ -220,7 +222,11 @@ export function buildServer(deps: ServerDependencies): VgFastify {
   // The SPEC-003 §5.1 group. Registered with Fastify's `:param` syntax; `beginHandler` normalises the
   // matched pattern back to the registry's `{param}` form, because the registry equals the
   // specification and the specification uses brace notation.
-  app.register(subjectRoutes, { sessionSecret: deps.sessionSecret, queries: deps.subjectQueries });
+  app.register(subjectRoutes, {
+    sessionSecret: deps.sessionSecret,
+    queries: deps.subjectQueries,
+    commands: deps.subjectCommands,
+  });
 
   // The SPEC-003 §5.3 group. Same registration convention as §5.1.
   app.register(sourceRoutes, {

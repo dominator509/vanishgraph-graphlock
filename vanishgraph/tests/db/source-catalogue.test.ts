@@ -119,6 +119,10 @@ function serverFor(tenantId: string, scopes: readonly string[], authTimeAgeSecon
     policyQueries: new PostgresPolicyQueries(),
     coverageQueries: new PostgresCoverageQueries(),
     subjectQueries: { ...testSubjectQueriesStub },
+    subjectCommands: {
+      createSubject: async () => ({ ok: false, reason: 'EVIDENCE_NOT_FOUND' }),
+      updateSubject: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+    },
     health: {
       startedAt: new Date(),
       now: () => new Date(),

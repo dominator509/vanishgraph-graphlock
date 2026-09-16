@@ -35,3 +35,4 @@ tests/contract/controller-response-routes.test.ts
 tests/contract/action-routes.test.ts
 tests/contract/policy-routes.test.ts
 tests/contract/coverage-routes.test.ts
+tests/contract/subject-command-routes.test.ts

@@ -39,6 +39,7 @@ import { PostgresAuditQueries } from '../../src/adapters/persistence/audit-queri
 import { PostgresDeadlineQueries } from '../../src/adapters/persistence/deadlines.ts';
 import { PostgresAppealQueries } from '../../src/adapters/persistence/appeals.ts';
 import { PostgresSubjectQueries } from '../../src/adapters/persistence/subjects.ts';
+import { PostgresSubjectCommands } from '../../src/adapters/persistence/subject-commands.ts';
 import { PostgresSourceQueries } from '../../src/adapters/persistence/sources.ts';
 import { canonicalRecipePayload } from '../../src/adapters/persistence/sources.ts';
 import { PostgresIdempotencyStore } from '../../src/adapters/idempotency/postgres-store.ts';
@@ -93,6 +94,7 @@ function serverFor(
     },
     sessionSecret: TEST_SESSION_SECRET,
     subjectQueries: new PostgresSubjectQueries(),
+    subjectCommands: new PostgresSubjectCommands(),
     sourceQueries: new PostgresSourceQueries(),
     recipeVerificationKeys: keys,
     appealQueries: new PostgresAppealQueries(),

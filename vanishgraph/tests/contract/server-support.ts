@@ -23,6 +23,7 @@ import type { TenancyPluginOptions, TenantTransaction } from '../../src/http/plu
 import type { VerifyResult } from '../../src/adapters/oidc/verify.ts';
 import type { IdempotencyPluginOptions } from '../../src/http/plugins/idempotency.ts';
 import type { SubjectQueries } from '../../src/application/contracts/subject-queries.ts';
+import type { SubjectCommands } from '../../src/application/contracts/subject-commands.ts';
 import type {
   RecipeVerificationKeys,
   SourceQueries,
@@ -174,6 +175,19 @@ export function testTenancy(): TestTenancy {
  * empty tenant looks like, which is the honest behaviour for a stub — a stub that fabricated a row
  * would make a route test assert against data the database never held.
  */
+/**
+ * The §5.1.1/§5.1.4 default: every command refused.
+ *
+ * A creation stub that SUCCEEDED would let a contract test assert a 201 for a request whose authority rules were
+ * never evaluated; refusing is the honest default for a suite that is not about subject creation.
+ */
+export function testSubjectCommands(): SubjectCommands {
+  return {
+    createSubject: async () => ({ ok: false, reason: 'EVIDENCE_NOT_FOUND' }),
+    updateSubject: async () => ({ ok: false, reason: 'NOT_FOUND' }),
+  };
+}
+
 export function testSubjectQueries(): SubjectQueries {
   return {
     listSubjects: async () => [],
@@ -459,6 +473,7 @@ export function testServerDependencies(overrides: Partial<ServerDependencies> = 
     idempotency: testIdempotency(),
     sessionSecret: TEST_SESSION_SECRET,
     subjectQueries: testSubjectQueries(),
+    subjectCommands: testSubjectCommands(),
     sourceQueries: testSourceQueries(),
     recipeVerificationKeys: testRecipeVerificationKeys(),
     appealQueries: testAppealQueries(),

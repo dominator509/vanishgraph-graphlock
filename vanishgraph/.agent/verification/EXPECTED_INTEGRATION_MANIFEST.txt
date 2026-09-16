@@ -24,3 +24,4 @@ tests/db/controller-responses.test.ts
 tests/db/action-records.test.ts
 tests/db/policy-decisions.test.ts
 tests/db/coverage-reports.test.ts
+tests/db/subject-commands.test.ts

@@ -1278,6 +1278,72 @@ it is now asserted field by field, which also says which member drifted. §3.33 
 `sort ∈ requestedAt|completedAt`. The declaration is a control that nothing enforces yet, which is exactly how it
 drifted; §5.4's node should correct it to the contract before the route reads it.
 
+### 3.35 §5.1.1 and §5.1.4: a registry that could not catch a missing code, and the readings subject creation needs
+
+**§5.1.1 and §5.1.4 implemented (2 routes).** Coverage measured: `68 registered / 65 working of 78` — **3 genuine
+stubs remain** (§5.1.7 identifier capture, §5.2.1 authority minting, §5.2.3 revocation) and 10 routes are not
+implemented (§5.4 ×5, §5.12 ×5). Migration `0030` adds `protected_subject.contact_channel` / `.contact_ref_id`
+(§5.1.4 declares `contactPreference` patchable and the schema had nowhere to keep it). Tests:
+`tests/db/subject-commands.test.ts` 12/12, `tests/contract/subject-command-routes.test.ts` 7/7, unit 636/636,
+integration 282/282 across 22 files.
+
+**1. THE REGISTRY WAS MISSING SIX CODES THE CONTRACT NAMES, AND NOTHING COULD HAVE CAUGHT IT AT COMPILE TIME.**
+MEASURED, on the first run of the new suite: a creation with no `expiresAt` was refused correctly by the handler —
+and the caller received **500 INTERNAL_ERROR**, because `statusFor` threw `unknown wire error code:
+AUTHORITY_WINDOW_INVALID` while the envelope was being built. The route was right; the registry had no row for the
+code it raised. **`export type ErrorCode = string` is why typecheck stayed green**: every `apiError('ANYTHING', …)`
+compiles, so an unregistered code fails only at RUNTIME, on the refusal path — the path a happy-path suite never
+walks. Seven rows were added (`AUTHORITY_GRANT_INVALID`, `AUTHORITY_EVIDENCE_REQUIRED`, `AUTHORITY_WINDOW_INVALID`,
+`AUTHORITY_SCOPE_UNKNOWN`, `AUTHORITY_KIND_UNSUPPORTED`, `AUTHORITY_ALREADY_REVOKED`, `STRICT_LANE_CONFLICT`), and the
+contract suite now asserts that every code these routes raise is registered — the check whose absence let a correct
+handler answer 500. Whether `ErrorCode` should stop being `string` is a real question this node answers only by
+narrowing the blast radius (H-7 already requires registration; a test now enforces it per route).
+
+**2. FIVE DECLARED READINGS, because no specification fixes them (the discipline of §3.33/§3.34).**
+(a) **The identity-level floor.** §5.1.1 declares `403 IDENTITY_LEVEL_INSUFFICIENT` without stating the level; §11
+item 10 says which level a jurisdiction or subject class requires is a `PolicyDecision` question. The floor applied
+is `IAL2`, read off SPEC-005 §4's own row ("`REQUEST_READY` and self-service writes") — creating a subject is the
+write that makes a subject exist. It claims nothing about jurisdictions.
+(b) **Separation of duties at creation.** SPEC-005 `VG-AUTHZ-016` is "`TENANT_ADMIN` may not approve its own
+`AuthorityGrant`". At creation the subject does not exist yet, so "its own" can only mean the operator registering
+a subject THAT IS ITSELF: the refusal fires when the caller's `subject_ref` claim equals the submitted `displayRef`
+and the kind is `SELF`. The decisive form — a grant minted for a subject the admin already is — belongs to §5.2.1,
+where the subject id exists to compare.
+(c) **"An in-flight automated write lane"** (§5.1.4's `409 STRICT_LANE_CONFLICT`) is defined as a case of that
+subject at `REQUEST_SUBMITTED` or `ACKNOWLEDGED`: past the point where a channel was addressed, before an outcome
+is recorded. A flag cannot recall work already dispatched, which is why the refusal exists.
+(d) **A missing `expiresAt` is `422 AUTHORITY_WINDOW_INVALID`, not a 400.** The column is NOT NULL and §5.1.1's
+error list has no "required field" entry for it; the window error covers absence as well as a past instant, and the
+test asserts both spellings produce the same code.
+(e) **A duplicate `displayRef` is NOT refused.** `protected_subject` has NO unique constraint on
+`(tenant_id, display_ref)` — verified against `pg_constraint`, not assumed — and §5.1.1 names no duplicate error.
+The route therefore neither invents a 409 nor adds a constraint the contract does not state; recorded here so the
+absence is a decision rather than an oversight.
+
+**3. THREE SCHEMA REALITIES, TWO OF WHICH CORRECTED MY FIXTURES AND ONE OF WHICH IS A STANDING CONFLICT.**
+(a) `evidence_artifact.egress_class` is NOT NULL — the first instrument fixture omitted it and the insert failed at
+psql status 3. (b) `request_case` requires `exposure_id`, `source_id` AND `authority_grant_id`: a case cannot be
+created without its exposure, so the strict-lane fixture had to build the whole source → record → exposure chain
+rather than a case alone. (c) **`evidence_artifact.redaction_state`'s CHECK is `('NONE','SCRUBBED','DENIED')`
+while SPEC-003 §5.12.1 declares the upload values `UNREDACTED|DLP_SCRUBBED`** — measured as
+`violates check constraint "evidence_artifact_redaction_state_check"` when a fixture used the CONTRACT's token. This
+is the §5.12 node's problem and is stated here with the constraint's exact text so it cannot be mistaken for a
+guess: **§5.12.1 cannot store the redaction states its own contract declares** without a migration or a contract
+change, and this node did not make that choice on its behalf.
+
+**4. AN ERROR IN MY OWN TEST HARNESS, RECORDED BECAUSE THE PLUGIN WAS RIGHT.** The helper added an
+`Idempotency-Key` only for `POST`, so five `PATCH` assertions failed `400 IDEMPOTENCY_KEY_REQUIRED`. §5.1.4 declares
+idempotency **Required**, the plugin read that from the registry, and the harness — not the product — was wrong.
+
+**5. WHAT §5.1.1 DOES NOT DO, STATED PLAINLY.** SPEC-005 `VG-AUTHZ-014` requires notice to the subject's verified
+contact channel on agent enrollment, and §5.2.1's success body carries `noticeSentAt` required non-null for `AGENT`
+grants. **There is no notification transport in this repository**, so a grant created here records no notice, and
+nothing in this node pretends one was sent. That is a real gap against SPEC-005 and it belongs to §5.2.1, whose
+contract states the requirement; it is recorded now rather than discovered there. §5.1.4's audit row is also
+appended with actor `service:subjects.write` and `actorKind: SERVICE`, because the port does not carry the operator
+identity — a `HUMAN` actor kind would be a claim this layer cannot support, and the audit trail for a subject update
+therefore names no human. Both are limitations, not designs.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

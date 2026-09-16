@@ -26,6 +26,7 @@ import { JwksCache, httpsJwksFetcher } from '../adapters/oidc/jwks.ts';
 import { PostgresIdempotencyStore } from '../adapters/idempotency/postgres-store.ts';
 import { PostgresTenantRunner, postgresReadinessProbe } from '../adapters/persistence/postgres-runner.ts';
 import { PostgresSubjectQueries } from '../adapters/persistence/subjects.ts';
+import { PostgresSubjectCommands } from '../adapters/persistence/subject-commands.ts';
 import { PostgresSourceQueries, verificationKeysFrom } from '../adapters/persistence/sources.ts';
 import { PostgresAppealQueries } from '../adapters/persistence/appeals.ts';
 import { PostgresDeadlineQueries } from '../adapters/persistence/deadlines.ts';
@@ -179,6 +180,7 @@ async function main(): Promise<number> {
     // The read model is constructed HERE, in the composition root, because this is the only layer
     // allowed to know that a PostgreSQL adapter exists.
     subjectQueries: new PostgresSubjectQueries(),
+    subjectCommands: new PostgresSubjectCommands(),
     // The §5.3 model, constructed here for the same reason.
     sourceQueries: new PostgresSourceQueries(),
     // Recipe signature verification keys, from the environment. An EMPTY map is a real state rather

@@ -44,6 +44,7 @@ import { PostgresCoverageQueries } from '../../src/adapters/persistence/coverage
 import { appendAuditEvents } from '../../src/adapters/persistence/audit-sink.ts';
 import { PostgresIdempotencyStore } from '../../src/adapters/idempotency/postgres-store.ts';
 import { PostgresSubjectQueries } from '../../src/adapters/persistence/subjects.ts';
+import { PostgresSubjectCommands } from '../../src/adapters/persistence/subject-commands.ts';
 import { PostgresSourceQueries } from '../../src/adapters/persistence/sources.ts';
 import { PostgresAppealQueries } from '../../src/adapters/persistence/appeals.ts';
 import { PostgresDeadlineQueries } from '../../src/adapters/persistence/deadlines.ts';
@@ -89,6 +90,7 @@ function serverFor(tenantId: string, scopes: readonly string[] = ['vg.audit.read
     },
     sessionSecret: TEST_SESSION_SECRET,
     subjectQueries: new PostgresSubjectQueries(),
+    subjectCommands: new PostgresSubjectCommands(),
     sourceQueries: new PostgresSourceQueries(),
     recipeVerificationKeys: { publicKeysByRef: new Map<string, string>() },
     appealQueries: new PostgresAppealQueries(),

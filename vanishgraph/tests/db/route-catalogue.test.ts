@@ -21,6 +21,7 @@ import { buildServer, type VgFastify } from '../../src/http/server.ts';
 import { testIdempotency, testIdentity, TEST_SESSION_SECRET, TEST_TOKEN } from '../contract/server-support.ts';
 import { PostgresTenantRunner } from '../../src/adapters/persistence/postgres-runner.ts';
 import { PostgresSubjectQueries } from '../../src/adapters/persistence/subjects.ts';
+import { PostgresSubjectCommands } from '../../src/adapters/persistence/subject-commands.ts';
 import { PostgresSourceQueries } from '../../src/adapters/persistence/sources.ts';
 import { PostgresAppealQueries } from '../../src/adapters/persistence/appeals.ts';
 import { PostgresDeadlineQueries } from '../../src/adapters/persistence/deadlines.ts';
@@ -82,6 +83,7 @@ function serverFor(
     sessionSecret: TEST_SESSION_SECRET,
     // The REAL read models: this suite asserts persistence behaviour, so a stub would prove nothing.
     subjectQueries: new PostgresSubjectQueries(),
+    subjectCommands: new PostgresSubjectCommands(),
     sourceQueries: new PostgresSourceQueries(),
     // EMPTY, and deliberately so: no signing key is configured, which makes the recipe route refuse
     // with DEPENDENCY_UNAVAILABLE. That refusal is asserted; a key planted here would make this suite

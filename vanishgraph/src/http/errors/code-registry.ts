@@ -256,6 +256,30 @@ export const ERROR_CODE_REGISTRY: readonly ErrorCodeSpec[] = Object.freeze([
     message: 'A referenced evidence artifact does not resolve.' },
   { domainCode: 'INVALID_REQUEST', wireCode: 'FIELD_NOT_PATCHABLE', status: 422, retryable: false,
     message: 'This field cannot be changed by this operation.' },
+  // THE AUTHORITY-GRANT VOCABULARY §5.1.1, §5.1.4 AND §5.2 NAME, which the registry did not carry.
+  //
+  // MEASURED DEFECT this corrects, found by implementing §5.1.1: `statusFor` threw "unknown wire error code:
+  // AUTHORITY_WINDOW_INVALID" while building the envelope, the boundary caught that, and the caller received a 500
+  // for a request the contract says is a 422. The route was right; the registry had no row for the code it raised.
+  // TYPECHECK COULD NOT CATCH IT, and that is the part worth recording: `export type ErrorCode = string` (line 541
+  // above) makes every `apiError('ANYTHING', …)` compile, so a code the registry lacks fails only at RUNTIME, on the
+  // refusal path — which is the path least likely to be exercised by a happy-path suite. The five codes below are
+  // the ones §5.1.1/§5.4/§5.2.1/§5.2.3 declare for authority grants and the strict lane; each is listed with the
+  // status its own specification states.
+  { domainCode: 'INVALID_REQUEST', wireCode: 'AUTHORITY_GRANT_INVALID', status: 422, retryable: false,
+    message: 'The authority grant is missing, expired, revoked or unsupported.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'AUTHORITY_EVIDENCE_REQUIRED', status: 422, retryable: false,
+    message: 'This authority kind requires a stored signed instrument.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'AUTHORITY_WINDOW_INVALID', status: 422, retryable: false,
+    message: 'The authority window is absent, or its expiry is not after its issue instant.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'AUTHORITY_SCOPE_UNKNOWN', status: 422, retryable: false,
+    message: 'The authority scope contains a value this API does not define.' },
+  { domainCode: 'INVALID_REQUEST', wireCode: 'AUTHORITY_KIND_UNSUPPORTED', status: 422, retryable: false,
+    message: 'This authority kind is not one of the kinds this API defines.' },
+  { domainCode: 'CONFLICT', wireCode: 'AUTHORITY_ALREADY_REVOKED', status: 409, retryable: false,
+    message: 'This authority grant is already revoked.' },
+  { domainCode: 'CONFLICT', wireCode: 'STRICT_LANE_CONFLICT', status: 409, retryable: false,
+    message: 'A minor subject cannot enter the automated lane while one is already in flight.' },
   { domainCode: 'INVALID_REQUEST', wireCode: 'OVERLAPPING_INTERVAL', status: 422, retryable: false,
     message: 'The supplied interval overlaps an existing interval.' },
   { domainCode: 'INVALID_REQUEST', wireCode: 'IDENTIFIER_KIND_UNSUPPORTED', status: 422, retryable: false,

@@ -24,11 +24,49 @@ import type { FastifyInstance } from 'fastify';
 
 import { apiError } from '../plugins/error-handler.ts';
 import { beginHandler, uuidParam } from './handler-context.ts';
+import { epochMillisFromIfMatch, ifMatchHeader } from './preconditions.ts';
+import { idempotentWrite } from './idempotent-write.ts';
 import { parseQuery } from '../query/strict.ts';
 import { SUBJECTS_QUERY } from '../query/filters.ts';
 import { buildCollection } from '../dto/page.ts';
 import { encodeCursor, decodeCursor, filterHashOf } from '../pagination/cursor.ts';
 import type { SubjectListRow, SubjectQueries } from '../../application/contracts/subject-queries.ts';
+import type { CreateSubjectOutcome, SubjectCommands, SubjectPatch } from '../../application/contracts/subject-commands.ts';
+import { AUTHORITY_KINDS } from '../../application/contracts/subject-commands.ts';
+
+/** SPEC-003 §5.1.10's jurisdiction shape, and §5.1.1's: a two-letter region, optionally with a subdivision. */
+const JURISDICTION_SHAPE = /^[A-Z]{2}(-[A-Z0-9]{1,3})?$/;
+
+/** A body field that must be a non-empty string of bounded length. */
+function requiredText(body: Record<string, unknown>, field: string, max: number): string {
+  const value = body[field];
+  if (typeof value !== 'string' || value.length === 0 || value.length > max) {
+    throw apiError('SCHEMA_VALIDATION_FAILED', { field });
+  }
+  return value;
+}
+
+/** Map §5.1.1's refusals onto the wire codes the contract names. */
+function createSubjectRefusal(outcome: Exclude<CreateSubjectOutcome, { ok: true }>): ReturnType<typeof apiError> {
+  switch (outcome.reason) {
+    case 'AUTHORITY_EVIDENCE_REQUIRED':
+      return apiError('AUTHORITY_EVIDENCE_REQUIRED', { field: 'authorityGrant.evidenceArtifactId' }, 422);
+    case 'AUTHORITY_WINDOW_INVALID':
+      return apiError('AUTHORITY_WINDOW_INVALID', { field: 'authorityGrant.expiresAt' }, 422);
+    case 'EVIDENCE_NOT_FOUND':
+      return apiError('EVIDENCE_NOT_FOUND', { field: 'authorityGrant.evidenceArtifactId' }, 422);
+    case 'SCHEMA_VALIDATION_FAILED':
+      return apiError('SCHEMA_VALIDATION_FAILED', { field: outcome.field }, 422);
+    case 'IDENTITY_LEVEL_INSUFFICIENT':
+      return apiError(
+        'IDENTITY_LEVEL_INSUFFICIENT',
+        { required: outcome.requiredLevel, supplied: outcome.heldLevel },
+        403,
+      );
+    case 'SEPARATION_OF_DUTIES':
+      return apiError('SEPARATION_OF_DUTIES', { field: 'displayRef' }, 403);
+  }
+}
 
 export interface SubjectRouteOptions {
   /** The cursor signing secret (SPEC-003 §2.5). Comes from configuration, never a constant. */
@@ -41,6 +79,13 @@ export interface SubjectRouteOptions {
    * to one storage technology. The port is what lets the adapter change without touching a route.
    */
   readonly queries: SubjectQueries;
+  /**
+   * The write model (§5.1.1, §5.1.4), injected as its own port.
+   *
+   * Separate from `queries` because that interface is a READ model, and a write hidden inside a read model is how
+   * a handler comes to believe reading has no consequence.
+   */
+  readonly commands: SubjectCommands;
 }
 
 /** The query parameters §5.1.2 documents, mapped onto `listSubjects`' filter shape. */
@@ -66,6 +111,7 @@ function subjectFilters(filter: Readonly<Record<string, unknown>>): {
 export function subjectRoutes(app: FastifyInstance, options: SubjectRouteOptions): void {
   const secret = options.sessionSecret;
   const queries = options.queries;
+  const commands = options.commands;
 
   // ---------------------------------------------------------------------------------------------
   // 5.1.2 GET /v1/subjects — list, keyset-paginated.
@@ -416,25 +462,133 @@ export function subjectRoutes(app: FastifyInstance, options: SubjectRouteOptions
   // Each names the dependency that blocks it, so an operator sees WHY rather than a generic 500.
   // ---------------------------------------------------------------------------------------------
 
-  // 5.1.1 POST /v1/subjects — needs the authority command. Step-up is enforced by `beginHandler`
-  // from the registry's `stepUp: true`, so it runs BEFORE the body is examined.
+  // 5.1.1 POST /v1/subjects — create the subject and its authority grant in one transaction.
   app.post('/v1/subjects', async (request, reply) => {
-    void reply;
-    beginHandler(request, reply);
-    throw apiError('DEPENDENCY_UNAVAILABLE', { reason: 'subject creation requires the authority command wiring (EP-004 M6 remainder)' });
+    const h = beginHandler(request, reply);
+    const body = (request.body ?? {}) as Record<string, unknown>;
+
+    const displayRef = requiredText(body, 'displayRef', 64);
+    const jurisdiction = requiredText(body, 'jurisdiction', 6);
+    if (!JURISDICTION_SHAPE.test(jurisdiction)) {
+      throw apiError('SCHEMA_VALIDATION_FAILED', { field: 'jurisdiction' });
+    }
+    const isMinorRaw = body['isMinor'];
+    if (isMinorRaw !== undefined && typeof isMinorRaw !== 'boolean') {
+      throw apiError('SCHEMA_VALIDATION_FAILED', { field: 'isMinor' });
+    }
+    const grantRaw = body['authorityGrant'];
+    if (typeof grantRaw !== 'object' || grantRaw === null || Array.isArray(grantRaw)) {
+      throw apiError('SCHEMA_VALIDATION_FAILED', { field: 'authorityGrant' });
+    }
+    const grant = grantRaw as Record<string, unknown>;
+    const kind = requiredText(grant, 'kind', 32);
+    if (!(AUTHORITY_KINDS as readonly string[]).includes(kind)) {
+      // §5.1.1 names AUTHORITY_GRANT_INVALID for a grant it cannot accept; an unrecognised kind is that, and
+      // reporting it as a schema failure would hide that the caller sent a KIND the contract does not have.
+      throw apiError('AUTHORITY_GRANT_INVALID', { field: 'authorityGrant.kind' });
+    }
+    const scopeRaw = grant['scope'];
+    if (!Array.isArray(scopeRaw) || scopeRaw.some((entry) => typeof entry !== 'string')) {
+      throw apiError('SCHEMA_VALIDATION_FAILED', { field: 'authorityGrant.scope' });
+    }
+    const evidenceRaw = grant['evidenceArtifactId'];
+    if (evidenceRaw !== undefined && evidenceRaw !== null && typeof evidenceRaw !== 'string') {
+      throw apiError('SCHEMA_VALIDATION_FAILED', { field: 'authorityGrant.evidenceArtifactId' });
+    }
+    const expiresRaw = grant['expiresAt'];
+    let expiresAtMs: number | null = null;
+    if (expiresRaw !== undefined) {
+      if (typeof expiresRaw !== 'string' || Number.isNaN(Date.parse(expiresRaw))) {
+        throw apiError('SCHEMA_VALIDATION_FAILED', { field: 'authorityGrant.expiresAt' });
+      }
+      expiresAtMs = Date.parse(expiresRaw);
+    }
+
+    return idempotentWrite(h, async (tx) => {
+      const outcome = await commands.createSubject(tx, {
+        displayRef,
+        jurisdiction,
+        isMinor: isMinorRaw === true,
+        authority: {
+          kind: kind as (typeof AUTHORITY_KINDS)[number],
+          scope: scopeRaw as readonly string[],
+          evidenceArtifactId: typeof evidenceRaw === 'string' ? evidenceRaw : null,
+          expiresAtMs,
+        },
+        actorIdentity: h.context.actorIdentity,
+        actorSubjectRef: h.context.subjectRef,
+        authLevel: h.context.authLevel,
+        correlationId: h.context.correlationId,
+        nowMs: Date.now(),
+      });
+      if (!outcome.ok) throw createSubjectRefusal(outcome);
+      reply.header('location', `/v1/subjects/${outcome.subject.subjectId}`);
+      return { status: 201, body: outcome.subject, resourceId: outcome.subject.subjectId };
+    });
   });
 
-  // 5.1.4 PATCH /v1/subjects/{subjectId} — needs If-Match plus field-level rules.
+  // 5.1.4 PATCH /v1/subjects/{subjectId} — mutable fields only, guarded by the row version.
   app.patch('/v1/subjects/:subjectId', async (request, reply) => {
-    // eginHandler runs the scope check; the id is validated before the precondition check so a
-    // malformed id is not distinguished from a missing token by response shape.
-    beginHandler(request, reply);
-    uuidParam(request, 'subjectId');
-    const ifMatch = request.headers['if-match'];
-    // 428 before 412: a MISSING token and a STALE token are different failures and the contract
-    // assigns them different codes (SPEC-003 §8.2).
-    if (ifMatch === undefined) throw apiError('PRECONDITION_REQUIRED');
-    throw apiError('DEPENDENCY_UNAVAILABLE', { reason: 'subject update requires the command wiring (EP-004 M6 remainder)' });
+    const h = beginHandler(request, reply);
+    const subjectId = uuidParam(request, 'subjectId');
+    const expectedRowVersionMs = epochMillisFromIfMatch(ifMatchHeader(request));
+    const body = (request.body ?? {}) as Record<string, unknown>;
+
+    // `jurisdiction` IS NOT PATCHABLE HERE, and it is refused rather than ignored: §5.1.4 states that a
+    // jurisdiction change invalidates existing PolicyDecision rows (VG-POLICY-002) and must go through §5.1.10
+    // plus a fresh decision. Silently dropping the field would leave a caller believing the jurisdiction moved.
+    if (body['jurisdiction'] !== undefined) {
+      throw apiError('FIELD_NOT_PATCHABLE', { field: 'jurisdiction' });
+    }
+    // The patch is built as a whole rather than field by field: `SubjectPatch`'s members are readonly, which makes
+    // "assign each field as it is parsed" a type error — and the error is the useful kind, because it forces the
+    // patch to be one value whose members are known to have been validated together.
+    const displayRefPatch = body['displayRef'] === undefined ? undefined : requiredText(body, 'displayRef', 64);
+    let isMinorPatch: boolean | undefined;
+    if (body['isMinor'] !== undefined) {
+      if (typeof body['isMinor'] !== 'boolean') throw apiError('SCHEMA_VALIDATION_FAILED', { field: 'isMinor' });
+      isMinorPatch = body['isMinor'];
+    }
+    let contactPatch: { channel: string; contactRefId: string } | undefined;
+    const contactRaw = body['contactPreference'];
+    if (contactRaw !== undefined) {
+      if (typeof contactRaw !== 'object' || contactRaw === null || Array.isArray(contactRaw)) {
+        throw apiError('SCHEMA_VALIDATION_FAILED', { field: 'contactPreference' });
+      }
+      const contact = contactRaw as Record<string, unknown>;
+      contactPatch = {
+        channel: requiredText(contact, 'channel', 32),
+        contactRefId: requiredText(contact, 'contactRefId', 64),
+      };
+    }
+    const patch: SubjectPatch = {
+      ...(displayRefPatch === undefined ? {} : { displayRef: displayRefPatch }),
+      ...(isMinorPatch === undefined ? {} : { isMinor: isMinorPatch }),
+      ...(contactPatch === undefined ? {} : { contactPreference: contactPatch }),
+    };
+
+    return idempotentWrite(h, async (tx) => {
+      const outcome = await commands.updateSubject(tx, {
+        subjectId,
+        expectedRowVersionMs,
+        patch,
+        correlationId: h.context.correlationId,
+        nowMs: Date.now(),
+      });
+      if (!outcome.ok) {
+        switch (outcome.reason) {
+          case 'NOT_FOUND':
+            throw apiError('RESOURCE_NOT_FOUND');
+          case 'PRECONDITION_FAILED':
+            throw apiError('PRECONDITION_FAILED', {
+              currentEtag: `${outcome.authorityState}:${String(outcome.currentRowVersionMs)}`,
+            });
+          case 'STRICT_LANE_CONFLICT':
+            throw apiError('STRICT_LANE_CONFLICT', { field: 'isMinor' });
+        }
+      }
+      return { status: 200, body: outcome.subject, resourceId: subjectId };
+    });
   });
 
   // 5.2.1 POST /v1/subjects/{subjectId}/authority-grants — step-up, and separation of duties.

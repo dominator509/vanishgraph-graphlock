@@ -43,6 +43,7 @@ import { PostgresDeadlineQueries } from '../../src/adapters/persistence/deadline
 import { PostgresAppealQueries } from '../../src/adapters/persistence/appeals.ts';
 import { PostgresIdempotencyStore } from '../../src/adapters/idempotency/postgres-store.ts';
 import { PostgresSubjectQueries } from '../../src/adapters/persistence/subjects.ts';
+import { PostgresSubjectCommands } from '../../src/adapters/persistence/subject-commands.ts';
 import { PostgresSourceQueries } from '../../src/adapters/persistence/sources.ts';
 import { canonicalRecipePayload } from '../../src/adapters/persistence/sources.ts';
 import { findRoute } from '../../src/http/openapi/registry.ts';
@@ -95,6 +96,7 @@ function serverFor(
     },
     sessionSecret: TEST_SESSION_SECRET,
     subjectQueries: new PostgresSubjectQueries(),
+    subjectCommands: new PostgresSubjectCommands(),
     sourceQueries: new PostgresSourceQueries(),
     recipeVerificationKeys: { publicKeysByRef: new Map<string, string>() },
     appealQueries: new PostgresAppealQueries(),
