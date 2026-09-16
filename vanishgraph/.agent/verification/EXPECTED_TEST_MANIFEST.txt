@@ -48,3 +48,4 @@ tests/contract/webhook-verification.test.ts
 tests/contract/coverage-presentation.test.ts
 tests/contract/contrast-tokens.test.ts
 tests/contract/region-states.test.ts
+tests/contract/portal-api-contract.test.ts

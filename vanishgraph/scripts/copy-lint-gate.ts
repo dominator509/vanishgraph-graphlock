@@ -92,6 +92,11 @@ export const ALLOWLIST: readonly { readonly token: string; readonly reason: stri
     token: 'if-match',
     reason: 'the standard HTTP conditional-request header (RFC 9110), not a product identifier',
   },
+  {
+    token: 'ifMatch',
+    reason:
+      'the same RFC 9110 header in the camelCase spelling this codebase uses for an option key; EP-005 M5 measured that the gate flagged it as the forbidden synonym "match", which it is not',
+  },
   { token: 'targetKind', reason: 'SPEC-003 §5.15.1’s audit filter, named verbatim in the contract' },
   { token: 'targetId', reason: 'SPEC-003 §5.15.1’s audit filter, named verbatim in the contract' },
   {
