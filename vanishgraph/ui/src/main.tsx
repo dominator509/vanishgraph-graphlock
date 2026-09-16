@@ -14,6 +14,14 @@ import { createRoot } from 'react-dom/client';
 
 import { router } from './router.ts';
 
+// THE STYLESHEETS ARE IMPORTED HERE, AND UNTIL M4 THEY WERE NOT IMPORTED AT ALL. The truth-state tokens existed as a
+// file nobody loaded, so the built artefact carried no CSS: every contrast, focus-visibility and reduced-motion rule was
+// unmeasurable, and the browser suites in `tests/ui/` would have measured a browser default. `app.css` carries the
+// layout, the focus ring and the region-state styling; the import order puts the tokens first so the state palette is
+// defined before the rules that consume it.
+import './tokens/truth-state.css';
+import './tokens/app.css';
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

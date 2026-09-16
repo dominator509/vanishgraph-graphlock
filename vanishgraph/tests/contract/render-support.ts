@@ -38,7 +38,13 @@ import ts from 'typescript';
 
 const PROJECT_ROOT = resolve(import.meta.dirname, '..', '..');
 const UI_SRC = join(PROJECT_ROOT, 'ui', 'src');
-const MIRROR = join(PROJECT_ROOT, '.cache-ui-render', 'ui-src');
+/**
+ * ONE MIRROR PER PROCESS. MEASURED: the mirror was a single shared directory, and Playwright's `fullyParallel` runs
+ * tests from one file in several worker PROCESSES at once, so one worker's `rmSync` deleted the directory another was
+ * importing from and the filesystem error surfaced as a test failure in the suite, not in the harness. Including the
+ * process id makes each worker's mirror its own; stale directories are inert and gitignored.
+ */
+const MIRROR = join(PROJECT_ROOT, '.cache-ui-render', `ui-src-${String(process.pid)}`);
 
 const require = createRequire(import.meta.url);
 

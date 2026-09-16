@@ -22,8 +22,15 @@ export function PageShell({ surface, path, purpose }: PageShellProps): React.JSX
   return (
     <main>
       {/* `h1` carries the PATH, not the purpose: the path is what the user navigated to and what a support call can
-          repeat, and it is stable while a purpose statement may be reworded. */}
-      <h1>{path}</h1>
+          repeat, and it is stable while a purpose statement may be reworded.
+
+          IT IS PROGRAMMATICALLY FOCUSABLE (`tabIndex={-1}`) FROM M4, which is VG-UI-059's focus-management rule: after
+          route-level navigation focus moves to the page heading, and focus needs somewhere to land. `-1` rather than `0`
+          keeps it OUT of the tab order — a heading is not a control, and adding it to the tab sequence would make every
+          page take one extra keypress to traverse. */}
+      <h1 tabIndex={-1} data-page-heading="true">
+        {path}
+      </h1>
       <dl>
         <dt>Surface</dt>
         <dd>{surface}</dd>

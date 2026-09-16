@@ -148,31 +148,44 @@ applies through this same script.
 ### The portal (EP-005)
 
 `sh scripts/gate-ui.sh` (gate-ui: ok, node EP-005) is this node's gate. It verifies what can be
-verified without a browser runtime or a database: the UI type-checks (`tsc -p tsconfig.ui.json`),
-the layer import boundary holds (including the UI rule that the browser bundle may not import
+verified without launching a browser or a database: the UI type-checks (`tsc -p tsconfig.ui.json`),
+the browser suites type-check (`tsc -p tsconfig.ui-tests.json`, which is where the DOM lib lives —
+the root project has none, so the API layer cannot reach for a browser global), the layer import
+boundary holds (including the UI rule that the browser bundle may not import
 `src/domain|adapters|http|infrastructure`), the committed route manifest is the one the route tree
-produces, the credential-free contract suites pass, and the manifest equals SPEC-004 §1's declared
-route set. **It prints an `UNVERIFIED-BY-THIS-GATE` block on every run** naming the browser-runtime
-suites, the manual assistive-technology validation (`EXTERNAL_REQUIRED`, VG-UI-064/DOD-039), and the
-real-data flows (`BLOCKED_CREDENTIALS`), and it never reports those as passing.
+produces, the credential-free contract suites pass, the copy and vocabulary gate passes, and the
+manifest equals SPEC-004 §1's declared route set. **It prints an `UNVERIFIED-BY-THIS-GATE` block on
+every run** naming the browser stage, the manual assistive-technology validation (`EXTERNAL_REQUIRED`,
+VG-UI-064/DOD-039), and the real-data flows (`BLOCKED_CREDENTIALS`), and it never reports those as
+passing.
 
 `npm run build:web` (`vite build`) emits `ui/src/route-manifest.json` from
 `scripts/emit-route-manifest.ts` and then builds the static bundle into `ui/dist`. The manifest
 emitter walks `ui/src/routes/**` and normalises TanStack's `$param` to SPEC-004's `[param]`; the
 equality against the specification is asserted by `tests/contract/route-manifest.test.ts`, which
-PARSES the specification's table rather than copying it.
+PARSES the specification's table rather than copying it. From M4 the bundle also carries the
+stylesheet (`ui/src/tokens/truth-state.css` and `app.css`, imported by `src/main.tsx`): before that
+milestone no CSS was imported at all, and every contrast or focus measurement would have measured a
+browser default.
 
 `npm run dev:web` (`vite`) runs the development server. **Acceptance never runs against it**:
 `sh scripts/test-e2e.sh` (`end-to-end tests: ok`) requires the built bundle at `ui/dist/index.html`,
-makes a real attempt at the Playwright suites, and classifies honestly — a missing browser runtime is
-`BLOCKED_ENVIRONMENT` with the property named, no suites at all is `FAIL`, and its sentinel appears
-only after the suites ran and passed against the built artefact (SPEC-008 VG-SHIP-021/022).
+discovers the suites under `tests/ui/` and `tests/e2e/`, makes a real attempt at them, and classifies
+honestly — a missing browser runtime is `BLOCKED_ENVIRONMENT` with the property named, no suites at
+all is `FAIL`, and its sentinel appears only after the suites ran and passed against the built
+artefact (SPEC-008 VG-SHIP-021/022). Playwright starts the artefact's own server
+(`vite preview`, port 4173, bound to `127.0.0.1` because on this machine Vite's default host binds
+IPv6 loopback only).
 
 `npm run test:ui` (`playwright test`) runs both Playwright projects against the built bundle;
 `npm run test:a11y` runs the axe-core project alone, so an accessibility failure is never reported as
-a functional one. `npx playwright --version` prints the pinned version, and
-`npx --no-install tsc -p tsconfig.ui.json --noEmit` type-checks the UI alone — the two commands M1's
-RUN block needs.
+a functional one. The suites are `tests/ui/states.spec.ts` (the seven region states, measured in a
+real engine), `tests/ui/keyboard.spec.ts` (focus management on the built application, plus the five
+keyboard flows recorded as `BLOCKED_PREREQUISITE` on M5/M6), `tests/ui/a11y.spec.ts` (axe-core over
+every declared route, with the tool versions and per-route results written to
+`.agent/evidence/EP-005/accessibility/`), and `tests/ui/reduced-motion.spec.ts` (a declared
+transition is removed, not shortened, under `prefers-reduced-motion: reduce`). `npx playwright
+--version` prints the pinned version.
 
 ### The service
 

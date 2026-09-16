@@ -42,21 +42,22 @@
   border-inline-start: 2px solid currentColor;
   padding: 0.125rem 0.375rem;
   color: var(--vg-ink-900);
-  /* The tint fill is applied per group below rather than per state so a state without a rule still has contrast. */
+  /* The base fill is the uncounted tint so a badge always has a defined background even before its group rule applies. */
   background: var(--vg-state-candidate-tint);
 }
 
+/* THE GROUP IS WHAT THE BADGE EMITS, and these are the five group values §2.3 declares: `uncounted`, `verified`,
+ * `reopened`, `forbidden`, `action`. MEASURED AND CORRECTED IN M4: the first version of this file styled ELEVEN
+ * per-STATE class names (`--confirmed`, `--ready`, `--submitted`, …) that `TruthStateBadge` never renders, because the
+ * badge emits `vg-truth-badge--${group}`. The visible effect was that `NOT_REMOVABLE`, `HUMAN_REQUIRED` and `REAPPEARED`
+ * fell through to the candidate tint while nine rules styled nothing at all. Contrast still held — the text colour is
+ * always `--vg-ink-900` — but a stylesheet that selects classes the component does not emit is stale code, and
+ * `tests/contract/contrast-tokens.test.ts` now computes contrast from the rules that actually match. */
 .vg-truth-badge--uncounted { background: var(--vg-state-candidate-tint); }
-.vg-truth-badge--confirmed { background: var(--vg-state-confirmed-tint); }
-.vg-truth-badge--ready { background: var(--vg-state-ready-tint); }
-.vg-truth-badge--submitted { background: var(--vg-state-submitted-tint); }
-.vg-truth-badge--acknowledged { background: var(--vg-state-acknowledged-tint); }
 .vg-truth-badge--verified { background: var(--vg-state-verified-tint); }
-.vg-truth-badge--delisted { background: var(--vg-state-delisted-tint); }
-.vg-truth-badge--absent { background: var(--vg-state-absent-tint); }
-.vg-truth-badge--notremovable { background: var(--vg-state-notremovable-tint); }
-.vg-truth-badge--human { background: var(--vg-state-human-tint); }
-.vg-truth-badge--reappeared { background: var(--vg-state-reappeared-tint); }
+.vg-truth-badge--reopened { background: var(--vg-state-reappeared-tint); }
+.vg-truth-badge--forbidden { background: var(--vg-state-notremovable-tint); }
+.vg-truth-badge--action { background: var(--vg-state-human-tint); }
 
 .vg-truth-badge__glyph { font-variant-emoji: text; }
 /* The machine value is MONOSPACE and visible: a reader must be able to cross-check the exact token. */

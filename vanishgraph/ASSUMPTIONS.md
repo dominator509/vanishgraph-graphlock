@@ -2065,6 +2065,102 @@ renderer fails by name instead of surfacing as a module-not-found inside the har
 checked); `copy lint gate: ok` (87 files scanned, 0 hits). The three M3 UI files were added without inventing a second
 mapping: the reason a figure is a component at all is that a formatting helper can be bypassed by writing the string.
 
+### 3.50 EP-005 M4: the browser suites ran, and the first four defects they found were all mine
+
+**1. THE STAGE THAT HAD NEVER RUN RAN, AND IT FOUND TWO DEFECTS IN ITS OWN CONFIGURATION IMMEDIATELY.** `test-e2e.sh`
+had been reporting `FAIL` because no browser suite existed (§3.47.5c). The moment a suite existed, Playwright could not
+start its server at all:
+(a) **`vite preview --outDir ui/dist` resolved to `ui/ui/dist`.** `vite.config.ts` sets `root: 'ui'`, so a preview
+outDir is relative to that root, and the server exited with `The directory "ui/dist" does not exist. Did you build your
+project?` — while `ui/dist` plainly existed. M1 wrote that command and nothing ran it for four milestones; **a web server
+configuration that nothing starts is untested configuration**, and the fix is `--outDir dist`.
+(b) **Vite's default host binds IPv6 loopback only on this machine.** With the corrected outDir the server started and
+printed `Local: http://localhost:4173/`, and a request to `http://127.0.0.1:4173/portal` was REFUSED
+(`No connection could be made because the target machine actively refused it`) — measured with a direct HTTP request,
+not inferred. `baseURL` and Playwright's readiness poll both use the IPv4 literal, so `--host 127.0.0.1` makes the
+address the suite polls and the address the server binds the same one.
+
+**2. THE FOCUS-MANAGEMENT DEFECT, AND WHY IT TOOK TWO ATTEMPTS — BOTH RECORDED.**
+VG-UI-059 requires focus to move to the page heading after route-level navigation. The first implementation subscribed
+with `useRouterState({ select: (state) => state.location.pathname })` and focused inside the effect. The browser suite
+navigated, the new heading rendered — and focus was `inactive`: **the effect ran while the outlet still rendered the
+previous route**, so `querySelector` returned the OUTGOING heading, which was removed a moment later, leaving focus on
+the document body. Switching to the router's own `useLocation()` was NOT enough (measured: the next run failed the same
+way), so the focus move is deferred by one `requestAnimationFrame`, which lands after the new route has committed. Two
+wrong versions, two runs, one measurement each: this is the fourth defect in this node that only execution could find,
+and the shape is consistent — the code read correctly both times.
+
+**3. THE MIRROR WAS SHARED AND PLAYWRIGHT RUNS SUITES IN PARALLEL PROCESSES.** `fullyParallel: true` runs tests from one
+file across several worker PROCESSES, and `buildMirror()` began with `rmSync` on a single shared directory: one worker
+deleted the mirror another worker was importing from, and the resulting filesystem error surfaced as seven unrelated test
+failures. The mirror is now per-process (`.cache-ui-render/ui-src-<pid>`), and the harness comment says why.
+
+**4. A MEASUREMENT OF THE WRONG THING PRODUCES `NaN`, WHICH IS AT LEAST LOUD.** The focus-ring contrast test read the
+`--vg-focus` custom property and computed a ratio from it: `NaN`. The test now measures the focused control's COMPUTED
+`outlineColor` against its parent's computed background — the ring that is actually drawn, not the declaration that it
+exists.
+
+**5. THE STALE-REQUEST GUARD FIRED ON ITS FIRST OPPORTUNITY, WHICH IS THE POINT OF HAVING IT.**
+`human-gate-request.json` carries `requestedArtifactDigest`, and `tests/ui/a11y.spec.ts` asserts it equals the digest of
+the built entry document. After the focus fix rebuilt the bundle, that assertion failed with the two digests printed side
+by side — so a human-gate request cannot silently point at an interface that has changed since the request was made. The
+recorded value is now the digest of the current build, and the file says why.
+
+**6. THE BUILT ARTEFACT CARRIED NO CSS AT ALL UNTIL THIS MILESTONE, AND THE STATE STYLESHEET SELECTED CLASSES THE
+COMPONENT NEVER EMITS.** `ui/src/tokens/truth-state.css` was never imported, so `ui/dist` had no stylesheet: every
+contrast, focus and reduced-motion measurement would have measured browser defaults. `main.tsx` now imports the tokens
+and `app.css`. Separately, the token file styled ELEVEN per-STATE class names (`--confirmed`, `--ready`, `--submitted`, …)
+while `TruthStateBadge` emits `vg-truth-badge--${group}`: nine rules matched nothing and `NOT_REMOVABLE`,
+`HUMAN_REQUIRED` and `REAPPEARED` fell through to the candidate tint. Contrast still held (state text is always
+`--vg-ink-900`), but the stylesheet was stale code, and `tests/contract/contrast-tokens.test.ts` now asserts the group
+set the component actually emits.
+
+**7. THE BROWSER SUITES GOT THEIR OWN TYPESCRIPT PROJECT, FOR A REASON THAT IS A RULE RATHER THAN A PREFERENCE.**
+`tsconfig.json` covers `tests/**` with `lib: ["ES2023"]` so the API layer cannot see a browser global; adding
+`tests/ui/**` to it produced `Cannot find name 'document'` and `getComputedStyle` errors in three specs. The suites are
+now checked by `tsconfig.ui-tests.json` (DOM lib) from `gate-ui.sh`, and the root project excludes them. A second
+measured detail: `format-check.sh` parses every root `*.json` with `JSON.parse`, so `tsconfig.json` may not carry
+comments — the explanation therefore lives in the `*-tests` project and here, and the root file stays strict JSON.
+
+**8. WHAT THE STATES SUITE CAN AND CANNOT PROVE, AND WHY IT IS SHAPED THIS WAY.** The seven region states are not mounted
+in any route, and mounting them now would mean writing coverage numbers, confidence bases and case counts into pages by
+hand — a fabricated figure is the defect §3 and §14 exist to prevent (§3.49.4). So `tests/ui/states.spec.ts` measures
+the real components' output with the real stylesheet through `page.setContent`, in a real engine: roles, accessible
+names, the one polite live region, the reserved skeleton box (143–145px for a declared `9rem`), the focus ring's computed
+2px/solid/1px offset, a forced-grayscale image comparison of all eleven states, and 4.5:1 contrast for every rendered
+element of every state. What such a page CANNOT prove is stated in the suite: no application shell, so nothing about the
+app's own focus behaviour (that is `keyboard.spec.ts`, on the built app), and no timers, so the 10-second delayed-loading
+threshold and the 120-second session warning are component behaviour that becomes measurable when M5/M6 mount a request
+behind them.
+
+**9. THE FIVE KEYBOARD FLOWS ARE RECORDED AS `BLOCKED_PREREQUISITE`, NOT SKIPPED AND NOT CLAIMED.** VG-UI-060's oracle
+needs onboarding, exposure review, evidence reveal, appeal request and queue filtering — surfaces M5/M6 own. Each flow
+has a test whose NAME carries `BLOCKED_PREREQUISITE`, the missing surface and the owning milestone, and whose body
+asserts the ABSENCE of the controls the flow needs. That is the fail-closed direction: the record cannot go stale
+silently, because the day a surface appears without the flow being completed here, the test fails.
+
+**10. THE ACCESSIBILITY REPORT CONTAINS A REAL FAILURE, AND IT IS SUPPOSED TO.** axe-core 4.13.0 (rule tags `wcag2a`,
+`wcag2aa`, `wcag21a`, `wcag21aa`, `wcag22a`, `wcag22aa`) reported **zero violations across all 25 declared routes**, with
+the tool versions, per-route results and the artefact digest written to `.agent/evidence/EP-005/accessibility/`. The
+per-criterion report is nonetheless not clean, and that is deliberate: **2.4.5 Multiple Ways is FAIL**, because this
+artefact renders no in-product navigation and its 25 routes are reachable only by typing a URL (owner: M5/M6), and 16
+criteria are `PARTIAL`, 2 are `EXTERNAL_REQUIRED` and 11 are `N/A`. Totals: 24 PASS, 1 FAIL, 16 PARTIAL, 2
+EXTERNAL_REQUIRED, 11 N/A — recorded because VG-UI-056's negative case is a report that turns automated passes into a
+claim. The suite asserts that the report uses all four statuses, makes no conformance claim, and that
+`human-gate-request.json` carries `verdict: EXTERNAL_REQUIRED`, `externalPartyRole: accessibility practitioner`, a
+matching artefact digest and an UNSIGNED sign-off block.
+
+**11. A GATE'S OWN UNVERIFIED BLOCK HAD GONE STALE AGAIN.** `gate-ui.sh` still printed "browser-runtime suites: NOT
+DECLARED YET …", which stopped being true in this milestone. It now states what the gate actually does and does not do:
+it typechecks the browser suites and runs the credential-free contract suites, and the browser stage is
+`test-e2e.sh` with its own sentinel.
+
+**12. MILESTONE EVIDENCE (all re-run after the last edit).** `sh scripts/test-e2e.sh` → **`end-to-end tests: ok`, 28
+browser tests passed** against the built artefact (25 axe route scans, focus management, seven states, grayscale,
+reduced motion, 320px reflow); `gate-ui: ok` (now including `tsc -p tsconfig.ui-tests.json`); `typecheck: ok`;
+`lint: ok`; `format-check: ok`; `import boundary: ok`; `reality gate: ok`; `test-unit: ok` (**769 tests, 769 pass, 0
+fail**); `test collection guard: ok` (43 files seen, 42 manifest entries); `copy lint gate: ok`.
+
 ## 4. Known limitations recorded honestly (not resolved)
 
 1. **Empty `describe` blocks are not detected by the collection guard.** Node reports a

@@ -30,6 +30,10 @@ command -v node >/dev/null 2>&1 || { echo "gate-ui: FAIL - node is required but 
 [ -d ui/src/routes ] || { echo "gate-ui: FAIL - the route directory is missing" >&2; exit 1; }
 
 npx --no-install tsc -p tsconfig.ui.json --noEmit || { echo "gate-ui: FAIL - UI typecheck failed" >&2; exit 1; }
+# THE BROWSER SUITES ARE TYPECHECKED HERE, WITH THE DOM LIB, because they run in a browser and the root project has no
+# DOM lib on purpose (see tsconfig.ui-tests.json). A Playwright spec that no gate type-checks is a spec whose selectors
+# and API calls are only checked by running it.
+npx --no-install tsc -p tsconfig.ui-tests.json --noEmit || { echo "gate-ui: FAIL - browser-suite typecheck failed" >&2; exit 1; }
 sh scripts/import-boundary.sh || { echo "gate-ui: FAIL - layer import boundary violated" >&2; exit 1; }
 
 node --test "tests/contract/**/*.test.ts" || { echo "gate-ui: FAIL - UI contract suites failed" >&2; exit 1; }
@@ -47,7 +51,7 @@ if ! git diff --quiet -- ui/src/route-manifest.json; then
 fi
 
 echo "gate-ui: UNVERIFIED-BY-THIS-GATE:"
-echo "  - browser-runtime suites (keyboard, screen-reader tree, reduced motion, zoom/reflow): NOT DECLARED YET - tests/e2e/ holds no suite before M4, so 'npm run test:ui' reports FAIL rather than a pass. The runtime itself IS provisioned and launch-probed (Chrome Headless Shell 153.0.8010.12, ASSUMPTIONS 3.47), so this is a missing suite, not a missing browser."
+echo "  - the browser suites themselves: this gate typechecks tests/ui/** and runs the credential-free contract suites, but it does NOT launch a browser. The browser stage is 'sh scripts/test-e2e.sh' with its own sentinel, and as of M4 it passes 28 tests against the built artefact (states, keyboard, axe over every declared route, reduced motion)."
 echo "  - manual assistive-technology validation (VG-UI-064, DOD-039): EXTERNAL_REQUIRED, human participants only; automation cannot satisfy or substitute for this gate"
 echo "  - real-data flows: BLOCKED_CREDENTIALS (DATABASE_URL, KEYCLOAK_ISSUER) and BLOCKED_PREREQUISITE (EP-003, EP-004)"
 

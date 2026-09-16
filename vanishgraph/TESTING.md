@@ -42,12 +42,23 @@ exactly the confusion DOD-032 forbids.
 
 **`tests/ui/` is browser-dependent, not pure.** EP-005 puts its Playwright suites there
 (`states.spec.ts`, `keyboard.spec.ts`, `a11y.spec.ts`, `reduced-motion.spec.ts`,
-`privacy.spec.ts`) and they require a provisioned browser runtime plus the built
-application. They are named `*.spec.ts`, not `*.test.ts`, so the unit stage's
+`privacy.spec.ts` — the last arriving with M7) and they require a provisioned browser runtime plus the
+built application. They are named `*.spec.ts`, not `*.test.ts`, so the unit stage's
 `find -name '*.test.ts'` does not pick them up — but the distinction must not be relied
 on by accident: a browser-dependent suite added as `tests/ui/*.test.ts` would be swept
 into the unit stage and fail on a clean checkout. Put browser work in `*.spec.ts` under
 `tests/ui/`, or in `tests/e2e/`.
+
+**M4 makes three things about that root concrete.** (a) `playwright.config.ts` sets
+`testDir: 'tests/ui'` and `scripts/test-e2e.sh` discovers suites under both `tests/ui/` and
+`tests/e2e/`, so a suite the plan names cannot be invisible to the stage that runs it — the first
+version of the runner looked only at `tests/e2e/`. (b) The specs are type-checked by
+`tsconfig.ui-tests.json` (DOM lib), which `scripts/gate-ui.sh` runs; the root `tsconfig.json`
+excludes `tests/ui/**` so the API layer's type environment stays browser-free. (c) The states suite
+measures component output through `page.setContent` with the stylesheet the build emitted, because
+the region states are not mounted in any route until M5/M6 wire them to a request; what such a page
+CANNOT prove (application-shell focus behaviour, timers, live requests) is asserted elsewhere or
+recorded, never implied.
 
 Rules:
 

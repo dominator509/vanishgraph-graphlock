@@ -1,0 +1,199 @@
+/**
+ * Application styles (SPEC-004 §9, §10; EP-005 M4).
+ *
+ * WHY THIS FILE EXISTS AT ALL, AND WHY IT ARRIVED WITH THE ACCESSIBILITY MILESTONE. Until M4 the components had no
+ * stylesheet in the built artefact: `ui/src/tokens/truth-state.css` was never imported, so the bundle carried no CSS and
+ * every browser measurement of contrast, focus visibility or reduced motion would have measured nothing. The M4 rules
+ * are about what a reader actually sees — VG-UI-058 contrast, VG-UI-059 focus visibility, VG-UI-062 reduced motion — so
+ * the styles those rules are about have to exist before they can be asserted, and asserting them is what the browser
+ * suites in `tests/ui/` do.
+ *
+ * THE PALETTE IS DELIBERATELY SMALL. Text is `--vg-ink-900` on every surface, state hue is carried by a border and a
+ * tint, and there are exactly two accent colours (focus and error). A larger palette would mean more foreground/
+ * background pairs to prove, and `tests/contract/contrast-tokens.test.ts` proves EVERY declared pair by computing the
+ * contrast ratio from this file rather than trusting a comment.
+ *
+ * NOTHING HERE ANIMATES EXCEPT ONE STATE-CHANGE TRANSITION. VG-UI-062 needs the reduced-motion query to have something
+ * to remove, and a state change is the one transition with a purpose (it shows that the state is new). Everything else
+ * is instantaneous, so "no non-essential animation" is a property of the stylesheet rather than a promise.
+ */
+
+:root {
+  /* `--vg-ink-900` is NOT redeclared here: it belongs to the state palette in `truth-state.css`, and two declarations
+   * of the same token in two files is exactly how a palette drifts. */
+  --vg-surface: #ffffff;
+  --vg-surface-muted: #f8fafc;
+  --vg-border: #374151;
+  --vg-focus: #1d4ed8;
+  --vg-error: #b91c1c;
+  --vg-error-tint: #fbe9e9;
+  --vg-gate: #a16207;
+  --vg-gate-tint: #fbf3dc;
+  --vg-denied: #374151;
+  --vg-denied-tint: #eceef1;
+  --vg-space-1: 0.25rem;
+  --vg-space-2: 0.5rem;
+  --vg-space-3: 1rem;
+  --vg-space-4: 1.5rem;
+  --vg-radius: 0.25rem;
+}
+
+html {
+  /* The base font size is left at the user's setting: a fixed px root would defeat the 200% zoom requirement. */
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  color: var(--vg-ink-900);
+  background: var(--vg-surface);
+}
+
+body {
+  margin: 0;
+  padding: var(--vg-space-3);
+}
+
+/* ----------------------------------------------------------------------------------------------------------------
+ * FOCUS VISIBILITY (VG-UI-059)
+ *
+ * A 2px outline plus a 1px offset: the offset is the NON-COLOUR indicator, so the focus ring is distinguishable when
+ * colour is unavailable. There is no outline suppression anywhere in this file, and the M4 source audit asserts that.
+ * -------------------------------------------------------------------------------------------------------------- */
+:focus-visible {
+  outline: 2px solid var(--vg-focus);
+  outline-offset: 1px;
+}
+
+/* A heading that receives focus programmatically after navigation must not draw a ring: it is not an interactive
+ * control, and a ring on a heading reads as a control a keyboard user can act on. The heading is still focusable, which
+ * is what VG-UI-059 requires, and the focus move is announced by the assistive technology reading the heading. */
+h1[tabindex='-1']:focus,
+h2[tabindex='-1']:focus {
+  outline: none;
+}
+
+/* ----------------------------------------------------------------------------------------------------------------
+ * LAYOUT
+ * -------------------------------------------------------------------------------------------------------------- */
+main {
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.25rem; }
+h3 { font-size: 1.0625rem; }
+
+dl { display: grid; grid-template-columns: max-content 1fr; gap: var(--vg-space-1) var(--vg-space-3); }
+dt { font-weight: 600; }
+dd { margin: 0; }
+
+/* ----------------------------------------------------------------------------------------------------------------
+ * REGION STATES (VG-UI-048…055)
+ * -------------------------------------------------------------------------------------------------------------- */
+.vg-region {
+  border: 1px solid var(--vg-border);
+  border-radius: var(--vg-radius);
+  padding: var(--vg-space-3);
+  background: var(--vg-surface);
+}
+
+.vg-region__heading { margin-top: 0; }
+
+.vg-region__body { margin-bottom: 0; }
+
+/* THE SKELETON'S BOX IS THE FINAL REGION'S BOX: the height is supplied by the caller measuring the region, and the
+ * placeholder blocks are block-level so the layout does not jump when the data arrives. */
+.vg-loading {
+  border: 1px dashed var(--vg-border);
+  border-radius: var(--vg-radius);
+  padding: var(--vg-space-3);
+  background: var(--vg-surface-muted);
+}
+
+.vg-loading__skeleton {
+  display: block;
+  background: #e5e7eb;
+  border-radius: var(--vg-radius);
+}
+
+.vg-loading__line { height: 1rem; margin-block: var(--vg-space-2); }
+
+.vg-loading__announcement { margin: 0; }
+
+.vg-empty,
+.vg-partial-banner,
+.vg-gate,
+.vg-session,
+.vg-denied {
+  border: 1px solid var(--vg-border);
+  border-inline-start-width: 4px;
+  border-radius: var(--vg-radius);
+  padding: var(--vg-space-3);
+  background: var(--vg-surface-muted);
+}
+
+.vg-gate { border-inline-start-color: var(--vg-gate); background: var(--vg-gate-tint); }
+.vg-denied { border-inline-start-color: var(--vg-denied); background: var(--vg-denied-tint); }
+
+.vg-error {
+  border: 1px solid var(--vg-error);
+  border-inline-start-width: 4px;
+  border-radius: var(--vg-radius);
+  padding: var(--vg-space-3);
+  background: var(--vg-error-tint);
+}
+
+/* THE CORRELATION IDENTIFIER IS SELECTABLE TEXT, not an image and not a disabled input: a reader has to be able to copy
+ * it into a support message (VG-UI-051). */
+.vg-error__correlation {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  user-select: text;
+}
+
+.vg-partial-banner { border-inline-start-color: var(--vg-gate); background: var(--vg-gate-tint); }
+.vg-partial-marker { font-style: italic; }
+
+/* ----------------------------------------------------------------------------------------------------------------
+ * COVERAGE, METRICS, CONFIDENCE, TIMELINE (EP-005 M3 components)
+ * -------------------------------------------------------------------------------------------------------------- */
+.vg-metric {
+  margin: 0 0 var(--vg-space-2) 0;
+  padding: var(--vg-space-2);
+  border: 1px solid var(--vg-border);
+  border-radius: var(--vg-radius);
+}
+
+.vg-metric--partial { border-style: dashed; }
+.vg-metric__label { font-weight: 600; }
+.vg-metric__value { margin: var(--vg-space-1) 0; font-variant-numeric: tabular-nums; }
+.vg-metric__value [data-metric-part='percent'] { font-weight: 600; }
+.vg-metric__reason,
+.vg-metric__partial-note { margin: var(--vg-space-1) 0 0 0; }
+
+.vg-confidence { border: 1px solid var(--vg-border); border-radius: var(--vg-radius); padding: var(--vg-space-2); }
+.vg-confidence__entries { list-style: none; padding-inline-start: 0; }
+.vg-confidence__contribution { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+.vg-timeline__list { padding-inline-start: var(--vg-space-4); }
+.vg-timeline__row { margin-block: var(--vg-space-2); }
+.vg-timeline__time { font-variant-numeric: tabular-nums; }
+
+.vg-coverage__skipped summary { cursor: pointer; }
+
+/* ----------------------------------------------------------------------------------------------------------------
+ * THE ONE STATE-CHANGE TRANSITION, AND ITS REDUCED-MOTION REMOVAL (VG-UI-062)
+ *
+ * 120ms on the state tint: enough to show that the state is new, short enough that it carries no meaning. Under
+ * `prefers-reduced-motion: reduce` it is removed ENTIRELY rather than shortened, so the "≤ 1ms" assertion in
+ * `tests/ui/reduced-motion.spec.ts` measures a real difference between the two modes instead of a constant.
+ * -------------------------------------------------------------------------------------------------------------- */
+.vg-truth-badge,
+.vg-region {
+  transition: background-color 120ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vg-truth-badge,
+  .vg-region {
+    transition: none;
+  }
+}

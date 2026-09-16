@@ -1,0 +1,36 @@
+{
+  "requirementId": "VG-UI-064",
+  "milestone": "EP-005 M4",
+  "verdict": "EXTERNAL_REQUIRED",
+  "externalPartyRole": "accessibility practitioner",
+  "requestEvidencePath": ".agent/evidence/EP-005/accessibility/per-criterion-report.md",
+  "requestedArtifactDigest": "sha256:8888d78cebac6dfe13d638dc69cc2a6b2f4bea3646e6523e22a3243d0815e9c7",
+  "requestedArtifact": "ui/dist — the Vite build output of the portal (entry document digest above; assets index-CjMJHlkm.css and index-BjXpAgx9.js). Rebuilt from the revision under review; the digest is asserted against the built artefact by tests/ui/a11y.spec.ts, so a stale request fails rather than passing silently — MEASURED: it did exactly that on the first run after the focus-management fix rebuilt the bundle, which is why the value here is the digest of the current build.",
+  "criteria": [
+    "1.4.4 Resize Text",
+    "3.3.8 Accessible Authentication (Minimum)",
+    "the perceptual judgement in 1.4.1 Use of Color",
+    "the 400% reflow and 200% zoom judgement behind 1.4.10 Reflow",
+    "the reader-applied text-spacing override in 1.4.12 Text Spacing",
+    "VG-UI-064's own procedure: NVDA with Firefox and Chrome, VoiceOver with Safari, keyboard-only operation, 200% zoom, 400% reflow, and a documented colour-vision-deficiency review"
+  ],
+  "requestedProcedure": [
+    "NVDA (current release) driving Firefox and Chrome over every declared route, with the observed screen-reader output recorded per route.",
+    "VoiceOver driving Safari over the same route set, recorded the same way.",
+    "Keyboard-only completion of onboarding, exposure review, evidence reveal, appeal request and queue filtering, with the focused element and its accessible name recorded at each step.",
+    "200% text zoom and 400% reflow, with the result recorded per route.",
+    "A documented colour-vision-deficiency review of the eleven truth states, including whether the glyph and label channels are sufficient in practice."
+  ],
+  "whatAutomationCannotEstablish": [
+    "Whether an interface is usable with a screen reader, as opposed to structurally well-formed.",
+    "Whether a focus order is comprehensible, as opposed to deterministic.",
+    "Whether the eleven state encodings are distinguishable in lived use, as opposed to byte-different under a grayscale filter.",
+    "Whether resized or reflowed content remains legible for a reader who needs it."
+  ],
+  "signOff": {
+    "signed": false,
+    "signedBy": null,
+    "signedAt": null,
+    "note": "An automated tool, an agent or an implementer cannot satisfy, impersonate or substitute for this gate. Any agent-authored sign-off in this field would be a fabrication defect (DOD-027, DOD-039)."
+  }
+}
