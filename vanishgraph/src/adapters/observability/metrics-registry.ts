@@ -51,6 +51,13 @@ export interface MetricCatalogue {
   readonly prohibitedLabels: readonly string[];
   readonly labelValueSets: Readonly<Record<string, readonly string[]>>;
   readonly labelValueSetSources: Readonly<Record<string, string>>;
+  /**
+   * Label bounds that apply to ONE metric family rather than to the label everywhere.
+   *
+   * SPEC-007 §6.3–§6.5 bound `reason_code` PER METRIC ROW, and the registry could not enforce a bound it could not see,
+   * so an out-of-enum reason code was accepted at record time (EP-008 M5 finding). This is where those bounds live.
+   */
+  readonly perFamilyLabelValueSets: Readonly<Record<string, Readonly<Record<string, readonly string[]>>>>;
   readonly prohibitedMetricNames: readonly string[];
   readonly forbiddenNameTokens: readonly string[];
   readonly byName: ReadonlyMap<string, MetricFamily>;
@@ -197,6 +204,13 @@ export function parseMetricCatalogue(raw: unknown): CatalogueLoadResult {
     errors.push(`the catalogue must carry exactly 42 metric families (§6.3-§6.5) and carries ${String(families.length)}`);
   }
 
+  // THE PER-FAMILY BOUNDS ARE READ BEFORE THE ERROR CHECK, AND THAT ORDER IS THE WHOLE POINT: the first version called
+  // this inside the return object below, so its errors were pushed AFTER `if (errors.length > 0) return …` had already
+  // run — a malformed bound would have been reported into an array nobody read and the document would have validated.
+  // The suite's three negative cases caught it. A validation whose findings are collected after the verdict is not a
+  // validation.
+  const perFamilyLabelValueSets = readPerFamilyLabelValueSets(raw['per_family_label_value_sets'], families, errors);
+
   if (errors.length > 0) return { ok: false, errors };
   return {
     ok: true,
@@ -207,11 +221,65 @@ export function parseMetricCatalogue(raw: unknown): CatalogueLoadResult {
       prohibitedLabels,
       labelValueSets,
       labelValueSetSources,
+      perFamilyLabelValueSets,
       prohibitedMetricNames,
       forbiddenNameTokens: [...FORBIDDEN_NAME_TOKENS],
       byName,
     }),
   };
+}
+
+/**
+ * Read the per-family label bounds, and REFUSE a document that bounds a label the family does not declare.
+ *
+ * THE CROSS-CHECK MATTERS AS MUCH AS THE BOUND: a bound attached to a family that does not carry the label would be dead
+ * configuration, which is a rule that looks enforced and is not — the same defect the rule-class validation refuses.
+ */
+function readPerFamilyLabelValueSets(
+  raw: unknown,
+  families: readonly MetricFamily[],
+  errors: string[],
+): Record<string, Record<string, readonly string[]>> {
+  const out: Record<string, Record<string, readonly string[]>> = {};
+  if (raw === undefined) return out;
+  if (!isRecord(raw)) {
+    errors.push('per_family_label_value_sets must be an object of metric name to label to values');
+    return out;
+  }
+  for (const [metric, labels] of Object.entries(raw)) {
+    // `$comment` IS DATA ABOUT THE FILE, NOT A FAMILY. A `$`-prefixed key is skipped for the same reason
+    // `label_value_set_sources` skips it: prose must not have to masquerade as a metric.
+    if (metric.startsWith('$')) continue;
+    const family = families.find((candidate) => candidate.name === metric);
+    if (family === undefined) {
+      errors.push(`per_family_label_value_sets.${metric}: no such metric family, so the bound would be dead configuration`);
+      continue;
+    }
+    if (!isRecord(labels)) {
+      errors.push(`per_family_label_value_sets.${metric} must be an object of label to values`);
+      continue;
+    }
+    const parsedLabels: Record<string, readonly string[]> = {};
+    for (const [label, values] of Object.entries(labels)) {
+      const parsed = stringArray(values);
+      if (parsed === null) {
+        errors.push(`per_family_label_value_sets.${metric}.${label} must be an array of strings`);
+        continue;
+      }
+      if (parsed.length === 0) {
+        // AN EMPTY BOUND WOULD FORBID EVERY VALUE, which is never what a bound is for; it is a defect in the document.
+        errors.push(`per_family_label_value_sets.${metric}.${label} is empty, so no value could ever be recorded`);
+        continue;
+      }
+      if (!family.labels.includes(label)) {
+        errors.push(`per_family_label_value_sets.${metric}.${label}: ${metric} does not declare that label, so the bound could never apply`);
+        continue;
+      }
+      parsedLabels[label] = parsed;
+    }
+    out[metric] = parsedLabels;
+  }
+  return out;
 }
 
 export function loadMetricCatalogue(path: string): CatalogueLoadResult {
@@ -292,7 +360,10 @@ export function createMetricsRegistry(catalogue: MetricCatalogue): MetricsRegist
         if (!family.labels.includes(label)) {
           throw new MetricRegistrationError('UNDECLARED_LABEL', name, `label "${label}" is not declared for this family`);
         }
-        const allowed = catalogue.labelValueSets[label];
+        // THE PER-FAMILY BOUND WINS WHERE ONE IS DECLARED, because SPEC-007 §6.3-§6.5 bound `reason_code` per metric row
+        // rather than globally. MEASURED: before this, an out-of-enum reason code was ACCEPTED here, because the label's
+        // only declared bound was a prose source the registry could not read — a rule that looked enforced and was not.
+        const allowed = catalogue.perFamilyLabelValueSets[name]?.[label] ?? catalogue.labelValueSets[label];
         const emitted = labels[label] ?? '';
         if (allowed !== undefined && !allowed.includes(emitted)) {
           throw new MetricRegistrationError('UNBOUNDED_LABEL_VALUE', name, `label "${label}" value "${emitted}" is outside the bounded set declared for it (§6.2)`);

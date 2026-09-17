@@ -345,3 +345,41 @@ describe('the metrics listener is a second, cluster-internal endpoint and refuse
     }
   });
 });
+
+describe('per-family label bounds are ENFORCED at record time, closing the gap M5 recorded', () => {
+  test('an out-of-enum reason_code is refused for the family that declares the bound', () => {
+    const registry = createMetricsRegistry(catalogue);
+    const family = 'vanishgraph_dependency_probe_failures_total';
+    registry.register(family);
+    // THE BOUND IS DECLARED PER METRIC (§6.5), so the registry must read it from the family rather than from a global set.
+    assert.deepEqual(catalogue.perFamilyLabelValueSets[family]?.['reason_code'], ['TIMEOUT', 'CONNECT_REFUSED', 'AUTH_FAILED', 'DNS_FAILED', 'TLS_FAILED', 'HTTP_5XX', 'MISCONFIGURED', 'UNKNOWN']);
+    assert.throws(
+      () => registry.record(family, { environment: 'local', dependency_key: 'postgresql', reason_code: 'SOMETHING_ELSE' }, 1),
+      (error: unknown) => error instanceof MetricRegistrationError && error.code === 'UNBOUNDED_LABEL_VALUE',
+    );
+    // AND AN IN-ENUM CODE IS STILL RECORDED, so the bound refuses the wrong value rather than the label.
+    const sample = registry.record(family, { environment: 'local', dependency_key: 'postgresql', reason_code: 'CONNECT_REFUSED' }, 1);
+    assert.equal(sample.value, 1);
+    // A LABEL WITH NO BOUND OF ITS OWN IS UNAFFECTED: dependency_key is bounded globally and still checks out.
+    assert.throws(
+      () => registry.record(family, { environment: 'local', dependency_key: 'not-a-dependency', reason_code: 'TIMEOUT' }, 1),
+      (error: unknown) => error instanceof MetricRegistrationError && error.code === 'UNBOUNDED_LABEL_VALUE',
+    );
+  });
+
+  test('NEGATIVE CASES: a bound for a family that does not exist, for a label the family lacks, and an empty bound', () => {
+    const raw = JSON.parse(readFileSync(CATALOGUE_PATH, 'utf8')) as Record<string, unknown>;
+    const withBounds = (bounds: Record<string, unknown>): unknown => ({ ...raw, per_family_label_value_sets: bounds });
+    const noSuchFamily = parseMetricCatalogue(withBounds({ vanishgraph_nonexistent_total: { reason_code: ['TIMEOUT'] } }));
+    assert.equal(noSuchFamily.ok, false);
+    if (!noSuchFamily.ok) assert.match(noSuchFamily.errors.join(' | '), /no such metric family/);
+    const wrongLabel = parseMetricCatalogue(withBounds({ vanishgraph_readiness_status: { outcome: ['SUCCEEDED'] } }));
+    assert.equal(wrongLabel.ok, false);
+    if (!wrongLabel.ok) assert.match(wrongLabel.errors.join(' | '), /does not declare that label/);
+    const emptyBound = parseMetricCatalogue(withBounds({ vanishgraph_readiness_status: { dependency_key: [] } }));
+    assert.equal(emptyBound.ok, false);
+    if (!emptyBound.ok) assert.match(emptyBound.errors.join(' | '), /is empty, so no value could ever be recorded/);
+    // AND THE SHIPPED FILE VALIDATES, so the three refusals above are about the planted defects and not about the file.
+    assert.equal(loaded.ok, true);
+  });
+});
