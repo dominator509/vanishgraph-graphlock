@@ -1,3 +1,4 @@
+import { startMetricsListener } from '../../src/infrastructure/observability/compose-telemetry.ts';
 /**
  * The metric catalogue and the registry (EP-008 M4; SPEC-007 §6.1, §6.2, §6.3, §6.6; DOD-022, DOD-037).
  *
@@ -315,5 +316,32 @@ describe('the DLP counters of M2 emit the sink label values the catalogue declar
     }
     assert.deepEqual(catalogue.byName.get(SCRUB_OUTCOME_COUNTER)?.labels, ['environment', 'sink', 'outcome']);
     assert.deepEqual(catalogue.byName.get(EGRESS_DENIED_COUNTER)?.labels, ['environment', 'sink', 'egress_class', 'reason_code']);
+  });
+});
+
+describe('the metrics listener is a second, cluster-internal endpoint and refuses everything else (§2.3 rule 2)', () => {
+  test('it serves exactly its path, refuses another path and another method, and closes cleanly', async () => {
+    const registry = createMetricsRegistry(catalogue);
+    registry.register('vanishgraph_readiness_status');
+    registry.record('vanishgraph_readiness_status', { environment: 'local', dependency_key: 'postgresql' }, 1);
+    // PORT 0 LETS THE OPERATING SYSTEM CHOOSE, so this test never races another process for a fixed number.
+    const listener = await startMetricsListener({ registry, path: '/metrics', host: '127.0.0.1', port: 0, environment: 'local' });
+    try {
+      const ok = await fetch(listener.url);
+      const body = await ok.text();
+      assert.equal(ok.status, 200);
+      assert.match(ok.headers.get('content-type') ?? '', /text\/plain/);
+      assert.match(body, /vanishgraph_readiness_status\{dependency_key="postgresql",environment="local"\} 1/);
+      // NOTHING OUTSIDE THE CATALOGUE CAN APPEAR: the body is the registry's own exposition.
+      assert.equal(body.includes('vanishgraph_slo_verdict'), false);
+      // THE PUBLIC ROUTES ARE NOT MOUNTED ON THE CLUSTER-INTERNAL LISTENER.
+      assert.equal((await fetch(listener.url.replace('/metrics', '/v1/ready'))).status, 404);
+      const posted = await fetch(listener.url, { method: 'POST' });
+      assert.equal(posted.status, 405, 'a path that exists with a method that does not is 405, not 404');
+      assert.equal(posted.headers.get('allow'), 'GET');
+      assert.equal(listener.requestsServed, 1, 'only the served request counts');
+    } finally {
+      await listener.close();
+    }
   });
 });

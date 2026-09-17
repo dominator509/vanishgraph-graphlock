@@ -439,9 +439,13 @@ export interface MetricsListener {
 
 /** Start the listener. The caller decides whether to start it at all (`metricsPort === 0` means no listener). */
 export async function startMetricsListener(options: MetricsListenerOptions): Promise<MetricsListener> {
-  if (!Number.isInteger(options.port) || options.port <= 0) {
-    throw new RangeError('the metrics listener needs a real port; configuration 0 means no listener and the caller must not start one');
+  if (!Number.isInteger(options.port) || options.port < 0 || options.port > 65535) {
+    throw new RangeError(`the metrics listener needs a TCP port in range and received ${String(options.port)}`);
   }
+  // PORT 0 MEANS "LET THE OPERATING SYSTEM CHOOSE", WHICH IS WHAT A TEST NEEDS to bind without racing another process
+  // for a fixed number. THE CONFIGURATION STILL TREATS 0 AS "NO LISTENER": the service entry point calls this function
+  // only when `config.metricsPort > 0`, so the caller decides WHETHER there is a listener and this function decides
+  // WHICH port it lands on.
   const { createServer } = await import('node:http');
   let served = 0;
   const server = createServer((request, response) => {
