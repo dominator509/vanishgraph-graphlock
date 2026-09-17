@@ -2,6 +2,12 @@ EP-008 M5 EVIDENCE - PARTIAL: the dependency probes and the fail-closed readines
 composition, the per-dependency induction stage, the runbook and OPERATIONS.md are NOT, and the milestone is open.
 ====================================================================================================================
 
+  NOTE ADDED AFTER THE FIRST ROUND, SO THIS FILE IS NOT READ AS THE WHOLE STORY: the sentence above was true when it
+  was written and is now out of date. The HTTP composition, the induced-failure stage, the runbook, OPERATIONS.md, the
+  COMMANDS.md entry and the metrics exposition writer HAVE since been built. The consolidated state is in the "M5 AS IT
+  STANDS" section at the end of this file, and the outstanding items are listed there. Nothing above is deleted: a
+  reader can see what was owed, what was delivered, and in what order.
+
 Spec: SPEC-007 §7.1-§7.4 (health, readiness, liveness, induced-failure proof), §12.5; SPEC-003 §5.17; SPEC-000 §6.7
 (VG-OPS-001). Plan: EP-008 M5. DOD-014, DOD-037. STATUS: MILESTONE_NOTE, NOT MILESTONE_PASS.
 
@@ -68,3 +74,65 @@ WHAT IS NOT DONE, AND WHY THE MILESTONE IS NOT MARKED PASS
     failure: ok` has been printed.
   * `docs/runbooks/operations/readiness-induced-failure.md`, `OPERATIONS.md`, and the `COMMANDS.md` entry.
   * `GET /metrics` on a cluster-internal listener, which is part of M5(b) and depends on the metrics exposure work.
+
+====================================================================================================================
+M5 AS IT STANDS, AFTER THE ROUNDS THAT FOLLOWED THE FIRST ONE
+====================================================================================================================
+
+DELIVERED SINCE THIS FILE WAS FIRST WRITTEN, each with the row that records it:
+
+  * src/http/health-routes.ts - the PORT the route layer is allowed to know (ReadinessDecision,
+    ReadinessDecisionPort, the ReadinessChangedRecord shape, the pure readinessTransitionRecord rule, and
+    toHealthDependencies). MEASURED: the first version imported the probe runner, the registry and the logger directly
+    and `scripts/import-boundary.sh` REFUSED it - http must not import adapters or infrastructure - and the check was
+    NOT relaxed (DOD-027).
+  * src/infrastructure/observability/compose-telemetry.ts::composeReadiness - the composition that runs the probes ONCE
+    per decision (so the counters and the HTTP answer describe the same evaluation) and writes exactly ONE
+    ReadinessChanged record per transition TO unready, at severity ERROR, naming the failing dependencyKey and its
+    classified reasonCode. None while steadily unready; none on recovery.
+  * tests/observability/readiness-fail-closed.test.ts - 25 tests, 25 pass: per-dependency induction for all six keys,
+    the missing-client case, liveness independent of all six failing at once, the metric labels, the four real client
+    factories' discriminating behaviour, the failure classifier, the section 7.4 step-3 negative case (a STATIC handler
+    that always answers READY fails the assertion that the verdict agrees with the probes), and the composition driven
+    through ready -> unready -> still-unready -> recovered with exactly one ERROR line.
+  * scripts/induced-failure-readiness.sh + docs/runbooks/operations/readiness-induced-failure.md + the COMMANDS.md
+    entry + OPERATIONS.md. The stage runs the SAME probe path three times (control, induced, remediated) and prints its
+    sentinel only when every declared dependency demonstrated PASS -> FAIL -> PASS.
+  * renderExposition in src/adapters/observability/metrics-registry.ts - M4's FALLBACK and the CONTENT of GET /metrics:
+    recorded-only series, HELP/TYPE lines, escaped labels, and histograms as _count/_sum with a NOTE in the scrape
+    output that no bucket boundaries are declared.
+
+THE MEASURED VERDICT OF THE INDUCTION STAGE, VERBATIM FROM .agent/evidence/EP-008/induced-failure/verdict.txt:
+
+  postgresql         PASS | FAIL (CONNECT_REFUSED 127.0.0.1:53589) | PASS | DEMONSTRATED
+  valkey             PASS | FAIL                              | PASS | DEMONSTRATED
+  job-worker         FAIL | FAIL                              | FAIL | INCONCLUSIVE - no worker process exists in
+                                                                       this repository to write a heartbeat
+  object-store       FAIL | FAIL                              | FAIL | ERROR (DOD-033) - the probe is not wired: no
+                                                                       module here can sign an S3 request
+  keycloak-jwks      UNKNOWN | UNKNOWN                        | UNKNOWN | ERROR (DOD-033) - not provisioned
+  provider-transport UNKNOWN | UNKNOWN                        | UNKNOWN | ERROR (DOD-033) - no entitlement
+
+  THE STAGE EXITS 1 AND NO `readiness induced failure: ok` HAS BEEN PRINTED. Two of six dependencies are demonstrated,
+  and their induction is the DECLARED one: stopping the PostgreSQL container, and `valkey-cli SHUTDOWN NOSAVE` run
+  inside the provisioned valkey container.
+
+DEFECTS FOUND BY RUNNING THE STAGE, EACH WITH ITS MEASUREMENT:
+
+  1. THE DRIVER QUERIED A TABLE THAT DOES NOT EXIST. The first version read `job_worker_heartbeat`; the table is
+     `job_worker` (migration 0008) and the control run reported `relation "job_worker_heartbeat" does not exist` - a
+     driver defect that LOOKED like a dependency failure. The names now come from the migration that declares them.
+  2. THE DRIVER NEVER RETURNED, AND IT COST A FULL TIMEOUT. With a CONNECTED valkey client the process stayed alive
+     because an open socket keeps the event loop alive, so the stage hung until the executor killed it at its 600-second
+     cap; the control run never finished and the induction never ran. The client now sets retryStrategy to null and the
+     driver exits EXPLICITLY.
+
+OUTSTANDING, AND THE REASON THE MILESTONE IS STILL A NOTE:
+
+  1. THE GET /metrics LISTENER IS NOT BUILT. Its content is (renderExposition); the cluster-internal listener that
+     would serve it, and the config that would declare its path and bind address, are not, and section 2.3 rule 2
+     requires it to be unreachable from the public ingress.
+  2. THE FOUR DEPENDENCIES ABOVE CANNOT DEMONSTRATE THEIR TRANSITION IN THIS ENVIRONMENT, for the reasons recorded in
+     their own rows - and per DOD-033 an unprovisionable dependency is an ERROR row, never a skipped one.
+  3. THE TWO FINDINGS FROM THE FIRST ROUND STAND: the section 7.2 per-probe timeouts sum to 1800 ms against a 1500 ms
+     total readiness budget, and the reason_code enum is declared per metric but NOT enforced at record time.
