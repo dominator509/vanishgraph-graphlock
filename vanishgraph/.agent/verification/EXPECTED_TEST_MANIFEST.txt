@@ -80,3 +80,4 @@ tests/contract/webhook-signature-replay.test.ts
 tests/security/negative-cases.test.ts
 tests/failure/fail-closed-authority.test.ts
 tests/failure/fail-closed-dependency.test.ts
+tests/failure/fail-closed-credentials.test.ts
