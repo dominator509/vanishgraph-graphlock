@@ -106,8 +106,28 @@ if (objectStoreEndpoint.trim().length > 0) {
   clients.objectStore = probes.objectStoreProbeUnavailable;
 }
 
-// keycloak-jwks and provider-transport: no issuer and no provider entitlement are provisioned in this environment, and
-// the stage reports that rather than faking a probe.
+// keycloak-jwks: WIRED WHEN AN ISSUER IS CONFIGURED, through the real probe — OIDC discovery plus JWKS retrieval over
+// TLS, with NO TOKEN MINTED, which is the declared action. The CA is supplied by the environment through
+// NODE_EXTRA_CA_CERTS because the issuer here is a disposable local Keycloak with a self-signed certificate; TLS
+// verification is NOT disabled, and a run without the CA fails (measured: "fetch failed" / DEPTH_ZERO_SELF_SIGNED_CERT).
+const keycloakIssuer = process.env.VG_KEYCLOAK_ISSUER ?? "";
+if (keycloakIssuer.trim().length > 0) {
+  clients.keycloakJwks = probes.keycloakJwksProbe({
+    discover: async () => {
+      const discovery = await fetch(`${keycloakIssuer}/realms/master/.well-known/openid-configuration`);
+      if (!discovery.ok) throw new Error(`discovery answered HTTP ${String(discovery.status)}`);
+      const document = await discovery.json();
+      if (typeof document.jwks_uri !== "string") throw new Error("the discovery document carries no jwks_uri");
+      const jwks = await fetch(document.jwks_uri);
+      if (!jwks.ok) throw new Error(`the JWKS answered HTTP ${String(jwks.status)}`);
+      const keys = await jwks.json();
+      return { issuer: String(document.issuer ?? ""), keys: Array.isArray(keys.keys) ? keys.keys.length : 0 };
+    },
+  });
+}
+
+// provider-transport: no provider entitlement is provisioned in this environment, and the stage reports that rather than
+// faking a probe. A reachability check against a provider nobody is entitled to contact would prove nothing.
 const runner = probes.createProbeRunner({ clients });
 const evaluation = await runner.evaluate();
 for (const check of evaluation.checks) {

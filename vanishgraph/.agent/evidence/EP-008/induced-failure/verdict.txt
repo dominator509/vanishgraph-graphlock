@@ -3,5 +3,5 @@ postgresql | PASS | FAIL | PASS | DEMONSTRATED (control=PASS induced=FAIL remedi
 valkey | PASS | FAIL | PASS | DEMONSTRATED (control=PASS induced=FAIL remediated=PASS on the same probe path)
 job-worker | PASS | FAIL | PASS | DEMONSTRATED (control=PASS induced=FAIL remediated=PASS on the same probe path)
 object-store | PASS | UNKNOWN | PASS | DEMONSTRATED (control=PASS induced=UNKNOWN remediated=PASS on the same probe path)
-keycloak-jwks | UNKNOWN | UNKNOWN | UNKNOWN | ERROR (DOD-033: not provisioned; see the provisioning attempt below)
+keycloak-jwks | PASS | FAIL | PASS | DEMONSTRATED (control=PASS induced=FAIL remediated=PASS on the same probe path)
 provider-transport | UNKNOWN | UNKNOWN | UNKNOWN | ERROR (DOD-033: not provisioned; see the provisioning attempt below)

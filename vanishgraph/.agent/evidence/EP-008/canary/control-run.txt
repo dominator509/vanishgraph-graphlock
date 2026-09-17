@@ -1,66 +1,66 @@
 ▶ the canary bundle is generated, non-live, and covers every §4.2 class
-  ✔ the run records its seed, its bundle digest and every entry it will assert on (1.583ms)
-  ✔ every §4.2 rule class in the shipped configuration has at least one canary (0.3523ms)
-  ✔ the six canary sites of §4.4 item 3 are all present (0.3224ms)
-  ✔ the material is non-live BY CONSTRUCTION, not by convention (1.4028ms)
-  ✔ the same seed reproduces the same bundle, and a different seed does not (5.1734ms)
-  ✔ NEGATIVE CONTROL: the cleanliness oracle flags a planted canary, so its silence means something (2.4351ms)
-✔ the canary bundle is generated, non-live, and covers every §4.2 class (13.6372ms)
+  ✔ the run records its seed, its bundle digest and every entry it will assert on (1.6402ms)
+  ✔ every §4.2 rule class in the shipped configuration has at least one canary (0.3486ms)
+  ✔ the six canary sites of §4.4 item 3 are all present (0.2914ms)
+  ✔ the material is non-live BY CONSTRUCTION, not by convention (1.1977ms)
+  ✔ the same seed reproduces the same bundle, and a different seed does not (4.1357ms)
+  ✔ NEGATIVE CONTROL: the cleanliness oracle flags a planted canary, so its silence means something (2.1108ms)
+✔ the canary bundle is generated, non-live, and covers every §4.2 class (11.9204ms)
 ▶ a value-pattern class never reaches a sink, in any encoding (SPEC-007 §4.2)
-  ✖ EMAIL_ADDRESS: plain is redacted, encoded forms are refused, truncation is bounded and recorded (8.103ms)
-  ✔ TELEPHONE_NUMBER: plain is redacted, encoded forms are refused, truncation is bounded and recorded (2.7595ms)
-  ✔ POSTAL_ADDRESS: plain is redacted, encoded forms are refused, truncation is bounded and recorded (1.6954ms)
-  ✔ RAW_HTML: plain is redacted, encoded forms are refused, truncation is bounded and recorded (2.0522ms)
-  ✔ COOKIE_SESSION_VALUE: plain is redacted, encoded forms are refused, truncation is bounded and recorded (1.5079ms)
-  ✔ TOKEN_OR_SECRET: plain is redacted, encoded forms are refused, truncation is bounded and recorded (1.4085ms)
-  ✔ OPERATOR_NOTE: plain is redacted, encoded forms are refused, truncation is bounded and recorded (0.8957ms)
-✖ a value-pattern class never reaches a sink, in any encoding (SPEC-007 §4.2) (19.451ms)
+  ✖ EMAIL_ADDRESS: plain is redacted, encoded forms are refused, truncation is bounded and recorded (6.6343ms)
+  ✔ TELEPHONE_NUMBER: plain is redacted, encoded forms are refused, truncation is bounded and recorded (3.8738ms)
+  ✔ POSTAL_ADDRESS: plain is redacted, encoded forms are refused, truncation is bounded and recorded (3.3267ms)
+  ✔ RAW_HTML: plain is redacted, encoded forms are refused, truncation is bounded and recorded (2.2714ms)
+  ✔ COOKIE_SESSION_VALUE: plain is redacted, encoded forms are refused, truncation is bounded and recorded (2.0329ms)
+  ✔ TOKEN_OR_SECRET: plain is redacted, encoded forms are refused, truncation is bounded and recorded (2.1786ms)
+  ✔ OPERATOR_NOTE: plain is redacted, encoded forms are refused, truncation is bounded and recorded (1.3498ms)
+✖ a value-pattern class never reaches a sink, in any encoding (SPEC-007 §4.2) (23.8806ms)
 ▶ a class with no value shape is refused by field name, and the configuration says so
-  ✔ SUBJECT_NAME: the field that would carry it is denied, and no pattern is claimed (0.4157ms)
-  ✔ PAGE_CONTENT: the field that would carry it is denied, and no pattern is claimed (0.152ms)
-  ✔ IDENTITY_DOCUMENT_CONTENT: the field that would carry it is denied, and no pattern is claimed (0.1252ms)
-  ✔ FORM_VALUE: the field that would carry it is denied, and no pattern is claimed (0.108ms)
-  ✔ SENSITIVE_SCREENSHOT: the field that would carry it is denied, and no pattern is claimed (0.1132ms)
-✔ a class with no value shape is refused by field name, and the configuration says so (1.147ms)
+  ✔ SUBJECT_NAME: the field that would carry it is denied, and no pattern is claimed (0.6229ms)
+  ✔ PAGE_CONTENT: the field that would carry it is denied, and no pattern is claimed (0.1808ms)
+  ✔ IDENTITY_DOCUMENT_CONTENT: the field that would carry it is denied, and no pattern is claimed (0.2147ms)
+  ✔ FORM_VALUE: the field that would carry it is denied, and no pattern is claimed (0.2451ms)
+  ✔ SENSITIVE_SCREENSHOT: the field that would carry it is denied, and no pattern is claimed (0.2289ms)
+✔ a class with no value shape is refused by field name, and the configuration says so (1.8543ms)
 ▶ the whole path, all five sinks, asserted on exported bytes (§4.4 items 3-4)
-  ✖ every canary site is driven through the real gate to all five sinks with no canary in the bytes (9.0617ms)
-  ✔ allowlisted opaque identifiers and all nine resource attributes still appear, unchanged (0.5784ms)
-  ✖ a resource attribute carrying a prohibited class is DENIED rather than rewritten (0.3814ms)
-✖ the whole path, all five sinks, asserted on exported bytes (§4.4 items 3-4) (10.2233ms)
+  ✖ every canary site is driven through the real gate to all five sinks with no canary in the bytes (16.3071ms)
+  ✔ allowlisted opaque identifiers and all nine resource attributes still appear, unchanged (0.9193ms)
+  ✖ a resource attribute carrying a prohibited class is DENIED rather than rewritten (0.6731ms)
+✖ the whole path, all five sinks, asserted on exported bytes (§4.4 items 3-4) (18.2386ms)
 ▶ the deny-by-default rules of §4.1
-  ✔ a field with no classification is denied, and the refusal names it (0.2819ms)
-  ✔ a prohibited field NAME is denied before its value is looked at (0.1557ms)
-  ✔ a field classified as denied is denied by class, not by value (2.9436ms)
-  ✔ a non-string value is a FAILURE, which behaves as a denial (0.2682ms)
-  ✔ an unvalidatable policy denies everything with POLICY_ABSENT, and says why (0.6153ms)
-✔ the deny-by-default rules of §4.1 (4.5403ms)
+  ✔ a field with no classification is denied, and the refusal names it (0.3977ms)
+  ✔ a prohibited field NAME is denied before its value is looked at (0.2434ms)
+  ✔ a field classified as denied is denied by class, not by value (3.0934ms)
+  ✔ a non-string value is a FAILURE, which behaves as a denial (0.5091ms)
+  ✔ an unvalidatable policy denies everything with POLICY_ABSENT, and says why (1.0762ms)
+✔ the deny-by-default rules of §4.1 (5.7459ms)
 ▶ the accepted-payload token (§4.1: reaching a sink without one is impossible)
-  ✔ a payload that is not the product of the scrub stage is refused by the sink at runtime (0.2164ms)
-  ✔ the token is a digest over the accepted content, so two different payloads do not share one (0.5398ms)
-✔ the accepted-payload token (§4.1: reaching a sink without one is impossible) (0.9358ms)
+  ✔ a payload that is not the product of the scrub stage is refused by the sink at runtime (0.3311ms)
+  ✔ the token is a digest over the accepted content, so two different payloads do not share one (0.8272ms)
+✔ the accepted-payload token (§4.1: reaching a sink without one is impossible) (1.4525ms)
 ▶ the counters the alerts select (§4.1, §8 A-06 and A-06c)
-  ✖ outcome, denial and canary series carry the label sets the alert expressions use (0.7058ms)
-✖ the counters the alerts select (§4.1, §8 A-06 and A-06c) (0.7933ms)
+  ✖ outcome, denial and canary series carry the label sets the alert expressions use (1.3191ms)
+✖ the counters the alerts select (§4.1, §8 A-06 and A-06c) (1.4797ms)
 ▶ the disabled-rule control proves the canary assertion can fail (§4.4 item 5)
-  ✔ with EMAIL_ADDRESS disabled the canary REACHES the exported bytes, and the report names the class and the field (0.9211ms)
-  ✖ the same suite run against the real gate passes, which is the difference the control measures (0.8075ms)
-✖ the disabled-rule control proves the canary assertion can fail (§4.4 item 5) (1.8843ms)
+  ✔ with EMAIL_ADDRESS disabled the canary REACHES the exported bytes, and the report names the class and the field (1.8333ms)
+  ✖ the same suite run against the real gate passes, which is the difference the control measures (1.3847ms)
+✖ the disabled-rule control proves the canary assertion can fail (§4.4 item 5) (3.4668ms)
 ▶ the allowlist validation refuses a policy that cannot be trusted
-  ✖ the shipped configuration validates, disables nothing, and declares the six reason codes (1.0975ms)
-  ✔ NEGATIVE CASE: a default of ALLOW is refused with a readable reason (0.5051ms)
-  ✔ NEGATIVE CASE: an unknown EgressClass is refused with a readable reason (0.2854ms)
-  ✔ NEGATIVE CASE: an unknown disposition is refused with a readable reason (0.1971ms)
-  ✔ NEGATIVE CASE: a prohibited name that is also allowlisted is refused with a readable reason (0.1871ms)
-  ✔ NEGATIVE CASE: a resource key with no fail-closed mark is refused with a readable reason (0.2165ms)
-  ✔ NEGATIVE CASE: a VALUE_PATTERN class with no pattern is refused with a readable reason (0.2257ms)
-  ✔ NEGATIVE CASE: a pattern on a FIELD_NAME class is refused with a readable reason (0.1987ms)
-  ✔ NEGATIVE CASE: a duplicated rule class is refused with a readable reason (0.1894ms)
-  ✔ NEGATIVE CASE: a pattern that does not compile is refused with a readable reason (0.3289ms)
-  ✔ a class marked enabled:false is accepted but recorded, because the control needs it and silence would hide it (1.2744ms)
-✖ the allowlist validation refuses a policy that cannot be trusted (5.2976ms)
+  ✖ the shipped configuration validates, disables nothing, and declares the six reason codes (1.3665ms)
+  ✔ NEGATIVE CASE: a default of ALLOW is refused with a readable reason (0.7105ms)
+  ✔ NEGATIVE CASE: an unknown EgressClass is refused with a readable reason (0.4101ms)
+  ✔ NEGATIVE CASE: an unknown disposition is refused with a readable reason (0.2002ms)
+  ✔ NEGATIVE CASE: a prohibited name that is also allowlisted is refused with a readable reason (0.2134ms)
+  ✔ NEGATIVE CASE: a resource key with no fail-closed mark is refused with a readable reason (0.2707ms)
+  ✔ NEGATIVE CASE: a VALUE_PATTERN class with no pattern is refused with a readable reason (0.2606ms)
+  ✔ NEGATIVE CASE: a pattern on a FIELD_NAME class is refused with a readable reason (0.2491ms)
+  ✔ NEGATIVE CASE: a duplicated rule class is refused with a readable reason (0.2149ms)
+  ✔ NEGATIVE CASE: a pattern that does not compile is refused with a readable reason (0.378ms)
+  ✔ a class marked enabled:false is accepted but recorded, because the control needs it and silence would hide it (2.0402ms)
+✖ the allowlist validation refuses a policy that cannot be trusted (7.0539ms)
 ▶ the redaction evidence this run leaves behind
-  ✔ the bundle, its digest and the per-sink digests are written where the canary stage reads them (6.071ms)
-✔ the redaction evidence this run leaves behind (6.2657ms)
+  ✔ the bundle, its digest and the per-sink digests are written where the canary stage reads them (8.4727ms)
+✔ the redaction evidence this run leaves behind (8.7262ms)
 ℹ tests 43
 ℹ suites 10
 ℹ pass 37
@@ -68,12 +68,12 @@
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 383.086
+ℹ duration_ms 547.934
 
 ✖ failing tests:
 
 test at tests\observability\egress-canary.test.ts:270:5
-✖ EMAIL_ADDRESS: plain is redacted, encoded forms are refused, truncation is bounded and recorded (8.103ms)
+✖ EMAIL_ADDRESS: plain is redacted, encoded forms are refused, truncation is bounded and recorded (6.6343ms)
   AssertionError [ERR_ASSERTION]: EMAIL_ADDRESS should have been redacted in field message, but the outcome was ALLOWED_OPAQUE
   + actual - expected
   
@@ -99,12 +99,12 @@ test at tests\observability\egress-canary.test.ts:270:5
   }
 
 test at tests\observability\egress-canary.test.ts:365:3
-✖ every canary site is driven through the real gate to all five sinks with no canary in the bytes (9.0617ms)
+✖ every canary site is driven through the real gate to all five sinks with no canary in the bytes (16.3071ms)
   AssertionError [ERR_ASSERTION]: OTLP_TRACE_EXPORTER exported a canary
   + actual - expected
   
   + [
-  +   'gathpenvor.mipen@draquo.invalid'
+  +   'hesmifim.nyxbel@lolohes.invalid'
   + ]
   - []
   
@@ -120,14 +120,14 @@ test at tests\observability\egress-canary.test.ts:365:3
       at Array.map (<anonymous>) {
     generatedMessage: false,
     code: 'ERR_ASSERTION',
-    actual: [ 'gathpenvor.mipen@draquo.invalid' ],
+    actual: [ 'hesmifim.nyxbel@lolohes.invalid' ],
     expected: [],
     operator: 'deepStrictEqual',
     diff: 'simple'
   }
 
 test at tests\observability\egress-canary.test.ts:432:3
-✖ a resource attribute carrying a prohibited class is DENIED rather than rewritten (0.3814ms)
+✖ a resource attribute carrying a prohibited class is DENIED rather than rewritten (0.6731ms)
   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
   
   true !== false
@@ -148,7 +148,7 @@ test at tests\observability\egress-canary.test.ts:432:3
   }
 
 test at tests\observability\egress-canary.test.ts:528:3
-✖ outcome, denial and canary series carry the label sets the alert expressions use (0.7058ms)
+✖ outcome, denial and canary series carry the label sets the alert expressions use (1.3191ms)
   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
   
   3 !== 1
@@ -172,12 +172,12 @@ test at tests\observability\egress-canary.test.ts:528:3
   }
 
 test at tests\observability\egress-canary.test.ts:576:3
-✖ the same suite run against the real gate passes, which is the difference the control measures (0.8075ms)
+✖ the same suite run against the real gate passes, which is the difference the control measures (1.3847ms)
   AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
   + actual - expected
   
   + [
-  +   'gathpenvor.mipen@draquo.invalid'
+  +   'hesmifim.nyxbel@lolohes.invalid'
   + ]
   - []
   
@@ -192,14 +192,14 @@ test at tests\observability\egress-canary.test.ts:576:3
       at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
     generatedMessage: true,
     code: 'ERR_ASSERTION',
-    actual: [ 'gathpenvor.mipen@draquo.invalid' ],
+    actual: [ 'hesmifim.nyxbel@lolohes.invalid' ],
     expected: [],
     operator: 'deepStrictEqual',
     diff: 'simple'
   }
 
 test at tests\observability\egress-canary.test.ts:594:3
-✖ the shipped configuration validates, disables nothing, and declares the six reason codes (1.0975ms)
+✖ the shipped configuration validates, disables nothing, and declares the six reason codes (1.3665ms)
   AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
   + actual - expected
   

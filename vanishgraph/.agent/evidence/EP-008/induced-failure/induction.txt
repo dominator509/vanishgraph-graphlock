@@ -9,3 +9,7 @@ vanishgraph-ep008-valkey
 vanishgraph-ep008-minio
 == remediating: docker start vanishgraph-ep008-minio ==
 vanishgraph-ep008-minio
+== inducing: docker stop vanishgraph-ep008-keycloak ==
+vanishgraph-ep008-keycloak
+== remediating: docker start vanishgraph-ep008-keycloak ==
+vanishgraph-ep008-keycloak

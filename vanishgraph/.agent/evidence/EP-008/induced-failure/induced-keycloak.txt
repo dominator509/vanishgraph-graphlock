@@ -1,7 +1,8 @@
-postgresql|PROVISIONED|PASS|-|7ms|postgresql session role verified as vg_app
+postgresql|PROVISIONED|PASS|-|8ms|postgresql session role verified as vg_app
 valkey|PROVISIONED|PASS|-|20ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|PASS|-|18ms|1 worker heartbeat(s) inside the 15000 ms freshness window
+job-worker|PROVISIONED|PASS|-|16ms|1 worker heartbeat(s) inside the 15000 ms freshness window
 object-store|PROVISIONED|PASS|-|15ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
-keycloak-jwks|PROVISIONED|PASS|-|82ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
+keycloak-jwks|PROVISIONED|FAIL|UNKNOWN|11ms|fetch failed
 provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|143ms
+overall|NOT_READY|71ms
+Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76

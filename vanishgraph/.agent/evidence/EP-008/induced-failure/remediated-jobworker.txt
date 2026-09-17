@@ -1,7 +1,7 @@
-postgresql|PROVISIONED|PASS|-|65ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|TIMEOUT|TIMEOUT|202ms|the probe exceeded its hard timeout (§7.2) and was aborted
-job-worker|PROVISIONED|PASS|-|184ms|1 worker heartbeat(s) inside the 15000 ms freshness window
-object-store|PROVISIONED|PASS|-|47ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
-keycloak-jwks|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for keycloak-jwks; the declared action is: OIDC discovery plus JWKS retrieval over TLS, with no token minted
+postgresql|PROVISIONED|PASS|-|236ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|TIMEOUT|TIMEOUT|210ms|the probe exceeded its hard timeout (§7.2) and was aborted
+job-worker|PROVISIONED|PASS|-|158ms|1 worker heartbeat(s) inside the 15000 ms freshness window
+object-store|PROVISIONED|PASS|-|78ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|PROVISIONED|PASS|-|138ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
 provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|498ms
+overall|NOT_READY|820ms

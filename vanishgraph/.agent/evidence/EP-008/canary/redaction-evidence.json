@@ -1,14 +1,14 @@
 {
   "spec": "SPEC-007 §4.4 item 6; EP-008 M2",
-  "canary_seed": "5cbc2b5e29c84416",
-  "canary_bundle_digest": "2b691a1dba276f787ccef050953bfcc8c4f088ffa88274eca66044c660dc0b11",
-  "canary_bundle_digest_recomputed_from_bytes": "2b691a1dba276f787ccef050953bfcc8c4f088ffa88274eca66044c660dc0b11",
+  "canary_seed": "e9cef0c3799c2d19",
+  "canary_bundle_digest": "8e8cb3766338a368613ae62c7e4fb09b04d0e3c54f2f8a6fd06a57a845a5e2b3",
+  "canary_bundle_digest_recomputed_from_bytes": "8e8cb3766338a368613ae62c7e4fb09b04d0e3c54f2f8a6fd06a57a845a5e2b3",
   "sinks": [
-    { "sink": "OTLP_TRACE_EXPORTER", "exported_payload_digest": "9394910aa31922fcd005605e3d21a099d4f353ea7ba80cf7f1d540b3529d6e87", "capture": "capture-OTLP_TRACE_EXPORTER.txt" }    ,
-    { "sink": "LOG_FORWARDER", "exported_payload_digest": "3ce303fe53f2127d6e4efd607f13bcf31d34c5a1466b0899404a6e8873339896", "capture": "capture-LOG_FORWARDER.txt" }    ,
-    { "sink": "ERROR_REPORTER", "exported_payload_digest": "b87ab1394cd570e725261eb7ef69a0a299d8681146251e1fe5cbd9032fc4e32b", "capture": "capture-ERROR_REPORTER.txt" }    ,
-    { "sink": "PR_ISSUE_EXPORTER", "exported_payload_digest": "7d391e44d8a0c8d584b46f1c25625391449439bb63e518d217c6889612158dcb", "capture": "capture-PR_ISSUE_EXPORTER.txt" }    ,
-    { "sink": "DEBUG_BUNDLE", "exported_payload_digest": "c73b4ec405dbde7b2538c50e2db8ab8bebab79b1b4d6bfa459f5cdcc27f6c15b", "capture": "capture-DEBUG_BUNDLE.txt" }
+    { "sink": "OTLP_TRACE_EXPORTER", "exported_payload_digest": "e83b60cf66609e421088750101afca71fdc36298dec93ddde4082484de960be6", "capture": "capture-OTLP_TRACE_EXPORTER.txt" }    ,
+    { "sink": "LOG_FORWARDER", "exported_payload_digest": "78dc3c4c5657880ccdf47be9465666aac85450366da4cff618e6fad1430548a4", "capture": "capture-LOG_FORWARDER.txt" }    ,
+    { "sink": "ERROR_REPORTER", "exported_payload_digest": "890d6ad020aba6fc533a000adabe01f554eafd269e5c65c47db770917770f787", "capture": "capture-ERROR_REPORTER.txt" }    ,
+    { "sink": "PR_ISSUE_EXPORTER", "exported_payload_digest": "aca28ec0b5c7adbfa98799e1ff1c975b14565ae1f9276da0efe5cd3d4c3151e3", "capture": "capture-PR_ISSUE_EXPORTER.txt" }    ,
+    { "sink": "DEBUG_BUNDLE", "exported_payload_digest": "6a15d5d027d2164dd38c111d8b9f354db85c4d32a43a7ac5c61841f926ca7943", "capture": "capture-DEBUG_BUNDLE.txt" }
   ],
   "positive_run": { "verdict": "PASS", "tests_passed": 43, "capture": "positive-run.txt" },
   "disabled_rule_control": { "rule_class": "EMAIL_ADDRESS", "field_path": "message", "verdict": "FAILED_AS_REQUIRED", "failing_tests": 6, "capture": "control-run.txt", "policy": "allowlist-control.json" },

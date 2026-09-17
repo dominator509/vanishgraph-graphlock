@@ -46,6 +46,13 @@ export VG_OBJECT_STORE_KEY=${VG_OBJECT_STORE_KEY:-readiness/probe-object}
 export VG_OBJECT_STORE_ACCESS_KEY=${VG_OBJECT_STORE_ACCESS_KEY:-vgprobe}
 export VG_OBJECT_STORE_SECRET_KEY=${VG_OBJECT_STORE_SECRET_KEY:-vgprobe-secret}
 
+# THE LOCAL KEYCLOAK'S ISSUER AND ITS CA, WITH THE SAME DEFAULTS THE REST OF THIS STAGE USES. The issuer is a disposable
+# instance started for this node with a self-signed certificate, so the environment supplies the CA; TLS VERIFICATION IS
+# NOT DISABLED, and a run without NODE_EXTRA_CA_CERTS fails, which is how the earlier check proved the handshake is real.
+export VG_KEYCLOAK_ISSUER=${VG_KEYCLOAK_ISSUER:-https://127.0.0.1:58443}
+export NODE_EXTRA_CA_CERTS=${NODE_EXTRA_CA_CERTS:-C:/tmp/vg-keycloak-certs/cert.pem}
+KEYCLOAK_CONTAINER=${VG_KEYCLOAK_CONTAINER:-vanishgraph-ep008-keycloak}
+
 # THE DRIVER IS WRITTEN ONCE AND RUN THREE TIMES (control, induced, remediated), so all three observations come from the
 # same code path — which is the property §7.4 asks the stage to prove.
 cat >"$EVIDENCE/probe-driver.mjs" <<'DRIVER_EOF'
@@ -157,8 +164,28 @@ if (objectStoreEndpoint.trim().length > 0) {
   clients.objectStore = probes.objectStoreProbeUnavailable;
 }
 
-// keycloak-jwks and provider-transport: no issuer and no provider entitlement are provisioned in this environment, and
-// the stage reports that rather than faking a probe.
+// keycloak-jwks: WIRED WHEN AN ISSUER IS CONFIGURED, through the real probe — OIDC discovery plus JWKS retrieval over
+// TLS, with NO TOKEN MINTED, which is the declared action. The CA is supplied by the environment through
+// NODE_EXTRA_CA_CERTS because the issuer here is a disposable local Keycloak with a self-signed certificate; TLS
+// verification is NOT disabled, and a run without the CA fails (measured: "fetch failed" / DEPTH_ZERO_SELF_SIGNED_CERT).
+const keycloakIssuer = process.env.VG_KEYCLOAK_ISSUER ?? "";
+if (keycloakIssuer.trim().length > 0) {
+  clients.keycloakJwks = probes.keycloakJwksProbe({
+    discover: async () => {
+      const discovery = await fetch(`${keycloakIssuer}/realms/master/.well-known/openid-configuration`);
+      if (!discovery.ok) throw new Error(`discovery answered HTTP ${String(discovery.status)}`);
+      const document = await discovery.json();
+      if (typeof document.jwks_uri !== "string") throw new Error("the discovery document carries no jwks_uri");
+      const jwks = await fetch(document.jwks_uri);
+      if (!jwks.ok) throw new Error(`the JWKS answered HTTP ${String(jwks.status)}`);
+      const keys = await jwks.json();
+      return { issuer: String(document.issuer ?? ""), keys: Array.isArray(keys.keys) ? keys.keys.length : 0 };
+    },
+  });
+}
+
+// provider-transport: no provider entitlement is provisioned in this environment, and the stage reports that rather than
+// faking a probe. A reachability check against a provider nobody is entitled to contact would prove nothing.
 const runner = probes.createProbeRunner({ clients });
 const evaluation = await runner.evaluate();
 for (const check of evaluation.checks) {
@@ -277,6 +304,25 @@ if grep -q '^object-store|PROVISIONED|PASS' "$EVIDENCE/control.txt"; then
   mv "$EVIDENCE/remediated-merged.txt" "$EVIDENCE/remediated.txt"
 fi
 
+# THE DECLARED INDUCTION FOR keycloak-jwks: §7.4 step 2 names stopping the Keycloak frontend so discovery or the JWKS
+# fetch fails. Stopping the container IS that action here, and the stage starts it again for the remediated run.
+if grep -q '^keycloak-jwks|PROVISIONED|PASS' "$EVIDENCE/control.txt"; then
+  echo "== inducing: docker stop $KEYCLOAK_CONTAINER ==" | tee -a "$EVIDENCE/induction.txt"
+  docker stop "$KEYCLOAK_CONTAINER" >>"$EVIDENCE/induction.txt" 2>&1 || true
+  sleep 2
+  run_driver "$EVIDENCE/induced-keycloak.txt" || true
+  awk -F'|' 'NR==FNR { if ($1=="keycloak-jwks") v=$0; next } { if ($1=="keycloak-jwks" && v!="") print v; else print }' "$EVIDENCE/induced-keycloak.txt" "$EVIDENCE/induced.txt" >"$EVIDENCE/induced-merged.txt"
+  mv "$EVIDENCE/induced-merged.txt" "$EVIDENCE/induced.txt"
+  echo "== remediating: docker start $KEYCLOAK_CONTAINER ==" | tee -a "$EVIDENCE/induction.txt"
+  docker start "$KEYCLOAK_CONTAINER" >>"$EVIDENCE/induction.txt" 2>&1 || { echo "readiness induced failure: ERROR - could not restart $KEYCLOAK_CONTAINER" >&2; exit 1; }
+  for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do
+    sleep 2
+    run_driver "$EVIDENCE/remediated-keycloak.txt" || true
+    grep -q '^keycloak-jwks|PROVISIONED|PASS' "$EVIDENCE/remediated-keycloak.txt" && break
+  done
+  awk -F'|' 'NR==FNR { if ($1=="keycloak-jwks") v=$0; next } { if ($1=="keycloak-jwks" && v!="") print v; else print }' "$EVIDENCE/remediated-keycloak.txt" "$EVIDENCE/remediated.txt" >"$EVIDENCE/remediated-merged.txt"
+  mv "$EVIDENCE/remediated-merged.txt" "$EVIDENCE/remediated.txt"
+fi
 # THE PROVISIONING ATTEMPT LOG DOD-033 ASKS FOR, PER DEPENDENCY THAT CANNOT BE INDUCED HERE.
 #
 # "A dependency that cannot be provisioned is recorded ERROR per DOD-033 WITH THE PROVISIONING ATTEMPT LOG." A one-line
