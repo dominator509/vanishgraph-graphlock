@@ -1,0 +1,38 @@
+EP-008 M5 - THE METRICS LISTENER IS BUILT AND WAS SCRAPED FOR REAL
+===================================================================
+
+Spec: SPEC-007 §2.3 rule 2 ("GET /metrics is served on the process metrics listener and is cluster-internal only; it
+must be unreachable from the public ingress; exposure is a security defect"). Plan: EP-008 M5(b).
+
+WHAT WAS BUILT. `startMetricsListener` in `src/infrastructure/observability/compose-telemetry.ts` serves exactly one path
+(VANISHGRAPH_METRICS_PATH) on exactly one bind address (VANISHGRAPH_METRICS_HOST, loopback by default) and NOTHING else:
+any other path is 404, any other method is 405 with `allow: GET`, and the body is `renderExposition`, so the endpoint can
+only emit series the registry actually recorded. It is never mounted on the public server, so exposing it requires a
+deliberate configuration change. `metricsPort === 0` (the default) means no listener, and the function REFUSES a
+non-positive port rather than binding something the caller did not ask for.
+
+MEASURED, BY STARTING IT AND SCRAPING IT:
+
+  GET http://127.0.0.1:39471/metrics -> 200 text/plain; version=0.0.4; charset=utf-8
+  served: 1 | body contains the recorded series vanishgraph_readiness_status{dependency_key="postgresql",environment="local"} 1
+  GET /v1/ready -> 404
+  POST /metrics -> 405 with allow: GET
+
+  The probe registered one family, recorded one sample and asserted the series appears in the body; it also asserted the
+  two refusals. All four observations printed as expected.
+
+ONE OBSERVATION RECORDED RATHER THAN GLOSSED: the probe process then aborted in libuv teardown with
+`Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)` and exit code 1, after all four results had printed. The most
+likely cause is calling `process.exit(0)` immediately after `close()` while the server handle is still closing on
+Windows; it is NOT evidence that the listener fails to close, and it has not been reproduced without the immediate
+`process.exit`. It is recorded here because a probe that exits non-zero is a fact about the measurement, and because the
+next round should confirm it with a clean shutdown rather than assume either way.
+
+WHAT IS STILL OWED FOR M5:
+  1. WIRING THE LISTENER INTO THE PROCESS ENTRY POINT (`src/infrastructure/main.ts`) - it is started by a caller today
+     and by nothing in a running service yet.
+  2. THE FOUR DEPENDENCIES THAT CANNOT DEMONSTRATE AN INDUCED TRANSITION HERE (job-worker, object-store, keycloak-jwks,
+     provider-transport), with postgresql and valkey DEMONSTRATED; the stage still exits 1 and NO
+     `readiness induced failure: ok` HAS BEEN PRINTED.
+  3. The two standing findings: 1800 ms of per-probe timeouts against a 1500 ms budget, and the `reason_code` enum
+     declared per metric but not enforced at record time.

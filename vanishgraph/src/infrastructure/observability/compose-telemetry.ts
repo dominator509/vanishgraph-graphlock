@@ -322,7 +322,7 @@ export const RESOURCE_KEYS: readonly CanonicalResourceKey[] = CANONICAL_RESOURCE
 import type { ReadinessChangedRecord, ReadinessDecision, ReadinessDecisionPort } from '../../http/health-routes.ts';
 import { createProbeRunner, type DependencyClients, type DependencyKey } from '../../adapters/observability/dependency-probes.ts';
 import { createStructuredLogger, type StructuredLogger } from '../../adapters/observability/structured-logger.ts';
-import type { MetricsRegistry } from '../../adapters/observability/metrics-registry.ts';
+import { renderExposition, type MetricsRegistry } from '../../adapters/observability/metrics-registry.ts';
 import type { TelemetryAllowlist } from '../../adapters/observability/telemetry-allowlist.ts';
 
 export interface ReadinessComposition {
@@ -408,6 +408,77 @@ export function composeReadiness(options: ReadinessCompositionOptions): Readines
 
 /** The six declared dependency keys, re-exported so the process entry point names them from one place. */
 export const READINESS_DEPENDENCY_KEYS: readonly DependencyKey[] = ['postgresql', 'valkey', 'job-worker', 'object-store', 'keycloak-jwks', 'provider-transport'];
+
+/* ----------------------------------------------------------------------------------------------------------------
+ * The metrics listener (SPEC-007 §2.3 rule 2; EP-008 M5(b))
+ *
+ * CLUSTER-INTERNAL ONLY, AND THE CODE ENFORCES IT RATHER THAN DOCUMENTING IT: the listener binds the address it is
+ * given (`VANISHGRAPH_METRICS_HOST`, loopback by default) and NOTHING else, it serves exactly one path
+ * (`VANISHGRAPH_METRICS_PATH`), and it answers 404 to every other path and 405 to every other method. §2.3 rule 2 says
+ * the endpoint "must be unreachable from the public ingress; exposure is a security defect, because raw metric series
+ * disclose tenant shape and operational state" — so the listener is never mounted on the public server, and a caller
+ * that wants it exposed has to change the configuration deliberately.
+ *
+ * IT ANSWERS ONLY WHAT WAS RECORDED: the body is `renderExposition`, which emits the registered catalogue and nothing
+ * else, so this endpoint cannot invent a series.
+ * ---------------------------------------------------------------------------------------------------------------- */
+
+export interface MetricsListenerOptions {
+  readonly registry: MetricsRegistry;
+  readonly path: string;
+  readonly host: string;
+  readonly port: number;
+  readonly environment: string;
+}
+
+export interface MetricsListener {
+  readonly url: string;
+  readonly requestsServed: number;
+  close(): Promise<void>;
+}
+
+/** Start the listener. The caller decides whether to start it at all (`metricsPort === 0` means no listener). */
+export async function startMetricsListener(options: MetricsListenerOptions): Promise<MetricsListener> {
+  if (!Number.isInteger(options.port) || options.port <= 0) {
+    throw new RangeError('the metrics listener needs a real port; configuration 0 means no listener and the caller must not start one');
+  }
+  const { createServer } = await import('node:http');
+  let served = 0;
+  const server = createServer((request, response) => {
+    if ((request.method ?? 'GET') !== 'GET') {
+      // 405, NOT 404: the path exists and the method does not, and saying so is what lets a scraper be fixed instead of
+      // guessed at.
+      response.writeHead(405, { 'content-type': 'text/plain; charset=utf-8', allow: 'GET' });
+      response.end('method not allowed\n');
+      return;
+    }
+    const path = (request.url ?? '/').split('?')[0] ?? '/';
+    if (path !== options.path) {
+      response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+      response.end('not found\n');
+      return;
+    }
+    served += 1;
+    response.writeHead(200, { 'content-type': 'text/plain; version=0.0.4; charset=utf-8' });
+    response.end(renderExposition(options.registry, { environment: options.environment }));
+  });
+  await new Promise<void>((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(options.port, options.host, () => resolve());
+  });
+  const address = server.address();
+  const boundPort = typeof address === 'object' && address !== null ? address.port : options.port;
+  return {
+    url: `http://${options.host}:${String(boundPort)}${options.path}`,
+    get requestsServed() {
+      return served;
+    },
+    close: () =>
+      new Promise<void>((resolve, reject) => {
+        server.close((error) => (error === undefined || error === null ? resolve() : reject(error)));
+      }),
+  };
+}
 
 /** Re-exported so a caller of this composition root needs one import for the refusal vocabulary. */
 export { RESOURCE_ATTR_MISSING_COUNTER, RESOURCE_ATTR_MISSING_REASON, RESOURCE_ATTR_MISSING_SERIES };
