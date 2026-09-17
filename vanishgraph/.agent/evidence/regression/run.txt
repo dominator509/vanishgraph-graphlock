@@ -1,0 +1,14 @@
+regression proof - 2026-09-17T04:18:39Z
+
+tests/regression/live-fire-proof-01.test.ts exit=0 {"tests":6,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":1,"manifestChecked":0,"failed":[],"verdict":"OK"}
+tests/regression/live-fire-proof-02.test.ts exit=0 {"tests":6,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":1,"manifestChecked":0,"failed":[],"verdict":"OK"}
+tests/regression/live-fire-proof-03.test.ts exit=0 {"tests":7,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":1,"manifestChecked":0,"failed":[],"verdict":"OK"}
+tests/regression/live-fire-proof-04.test.ts exit=0 {"tests":6,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":1,"manifestChecked":0,"failed":[],"verdict":"OK"}
+tests/regression/live-fire-proof-05.test.ts exit=0 {"tests":5,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":1,"manifestChecked":0,"failed":[],"verdict":"OK"}
+tests/regression/live-fire-proof-06.test.ts exit=0 {"tests":6,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":1,"manifestChecked":0,"failed":[],"verdict":"OK"}
+tests/regression/live-fire-proof-07.test.ts exit=0 {"tests":6,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":1,"manifestChecked":0,"failed":[],"verdict":"OK"}
+tests/regression/live-fire-proof-08.test.ts exit=0 {"tests":5,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":1,"manifestChecked":0,"failed":[],"verdict":"OK"}
+tests/regression/live-fire-proof-09.test.ts exit=0 {"tests":6,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":1,"manifestChecked":0,"failed":[],"verdict":"OK"}
+tests/regression/live-fire-proof-10.test.ts exit=0 {"tests":6,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":1,"manifestChecked":0,"failed":[],"verdict":"OK"}
+tests/regression/live-fire-proof-11.test.ts exit=0 {"tests":3,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":1,"manifestChecked":0,"failed":[],"verdict":"OK"}
+tests/regression/live-fire-proof-12.test.ts exit=0 {"tests":5,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":1,"manifestChecked":0,"failed":[],"verdict":"OK"}
