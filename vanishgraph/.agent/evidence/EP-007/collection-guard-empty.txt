@@ -1,0 +1,2 @@
+test collection guard: FAIL - zero tests were collected
+An empty or misconfigured suite must never pass (DOD-007).

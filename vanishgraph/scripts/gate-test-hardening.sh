@@ -151,4 +151,7 @@ if [ "$offender_count" -gt 0 ]; then
 fi
 echo "gate-test-hardening: canonical vocabulary scan reported $scanned test file(s), $offender_count title(s) flagged (not enforced; see the note above)"
 
-echo "gate-test-hardening: ok"
+# THE SENTINEL GOES INTO THE CAPTURE AS WELL AS TO STDOUT. MEASURED on this gate's first green run: every stage's exit was
+# in the log, but the sentinel itself was only on stdout, so the file a later reader opens did not contain the verdict it
+# is evidence for. `tee -a` writes both, and the ledger row still quotes the stdout line.
+echo "gate-test-hardening: ok" | tee -a "$LOG"
