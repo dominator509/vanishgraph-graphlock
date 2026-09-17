@@ -1,0 +1,4 @@
+== inducing: docker stop vanishgraph-ep003-postgres ==
+vanishgraph-ep003-postgres
+== remediating: docker start vanishgraph-ep003-postgres ==
+vanishgraph-ep003-postgres
