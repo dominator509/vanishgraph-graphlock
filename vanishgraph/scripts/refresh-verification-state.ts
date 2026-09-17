@@ -133,6 +133,12 @@ function main(): number {
         // records what was observed must see them.
         'tests/regression/**/*.test.ts',
         'tests/failure/**/*.test.ts',
+        // EP-008 M1-M5'S ROOT, AND MEASURED WHY IT IS HERE: the observability suites (telemetry identity, the DLP canary
+        // proof, the log contract, the metric catalogue, the effectiveness metric and the readiness fail-closed suite)
+        // run in the UNIT STAGE and need no database, so they belong in BOTH lists — otherwise nothing this node proved
+        // carries a row in the ledger that exists to record what was observed. This is the same defect the security and
+        // regression notes above record, for the third time in this file.
+        'tests/observability/**/*.test.ts',
         'tests/db/**/*.test.ts',
         // THE INTEGRATION ROOT IS PART OF THE --with-db RUN for the same reason the black-box root is: every suite there
         // drives real PostgreSQL (through `tests/db/harness.ts` or the real adapters), and EP-006 M10's authority,
@@ -151,6 +157,10 @@ function main(): number {
         'tests/architecture/**/*.test.ts',
         'tests/contract/**/*.test.ts',
         'tests/security/**/*.test.ts',
+        // EP-008'S ROOT IS IN THE PURE LIST TOO, because the observability suites run in the unit stage and touch no
+        // database: a root that is observed by the unit stage but invisible to this refresher is evidence the accounting
+        // never sees (see the longer note in the --with-db list above).
+        'tests/observability/**/*.test.ts',
       ];
 
   if (WITH_DB && (process.env.VG_TEST_DSN_OWNER ?? '') === '') {
