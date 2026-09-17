@@ -382,3 +382,33 @@ describe('each probe performs its DECLARED action, and the ones that cannot run 
     assert.notEqual(probePayloadDigest('probe-payload'), probePayloadDigest('probe-payload-2'));
   });
 });
+
+describe('the readiness budget is never extended (§7.2): a probe that would start past it is NOT run, and it FAILS', () => {
+  test('with time advanced past the budget, the remaining probes are refused as TIMEOUT and the verdict is NOT_READY', async () => {
+    // A DRIVEN CLOCK, so the breach is produced deterministically instead of by waiting 1.5 seconds. Each probe advances
+    // the clock by 400 ms, so the fifth and sixth probes are past the 1500 ms budget when their turn comes.
+    let clock = 0;
+    const clients = passingClients();
+    for (const key of Object.keys(clients) as (keyof DependencyClients)[]) {
+      clients[key] = async () => {
+        clock += 400;
+        return 'probe passed';
+      };
+    }
+    const registry = registryWithReadinessFamilies();
+    const runner = createProbeRunner({ clients, registry, now: () => clock });
+    const evaluation = await runner.evaluate();
+    const ran = evaluation.checks.filter((check) => check.detail === 'probe passed');
+    const unrun = evaluation.checks.filter((check) => check.status === 'TIMEOUT' && check.detail.includes('budget was already spent'));
+    assert.equal(ran.length + unrun.length, 6, 'every declared dependency is accounted for, run or refused');
+    assert.ok(unrun.length >= 1, 'the breach must leave at least one probe unrun');
+    for (const check of unrun) {
+      assert.equal(check.reasonCode, 'TIMEOUT', 'an unchecked dependency is not a healthy one');
+      assert.match(check.detail, /forbids extending the budget/);
+      // AND IT IS RECORDED AS A FAILURE SERIES, so the probe-failure counter moves for a dependency nobody checked.
+      assert.equal(registry.value('vanishgraph_dependency_probe_failures_total', { environment: 'local', dependency_key: check.name, reason_code: 'TIMEOUT' }), 1);
+    }
+    assert.equal(evaluation.dependencyState, 'NOT_READY', 'a budget breach can never be READY');
+    assert.equal(evaluation.budgetExceeded, true);
+  });
+});

@@ -244,6 +244,27 @@ export function createProbeRunner(options: ProbeRunnerOptions): ProbeRunner {
       for (const dependency of DECLARED_DEPENDENCIES) {
         // ONE RECORDING PER EXECUTION: the probes are run through the same path `probe()` uses, so a series cannot be
         // emitted twice for one evaluation or missed when the evaluation is the caller.
+        //
+        // THE BUDGET IS NEVER EXTENDED (§7.2), SO A PROBE THAT WOULD START PAST IT DOES NOT START AT ALL, AND IT IS
+        // RECORDED AS A FAILURE RATHER THAN SKIPPED. MEASURED REASON: the declared per-probe timeouts sum to 1800 ms
+        // against a 1500 ms total, so without this the evaluation could run to 1800 ms and still report READY if every
+        // probe happened to pass — an evaluation that took longer than the specification allows, described as healthy.
+        // A dependency nobody had time to check is NOT known to be healthy, so it is TIMEOUT/required-failing, which
+        // makes the process unready. Failing closed is the direction §7.3 requires.
+        const elapsedBeforeProbe = now() - started;
+        if (elapsedBeforeProbe >= READINESS_BUDGET_MS) {
+          const unrun: ProbeResult = Object.freeze({
+            name: dependency.key,
+            required: dependency.required,
+            status: 'TIMEOUT' as const,
+            latencyMs: 0,
+            reasonCode: 'TIMEOUT' as const,
+            detail: `the ${String(READINESS_BUDGET_MS)} ms readiness budget was already spent (${String(elapsedBeforeProbe)} ms) when this probe's turn came, so it was not run: §7.2 forbids extending the budget, and an unchecked dependency is not a healthy one`,
+          });
+          record(unrun);
+          checks.push(unrun);
+          continue;
+        }
         checks.push(await runAndRecord(dependency.key));
       }
       const totalLatencyMs = now() - started;
