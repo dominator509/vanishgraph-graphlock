@@ -1,0 +1,4 @@
+stripe | https://api.stripe.com/v1/balance | HTTP 401 | auth rejection (the induced state of §7.4 step 2) | 438ms
+postal_api | https://api.lob.com/v1/us_verifications | HTTP 401 | auth rejection (the induced state of §7.4 step 2) | 217ms
+search_api_key | https://serpapi.com/account | HTTP 401 | auth rejection (the induced state of §7.4 step 2) | 238ms
+probe -> stripe reachable, HTTP 401

@@ -533,7 +533,19 @@ export interface ProviderTransportProbeOptions {
 export function providerTransportProbe(options: ProviderTransportProbeOptions): Probe {
   return async () => {
     const response = await options.reachability();
+    // AN AUTH REJECTION IS A FAILURE, AND THIS IS A MEASURED CORRECTION. §7.4 step 2 induces this dependency by
+    // "forc[ing] the provider transport to return an auth rejection", so a probe that PASSED on 401 could never detect
+    // the induced state: it would report a healthy transport for the exact condition the specification calls the
+    // failure. The first version accepted any status below 500. MEASURED against the three declared transports with no
+    // credential: all three answer HTTP 401, which IS the induced state, so this row cannot reach PASS in this
+    // environment and now says so rather than reporting a pass.
+    if (response.status === 401 || response.status === 403) {
+      throw new ProbeUnavailableError(
+        `${options.name} rejected the request with HTTP ${String(response.status)}: the transport is reachable but not usable, and §7.4 step 2 names an auth rejection as the induced failure`,
+        'AUTH_FAILED',
+      );
+    }
     if (response.status >= 500) throw new ProbeUnavailableError(`${options.name} answered HTTP ${String(response.status)}`, 'HTTP_5XX');
-    return `${options.name} reachable, HTTP ${String(response.status)}`;
+    return `${options.name} reachable and usable, HTTP ${String(response.status)}`;
   };
 }
