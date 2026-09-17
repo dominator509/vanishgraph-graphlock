@@ -1770,3 +1770,75 @@ test-integration: seed already present (2158 tenant row(s))
 ℹ duration_ms 83597.7063
 test-integration: upgrade matrix UNPROVEN (scripts/test-migrations.sh absent); recorded in integration-migrations.txt
 test-integration: ok
+=== scripts/coverage-gate.sh exit=0
+coverage: domain lines=95.19 branches=92.12 functions=95.20 (targets 90/85/95)
+coverage: application lines=99.35 branches=95.67 functions=93.94 (targets 85/80/90)
+coverage: adapters lines=93.34 branches=78.39 functions=93.19 (targets 75/70/80)
+coverage: http lines=78.36 branches=73.49 functions=75.20 (targets 70/65/75)
+coverage: mcp lines=95.26 branches=85.71 functions=90.91 (targets 70/65/75)
+coverage: infrastructure lines=69.69 branches=62.96 functions=80.95 (targets 60/55/65)
+coverage: ui lines=89.49 branches=86.19 functions=87.57 (targets 70/65/75)
+coverage: ok
+=== scripts/regression-proof.sh exit=0
+regression proof: tests/regression/live-fire-proof-01.test.ts 6 test(s) PASS
+regression proof: tests/regression/live-fire-proof-02.test.ts 6 test(s) PASS
+regression proof: tests/regression/live-fire-proof-03.test.ts 7 test(s) PASS
+regression proof: tests/regression/live-fire-proof-04.test.ts 6 test(s) PASS
+regression proof: tests/regression/live-fire-proof-05.test.ts 5 test(s) PASS
+regression proof: tests/regression/live-fire-proof-06.test.ts 6 test(s) PASS
+regression proof: tests/regression/live-fire-proof-07.test.ts 6 test(s) PASS
+regression proof: tests/regression/live-fire-proof-08.test.ts 5 test(s) PASS
+regression proof: tests/regression/live-fire-proof-09.test.ts 6 test(s) PASS
+regression proof: tests/regression/live-fire-proof-10.test.ts 6 test(s) PASS
+regression proof: tests/regression/live-fire-proof-11.test.ts 3 test(s) PASS
+regression proof: tests/regression/live-fire-proof-12.test.ts 5 test(s) PASS
+regression proof: 67 test(s) across 12 outcomes; every LIVE-FIRE-PROOF outcome has its rule and its negative case asserted
+regression proof: ok
+=== scripts/forced-failure.sh exit=0
+forced failure: tests/failure/fail-closed-authority.test.ts 7 test(s) PASS
+forced failure: tests/failure/fail-closed-dependency.test.ts 4 test(s) PASS
+forced failure: tests/failure/fail-closed-credentials.test.ts 6 test(s) PASS
+forced failure: tests/failure/fail-closed-egress.test.ts 7 test(s) PASS
+forced failure: tests/failure/fail-closed-recipe.test.ts 6 test(s) PASS
+forced failure: 30 test(s) across the five fail-closed suites; every control refuses when its input is broken
+forced failure: ok
+=== scripts/mutation-gate.sh exit=0
+mutation gate: ok mechanism=7 catalogue_rows=7 features_awaiting_a_mutation=7
+mutation gate: the seven domain mutations are detected and restored; the catalogue's second table names the features that still have no controlled defect
+mutation gate: ok
+=== scripts/flake-guard.sh exit=0
+flake guard: run 1/5 exit=0 {"tests":1115,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":74,"manifestChecked":0,"failed":[],"verdict":"OK"}
+flake guard: run 2/5 exit=0 {"tests":1115,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":74,"manifestChecked":0,"failed":[],"verdict":"OK"}
+flake guard: run 3/5 exit=0 {"tests":1115,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":74,"manifestChecked":0,"failed":[],"verdict":"OK"}
+flake guard: run 4/5 exit=0 {"tests":1115,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":74,"manifestChecked":0,"failed":[],"verdict":"OK"}
+flake guard: run 5/5 exit=0 {"tests":1115,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":74,"manifestChecked":0,"failed":[],"verdict":"OK"}
+flake guard: 5 identical run(s) of 5 expected; verdict stable
+flake guard: ok
+=== scripts/double-boundary-guard.sh exit=0
+guard-side entry count: 2
+double boundary scan: src/** imports no test module; 2 file(s) carry a double-shaped declaration, all 2 explained by an allowlist entry; the allowlist matches exactly what it names
+NOTE ON THE LIMIT: this is a NAME scan. A double named something ordinary is invisible to it, and the file
+that would be one — src/adapters/crypto/local-key-provider.ts — is justified in ASSUMPTIONS §3.8 and in its
+own header rather than allowlisted here, because it is a real provider with a real bound, not a double.
+double boundary guard: ok
+=== scripts/test-collection-guard.sh exit=1
+{"tests":1115,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":74,"manifestChecked":89,"failed":[],"verdict":"FAIL"}
+test collection guard: FAIL
+  - expected suite produced no results: tests/failure/fail-closed-authority.test.ts
+  - expected suite produced no results: tests/failure/fail-closed-dependency.test.ts
+  - expected suite produced no results: tests/failure/fail-closed-credentials.test.ts
+  - expected suite produced no results: tests/failure/fail-closed-egress.test.ts
+  - expected suite produced no results: tests/failure/fail-closed-recipe.test.ts
+  - expected suite produced no results: tests/regression/live-fire-proof-04.test.ts
+  - expected suite produced no results: tests/regression/live-fire-proof-05.test.ts
+  - expected suite produced no results: tests/regression/live-fire-proof-02.test.ts
+  - expected suite produced no results: tests/regression/live-fire-proof-03.test.ts
+  - expected suite produced no results: tests/regression/live-fire-proof-07.test.ts
+  - expected suite produced no results: tests/regression/live-fire-proof-11.test.ts
+  - expected suite produced no results: tests/regression/live-fire-proof-12.test.ts
+  - expected suite produced no results: tests/regression/live-fire-proof-09.test.ts
+  - expected suite produced no results: tests/regression/live-fire-proof-01.test.ts
+  - expected suite produced no results: tests/regression/live-fire-proof-06.test.ts
+  - expected suite produced no results: tests/regression/live-fire-proof-10.test.ts
+  - expected suite produced no results: tests/regression/live-fire-proof-08.test.ts
+A suite that silently stops running removes its coverage without any red build.

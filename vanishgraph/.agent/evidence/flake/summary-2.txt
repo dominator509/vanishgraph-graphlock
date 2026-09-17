@@ -1,1 +1,1 @@
-{"tests":7,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":2,"manifestChecked":0,"failed":[],"verdict":"OK"}
+{"tests":1115,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":74,"manifestChecked":0,"failed":[],"verdict":"OK"}

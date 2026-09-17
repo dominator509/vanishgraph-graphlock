@@ -1,4 +1,4 @@
-double boundary guard - 2026-09-16T23:58:30Z
+double boundary guard - 2026-09-17T05:38:38Z
 allowlist: .agent/evidence/doubles/allowlist.txt (2 entries)
 double boundary scan: src/** imports no test module; 2 file(s) carry a double-shaped declaration, all 2 explained by an allowlist entry; the allowlist matches exactly what it names
 NOTE ON THE LIMIT: this is a NAME scan. A double named something ordinary is invisible to it, and the file

@@ -129,6 +129,10 @@ function main(): number {
         // that exists to record what was observed never saw them — the same "the evidence kept being produced and its
         // scope quietly stopped covering part of the system" defect the blackbox note below records.
         'tests/security/**/*.test.ts',
+        // EP-007 M2/M3 ROOTS, for the same reason the security root is here: the unit stage runs them, so the ledger that
+        // records what was observed must see them.
+        'tests/regression/**/*.test.ts',
+        'tests/failure/**/*.test.ts',
         'tests/db/**/*.test.ts',
         // THE INTEGRATION ROOT IS PART OF THE --with-db RUN for the same reason the black-box root is: every suite there
         // drives real PostgreSQL (through `tests/db/harness.ts` or the real adapters), and EP-006 M10's authority,

@@ -1,7 +1,10 @@
-flake guard - 2026-09-16T23:44:05Z
+flake guard - 2026-09-17T05:28:07Z
 config: config/testing/flake-runs.json (flakeRuns=5 seed=vg-flake-1)
-runs: 2 (FLAKE_RUNS override)
-suites: tests/architecture/**/*.test.ts
+runs: 5
+suites: tests/domain/**/*.test.ts tests/harness/**/*.test.ts tests/architecture/**/*.test.ts tests/contract/**/*.test.ts tests/security/**/*.test.ts
 
-run 1 exit=0 {"tests":7,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":2,"manifestChecked":0,"failed":[],"verdict":"OK"}
-run 2 exit=0 {"tests":7,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":2,"manifestChecked":0,"failed":[],"verdict":"OK"}
+run 1 exit=0 {"tests":1115,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":74,"manifestChecked":0,"failed":[],"verdict":"OK"}
+run 2 exit=0 {"tests":1115,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":74,"manifestChecked":0,"failed":[],"verdict":"OK"}
+run 3 exit=0 {"tests":1115,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":74,"manifestChecked":0,"failed":[],"verdict":"OK"}
+run 4 exit=0 {"tests":1115,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":74,"manifestChecked":0,"failed":[],"verdict":"OK"}
+run 5 exit=0 {"tests":1115,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":74,"manifestChecked":0,"failed":[],"verdict":"OK"}

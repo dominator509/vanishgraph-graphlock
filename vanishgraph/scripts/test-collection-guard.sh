@@ -39,11 +39,18 @@ cd "$(dirname "$0")/.."
 
 command -v node >/dev/null 2>&1 || { echo "test collection guard: FAIL - node is required but not found" >&2; exit 1; }
 
+# `tests/regression/**` AND `tests/failure/**` ARE IN THE DEFAULT SET FROM EP-007 M2/M3, AND MEASURED WHY: the twelve
+# regression suites and the five forced-failure suites were added to EXPECTED_TEST_MANIFEST.txt while this glob still
+# named five roots, so the guard failed the node gate with "expected suite produced no results" for fourteen suites the
+# UNIT STAGE was already running (its own collection excludes only tests/integration, tests/db, tests/blackbox, tests/api,
+# tests/e2e, tests/live-fire and tests/release). That is the same defect this file records twice already, and the rule it
+# states is the fix: the guard and the stage it guards must name the same roots.
+#
 # `tests/security/**` IS IN THE DEFAULT SET FROM EP-006 M1, because the unit stage already runs it and this guard's own rule is
 # that the guard and the stage it guards must name the same roots. MEASURED: after the security suite was added to the
 # manifest and NOT to this glob, the guard failed with "expected suite produced no results" while `test-unit.sh` was
 # running it and passing — the two disagreed about what the unit suite is, which is the defect this file exists to prevent.
-GLOB="${VG_TEST_GLOB:-tests/domain/**/*.test.ts tests/harness/**/*.test.ts tests/architecture/**/*.test.ts tests/contract/**/*.test.ts tests/security/**/*.test.ts}"
+GLOB="${VG_TEST_GLOB:-tests/domain/**/*.test.ts tests/harness/**/*.test.ts tests/architecture/**/*.test.ts tests/contract/**/*.test.ts tests/security/**/*.test.ts tests/regression/**/*.test.ts tests/failure/**/*.test.ts}"
 MANIFEST="${VG_EXPECTED_MANIFEST:-.agent/verification/EXPECTED_TEST_MANIFEST.txt}"
 
 [ -f "$MANIFEST" ] || { echo "test collection guard: FAIL - expected-test manifest $MANIFEST is missing" >&2; exit 1; }

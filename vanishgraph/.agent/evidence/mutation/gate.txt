@@ -1,4 +1,4 @@
-mutation gate - 2026-09-17T00:08:22Z
+mutation gate - 2026-09-17T05:28:03Z
 mechanism: scripts/mutation-check.sh
 catalogue: .agent/verification/MUTATION_CATALOG.md
 
