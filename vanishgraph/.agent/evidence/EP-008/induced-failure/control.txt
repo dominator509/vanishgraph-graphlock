@@ -1,7 +1,7 @@
-postgresql|PROVISIONED|PASS|-|31ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|PASS|-|10ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|FAIL|MISCONFIGURED|15ms|no worker heartbeat in the last 60000 ms: withholding heartbeats is exactly how this probe is induced to fail (§7.4)
+postgresql|PROVISIONED|PASS|-|36ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|16ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|FAIL|MISCONFIGURED|25ms|no worker heartbeat in the last 60000 ms: withholding heartbeats is exactly how this probe is induced to fail (§7.4)
 object-store|UNAVAILABLE|FAIL|MISCONFIGURED|0ms|the object-store probe requires HeadBucket and a SIGNED GetObject, and no module in this repository implements S3 request signing or holds an object-store credential: the probe is not wired rather than passing
 keycloak-jwks|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for keycloak-jwks; the declared action is: OIDC discovery plus JWKS retrieval over TLS, with no token minted
 provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|56ms
+overall|NOT_READY|77ms
