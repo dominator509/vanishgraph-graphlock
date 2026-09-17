@@ -29,7 +29,7 @@
     "channel": ["OFFICIAL_API", "OFFICIAL_FORM", "OFFICIAL_MAIL", "SEARCH_DELISTING"],
     "egress_class": ["NONE", "OPAQUE_ID", "CUSTOMER_PII", "HIGH_RISK_PII", "IDENTITY_DOCUMENT", "AUTH_SECRET"],
     "rule_class": ["SUBJECT_NAME", "EMAIL_ADDRESS", "TELEPHONE_NUMBER", "POSTAL_ADDRESS", "RAW_HTML", "PAGE_CONTENT", "COOKIE_SESSION_VALUE", "TOKEN_OR_SECRET", "IDENTITY_DOCUMENT_CONTENT", "FORM_VALUE", "SENSITIVE_SCREENSHOT", "OPERATOR_NOTE"],
-    "dependency_key": ["postgresql", "valkey", "job-worker", "object-store", "keycloak-jwks", "provider-transport"],
+    "dependency_key": ["postgresql", "valkey", "job-worker", "object-store", "keycloak-jwks", "provider-transport", "overall"],
     "service": ["vanishgraph-api", "vanishgraph-web", "vanishgraph-worker-discovery", "vanishgraph-worker-action", "vanishgraph-worker-verify", "vanishgraph-scheduler", "vanishgraph-mcp"],
     "auth_mode": ["OFFICIAL_API", "OFFICIAL_FORM", "OFFICIAL_MAIL"],
     "currency": ["EUR", "GBP", "USD"],

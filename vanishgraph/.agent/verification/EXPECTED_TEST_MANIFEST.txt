@@ -100,3 +100,4 @@ tests/observability/egress-canary.test.ts
 tests/observability/log-contract.test.ts
 tests/observability/metrics-catalogue.test.ts
 tests/observability/effectiveness-metric.test.ts
+tests/observability/readiness-fail-closed.test.ts

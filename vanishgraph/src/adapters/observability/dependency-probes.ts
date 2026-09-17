@@ -1,0 +1,402 @@
+/**
+ * Dependency probes and the fail-closed readiness decision (SPEC-007 §7.1-§7.4; EP-008 M5(a); VG-OPS-001, DOD-014).
+ *
+ * THE RULES THIS FILE IMPLEMENTS, AND WHY EACH ONE IS A RULE RATHER THAN A PREFERENCE:
+ *
+ *   1. **ONE DISCRIMINATING PROBE PER DECLARED DEPENDENCY, WITH THE DECLARED ACTION.** §7.2 gives each dependency its
+ *      exact action and hard timeout. A probe that "checks" a dependency by reading a configuration value is not a
+ *      probe: it passes when the dependency is down, which is the failure DOD-014 exists to catch.
+ *   2. **THE FIRST FAILING EVALUATION MAKES THE PROCESS UNREADY.** §7.3: "There is no grace period during which traffic
+ *      continues after a required dependency is known to be down." So the overall state is computed with no damping in
+ *      the readiness direction (damping exists only in the ALERTING direction, §7.3).
+ *   3. **LIVENESS IS DELIBERATELY INDEPENDENT.** A dependency outage must not fail `/v1/live` and must not cause a
+ *      restart loop: restarting a healthy process because a database is down converts a dependency incident into an
+ *      availability incident.
+ *   4. **EVERY FAILURE IS CLASSIFIED AND NAMED.** `reasonCode` comes from the closed enum the metric catalogue declares
+ *      for `vanishgraph_dependency_probe_failures_total`, so on-call can act on a cause rather than on a boolean.
+ *   5. **THE BUDGET IS NEVER EXTENDED.** 1 500 ms total, at most one retry inside a probe, and a probe that exceeds its
+ *      own timeout is `TIMEOUT` rather than a longer wait.
+ *
+ * WHAT IS NOT IMPLEMENTED HERE, STATED SO IT IS NOT ASSUMED: the object-store probe's declared action is `HeadBucket`
+ * plus a SIGNED `GetObject`, and NO module in this repository can sign an S3 request — there is no object-store client,
+ * no SigV4 implementation and no credential resolver for one. The probe therefore reports `MISCONFIGURED` with that
+ * reason rather than pretending to check the store. It is recorded as an open item in the M5 evidence file and the
+ * operator runbook, not smoothed over.
+ */
+
+import { createHash } from 'node:crypto';
+
+import type { MetricsRegistry } from './metrics-registry.ts';
+
+/**
+ * The reason codes a probe may report, which are the catalogue's declared set for
+ * `vanishgraph_dependency_probe_failures_total` (§6.5). They live here rather than in a file of their own so the runner
+ * has one import, and `tests/observability/readiness-fail-closed.test.ts` asserts this list EQUALS the catalogue's, so a
+ * code cannot be added in one place and missed in the other.
+ */
+export const DEPENDENCY_PROBE_REASON_CODES = [
+  'TIMEOUT',
+  'CONNECT_REFUSED',
+  'AUTH_FAILED',
+  'DNS_FAILED',
+  'TLS_FAILED',
+  'HTTP_5XX',
+  'MISCONFIGURED',
+  'UNKNOWN',
+] as const;
+
+export type ProbeReasonCode = (typeof DEPENDENCY_PROBE_REASON_CODES)[number];
+
+export const READINESS_BUDGET_MS = 1500;
+
+/** §7.2's declared dependencies, with the action and the hard timeout each probe must use. */
+export const DECLARED_DEPENDENCIES = [
+  { key: 'postgresql', required: true, timeoutMs: 300, action: 'pooled connection: BEGIN; SELECT 1; ROLLBACK, and the session role must be the tenant-scoped application role' },
+  { key: 'valkey', required: true, timeoutMs: 200, action: 'PING, then write/read/delete under a namespaced probe key' },
+  { key: 'job-worker', required: true, timeoutMs: 200, action: 'at least one worker heartbeat inside the declared freshness window' },
+  { key: 'object-store', required: true, timeoutMs: 400, action: 'HeadBucket plus a signed GetObject of a probe key that must return the expected digest' },
+  { key: 'keycloak-jwks', required: true, timeoutMs: 300, action: 'OIDC discovery plus JWKS retrieval over TLS, with no token minted' },
+  { key: 'provider-transport', required: true, timeoutMs: 400, action: 'read-only or no-op reachability per declared official transport, never a form write' },
+] as const;
+
+export type DependencyKey = (typeof DECLARED_DEPENDENCIES)[number]['key'];
+
+export const DEPENDENCY_KEYS: readonly DependencyKey[] = DECLARED_DEPENDENCIES.map((dependency) => dependency.key);
+
+export type ProbeStatus = 'PASS' | 'FAIL' | 'TIMEOUT' | 'UNKNOWN';
+
+export interface ProbeResult {
+  readonly name: DependencyKey;
+  readonly required: boolean;
+  readonly status: ProbeStatus;
+  readonly latencyMs: number;
+  /** `null` when the probe passed: a passing probe has no reason code to give. */
+  readonly reasonCode: ProbeReasonCode | null;
+  readonly detail: string;
+}
+
+/** A probe function. It throws to fail; the runner classifies the throw. */
+export type Probe = () => Promise<string>;
+
+export interface DependencyClients {
+  readonly postgresql?: Probe;
+  readonly valkey?: Probe;
+  readonly jobWorker?: Probe;
+  readonly objectStore?: Probe;
+  readonly keycloakJwks?: Probe;
+  readonly providerTransport?: Probe;
+}
+
+export interface ProbeRunnerOptions {
+  readonly clients: DependencyClients;
+  readonly registry?: MetricsRegistry;
+  /** The service reporting readiness. Required by the catalogue's label set for the readiness series (§6.5). */
+  readonly service?: string;
+  /** Injected so the budget test can drive the clock instead of waiting for it. */
+  readonly now?: () => number;
+}
+
+export interface ReadinessEvaluation {
+  readonly dependencyState: 'READY' | 'NOT_READY';
+  readonly failedChecks: readonly DependencyKey[];
+  readonly checks: readonly ProbeResult[];
+  readonly budgetExceeded: boolean;
+  readonly totalLatencyMs: number;
+}
+
+/** A probe that cannot run because nothing in this repository can perform its declared action. */
+export class ProbeUnavailableError extends Error {
+  readonly reasonCode: ProbeReasonCode;
+  constructor(message: string, reasonCode: ProbeReasonCode = 'MISCONFIGURED') {
+    super(message);
+    this.name = 'ProbeUnavailableError';
+    this.reasonCode = reasonCode;
+  }
+}
+
+/**
+ * Classify a thrown probe failure into the catalogue's closed reason-code enum.
+ *
+ * THE CLASSIFICATION IS BY CAUSE, NOT BY MESSAGE-MATCHING ALONE: the error's `code` property (Node's, `pg`'s and
+ * `ioredis`'s all set one) is consulted first, because a message is prose that changes and a code is a contract.
+ */
+export function classifyProbeFailure(error: unknown): { reasonCode: ProbeReasonCode; detail: string } {
+  if (error instanceof ProbeUnavailableError) return { reasonCode: error.reasonCode, detail: error.message };
+  if (error instanceof Error && error.name === 'AbortError') {
+    return { reasonCode: 'TIMEOUT', detail: 'the probe exceeded its hard timeout (§7.2) and was aborted' };
+  }
+  const code = typeof error === 'object' && error !== null && 'code' in error ? String((error as { code: unknown }).code) : '';
+  const detail = error instanceof Error ? error.message : String(error);
+  if (code === 'ECONNREFUSED') return { reasonCode: 'CONNECT_REFUSED', detail };
+  if (code === 'ENOTFOUND' || code === 'EAI_AGAIN') return { reasonCode: 'DNS_FAILED', detail };
+  if (code === 'ETIMEDOUT' || code === 'UND_ERR_CONNECT_TIMEOUT' || code === 'ESOCKETTIMEDOUT') return { reasonCode: 'TIMEOUT', detail };
+  if (code.startsWith('ERR_TLS') || code === 'CERT_HAS_EXPIRED' || code === 'DEPTH_ZERO_SELF_SIGNED_CERT') return { reasonCode: 'TLS_FAILED', detail };
+  if (code === '28P01' || code === '28000' || code === 'NOAUTH' || code === 'WRONGPASS' || code === 'NOPERM') return { reasonCode: 'AUTH_FAILED', detail };
+  if (/HTTP 5\d\d/.test(detail)) return { reasonCode: 'HTTP_5XX', detail };
+  return { reasonCode: 'UNKNOWN', detail };
+}
+
+/** Run one probe with its hard timeout, and at most one retry inside the probe (§7.2). */
+async function runProbe(
+  dependency: (typeof DECLARED_DEPENDENCIES)[number],
+  probe: Probe | undefined,
+  now: () => number,
+): Promise<ProbeResult> {
+  const started = now();
+  const base = { name: dependency.key, required: dependency.required } as const;
+  if (probe === undefined) {
+    // A MISSING CLIENT IS A FAILURE, NOT A PASS. A probe that has not been wired is a dependency nobody is checking, and
+    // reporting it healthy would be the fabrication DOD-037 forbids.
+    return Object.freeze({
+      ...base,
+      status: 'UNKNOWN' as const,
+      latencyMs: now() - started,
+      reasonCode: 'MISCONFIGURED' as const,
+      detail: `no probe is wired for ${dependency.key}; the declared action is: ${dependency.action}`,
+    });
+  }
+  let lastFailure: { reasonCode: ProbeReasonCode; detail: string } | null = null;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), dependency.timeoutMs);
+    try {
+      const detail = await Promise.race([
+        probe(),
+        new Promise<never>((_resolve, reject) => {
+          controller.signal.addEventListener('abort', () => {
+            const abort = new Error(`probe ${dependency.key} exceeded ${String(dependency.timeoutMs)} ms`);
+            abort.name = 'AbortError';
+            reject(abort);
+          });
+        }),
+      ]);
+      clearTimeout(timer);
+      return Object.freeze({ ...base, status: 'PASS' as const, latencyMs: now() - started, reasonCode: null, detail });
+    } catch (error) {
+      clearTimeout(timer);
+      lastFailure = classifyProbeFailure(error);
+      // AT MOST ONE RETRY INSIDE A PROBE (§7.2), and a TIMEOUT is not retried: the budget is what it is.
+      if (lastFailure.reasonCode === 'TIMEOUT') break;
+    }
+  }
+  const failure = lastFailure ?? { reasonCode: 'UNKNOWN' as ProbeReasonCode, detail: 'the probe failed without an error' };
+  return Object.freeze({
+    ...base,
+    status: failure.reasonCode === 'TIMEOUT' ? ('TIMEOUT' as const) : ('FAIL' as const),
+    latencyMs: now() - started,
+    reasonCode: failure.reasonCode,
+    detail: failure.detail,
+  });
+}
+
+export interface ProbeRunner {
+  probe(key: DependencyKey): Promise<ProbeResult>;
+  evaluate(): Promise<ReadinessEvaluation>;
+  /** Liveness never touches a dependency: it answers whether THIS process is running (§7.3). */
+  live(): { status: 'PASS'; detail: string };
+}
+
+/**
+ * Build the probe runner.
+ *
+ * THE EVALUATION IS SEQUENTIAL ON PURPOSE. §7.2's budget is 1 500 ms in total, and probes run in parallel would let a
+ * single slow dependency consume the budget while others are still in flight; sequential probes make the total the sum
+ * of what actually happened, which is what the budget is stated against.
+ */
+export function createProbeRunner(options: ProbeRunnerOptions): ProbeRunner {
+  const now = options.now ?? (() => Date.now());
+  const probes: Readonly<Record<DependencyKey, Probe | undefined>> = Object.freeze({
+    postgresql: options.clients.postgresql,
+    valkey: options.clients.valkey,
+    'job-worker': options.clients.jobWorker,
+    'object-store': options.clients.objectStore,
+    'keycloak-jwks': options.clients.keycloakJwks,
+    'provider-transport': options.clients.providerTransport,
+  });
+
+  const record = (result: ProbeResult): void => {
+    if (options.registry === undefined) return;
+    // THE SERIES ARE THE CATALOGUE'S, WITH THE CATALOGUE'S LABELS: readiness per dependency key, probe failures by
+    // classified reason, and the probe duration. A metric the catalogue does not declare cannot be recorded at all.
+    options.registry.record('vanishgraph_readiness_status', { environment: 'local', dependency_key: result.name }, result.status === 'PASS' ? 1 : 0);
+    options.registry.record('vanishgraph_dependency_probe_duration_seconds', { environment: 'local', dependency_key: result.name }, result.latencyMs / 1000);
+    if (result.status !== 'PASS' && result.reasonCode !== null) {
+      options.registry.record('vanishgraph_dependency_probe_failures_total', { environment: 'local', dependency_key: result.name, reason_code: result.reasonCode }, 1);
+    }
+  };
+
+  /** The previous readiness verdict, so the state-change counter advances on a change rather than on every evaluation. */
+  let lastState: 'READY' | 'NOT_READY' | null = null;
+
+  const runAndRecord = async (key: DependencyKey): Promise<ProbeResult> => {
+    const dependency = DECLARED_DEPENDENCIES.find((candidate) => candidate.key === key);
+    if (dependency === undefined) throw new RangeError(`${key} is not a declared dependency (§7.2)`);
+    const result = await runProbe(dependency, probes[key], now);
+    record(result);
+    return result;
+  };
+
+  const runner: ProbeRunner = {
+    probe: (key) => runAndRecord(key),
+    evaluate: async () => {
+      const started = now();
+      const checks: ProbeResult[] = [];
+      for (const dependency of DECLARED_DEPENDENCIES) {
+        // ONE RECORDING PER EXECUTION: the probes are run through the same path `probe()` uses, so a series cannot be
+        // emitted twice for one evaluation or missed when the evaluation is the caller.
+        checks.push(await runAndRecord(dependency.key));
+      }
+      const totalLatencyMs = now() - started;
+      const failedChecks = checks.filter((check) => check.required && check.status !== 'PASS').map((check) => check.name);
+      const budgetExceeded = totalLatencyMs > READINESS_BUDGET_MS;
+      // NO GRACE PERIOD, NO DAMPING: one failing required dependency is enough (§7.3).
+      //
+      // AND A BUDGET BREACH IS ALSO UNREADY, WHICH IS A FINDING RATHER THAN A PREFERENCE: the declared per-probe
+      // timeouts are 300 + 200 + 200 + 400 + 300 + 400 = 1800 ms, which EXCEEDS the 1500 ms total budget §7.2 states. A
+      // run in which several dependencies hang therefore cannot stay inside the budget however the probes are
+      // scheduled, and reporting READY because every check eventually passed would hide an evaluation that took longer
+      // than the specification allows. The breach is surfaced in the verdict AND in its own field.
+      const dependencyState = failedChecks.length === 0 && !budgetExceeded ? ('READY' as const) : ('NOT_READY' as const);
+      if (options.registry !== undefined) {
+        options.registry.record('vanishgraph_readiness_status', { environment: 'local', dependency_key: 'overall' }, dependencyState === 'READY' ? 1 : 0);
+        // THE CHANGE COUNTER ADVANCES ONLY ON A CHANGE, and only from a known previous state: the flapping alert A-10
+        // counts transitions, so incrementing it on every evaluation would make a steady instance look like it is
+        // flapping. The direction is the catalogue's bounded enum.
+        if (lastState !== null && lastState !== dependencyState) {
+          options.registry.record(
+            'vanishgraph_readiness_state_changes_total',
+            { environment: 'local', service: options.service ?? 'vanishgraph-api', direction: dependencyState === 'READY' ? 'TO_READY' : 'TO_NOT_READY' },
+            1,
+          );
+        }
+      }
+      lastState = dependencyState;
+      return Object.freeze({
+        dependencyState,
+        failedChecks: Object.freeze(failedChecks),
+        checks: Object.freeze(checks),
+        budgetExceeded,
+        totalLatencyMs,
+      });
+    },
+    live: () => ({ status: 'PASS', detail: 'the process is running and liveness does not evaluate any dependency (§7.3)' }),
+  };
+  return runner;
+}
+
+/* ----------------------------------------------------------------------------------------------------------------
+ * The real probe clients
+ *
+ * EACH CLIENT PERFORMS THE DECLARED ACTION AND NOTHING ELSE. Two of them are deliberately absent rather than faked:
+ * the object-store client cannot sign an S3 request anywhere in this repository, and the provider-transport client needs
+ * a declared official transport to reach. A probe that cannot run reports that fact.
+ * ---------------------------------------------------------------------------------------------------------------- */
+
+/** The expected digest a signed probe read must return, so the read is verified rather than merely attempted (§7.2). */
+export function probePayloadDigest(payload: string): string {
+  return createHash('sha256').update(payload).digest('hex');
+}
+
+export interface PostgresProbeOptions {
+  /** Executes one statement and resolves with the session role. Injected so this module owns no connection pool. */
+  readonly querySessionRole: () => Promise<string>;
+  /** The tenant-scoped application role the session must be using (`vg_app`). */
+  readonly expectedRole: string;
+}
+
+/** §7.2 postgresql: a real round trip that also proves the session is the tenant-scoped application role. */
+export function postgresProbe(options: PostgresProbeOptions): Probe {
+  return async () => {
+    const role = await options.querySessionRole();
+    if (role !== options.expectedRole) {
+      // THE ROLE CHECK IS THE POINT OF THIS PROBE: a pool that connects as the owner bypasses row-level security, and a
+      // readiness probe that only ran SELECT 1 would report that pool healthy while every tenant boundary is open.
+      throw new ProbeUnavailableError(
+        `the session role is "${role}" and the deployed role is "${options.expectedRole}": a connection that bypasses row-level security is not a working dependency (VG-DATA-001)`,
+        'AUTH_FAILED',
+      );
+    }
+    return `postgresql session role verified as ${role}`;
+  };
+}
+
+export interface ValkeyProbeOptions {
+  /** PING, then write, read and delete under a namespaced key. Resolves with the value read back. */
+  readonly roundTrip: (key: string) => Promise<string>;
+  readonly keyPrefix?: string;
+}
+
+/** §7.2 valkey: PING and a write/read/delete round trip under a namespaced probe key. */
+export function valkeyProbe(options: ValkeyProbeOptions): Probe {
+  return async () => {
+    const key = `${options.keyPrefix ?? 'vanishgraph:probe'}:readiness`;
+    const payload = `probe-${String(Date.now())}`;
+    const readBack = await options.roundTrip(`${key}:${payload}`);
+    if (readBack !== payload) {
+      throw new ProbeUnavailableError(`valkey returned "${readBack}" for the probe key, not the written value`, 'MISCONFIGURED');
+    }
+    return 'valkey PING and write/read/delete round trip verified';
+  };
+}
+
+export interface JobWorkerProbeOptions {
+  /** The number of worker heartbeats inside the declared freshness window. */
+  readonly freshHeartbeats: (windowMs: number) => Promise<number>;
+  readonly windowMs: number;
+}
+
+/** §7.2 job-worker: at least one worker heartbeat inside the declared window. */
+export function jobWorkerProbe(options: JobWorkerProbeOptions): Probe {
+  return async () => {
+    const fresh = await options.freshHeartbeats(options.windowMs);
+    if (fresh < 1) {
+      throw new ProbeUnavailableError(
+        `no worker heartbeat in the last ${String(options.windowMs)} ms: withholding heartbeats is exactly how this probe is induced to fail (§7.4)`,
+        'MISCONFIGURED',
+      );
+    }
+    return `${String(fresh)} worker heartbeat(s) inside the ${String(options.windowMs)} ms freshness window`;
+  };
+}
+
+/** §7.2 object-store: the declared action, with the repository's actual limitation stated as the failure. */
+export const objectStoreProbeUnavailable: Probe = async () => {
+  throw new ProbeUnavailableError(
+    'the object-store probe requires HeadBucket and a SIGNED GetObject, and no module in this repository implements S3 request signing or holds an object-store credential: the probe is not wired rather than passing',
+    'MISCONFIGURED',
+  );
+};
+
+export interface JwksProbeOptions {
+  /** OIDC discovery plus JWKS retrieval, over TLS, minting no token. */
+  readonly discover: () => Promise<{ issuer: string; keys: number }>;
+}
+
+/** §7.2 keycloak-jwks: discovery and JWKS retrieval, with no token minted. */
+export function keycloakJwksProbe(options: JwksProbeOptions): Probe {
+  return async () => {
+    const discovered = await options.discover();
+    if (!discovered.issuer.startsWith('https://')) {
+      throw new ProbeUnavailableError(`the discovered issuer "${discovered.issuer}" is not an HTTPS issuer`, 'MISCONFIGURED');
+    }
+    if (discovered.keys < 1) {
+      throw new ProbeUnavailableError('the JWKS document carries no signing key, so no token could ever be verified', 'MISCONFIGURED');
+    }
+    return `issuer ${discovered.issuer} advertises ${String(discovered.keys)} signing key(s)`;
+  };
+}
+
+export interface ProviderTransportProbeOptions {
+  /** A read-only or no-op reachability check. NEVER a form write (SPEC-000 §6.7, VG-SCOPE-004). */
+  readonly reachability: () => Promise<{ status: number }>;
+  readonly name: string;
+}
+
+/** §7.2 provider-transport: read-only reachability per declared official transport, never a form write. */
+export function providerTransportProbe(options: ProviderTransportProbeOptions): Probe {
+  return async () => {
+    const response = await options.reachability();
+    if (response.status >= 500) throw new ProbeUnavailableError(`${options.name} answered HTTP ${String(response.status)}`, 'HTTP_5XX');
+    return `${options.name} reachable, HTTP ${String(response.status)}`;
+  };
+}

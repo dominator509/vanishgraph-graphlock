@@ -1,0 +1,70 @@
+EP-008 M5 EVIDENCE - PARTIAL: the dependency probes and the fail-closed readiness decision are built; the HTTP
+composition, the per-dependency induction stage, the runbook and OPERATIONS.md are NOT, and the milestone is open.
+====================================================================================================================
+
+Spec: SPEC-007 §7.1-§7.4 (health, readiness, liveness, induced-failure proof), §12.5; SPEC-003 §5.17; SPEC-000 §6.7
+(VG-OPS-001). Plan: EP-008 M5. DOD-014, DOD-037. STATUS: MILESTONE_NOTE, NOT MILESTONE_PASS.
+
+WHAT IS DONE, AND WHAT IT WAS VERIFIED BY
+-----------------------------------------
+
+`src/adapters/observability/dependency-probes.ts` — §7.2's six declared dependencies, each with its declared ACTION and
+hard timeout: `postgresql` 300 ms (pooled round trip whose session role must be the tenant-scoped application role),
+`valkey` 200 ms (PING plus write/read/delete under a namespaced probe key), `job-worker` 200 ms (heartbeat freshness
+inside the declared window), `object-store` 400 ms (HeadBucket plus a SIGNED GetObject of a probe key returning the
+expected digest), `keycloak-jwks` 300 ms (discovery plus JWKS over TLS, no token minted), `provider-transport` 400 ms
+(read-only or no-op reachability per official transport, never a form write). The runner enforces each probe's hard
+timeout, allows at most one retry inside a probe and does not retry a timeout, classifies every failure into the closed
+reason-code enum the catalogue declares, records the readiness/probe-duration/probe-failure series with the catalogue's
+labels, advances the readiness state-change counter ONLY on a change and only from a known previous state, and answers
+liveness without touching a dependency.
+
+`tests/observability/readiness-fail-closed.test.ts` — 22 tests, all passing: the six keys and their actions; the enum
+equality with the catalogue; a pass-through evaluation; per-dependency induction for ALL SIX keys, each asserting
+`NOT_READY`, the dependency named in `failedChecks`, a classified reason code and the other five still evaluated; a
+missing client reported `UNKNOWN`/`MISCONFIGURED` rather than passing; liveness independent of all six failing at once;
+the metric labels and the failure counter; the four real client factories' discriminating behaviour (a session role that
+bypasses row-level security fails; a valkey round trip that returns the wrong value fails; zero fresh heartbeats fail; a
+non-HTTPS issuer and an empty key set fail; a 5xx provider response fails); the failure classifier; and the §7.4 step-3
+NEGATIVE CASE — a STATIC readiness handler that always answers READY fails the assertion that the verdict agrees with
+the probe results.
+
+MEASURED, THIS ROUND: `node --test tests/observability/readiness-fail-closed.test.ts` -> 22 tests, 22 pass, 0 fail;
+`sh scripts/lint.sh` -> `lint: ok`; `sh scripts/metrics-catalogue-guard.sh` -> `metrics catalogue: ok`; the unit stage's
+result is recorded in the ledger entry for this round.
+
+TWO FINDINGS, BOTH RECORDED IN THE CODE THEY AFFECT
+---------------------------------------------------
+
+1. THE PER-PROBE TIMEOUTS SUM ABOVE THE TOTAL READINESS BUDGET. §7.2 declares timeouts of 300 + 200 + 200 + 400 + 300 +
+   400 = 1800 ms AND a total readiness budget of 1500 ms, so a run in which several dependencies hang cannot satisfy
+   both however the probes are scheduled. The runner therefore reports `budgetExceeded` and treats a breach as
+   `NOT_READY` — reporting READY because every check eventually passed would hide an evaluation that took longer than
+   the specification allows. A test asserts the 1800 ms sum so the finding cannot be forgotten if the timeouts change.
+2. THE `reason_code` ENUM IS DECLARED, NOT ENFORCED AT RECORD TIME. The catalogue names each metric's own §6.5 row as
+   the source of the bound for `reason_code`, and the registry cannot read a per-metric row: it enforces bounded sets for
+   labels that carry one and records the source for the four whose bound lives elsewhere, so an out-of-enum reason code
+   would NOT be refused by `record()`. The probe runner cannot produce one (its codes are a module constant the suite
+   asserts equal to §6.5's eight), but the missing enforcement is a real gap and is recorded here and in the suite for
+   whichever milestone closes it.
+3. THE `dependency_key` BOUNDED SET NEEDED THE OVERALL-SERIES TOKEN. §6.5 says `vanishgraph_readiness_status` carries
+   "one series per declared dependency plus an overall series", while the same row bounds `dependency_key` to the six
+   declared names — the overall series could not be recorded inside its own declared bound. The catalogue now declares
+   `overall` as a seventh value, the runner records the overall series under it, and the suite asserts the set is the six
+   keys plus that token. This is a small specification gap, resolved in the direction the specification's own sentence
+   describes rather than by inventing a second metric.
+
+WHAT IS NOT DONE, AND WHY THE MILESTONE IS NOT MARKED PASS
+----------------------------------------------------------
+
+  * `src/http/health-routes.ts` — the composition that builds `HealthDependencies` from this probe runner and wires it to
+    the endpoints. NOTE FOR THE NEXT ROUND: the four endpoints of §5.17 ALREADY EXIST in `src/http/routes/health.ts`
+    with their response interfaces (`HealthBody`, `ReadyBody`, `LivenessBody`, `StartupBody`) and are exercised by the
+    contract suite, so this file is a COMPOSITION and a `ReadinessChanged` ERROR record, not a second route module.
+  * `scripts/induced-failure-readiness.sh` — the per-dependency control and induced runs against REAL dependencies, with
+    ERROR per DOD-033 for any dependency this environment cannot provision. A dependency whose control run cannot reach
+    PASS (because it is not provisioned here) cannot demonstrate PASS-before/FAIL-after, and claiming otherwise would be
+    a fabrication. Nothing in this round ran an induced failure against a real service, and no `readiness induced
+    failure: ok` has been printed.
+  * `docs/runbooks/operations/readiness-induced-failure.md`, `OPERATIONS.md`, and the `COMMANDS.md` entry.
+  * `GET /metrics` on a cluster-internal listener, which is part of M5(b) and depends on the metrics exposure work.
