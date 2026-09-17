@@ -1,18 +1,43 @@
 {
-  "$comment": "Telemetry egress allowlist (SPEC-007 §4.3, §2.1, §3.1, §5.2, §5.3, §5.4; EP-008 M1). The classification of every emitted field is DATA, NOT A CODE COMMENT (§4.3): a field with no entry here is DENIED at runtime. Dispositions are a closed set: ALLOW (no privacy surface), ALLOW_WITH_REDACTION (permitted only with a tenant policy row, an entry here, and an unconditional deterministic redaction pass), DENY_BY_DEFAULT (permitted only with the tenant policy row of §4.3, which no environment in this repository has yet), DENY (no telemetry exception). Every canonical resource key carries the §2.1 fail-closed reason code as its on_resolution_failure value; a reader can count them with `grep -c` over this file and must get exactly nine, one per key.",
+  "$comment": "Telemetry egress allowlist (SPEC-007 §4.3, §2.1, §3.1, §5.2, §5.3, §5.4; EP-008 M1). The classification of every emitted field is DATA, NOT A CODE COMMENT (§4.3): a field with no entry here is DENIED at runtime. Dispositions are a closed set: ALLOW (no privacy surface), ALLOW_WITH_REDACTION (permitted only with a tenant policy row, an entry here, and an unconditional deterministic redaction pass), DENY_BY_DEFAULT (permitted only with the tenant policy row of §4.3, which no environment in this repository has yet), DENY (no telemetry exception). Every canonical resource key carries the §2.1 fail-closed reason code as its on_resolution_failure value; a reader can count them with `grep -c` over this file and must get exactly nine, one per key. CONTROL VARIANT: EMAIL_ADDRESS disabled, written into the evidence directory by scripts/egress-canary-test.sh. NOT a shipped configuration.",
   "version": "1",
   "spec": "SPEC-007 §4.3 (EgressClass model), §2.1 (nine canonical resource keys), §3.1-§3.2 (span attributes), §5.2-§5.4 (structured log contract)",
   "default_disposition": "DENY",
-  "egress_classes": ["NONE", "OPAQUE_ID", "CUSTOMER_PII", "HIGH_RISK_PII", "IDENTITY_DOCUMENT", "AUTH_SECRET"],
+  "egress_classes": [
+    "NONE",
+    "OPAQUE_ID",
+    "CUSTOMER_PII",
+    "HIGH_RISK_PII",
+    "IDENTITY_DOCUMENT",
+    "AUTH_SECRET"
+  ],
   "dispositions": {
     "ALLOW": "structural or non-reversible data; no privacy surface",
     "ALLOW_WITH_REDACTION": "permitted only with a tenant policy row, this entry, and an unconditional deterministic redaction pass leaving at most the opaque reference",
     "DENY_BY_DEFAULT": "no tenant policy row in this repository permits it, so it is denied by default (VG-EGRESS-001)",
     "DENY": "denied unconditionally, including for model egress, issues and PRs"
   },
-  "dlp_sinks": ["OTLP_TRACE_EXPORTER", "LOG_FORWARDER", "ERROR_REPORTER", "PR_ISSUE_EXPORTER", "DEBUG_BUNDLE"],
-  "dlp_outcomes": ["ALLOWED_OPAQUE", "REDACTED", "DENIED", "FAILED"],
-  "dlp_reason_codes": ["NOT_ALLOWLISTED", "PROHIBITED_CLASS", "PROHIBITED_FIELD_NAME", "POLICY_ABSENT", "SCRUB_FAILED", "CANARY_DETECTED"],
+  "dlp_sinks": [
+    "OTLP_TRACE_EXPORTER",
+    "LOG_FORWARDER",
+    "ERROR_REPORTER",
+    "PR_ISSUE_EXPORTER",
+    "DEBUG_BUNDLE"
+  ],
+  "dlp_outcomes": [
+    "ALLOWED_OPAQUE",
+    "REDACTED",
+    "DENIED",
+    "FAILED"
+  ],
+  "dlp_reason_codes": [
+    "NOT_ALLOWLISTED",
+    "PROHIBITED_CLASS",
+    "PROHIBITED_FIELD_NAME",
+    "POLICY_ABSENT",
+    "SCRUB_FAILED",
+    "CANARY_DETECTED"
+  ],
   "dlp_rule_classes_note": "THE TWELVE RULE CLASSES ARE THE §4.2 TABLE, ONE ROW EACH, AND EACH DECLARES HOW IT IS ENFORCED. VALUE_PATTERN classes are detected in a field value and redacted to the required representation; FIELD_NAME classes are enforced by the prohibited-name rule of §5.3, because a subject's name or a session value has no shape a scanner could recognise; EGRESS_CLASS classes are enforced by the §4.3 disposition of the field they would travel in, because an identity document or a form payload is characterised by what it is, not by what it looks like. A class whose enforcement is honestly impossible by value is recorded as such rather than given a pattern that would look like coverage. Every class carries enabled: true in the shipped configuration; enabled: false is a CONTROL-ONLY state used by the canary stage to prove the canary assertion can fail, it is recorded in the gate's own diagnostics when it happens, and tests/observability/egress-canary.test.ts asserts that every class in the SHIPPED file is enabled.",
   "dlp_rule_classes": [
     {
@@ -28,7 +53,7 @@
       "enforcement": "VALUE_PATTERN",
       "egress_class": "CUSTOMER_PII",
       "representation": "EmailThread opaque ID or digest",
-      "enabled": true,
+      "enabled": false,
       "pattern": "[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\\.[A-Za-z0-9-]+)+"
     },
     {
@@ -113,76 +138,280 @@
     }
   ],
   "resource_keys": {
-    "service.name": { "egress_class": "NONE", "disposition": "ALLOW", "on_resolution_failure": "RESOURCE_ATTR_MISSING" },
-    "service.version": { "egress_class": "NONE", "disposition": "ALLOW", "on_resolution_failure": "RESOURCE_ATTR_MISSING" },
-    "deployment.environment.name": { "egress_class": "NONE", "disposition": "ALLOW", "on_resolution_failure": "RESOURCE_ATTR_MISSING" },
-    "vanishgraph.tenant.class": { "egress_class": "NONE", "disposition": "ALLOW", "on_resolution_failure": "RESOURCE_ATTR_MISSING" },
-    "vanishgraph.candidate_epoch": { "egress_class": "NONE", "disposition": "ALLOW", "on_resolution_failure": "RESOURCE_ATTR_MISSING" },
-    "vanishgraph.artifact.digest": { "egress_class": "OPAQUE_ID", "disposition": "ALLOW", "on_resolution_failure": "RESOURCE_ATTR_MISSING" },
-    "vanishgraph.build.inputs_digest": { "egress_class": "OPAQUE_ID", "disposition": "ALLOW", "on_resolution_failure": "RESOURCE_ATTR_MISSING" },
-    "vanishgraph.policy.version": { "egress_class": "NONE", "disposition": "ALLOW", "on_resolution_failure": "RESOURCE_ATTR_MISSING" },
-    "vanishgraph.recipe.set_digest": { "egress_class": "OPAQUE_ID", "disposition": "ALLOW", "on_resolution_failure": "RESOURCE_ATTR_MISSING" }
+    "service.name": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW",
+      "on_resolution_failure": "RESOURCE_ATTR_MISSING"
+    },
+    "service.version": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW",
+      "on_resolution_failure": "RESOURCE_ATTR_MISSING"
+    },
+    "deployment.environment.name": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW",
+      "on_resolution_failure": "RESOURCE_ATTR_MISSING"
+    },
+    "vanishgraph.tenant.class": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW",
+      "on_resolution_failure": "RESOURCE_ATTR_MISSING"
+    },
+    "vanishgraph.candidate_epoch": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW",
+      "on_resolution_failure": "RESOURCE_ATTR_MISSING"
+    },
+    "vanishgraph.artifact.digest": {
+      "egress_class": "OPAQUE_ID",
+      "disposition": "ALLOW",
+      "on_resolution_failure": "RESOURCE_ATTR_MISSING"
+    },
+    "vanishgraph.build.inputs_digest": {
+      "egress_class": "OPAQUE_ID",
+      "disposition": "ALLOW",
+      "on_resolution_failure": "RESOURCE_ATTR_MISSING"
+    },
+    "vanishgraph.policy.version": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW",
+      "on_resolution_failure": "RESOURCE_ATTR_MISSING"
+    },
+    "vanishgraph.recipe.set_digest": {
+      "egress_class": "OPAQUE_ID",
+      "disposition": "ALLOW",
+      "on_resolution_failure": "RESOURCE_ATTR_MISSING"
+    }
   },
   "resource_key_note": "TWO RESOURCE KEYS ARE EXEMPT FROM THE LEAF-NAME PROHIBITION, AND ONLY THEY ARE. §5.3 prohibits the field NAME `name` at any nesting depth, while §2.1 mandates the resource attributes `service.name` and `deployment.environment.name`. The prohibition is aimed at a record field that would carry a subject's name; a resource attribute is not a record field, and §2.1 names these nine keys as the only canonical ones. A checker that applies the leaf-name rule to a resource key MUST raise the conflict rather than silently exempt it, and MUST NOT extend the exemption to any other key.",
   "span_attributes": {
-    "vanishgraph.correlation_id": { "egress_class": "OPAQUE_ID", "disposition": "ALLOW" },
-    "vanishgraph.tenant_id": { "egress_class": "OPAQUE_ID", "disposition": "ALLOW" },
-    "vanishgraph.case_id": { "egress_class": "OPAQUE_ID", "disposition": "ALLOW" },
-    "vanishgraph.exposure_id": { "egress_class": "OPAQUE_ID", "disposition": "ALLOW" },
-    "vanishgraph.action_id": { "egress_class": "OPAQUE_ID", "disposition": "ALLOW" },
-    "vanishgraph.truth_state.from": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "vanishgraph.truth_state.to": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "vanishgraph.transition_id": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "vanishgraph.idempotency_key": { "egress_class": "OPAQUE_ID", "disposition": "ALLOW" },
-    "vanishgraph.egress.class": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "vanishgraph.evidence.id": { "egress_class": "OPAQUE_ID", "disposition": "ALLOW" },
-    "vanishgraph.evidence.digest": { "egress_class": "OPAQUE_ID", "disposition": "ALLOW" },
-    "vanishgraph.verification.observation_id": { "egress_class": "OPAQUE_ID", "disposition": "ALLOW" }
+    "vanishgraph.correlation_id": {
+      "egress_class": "OPAQUE_ID",
+      "disposition": "ALLOW"
+    },
+    "vanishgraph.tenant_id": {
+      "egress_class": "OPAQUE_ID",
+      "disposition": "ALLOW"
+    },
+    "vanishgraph.case_id": {
+      "egress_class": "OPAQUE_ID",
+      "disposition": "ALLOW"
+    },
+    "vanishgraph.exposure_id": {
+      "egress_class": "OPAQUE_ID",
+      "disposition": "ALLOW"
+    },
+    "vanishgraph.action_id": {
+      "egress_class": "OPAQUE_ID",
+      "disposition": "ALLOW"
+    },
+    "vanishgraph.truth_state.from": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "vanishgraph.truth_state.to": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "vanishgraph.transition_id": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "vanishgraph.idempotency_key": {
+      "egress_class": "OPAQUE_ID",
+      "disposition": "ALLOW"
+    },
+    "vanishgraph.egress.class": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "vanishgraph.evidence.id": {
+      "egress_class": "OPAQUE_ID",
+      "disposition": "ALLOW"
+    },
+    "vanishgraph.evidence.digest": {
+      "egress_class": "OPAQUE_ID",
+      "disposition": "ALLOW"
+    },
+    "vanishgraph.verification.observation_id": {
+      "egress_class": "OPAQUE_ID",
+      "disposition": "ALLOW"
+    }
   },
   "log_fields": {
-    "timestamp": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "severity": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "service": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "correlationId": { "egress_class": "OPAQUE_ID", "disposition": "ALLOW" },
-    "tenantId": { "egress_class": "OPAQUE_ID", "disposition": "ALLOW" },
-    "caseId": { "egress_class": "OPAQUE_ID", "disposition": "ALLOW" },
-    "exposureId": { "egress_class": "OPAQUE_ID", "disposition": "ALLOW" },
-    "actionId": { "egress_class": "OPAQUE_ID", "disposition": "ALLOW" },
-    "event": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "outcome": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "message": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "candidateEpoch": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "artifactDigest": { "egress_class": "OPAQUE_ID", "disposition": "ALLOW" },
-    "traceId": { "egress_class": "OPAQUE_ID", "disposition": "ALLOW" },
-    "spanId": { "egress_class": "OPAQUE_ID", "disposition": "ALLOW" },
-    "traceFlags": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "sourceId": { "egress_class": "OPAQUE_ID", "disposition": "ALLOW" },
-    "recipeId": { "egress_class": "OPAQUE_ID", "disposition": "ALLOW" },
-    "recipeVersion": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "channel": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "truthStateFrom": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "truthStateTo": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "transitionId": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "policyVersion": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "jurisdiction": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "evidenceId": { "egress_class": "OPAQUE_ID", "disposition": "ALLOW" },
-    "evidenceDigest": { "egress_class": "OPAQUE_ID", "disposition": "ALLOW" },
-    "idempotencyKey": { "egress_class": "OPAQUE_ID", "disposition": "ALLOW" },
-    "attempt": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "latencyMs": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "dependencyKey": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "reasonCode": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "gateKind": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "egressClass": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "redactionRuleClass": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "redactionCount": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "budgetKey": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "costMinorUnits": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "currency": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "humanMinutes": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "errorType": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "errorCode": { "egress_class": "NONE", "disposition": "ALLOW" },
-    "retryable": { "egress_class": "NONE", "disposition": "ALLOW" }
+    "timestamp": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "severity": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "service": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "correlationId": {
+      "egress_class": "OPAQUE_ID",
+      "disposition": "ALLOW"
+    },
+    "tenantId": {
+      "egress_class": "OPAQUE_ID",
+      "disposition": "ALLOW"
+    },
+    "caseId": {
+      "egress_class": "OPAQUE_ID",
+      "disposition": "ALLOW"
+    },
+    "exposureId": {
+      "egress_class": "OPAQUE_ID",
+      "disposition": "ALLOW"
+    },
+    "actionId": {
+      "egress_class": "OPAQUE_ID",
+      "disposition": "ALLOW"
+    },
+    "event": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "outcome": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "message": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "candidateEpoch": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "artifactDigest": {
+      "egress_class": "OPAQUE_ID",
+      "disposition": "ALLOW"
+    },
+    "traceId": {
+      "egress_class": "OPAQUE_ID",
+      "disposition": "ALLOW"
+    },
+    "spanId": {
+      "egress_class": "OPAQUE_ID",
+      "disposition": "ALLOW"
+    },
+    "traceFlags": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "sourceId": {
+      "egress_class": "OPAQUE_ID",
+      "disposition": "ALLOW"
+    },
+    "recipeId": {
+      "egress_class": "OPAQUE_ID",
+      "disposition": "ALLOW"
+    },
+    "recipeVersion": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "channel": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "truthStateFrom": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "truthStateTo": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "transitionId": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "policyVersion": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "jurisdiction": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "evidenceId": {
+      "egress_class": "OPAQUE_ID",
+      "disposition": "ALLOW"
+    },
+    "evidenceDigest": {
+      "egress_class": "OPAQUE_ID",
+      "disposition": "ALLOW"
+    },
+    "idempotencyKey": {
+      "egress_class": "OPAQUE_ID",
+      "disposition": "ALLOW"
+    },
+    "attempt": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "latencyMs": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "dependencyKey": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "reasonCode": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "gateKind": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "egressClass": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "redactionRuleClass": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "redactionCount": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "budgetKey": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "costMinorUnits": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "currency": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "humanMinutes": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "errorType": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "errorCode": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    },
+    "retryable": {
+      "egress_class": "NONE",
+      "disposition": "ALLOW"
+    }
   },
   "canonical_events": [
     "SourceRecordObserved",

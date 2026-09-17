@@ -1,0 +1,76 @@
+### Repair capsule (DLP-scrubbed before egress)
+
+scrub outcome: REDACTED
+redaction rule class: EMAIL_ADDRESS
+
+- correlationId: corr-7Q2F4M8ZC1
+- caseId: case-9F3B21
+- transitionId: T14
+- message: [REDACTED:EMAIL_ADDRESS]
+- reasonCode: SCRUBBED
+---
+### Repair capsule (DLP-scrubbed before egress)
+
+scrub outcome: REDACTED
+redaction rule class: RAW_HTML
+
+- correlationId: corr-7Q2F4M8ZC1
+- caseId: case-9F3B21
+- transitionId: T14
+- message: [REDACTED:RAW_HTML][REDACTED:RAW_HTML]rennyx</a></div>
+- reasonCode: SCRUBBED
+---
+### Repair capsule (DLP-scrubbed before egress)
+
+scrub outcome: REDACTED
+redaction rule class: TELEPHONE_NUMBER
+
+- correlationId: corr-7Q2F4M8ZC1
+- caseId: case-9F3B21
+- transitionId: T14
+- message: [REDACTED:TELEPHONE_NUMBER]
+- reasonCode: SCRUBBED
+---
+### Repair capsule (DLP-scrubbed before egress)
+
+scrub outcome: REDACTED
+redaction rule class: TOKEN_OR_SECRET
+
+- correlationId: corr-7Q2F4M8ZC1
+- caseId: case-9F3B21
+- transitionId: T14
+- message: [REDACTED:TOKEN_OR_SECRET]
+- reasonCode: SCRUBBED
+---
+### Repair capsule (DLP-scrubbed before egress)
+
+scrub outcome: REDACTED
+redaction rule class: POSTAL_ADDRESS
+
+- correlationId: corr-7Q2F4M8ZC1
+- caseId: case-9F3B21
+- transitionId: T14
+- message: [REDACTED:POSTAL_ADDRESS], Silverbrook
+- reasonCode: SCRUBBED
+---
+### Repair capsule (DLP-scrubbed before egress)
+
+scrub outcome: REDACTED
+redaction rule class: COOKIE_SESSION_VALUE
+
+- correlationId: corr-7Q2F4M8ZC1
+- caseId: case-9F3B21
+- transitionId: T14
+- message: [REDACTED:COOKIE_SESSION_VALUE]
+- reasonCode: SCRUBBED
+---
+### Repair capsule (DLP-scrubbed before egress)
+
+scrub outcome: REDACTED
+redaction rule class: OPERATOR_NOTE
+
+- correlationId: corr-7Q2F4M8ZC1
+- caseId: case-9F3B21
+- transitionId: T14
+- message: [REDACTED:OPERATOR_NOTE] lopenpen ccc9bd
+- reasonCode: SCRUBBED

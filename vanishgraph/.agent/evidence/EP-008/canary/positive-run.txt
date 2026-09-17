@@ -1,0 +1,71 @@
+▶ the canary bundle is generated, non-live, and covers every §4.2 class
+  ✔ the run records its seed, its bundle digest and every entry it will assert on (1.1079ms)
+  ✔ every §4.2 rule class in the shipped configuration has at least one canary (0.191ms)
+  ✔ the six canary sites of §4.4 item 3 are all present (0.1721ms)
+  ✔ the material is non-live BY CONSTRUCTION, not by convention (0.7685ms)
+  ✔ the same seed reproduces the same bundle, and a different seed does not (2.3975ms)
+  ✔ NEGATIVE CONTROL: the cleanliness oracle flags a planted canary, so its silence means something (1.4762ms)
+✔ the canary bundle is generated, non-live, and covers every §4.2 class (7.5206ms)
+▶ a value-pattern class never reaches a sink, in any encoding (SPEC-007 §4.2)
+  ✔ EMAIL_ADDRESS: plain is redacted, encoded forms are refused, truncation is bounded and recorded (5.0015ms)
+  ✔ TELEPHONE_NUMBER: plain is redacted, encoded forms are refused, truncation is bounded and recorded (2.4217ms)
+  ✔ POSTAL_ADDRESS: plain is redacted, encoded forms are refused, truncation is bounded and recorded (1.7888ms)
+  ✔ RAW_HTML: plain is redacted, encoded forms are refused, truncation is bounded and recorded (1.6105ms)
+  ✔ COOKIE_SESSION_VALUE: plain is redacted, encoded forms are refused, truncation is bounded and recorded (1.1319ms)
+  ✔ TOKEN_OR_SECRET: plain is redacted, encoded forms are refused, truncation is bounded and recorded (1.2435ms)
+  ✔ OPERATOR_NOTE: plain is redacted, encoded forms are refused, truncation is bounded and recorded (1.5892ms)
+✔ a value-pattern class never reaches a sink, in any encoding (SPEC-007 §4.2) (15.4508ms)
+▶ a class with no value shape is refused by field name, and the configuration says so
+  ✔ SUBJECT_NAME: the field that would carry it is denied, and no pattern is claimed (0.3932ms)
+  ✔ PAGE_CONTENT: the field that would carry it is denied, and no pattern is claimed (0.144ms)
+  ✔ IDENTITY_DOCUMENT_CONTENT: the field that would carry it is denied, and no pattern is claimed (0.1358ms)
+  ✔ FORM_VALUE: the field that would carry it is denied, and no pattern is claimed (0.1309ms)
+  ✔ SENSITIVE_SCREENSHOT: the field that would carry it is denied, and no pattern is claimed (0.1486ms)
+✔ a class with no value shape is refused by field name, and the configuration says so (1.1453ms)
+▶ the whole path, all five sinks, asserted on exported bytes (§4.4 items 3-4)
+  ✔ every canary site is driven through the real gate to all five sinks with no canary in the bytes (17.8714ms)
+  ✔ allowlisted opaque identifiers and all nine resource attributes still appear, unchanged (0.7263ms)
+  ✔ a resource attribute carrying a prohibited class is DENIED rather than rewritten (0.2732ms)
+✔ the whole path, all five sinks, asserted on exported bytes (§4.4 items 3-4) (19.1056ms)
+▶ the deny-by-default rules of §4.1
+  ✔ a field with no classification is denied, and the refusal names it (0.4244ms)
+  ✔ a prohibited field NAME is denied before its value is looked at (0.2764ms)
+  ✔ a field classified as denied is denied by class, not by value (1.1454ms)
+  ✔ a non-string value is a FAILURE, which behaves as a denial (0.2516ms)
+  ✔ an unvalidatable policy denies everything with POLICY_ABSENT, and says why (0.6137ms)
+✔ the deny-by-default rules of §4.1 (3.0217ms)
+▶ the accepted-payload token (§4.1: reaching a sink without one is impossible)
+  ✔ a payload that is not the product of the scrub stage is refused by the sink at runtime (0.2022ms)
+  ✔ the token is a digest over the accepted content, so two different payloads do not share one (0.5072ms)
+✔ the accepted-payload token (§4.1: reaching a sink without one is impossible) (0.8479ms)
+▶ the counters the alerts select (§4.1, §8 A-06 and A-06c)
+  ✔ outcome, denial and canary series carry the label sets the alert expressions use (0.8108ms)
+✔ the counters the alerts select (§4.1, §8 A-06 and A-06c) (0.9595ms)
+▶ the disabled-rule control proves the canary assertion can fail (§4.4 item 5)
+  ✔ with EMAIL_ADDRESS disabled the canary REACHES the exported bytes, and the report names the class and the field (1.1941ms)
+  ✔ the same suite run against the real gate passes, which is the difference the control measures (0.3927ms)
+✔ the disabled-rule control proves the canary assertion can fail (§4.4 item 5) (1.7316ms)
+▶ the allowlist validation refuses a policy that cannot be trusted
+  ✔ the shipped configuration validates, disables nothing, and declares the six reason codes (0.4598ms)
+  ✔ NEGATIVE CASE: a default of ALLOW is refused with a readable reason (0.238ms)
+  ✔ NEGATIVE CASE: an unknown EgressClass is refused with a readable reason (0.1051ms)
+  ✔ NEGATIVE CASE: an unknown disposition is refused with a readable reason (0.0953ms)
+  ✔ NEGATIVE CASE: a prohibited name that is also allowlisted is refused with a readable reason (0.2175ms)
+  ✔ NEGATIVE CASE: a resource key with no fail-closed mark is refused with a readable reason (0.1708ms)
+  ✔ NEGATIVE CASE: a VALUE_PATTERN class with no pattern is refused with a readable reason (0.2215ms)
+  ✔ NEGATIVE CASE: a pattern on a FIELD_NAME class is refused with a readable reason (0.2079ms)
+  ✔ NEGATIVE CASE: a duplicated rule class is refused with a readable reason (0.717ms)
+  ✔ NEGATIVE CASE: a pattern that does not compile is refused with a readable reason (0.1936ms)
+  ✔ a class marked enabled:false is accepted but recorded, because the control needs it and silence would hide it (0.3211ms)
+✔ the allowlist validation refuses a policy that cannot be trusted (3.3448ms)
+▶ the redaction evidence this run leaves behind
+  ✔ the bundle, its digest and the per-sink digests are written where the canary stage reads them (5.1533ms)
+✔ the redaction evidence this run leaves behind (5.3301ms)
+ℹ tests 43
+ℹ suites 10
+ℹ pass 43
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 317.1126

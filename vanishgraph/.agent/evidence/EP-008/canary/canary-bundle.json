@@ -1,0 +1,342 @@
+{
+  "seed": "c07931bbb67cd62b",
+  "generated_at": "1970-01-01T00:00:00.000Z",
+  "entries": [
+    {
+      "site": "PROTECTED_SUBJECT_REFERENCE_CHAIN",
+      "field_path": "displayRef",
+      "rule_class": "SUBJECT_NAME",
+      "encoding": "plain",
+      "value": "fimlohes pensil"
+    },
+    {
+      "site": "PROTECTED_SUBJECT_REFERENCE_CHAIN",
+      "field_path": "displayRef",
+      "rule_class": "SUBJECT_NAME",
+      "encoding": "base64",
+      "value": "ZmltbG9oZXMgcGVuc2ls"
+    },
+    {
+      "site": "PROTECTED_SUBJECT_REFERENCE_CHAIN",
+      "field_path": "displayRef",
+      "rule_class": "SUBJECT_NAME",
+      "encoding": "percent",
+      "value": "fimlohes%20pensil"
+    },
+    {
+      "site": "PROTECTED_SUBJECT_REFERENCE_CHAIN",
+      "field_path": "displayRef",
+      "rule_class": "SUBJECT_NAME",
+      "encoding": "truncated",
+      "value": "fimlohe"
+    },
+    {
+      "site": "EMAIL_THREAD_BODY",
+      "field_path": "message",
+      "rule_class": "EMAIL_ADDRESS",
+      "encoding": "plain",
+      "value": "vorquo.pennyx@cormi.invalid"
+    },
+    {
+      "site": "EMAIL_THREAD_BODY",
+      "field_path": "message",
+      "rule_class": "EMAIL_ADDRESS",
+      "encoding": "base64",
+      "value": "dm9ycXVvLnBlbm55eEBjb3JtaS5pbnZhbGlk"
+    },
+    {
+      "site": "EMAIL_THREAD_BODY",
+      "field_path": "message",
+      "rule_class": "EMAIL_ADDRESS",
+      "encoding": "percent",
+      "value": "vorquo.pennyx%40cormi.invalid"
+    },
+    {
+      "site": "EMAIL_THREAD_BODY",
+      "field_path": "message",
+      "rule_class": "EMAIL_ADDRESS",
+      "encoding": "truncated",
+      "value": "vorquo.pennyx"
+    },
+    {
+      "site": "FETCHED_PAGE_BODY",
+      "field_path": "message",
+      "rule_class": "RAW_HTML",
+      "encoding": "plain",
+      "value": "<div class=\"lomicor\"><a href=\"https://fimtami.example/bellofim\">rennyx</a></div>"
+    },
+    {
+      "site": "FETCHED_PAGE_BODY",
+      "field_path": "message",
+      "rule_class": "RAW_HTML",
+      "encoding": "base64",
+      "value": "PGRpdiBjbGFzcz0ibG9taWNvciI+PGEgaHJlZj0iaHR0cHM6Ly9maW10YW1pLmV4YW1wbGUvYmVsbG9maW0iPnJlbm55eDwvYT48L2Rpdj4="
+    },
+    {
+      "site": "FETCHED_PAGE_BODY",
+      "field_path": "message",
+      "rule_class": "RAW_HTML",
+      "encoding": "percent",
+      "value": "%3Cdiv%20class%3D%22lomicor%22%3E%3Ca%20href%3D%22https%3A%2F%2Ffimtami.example%2Fbellofim%22%3Erennyx%3C%2Fa%3E%3C%2Fdiv%3E"
+    },
+    {
+      "site": "FETCHED_PAGE_BODY",
+      "field_path": "message",
+      "rule_class": "RAW_HTML",
+      "encoding": "truncated",
+      "value": "<div class=\"lomicor\"><a href=\"https://fi"
+    },
+    {
+      "site": "FORM_SUBMISSION_PAYLOAD",
+      "field_path": "message",
+      "rule_class": "TELEPHONE_NUMBER",
+      "encoding": "plain",
+      "value": "+1 555-0170"
+    },
+    {
+      "site": "FORM_SUBMISSION_PAYLOAD",
+      "field_path": "message",
+      "rule_class": "TELEPHONE_NUMBER",
+      "encoding": "base64",
+      "value": "KzEgNTU1LTAxNzA="
+    },
+    {
+      "site": "FORM_SUBMISSION_PAYLOAD",
+      "field_path": "message",
+      "rule_class": "TELEPHONE_NUMBER",
+      "encoding": "percent",
+      "value": "%2B1%20555-0170"
+    },
+    {
+      "site": "FORM_SUBMISSION_PAYLOAD",
+      "field_path": "message",
+      "rule_class": "TELEPHONE_NUMBER",
+      "encoding": "truncated",
+      "value": "+1 55"
+    },
+    {
+      "site": "SCREENSHOT_ARTIFACT",
+      "field_path": "screenshot",
+      "rule_class": "SENSITIVE_SCREENSHOT",
+      "encoding": "plain",
+      "value": "data:image/png;base64,ZTkwZTI5YzYzNmFhYmU4YTc2M2JlZTAyYjI3ODE1MGJiZTU4YjFhZWIxNDY1NDM4"
+    },
+    {
+      "site": "SCREENSHOT_ARTIFACT",
+      "field_path": "screenshot",
+      "rule_class": "SENSITIVE_SCREENSHOT",
+      "encoding": "base64",
+      "value": "ZGF0YTppbWFnZS9wbmc7YmFzZTY0LFpUa3daVEk1WXpZek5tRmhZbVU0WVRjMk0ySmxaVEF5WWpJM09ERTFNR0ppWlRVNFlqRmhaV0l4TkRZMU5ETTQ="
+    },
+    {
+      "site": "SCREENSHOT_ARTIFACT",
+      "field_path": "screenshot",
+      "rule_class": "SENSITIVE_SCREENSHOT",
+      "encoding": "percent",
+      "value": "data%3Aimage%2Fpng%3Bbase64%2CZTkwZTI5YzYzNmFhYmU4YTc2M2JlZTAyYjI3ODE1MGJiZTU4YjFhZWIxNDY1NDM4"
+    },
+    {
+      "site": "SCREENSHOT_ARTIFACT",
+      "field_path": "screenshot",
+      "rule_class": "SENSITIVE_SCREENSHOT",
+      "encoding": "truncated",
+      "value": "data:image/png;base64,ZTkwZTI5YzYzNmFhYmU4Y"
+    },
+    {
+      "site": "SECRET_SHAPED_ENVIRONMENT_VALUE",
+      "field_path": "message",
+      "rule_class": "TOKEN_OR_SECRET",
+      "encoding": "plain",
+      "value": "Bearer c17964b0a6522abe6fb8362826b737b2ad33c7a9"
+    },
+    {
+      "site": "SECRET_SHAPED_ENVIRONMENT_VALUE",
+      "field_path": "message",
+      "rule_class": "TOKEN_OR_SECRET",
+      "encoding": "base64",
+      "value": "QmVhcmVyIGMxNzk2NGIwYTY1MjJhYmU2ZmI4MzYyODI2YjczN2IyYWQzM2M3YTk="
+    },
+    {
+      "site": "SECRET_SHAPED_ENVIRONMENT_VALUE",
+      "field_path": "message",
+      "rule_class": "TOKEN_OR_SECRET",
+      "encoding": "percent",
+      "value": "Bearer%20c17964b0a6522abe6fb8362826b737b2ad33c7a9"
+    },
+    {
+      "site": "SECRET_SHAPED_ENVIRONMENT_VALUE",
+      "field_path": "message",
+      "rule_class": "TOKEN_OR_SECRET",
+      "encoding": "truncated",
+      "value": "Bearer c17964b0a6522abe"
+    },
+    {
+      "site": "CONTROLLED_CLASS_COVERAGE",
+      "field_path": "message",
+      "rule_class": "POSTAL_ADDRESS",
+      "encoding": "plain",
+      "value": "149 tabel Street, Silverbrook"
+    },
+    {
+      "site": "CONTROLLED_CLASS_COVERAGE",
+      "field_path": "message",
+      "rule_class": "POSTAL_ADDRESS",
+      "encoding": "base64",
+      "value": "MTQ5IHRhYmVsIFN0cmVldCwgU2lsdmVyYnJvb2s="
+    },
+    {
+      "site": "CONTROLLED_CLASS_COVERAGE",
+      "field_path": "message",
+      "rule_class": "POSTAL_ADDRESS",
+      "encoding": "percent",
+      "value": "149%20tabel%20Street%2C%20Silverbrook"
+    },
+    {
+      "site": "CONTROLLED_CLASS_COVERAGE",
+      "field_path": "message",
+      "rule_class": "POSTAL_ADDRESS",
+      "encoding": "truncated",
+      "value": "149 tabel Stre"
+    },
+    {
+      "site": "CONTROLLED_CLASS_COVERAGE",
+      "field_path": "message",
+      "rule_class": "PAGE_CONTENT",
+      "encoding": "plain",
+      "value": "page body: nyxcorta drasilhes drafimmi"
+    },
+    {
+      "site": "CONTROLLED_CLASS_COVERAGE",
+      "field_path": "message",
+      "rule_class": "PAGE_CONTENT",
+      "encoding": "base64",
+      "value": "cGFnZSBib2R5OiBueXhjb3J0YSBkcmFzaWxoZXMgZHJhZmltbWk="
+    },
+    {
+      "site": "CONTROLLED_CLASS_COVERAGE",
+      "field_path": "message",
+      "rule_class": "PAGE_CONTENT",
+      "encoding": "percent",
+      "value": "page%20body%3A%20nyxcorta%20drasilhes%20drafimmi"
+    },
+    {
+      "site": "CONTROLLED_CLASS_COVERAGE",
+      "field_path": "message",
+      "rule_class": "PAGE_CONTENT",
+      "encoding": "truncated",
+      "value": "page body: nyxcorta"
+    },
+    {
+      "site": "CONTROLLED_CLASS_COVERAGE",
+      "field_path": "message",
+      "rule_class": "COOKIE_SESSION_VALUE",
+      "encoding": "plain",
+      "value": "Cookie: session=aab2afc756d85b5b6738d0ee"
+    },
+    {
+      "site": "CONTROLLED_CLASS_COVERAGE",
+      "field_path": "message",
+      "rule_class": "COOKIE_SESSION_VALUE",
+      "encoding": "base64",
+      "value": "Q29va2llOiBzZXNzaW9uPWFhYjJhZmM3NTZkODViNWI2NzM4ZDBlZQ=="
+    },
+    {
+      "site": "CONTROLLED_CLASS_COVERAGE",
+      "field_path": "message",
+      "rule_class": "COOKIE_SESSION_VALUE",
+      "encoding": "percent",
+      "value": "Cookie%3A%20session%3Daab2afc756d85b5b6738d0ee"
+    },
+    {
+      "site": "CONTROLLED_CLASS_COVERAGE",
+      "field_path": "message",
+      "rule_class": "COOKIE_SESSION_VALUE",
+      "encoding": "truncated",
+      "value": "Cookie: session=aab2"
+    },
+    {
+      "site": "CONTROLLED_CLASS_COVERAGE",
+      "field_path": "message",
+      "rule_class": "IDENTITY_DOCUMENT_CONTENT",
+      "encoding": "plain",
+      "value": "7FE88CD2D<A0A952765F31"
+    },
+    {
+      "site": "CONTROLLED_CLASS_COVERAGE",
+      "field_path": "message",
+      "rule_class": "IDENTITY_DOCUMENT_CONTENT",
+      "encoding": "base64",
+      "value": "N0ZFODhDRDJEPEEwQTk1Mjc2NUYzMQ=="
+    },
+    {
+      "site": "CONTROLLED_CLASS_COVERAGE",
+      "field_path": "message",
+      "rule_class": "IDENTITY_DOCUMENT_CONTENT",
+      "encoding": "percent",
+      "value": "7FE88CD2D%3CA0A952765F31"
+    },
+    {
+      "site": "CONTROLLED_CLASS_COVERAGE",
+      "field_path": "message",
+      "rule_class": "IDENTITY_DOCUMENT_CONTENT",
+      "encoding": "truncated",
+      "value": "7FE88CD2D<A"
+    },
+    {
+      "site": "CONTROLLED_CLASS_COVERAGE",
+      "field_path": "message",
+      "rule_class": "FORM_VALUE",
+      "encoding": "plain",
+      "value": "formValues: quoquo-4aab37a4"
+    },
+    {
+      "site": "CONTROLLED_CLASS_COVERAGE",
+      "field_path": "message",
+      "rule_class": "FORM_VALUE",
+      "encoding": "base64",
+      "value": "Zm9ybVZhbHVlczogcXVvcXVvLTRhYWIzN2E0"
+    },
+    {
+      "site": "CONTROLLED_CLASS_COVERAGE",
+      "field_path": "message",
+      "rule_class": "FORM_VALUE",
+      "encoding": "percent",
+      "value": "formValues%3A%20quoquo-4aab37a4"
+    },
+    {
+      "site": "CONTROLLED_CLASS_COVERAGE",
+      "field_path": "message",
+      "rule_class": "FORM_VALUE",
+      "encoding": "truncated",
+      "value": "formValues: q"
+    },
+    {
+      "site": "CONTROLLED_CLASS_COVERAGE",
+      "field_path": "message",
+      "rule_class": "OPERATOR_NOTE",
+      "encoding": "plain",
+      "value": "note: rengathvor lopenpen ccc9bd"
+    },
+    {
+      "site": "CONTROLLED_CLASS_COVERAGE",
+      "field_path": "message",
+      "rule_class": "OPERATOR_NOTE",
+      "encoding": "base64",
+      "value": "bm90ZTogcmVuZ2F0aHZvciBsb3BlbnBlbiBjY2M5YmQ="
+    },
+    {
+      "site": "CONTROLLED_CLASS_COVERAGE",
+      "field_path": "message",
+      "rule_class": "OPERATOR_NOTE",
+      "encoding": "percent",
+      "value": "note%3A%20rengathvor%20lopenpen%20ccc9bd"
+    },
+    {
+      "site": "CONTROLLED_CLASS_COVERAGE",
+      "field_path": "message",
+      "rule_class": "OPERATOR_NOTE",
+      "encoding": "truncated",
+      "value": "note: rengathvor"
+    }
+  ]
+}

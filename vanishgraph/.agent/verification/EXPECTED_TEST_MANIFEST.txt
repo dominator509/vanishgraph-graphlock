@@ -96,3 +96,4 @@ tests/regression/live-fire-proof-06.test.ts
 tests/regression/live-fire-proof-10.test.ts
 tests/regression/live-fire-proof-08.test.ts
 tests/observability/telemetry-identity.test.ts
+tests/observability/egress-canary.test.ts

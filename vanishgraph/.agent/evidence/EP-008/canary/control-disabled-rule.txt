@@ -1,0 +1,3 @@
+rule_class=EMAIL_ADDRESS
+field_path=message
+value_reached_bytes=vorquo.pennyx@cormi.invalid

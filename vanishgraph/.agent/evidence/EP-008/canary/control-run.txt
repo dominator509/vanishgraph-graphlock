@@ -1,0 +1,234 @@
+▶ the canary bundle is generated, non-live, and covers every §4.2 class
+  ✔ the run records its seed, its bundle digest and every entry it will assert on (1.6808ms)
+  ✔ every §4.2 rule class in the shipped configuration has at least one canary (0.377ms)
+  ✔ the six canary sites of §4.4 item 3 are all present (0.3285ms)
+  ✔ the material is non-live BY CONSTRUCTION, not by convention (1.1808ms)
+  ✔ the same seed reproduces the same bundle, and a different seed does not (3.6859ms)
+  ✔ NEGATIVE CONTROL: the cleanliness oracle flags a planted canary, so its silence means something (1.8782ms)
+✔ the canary bundle is generated, non-live, and covers every §4.2 class (11.2877ms)
+▶ a value-pattern class never reaches a sink, in any encoding (SPEC-007 §4.2)
+  ✖ EMAIL_ADDRESS: plain is redacted, encoded forms are refused, truncation is bounded and recorded (8.3734ms)
+  ✔ TELEPHONE_NUMBER: plain is redacted, encoded forms are refused, truncation is bounded and recorded (2.9673ms)
+  ✔ POSTAL_ADDRESS: plain is redacted, encoded forms are refused, truncation is bounded and recorded (2.497ms)
+  ✔ RAW_HTML: plain is redacted, encoded forms are refused, truncation is bounded and recorded (2.0731ms)
+  ✔ COOKIE_SESSION_VALUE: plain is redacted, encoded forms are refused, truncation is bounded and recorded (3.0184ms)
+  ✔ TOKEN_OR_SECRET: plain is redacted, encoded forms are refused, truncation is bounded and recorded (1.9803ms)
+  ✔ OPERATOR_NOTE: plain is redacted, encoded forms are refused, truncation is bounded and recorded (1.4475ms)
+✖ a value-pattern class never reaches a sink, in any encoding (SPEC-007 §4.2) (23.4089ms)
+▶ a class with no value shape is refused by field name, and the configuration says so
+  ✔ SUBJECT_NAME: the field that would carry it is denied, and no pattern is claimed (0.5323ms)
+  ✔ PAGE_CONTENT: the field that would carry it is denied, and no pattern is claimed (0.2173ms)
+  ✔ IDENTITY_DOCUMENT_CONTENT: the field that would carry it is denied, and no pattern is claimed (0.1597ms)
+  ✔ FORM_VALUE: the field that would carry it is denied, and no pattern is claimed (0.1816ms)
+  ✔ SENSITIVE_SCREENSHOT: the field that would carry it is denied, and no pattern is claimed (0.1894ms)
+✔ a class with no value shape is refused by field name, and the configuration says so (1.5863ms)
+▶ the whole path, all five sinks, asserted on exported bytes (§4.4 items 3-4)
+  ✖ every canary site is driven through the real gate to all five sinks with no canary in the bytes (13.2424ms)
+  ✔ allowlisted opaque identifiers and all nine resource attributes still appear, unchanged (0.4374ms)
+  ✖ a resource attribute carrying a prohibited class is DENIED rather than rewritten (0.3613ms)
+✖ the whole path, all five sinks, asserted on exported bytes (§4.4 items 3-4) (14.2207ms)
+▶ the deny-by-default rules of §4.1
+  ✔ a field with no classification is denied, and the refusal names it (0.3536ms)
+  ✔ a prohibited field NAME is denied before its value is looked at (0.2237ms)
+  ✔ a field classified as denied is denied by class, not by value (3.0221ms)
+  ✔ a non-string value is a FAILURE, which behaves as a denial (0.3148ms)
+  ✔ an unvalidatable policy denies everything with POLICY_ABSENT, and says why (0.6771ms)
+✔ the deny-by-default rules of §4.1 (4.909ms)
+▶ the accepted-payload token (§4.1: reaching a sink without one is impossible)
+  ✔ a payload that is not the product of the scrub stage is refused by the sink at runtime (0.2671ms)
+  ✔ the token is a digest over the accepted content, so two different payloads do not share one (0.6165ms)
+✔ the accepted-payload token (§4.1: reaching a sink without one is impossible) (1.0647ms)
+▶ the counters the alerts select (§4.1, §8 A-06 and A-06c)
+  ✖ outcome, denial and canary series carry the label sets the alert expressions use (0.807ms)
+✖ the counters the alerts select (§4.1, §8 A-06 and A-06c) (0.9236ms)
+▶ the disabled-rule control proves the canary assertion can fail (§4.4 item 5)
+  ✔ with EMAIL_ADDRESS disabled the canary REACHES the exported bytes, and the report names the class and the field (0.8679ms)
+  ✖ the same suite run against the real gate passes, which is the difference the control measures (0.733ms)
+✖ the disabled-rule control proves the canary assertion can fail (§4.4 item 5) (1.7241ms)
+▶ the allowlist validation refuses a policy that cannot be trusted
+  ✖ the shipped configuration validates, disables nothing, and declares the six reason codes (0.8555ms)
+  ✔ NEGATIVE CASE: a default of ALLOW is refused with a readable reason (0.276ms)
+  ✔ NEGATIVE CASE: an unknown EgressClass is refused with a readable reason (0.1132ms)
+  ✔ NEGATIVE CASE: an unknown disposition is refused with a readable reason (0.1167ms)
+  ✔ NEGATIVE CASE: a prohibited name that is also allowlisted is refused with a readable reason (0.2164ms)
+  ✔ NEGATIVE CASE: a resource key with no fail-closed mark is refused with a readable reason (0.1755ms)
+  ✔ NEGATIVE CASE: a VALUE_PATTERN class with no pattern is refused with a readable reason (0.1116ms)
+  ✔ NEGATIVE CASE: a pattern on a FIELD_NAME class is refused with a readable reason (0.1839ms)
+  ✔ NEGATIVE CASE: a duplicated rule class is refused with a readable reason (0.2482ms)
+  ✔ NEGATIVE CASE: a pattern that does not compile is refused with a readable reason (0.3278ms)
+  ✔ a class marked enabled:false is accepted but recorded, because the control needs it and silence would hide it (0.5206ms)
+✖ the allowlist validation refuses a policy that cannot be trusted (3.6079ms)
+▶ the redaction evidence this run leaves behind
+  ✔ the bundle, its digest and the per-sink digests are written where the canary stage reads them (5.3326ms)
+✔ the redaction evidence this run leaves behind (5.4707ms)
+ℹ tests 43
+ℹ suites 10
+ℹ pass 37
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 354.0623
+
+✖ failing tests:
+
+test at tests\observability\egress-canary.test.ts:259:5
+✖ EMAIL_ADDRESS: plain is redacted, encoded forms are refused, truncation is bounded and recorded (8.3734ms)
+  AssertionError [ERR_ASSERTION]: EMAIL_ADDRESS should have been redacted in field message, but the outcome was ALLOWED_OPAQUE
+  + actual - expected
+  
+  + 'ALLOWED_OPAQUE'
+  - 'REDACTED'
+  
+      at TestContext.<anonymous> (file:///C:/dev/vanishgraph-graphlock/vanishgraph/tests/observability/egress-canary.test.ts:270:14)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at node:internal/test_runner/test:1531:71
+      at node:internal/per_context/primordials:466:82
+      at new Promise (<anonymous>)
+      at new SafePromise (node:internal/per_context/primordials:435:3)
+      at node:internal/per_context/primordials:466:9
+      at Array.map (<anonymous>) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'ALLOWED_OPAQUE',
+    expected: 'REDACTED',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\observability\egress-canary.test.ts:354:3
+✖ every canary site is driven through the real gate to all five sinks with no canary in the bytes (13.2424ms)
+  AssertionError [ERR_ASSERTION]: OTLP_TRACE_EXPORTER exported a canary
+  + actual - expected
+  
+  + [
+  +   'vorquo.pennyx@cormi.invalid'
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///C:/dev/vanishgraph-graphlock/vanishgraph/tests/observability/egress-canary.test.ts:382:14)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at node:internal/test_runner/test:1531:71
+      at node:internal/per_context/primordials:466:82
+      at new Promise (<anonymous>)
+      at new SafePromise (node:internal/per_context/primordials:435:3)
+      at node:internal/per_context/primordials:466:9
+      at Array.map (<anonymous>) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ 'vorquo.pennyx@cormi.invalid' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\observability\egress-canary.test.ts:421:3
+✖ a resource attribute carrying a prohibited class is DENIED rather than rewritten (0.3613ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  true !== false
+  
+      at TestContext.<anonymous> (file:///C:/dev/vanishgraph-graphlock/vanishgraph/tests/observability/egress-canary.test.ts:428:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: true,
+    expected: false,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\observability\egress-canary.test.ts:517:3
+✖ outcome, denial and canary series carry the label sets the alert expressions use (0.807ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  3 !== 1
+  
+      at TestContext.<anonymous> (file:///C:/dev/vanishgraph-graphlock/vanishgraph/tests/observability/egress-canary.test.ts:529:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at node:internal/test_runner/test:1531:71
+      at node:internal/per_context/primordials:466:82
+      at new Promise (<anonymous>)
+      at new SafePromise (node:internal/per_context/primordials:435:3)
+      at node:internal/per_context/primordials:466:9
+      at Array.map (<anonymous>) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 3,
+    expected: 1,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\observability\egress-canary.test.ts:562:3
+✖ the same suite run against the real gate passes, which is the difference the control measures (0.733ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   'vorquo.pennyx@cormi.invalid'
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///C:/dev/vanishgraph-graphlock/vanishgraph/tests/observability/egress-canary.test.ts:571:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Suite.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Promise.all (index 0)
+      at async Suite.run (node:internal/test_runner/test:1533:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'vorquo.pennyx@cormi.invalid' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests\observability\egress-canary.test.ts:580:3
+✖ the shipped configuration validates, disables nothing, and declares the six reason codes (0.8555ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+  
+  + [
+  +   {
+  +     egressClass: 'CUSTOMER_PII',
+  +     enabled: false,
+  +     enforcement: 'VALUE_PATTERN',
+  +     pattern: '[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\\.[A-Za-z0-9-]+)+',
+  +     representation: 'EmailThread opaque ID or digest',
+  +     ruleClass: 'EMAIL_ADDRESS'
+  +   }
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///C:/dev/vanishgraph-graphlock/vanishgraph/tests/observability/egress-canary.test.ts:582:12)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at node:internal/test_runner/test:1531:71
+      at node:internal/per_context/primordials:466:82
+      at new Promise (<anonymous>)
+      at new SafePromise (node:internal/per_context/primordials:435:3)
+      at node:internal/per_context/primordials:466:9
+      at Array.map (<anonymous>) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ { ruleClass: 'EMAIL_ADDRESS', enforcement: 'VALUE_PATTERN', egressClass: 'CUSTOMER_PII', representation: 'EmailThread opaque ID or digest', enabled: false, pattern: '[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\\.[A-Za-z0-9-]+)+' } ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

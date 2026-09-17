@@ -1,0 +1,195 @@
+{
+  "bundle": {
+    "resource": {
+      "service.name": "vanishgraph-worker-verify",
+      "service.version": "0.1.0",
+      "deployment.environment.name": "local",
+      "vanishgraph.tenant.class": "TEST",
+      "vanishgraph.candidate_epoch": "GENERATION",
+      "vanishgraph.artifact.digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "vanishgraph.build.inputs_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "vanishgraph.policy.version": "2026-02-14.1",
+      "vanishgraph.recipe.set_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    },
+    "fields": {
+      "correlationId": "corr-7Q2F4M8ZC1",
+      "caseId": "case-9F3B21",
+      "transitionId": "T14",
+      "message": "[REDACTED:EMAIL_ADDRESS]",
+      "reasonCode": "SCRUBBED"
+    },
+    "scrub": {
+      "token": "scrub-64c1226ed7060c5c4d0548380a12df65",
+      "outcome": "REDACTED",
+      "redactionCount": 1
+    }
+  }
+}
+---
+{
+  "bundle": {
+    "resource": {
+      "service.name": "vanishgraph-worker-verify",
+      "service.version": "0.1.0",
+      "deployment.environment.name": "local",
+      "vanishgraph.tenant.class": "TEST",
+      "vanishgraph.candidate_epoch": "GENERATION",
+      "vanishgraph.artifact.digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "vanishgraph.build.inputs_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "vanishgraph.policy.version": "2026-02-14.1",
+      "vanishgraph.recipe.set_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    },
+    "fields": {
+      "correlationId": "corr-7Q2F4M8ZC1",
+      "caseId": "case-9F3B21",
+      "transitionId": "T14",
+      "message": "[REDACTED:RAW_HTML][REDACTED:RAW_HTML]rennyx</a></div>",
+      "reasonCode": "SCRUBBED"
+    },
+    "scrub": {
+      "token": "scrub-1728cc556112992595f7494426cd31bc",
+      "outcome": "REDACTED",
+      "redactionCount": 1
+    }
+  }
+}
+---
+{
+  "bundle": {
+    "resource": {
+      "service.name": "vanishgraph-worker-verify",
+      "service.version": "0.1.0",
+      "deployment.environment.name": "local",
+      "vanishgraph.tenant.class": "TEST",
+      "vanishgraph.candidate_epoch": "GENERATION",
+      "vanishgraph.artifact.digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "vanishgraph.build.inputs_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "vanishgraph.policy.version": "2026-02-14.1",
+      "vanishgraph.recipe.set_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    },
+    "fields": {
+      "correlationId": "corr-7Q2F4M8ZC1",
+      "caseId": "case-9F3B21",
+      "transitionId": "T14",
+      "message": "[REDACTED:TELEPHONE_NUMBER]",
+      "reasonCode": "SCRUBBED"
+    },
+    "scrub": {
+      "token": "scrub-3f3083f3ba3e958d006ebb86fb9d5157",
+      "outcome": "REDACTED",
+      "redactionCount": 1
+    }
+  }
+}
+---
+{
+  "bundle": {
+    "resource": {
+      "service.name": "vanishgraph-worker-verify",
+      "service.version": "0.1.0",
+      "deployment.environment.name": "local",
+      "vanishgraph.tenant.class": "TEST",
+      "vanishgraph.candidate_epoch": "GENERATION",
+      "vanishgraph.artifact.digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "vanishgraph.build.inputs_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "vanishgraph.policy.version": "2026-02-14.1",
+      "vanishgraph.recipe.set_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    },
+    "fields": {
+      "correlationId": "corr-7Q2F4M8ZC1",
+      "caseId": "case-9F3B21",
+      "transitionId": "T14",
+      "message": "[REDACTED:TOKEN_OR_SECRET]",
+      "reasonCode": "SCRUBBED"
+    },
+    "scrub": {
+      "token": "scrub-d17181a4c26fafb0d396e4c0bf09e476",
+      "outcome": "REDACTED",
+      "redactionCount": 1
+    }
+  }
+}
+---
+{
+  "bundle": {
+    "resource": {
+      "service.name": "vanishgraph-worker-verify",
+      "service.version": "0.1.0",
+      "deployment.environment.name": "local",
+      "vanishgraph.tenant.class": "TEST",
+      "vanishgraph.candidate_epoch": "GENERATION",
+      "vanishgraph.artifact.digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "vanishgraph.build.inputs_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "vanishgraph.policy.version": "2026-02-14.1",
+      "vanishgraph.recipe.set_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    },
+    "fields": {
+      "correlationId": "corr-7Q2F4M8ZC1",
+      "caseId": "case-9F3B21",
+      "transitionId": "T14",
+      "message": "[REDACTED:POSTAL_ADDRESS], Silverbrook",
+      "reasonCode": "SCRUBBED"
+    },
+    "scrub": {
+      "token": "scrub-47ef3269353dee0f34888a18084b1272",
+      "outcome": "REDACTED",
+      "redactionCount": 1
+    }
+  }
+}
+---
+{
+  "bundle": {
+    "resource": {
+      "service.name": "vanishgraph-worker-verify",
+      "service.version": "0.1.0",
+      "deployment.environment.name": "local",
+      "vanishgraph.tenant.class": "TEST",
+      "vanishgraph.candidate_epoch": "GENERATION",
+      "vanishgraph.artifact.digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "vanishgraph.build.inputs_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "vanishgraph.policy.version": "2026-02-14.1",
+      "vanishgraph.recipe.set_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    },
+    "fields": {
+      "correlationId": "corr-7Q2F4M8ZC1",
+      "caseId": "case-9F3B21",
+      "transitionId": "T14",
+      "message": "[REDACTED:COOKIE_SESSION_VALUE]",
+      "reasonCode": "SCRUBBED"
+    },
+    "scrub": {
+      "token": "scrub-6fb0961eb972494af208a34cef336d08",
+      "outcome": "REDACTED",
+      "redactionCount": 1
+    }
+  }
+}
+---
+{
+  "bundle": {
+    "resource": {
+      "service.name": "vanishgraph-worker-verify",
+      "service.version": "0.1.0",
+      "deployment.environment.name": "local",
+      "vanishgraph.tenant.class": "TEST",
+      "vanishgraph.candidate_epoch": "GENERATION",
+      "vanishgraph.artifact.digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "vanishgraph.build.inputs_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "vanishgraph.policy.version": "2026-02-14.1",
+      "vanishgraph.recipe.set_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    },
+    "fields": {
+      "correlationId": "corr-7Q2F4M8ZC1",
+      "caseId": "case-9F3B21",
+      "transitionId": "T14",
+      "message": "[REDACTED:OPERATOR_NOTE] lopenpen ccc9bd",
+      "reasonCode": "SCRUBBED"
+    },
+    "scrub": {
+      "token": "scrub-6576c391a959e8154d4324778424bd3e",
+      "outcome": "REDACTED",
+      "redactionCount": 1
+    }
+  }
+}

@@ -1,0 +1,158 @@
+EP-008 M2 EVIDENCE - the DLP scrub stage, the five sink adapters, and the canary proof
+======================================================================================
+
+Spec: SPEC-007 §4.1-§4.4 (DLP-safe telemetry), §2.3 (sinks and transport), §8 A-06/A-06b/A-06c (the alerts the counters
+feed). Plan: EP-008 M2. DOD-013, DOD-024, DOD-027.
+
+COMMANDS RUN, WITH THEIR RESULTS
+--------------------------------
+
+  sh scripts/test-unit.sh                       -> `test-unit: ok` (see the ledger entry for the counts of this run)
+  sh scripts/egress-canary-test.sh              -> `canary egress: ok` (exit 0)
+  grep -c 'CANARY_DETECTED' config/telemetry/allowlist.json -> 1
+  node --test tests/observability/egress-canary.test.ts     -> 43 tests, 43 pass, 0 fail
+  sh scripts/lint.sh                            -> `lint: ok` (`typecheck: ok`, `import boundary: ok`)
+
+THE THREE RUNS THE STAGE PERFORMS, AND WHY ALL THREE ARE REQUIRED
+-----------------------------------------------------------------
+
+§4.4 item 5: "The same test run must also prove it can fail: with exactly one redaction rule class disabled, the test must
+fail and must name the offending rule class and field path. A canary test that cannot fail is not a test."
+
+  RUN 1 - POSITIVE, shipped configuration:              43 passed, 0 failed.
+  RUN 2 - CONTROL, EMAIL_ADDRESS disabled:              37 passed, 6 FAILED. The first failure reads, verbatim:
+        "EMAIL_ADDRESS should have been redacted in field message, but the outcome was ALLOWED_OPAQUE"
+        so the failure names BOTH the offending rule class and the field path, which is what §4.4 item 5 requires. The
+        stage asserts the non-zero exit, the failing-test count, and the presence of both strings, so a control that
+        failed for an unrelated reason is a harness ERROR rather than a pass.
+  RUN 3 - RESTORED, shipped configuration again:        43 passed, 0 failed, the same count as run 1.
+
+THE CONTROL IS A POLICY CHANGE, NOT A SOURCE OR CONFIG EDIT. `scripts/egress-canary-test.sh` writes an alternate copy of
+`config/telemetry/allowlist.json` into `.agent/evidence/EP-008/canary/allowlist-control.json` with exactly one rule class
+set to `enabled: false`, points the suite at it through `VG_TELEMETRY_ALLOWLIST_PATH`, and never touches the tracked file.
+"Restore the rule" is therefore not an undo operation that could half-fail: the tracked configuration was never modified,
+and the stage proves it by comparing the tracked diff before and after the three runs (`baseline-diff.txt` vs
+`after-diff.txt`, compared byte for byte).
+
+  MEASURED DEFECT IN THE FIRST VERSION OF THAT CHECK, RECORDED BECAUSE IT IS THE SAME CONFUSION THIS REPOSITORY KEEPS
+  FINDING: the check was `git diff --exit-code`, which fails on ANY uncommitted change. This node was mid-milestone, so
+  the tree legitimately carried uncommitted work and the stage reported "the working tree changed while the control ran" —
+  the repository's own state reported as the stage's defect. It now compares the diff before and after, which measures
+  exactly the property claimed: THIS STAGE changed no tracked file.
+
+WHAT THE SCRUB STAGE DOES
+-------------------------
+
+  producer → classify (allowlist, deny-by-default) → scrub → [accepted payload + scrub token] → sink adapter → egress
+
+  * A field with NO entry in the allowlist is DENIED (`NOT_ALLOWLISTED`). A field whose NAME is on the §5.3 prohibited
+    list is denied before its value is read (`PROHIBITED_FIELD_NAME`). A field classified with a non-ALLOW disposition is
+    denied by class (`PROHIBITED_CLASS`). A malformed configuration denies everything (`POLICY_ABSENT`).
+  * A matched VALUE_PATTERN class is REDACTED to `[REDACTED:<CLASS>]`, and a RESIDUAL match after redaction is a FAILURE
+    (`SCRUB_FAILED`), which behaves as a denial. `FAILED` never reaches a sink.
+  * An ENCODED prohibited value — base64, percent-encoded, or a truncated contact prefix — is REFUSED
+    (`CANARY_DETECTED`), not decoded and cleaned: the value was encoded to get past the scanner, and the same code that
+    was just evaded is not the right thing to make the judgement.
+  * A resource attribute that matches a prohibited class is DENIED rather than rewritten, because rewriting a canonical
+    attribute would produce a record claiming an identity it does not have.
+  * A sink's `send` takes `AcceptedPayload`, whose brand only this module can apply, so a hand-built payload is a COMPILE
+    error; underneath the type, the runtime refuses a payload whose token is not shaped like one this module minted.
+  * The counters carry the label sets the alert expressions select: `vanishgraph_dlp_scrub_outcome_total{outcome=…}`,
+    `vanishgraph_dlp_egress_denied_total{reason_code=…}`, `vanishgraph_dlp_canary_detections_total{sink=…}`.
+
+THE FIVE SINKS, MEASURED IN THIS ENVIRONMENT
+--------------------------------------------
+
+The node plan's FALLBACK: "if the error reporter or the PR/issue exporter cannot be reached in this environment, the sink
+adapter is exercised against a local capture endpoint that receives the same scrubbed bytes through the same code path,
+and that sink's row is recorded BLOCKED_ENVIRONMENT with the provisioning attempt log. The canary assertion still runs on
+the captured bytes; it is never skipped and the sink is never assumed clean."
+
+Measured rows, with this environment's actual variables:
+
+  OTLP_TRACE_EXPORTER | BLOCKED_ENVIRONMENT | OTEL_EXPORTER_OTLP_ENDPOINT is unset
+  LOG_FORWARDER       | BLOCKED_ENVIRONMENT | VANISHGRAPH_LOG_FORMAT is unset
+  ERROR_REPORTER      | BLOCKED_ENVIRONMENT | VANISHGRAPH_ERROR_REPORTING_DSN is unset
+  PR_ISSUE_EXPORTER   | BLOCKED_ENVIRONMENT | no specification declares an environment variable for this sink
+  DEBUG_BUNDLE        | BLOCKED_ENVIRONMENT | no specification declares an environment variable for this sink
+
+  FINDING: TWO OF THE FIVE SINKS HAVE NO DECLARED ENVIRONMENT VARIABLE. SPEC-007 §2.3 declares variables for traces, logs
+  and the error reporter, and names the PR/issue text exporter and the debug bundle exporter as sinks without declaring
+  how either is addressed. This milestone DOES NOT INVENT A VARIABLE NAME for them: a configuration surface with no
+  specification behind it is a surface nobody can validate. Both rows therefore carry the absence with its reason, and
+  the finding is recorded for §13.3 / a later specification change rather than papered over.
+
+  EACH SINK SERIALISES DIFFERENTLY ON PURPOSE (OTLP resourceSpans; a JSON log line; an event-reporter POST body; markdown
+  PR text; a JSON debug tree), so the canary assertion runs against five independent renderings rather than one rendering
+  reported five times. The per-sink captures and their digests are in this directory, and the artifact that indexes them
+  is `redaction-evidence.json`.
+
+REDACTION EVIDENCE (§4.4 item 6)
+--------------------------------
+
+`.agent/evidence/EP-008/canary/redaction-evidence.json` carries: the canary seed, the bundle digest AS RECORDED BY THE
+GENERATOR, the same digest RECOMPUTED FROM THE FILE BYTES by an independent command (they are asserted equal), the five
+sinks with their exported-payload digests, the positive run's verdict and test count, the control's rule class, field
+path and failing-test count, the restored run's verdict, and the overall verdict. The alternate control policy is kept
+beside it, with a `$comment` marking it as a control variant rather than a shipped configuration.
+
+THE HONEST LIMITS OF VALUE SCANNING, RECORDED RATHER THAN IMPLIED
+----------------------------------------------------------------
+
+1. FIVE OF THE TWELVE §4.2 CLASSES ARE ENFORCED BY FIELD NAME OR BY EGRESS CLASS, NOT BY VALUE: SUBJECT_NAME,
+   PAGE_CONTENT, FORM_VALUE, SENSITIVE_SCREENSHOT and IDENTITY_DOCUMENT_CONTENT have no shape a scanner could recognise.
+   The configuration declares each class's enforcement (`VALUE_PATTERN`, `FIELD_NAME`, `EGRESS_CLASS`) and carries NO
+   pattern for the classes that have none, so the configuration cannot claim a coverage the code does not have. The suite
+   asserts both halves: the class with no pattern has no pattern, and the field that would carry it is denied with zero
+   bytes exported. A producer that puts a page body into an ALLOWED field is a producer defect this stage cannot catch by
+   value, and that sentence is in the suite's header as well as here.
+2. A TRUNCATION SO SHORT THAT THE CLASS'S MARKER IS GONE IS INDISTINGUISHABLE FROM ORDINARY TEXT. The suite separates the
+   two cases explicitly: a truncated value that still carries its marker (an `@`, an opening `<`, or a match) must be
+   refused or redacted and must not appear in the exported bytes; a markerless truncation is written to
+   `truncation-limits.txt` as a measured limitation. MEASURED EXAMPLES from the run: an email truncated before its `@`
+   (`nyxmifim.kadra`), a telephone truncated before any separator (`+1 55`), a street address truncated mid-word
+   (`43 milo Driv`).
+3. THE FALLBACK'S BOUNDARY: this milestone implements the serialisation, the token requirement and the capture. It does
+   NOT implement a network client for any sink, and no sink row claims a delivery. Every row says so in its own detail.
+
+DEFECTS FOUND BY THIS MILESTONE, EACH WITH ITS MEASUREMENT
+----------------------------------------------------------
+
+  * THE BASE64 CHECK NEVER EXAMINED SHORT VALUES. The candidate threshold was 16 characters, and the base64 of a
+    telephone number is 15 characters plus padding, so a canary of that class crossed the boundary intact while the check
+    appeared to run. The suite's per-class encoding case caught it. Fixed by lowering the threshold to 8 AND requiring a
+    canonical round-trip and a printable decoding, so ordinary short tokens are not turned into candidate decodings.
+  * THE TRUNCATION PATTERN REQUIRED A DOMAIN CHARACTER AFTER THE `@`, so a truncation that cut exactly at the `@` —
+    `renbel.corvor@`, which discloses the whole local part — passed the check and reached the exported bytes. Caught by
+    the suite's truncation case; the domain part is now allowed to be empty.
+  * AN UNTERMINATED MARKUP PREFIX WAS NOT RECOGNISED as raw HTML, because the pattern required a closing `>`. The
+    truncated canary of that class reached the bytes; the pattern now accepts a tag start that runs to the end of the
+    value.
+  * THE DISABLED-RULE CONTROL WAS SILENTLY NEUTRALISED BY A DIFFERENT RULE. With EMAIL_ADDRESS disabled, the truncation
+    heuristic — which consulted a compiled rule list that no longer contained the class — kept refusing complete
+    addresses, so the control could not show the gap it exists to show: it failed for the wrong reason. The heuristic is
+    now scoped to the class it belongs to, and disabling the class disables both.
+  * TWO TYPECHECK ERRORS FOUND BY THE LINT STAGE AND NOT BY THE SUITE (again): a variable that a guard only recorded an
+    error about does not narrow afterwards, so `version` stayed `unknown` at a return; and a static import of an untyped
+    `.mjs` needs a declaration file this milestone deliberately did not add — the suite loads the generator by URL
+    instead, exercising the real module without a second source of truth for its signature.
+
+CONTROL SUBTLETY WORTH STATING: the in-suite disabled-rule test proves the ORACLE can fail (it disables the class in
+process and shows the canary reaching the bytes), and the stage's control run proves the SUITE can fail as a whole, on the
+real assertions, through the real configuration path. Both are needed, and neither substitutes for the other.
+
+WHAT THIS MILESTONE DOES NOT DO, STATED SO IT IS NOT ASSUMED
+------------------------------------------------------------
+
+  * THE FULL DISCOVERY → ACTION → VERIFICATION WORKFLOW IS NOT EXECUTED HERE. It needs a provisioned PostgreSQL and a
+    running service, and `tests/observability/**` is a PURE suite root: a workflow driven from it would fail on a clean
+    checkout and turn a harness limitation into an apparent product failure (DOD-032). What runs here is the six canary
+    SITES of §4.4 item 3 — the ProtectedSubject reference chain, an email-thread body, a fetched page body, a form
+    submission payload, a screenshot artifact and a secret-shaped environment value — driven through the REAL
+    classification, the REAL scrub stage and the REAL five sink adapters, which is where the DLP rule is decided. The
+    workflow half lives in the integration and black-box suites, and this file does not claim it was run.
+  * THE PROTECTEDSUBJECT SITE IS ENFORCED BY THE DOMAIN, NOT BY THE SCRUB STAGE: `createProtectedSubject` refuses a
+    `displayRef` carrying apparent personal data, and the telemetry path carries only the opaque reference. The canary of
+    that class is refused in the suite by the field-name rule, which is the second line of defence behind the domain's
+    refusal.
+  * NO PROVIDER WAS CONTACTED, no external endpoint was reached, and no delivery is claimed by any sink row.
