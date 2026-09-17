@@ -88,3 +88,4 @@ tests/regression/live-fire-proof-05.test.ts
 tests/regression/live-fire-proof-02.test.ts
 tests/regression/live-fire-proof-03.test.ts
 tests/regression/live-fire-proof-07.test.ts
+tests/regression/live-fire-proof-11.test.ts
