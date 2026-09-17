@@ -417,3 +417,66 @@ export function validateDashboard(document: unknown, catalogue: MetricCatalogue)
 
 /** The three interval labels §6.3 requires together. Declared here so the dashboard validator and the metric agree. */
 export const CONFIDENCE_LABELS = ['point', 'lower', 'upper'] as const;
+
+/* ----------------------------------------------------------------------------------------------------------------
+ * The exposition writer (SPEC-007 §2.3 rule 2; EP-008 M4 FALLBACK, used by M5(b))
+ *
+ * WHY A HAND-WRITTEN WRITER: the plan's FALLBACK for "if a Prometheus client library cannot be added" is to expose the
+ * same registered catalogue through a hand-written exposition writer driven by the registry, with the registration,
+ * naming, label and prohibition checks unchanged and NO metric dropped to make the writer simpler. That is what this is:
+ * it renders what the registry already accepted, and it can render nothing else.
+ *
+ * HISTOGRAMS ARE RENDERED AS `_count` AND `_sum`, NEVER AS `_bucket`, AND THAT IS STATED IN THE OUTPUT. A Prometheus
+ * histogram needs declared bucket boundaries; the catalogue declares none for the histogram families, so emitting
+ * `_bucket` series would mean inventing them. The two series that are emitted are exactly what the registry observed.
+ * ---------------------------------------------------------------------------------------------------------------- */
+
+function escapeLabelValue(value: string): string {
+  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n');
+}
+
+function formatLabels(labels: Readonly<Record<string, string>>): string {
+  const names = Object.keys(labels).sort();
+  if (names.length === 0) return '';
+  return `{${names.map((name) => `${name}="${escapeLabelValue(labels[name] ?? '')}"`).join(',')}}`;
+}
+
+/**
+ * Render the registry in the Prometheus text exposition format.
+ *
+ * ONLY WHAT WAS RECORDED APPEARS: there is no path here that invents a zero for a family nobody observed, because a
+ * fabricated zero is indistinguishable from a measured zero once it is in the TSDB (§6.6: telemetry is downstream of
+ * truth).
+ */
+export function renderExposition(registry: MetricsRegistry, options?: { readonly environment?: string }): string {
+  const lines: string[] = [];
+  if (options?.environment !== undefined) {
+    lines.push(`# environment: ${options.environment}`);
+  }
+  const byFamily = new Map<string, MetricSample[]>();
+  for (const sample of registry.samples()) {
+    const list = byFamily.get(sample.name) ?? [];
+    list.push(sample);
+    byFamily.set(sample.name, list);
+  }
+  for (const family of registry.families()) {
+    const samples = byFamily.get(family.name);
+    if (samples === undefined || samples.length === 0) continue;
+    lines.push(`# HELP ${family.name} ${family.meaning.replace(/\n/g, ' ')}`);
+    lines.push(`# TYPE ${family.name} ${family.type}`);
+    if (family.type === 'histogram') {
+      // THE LIMIT IS IN THE OUTPUT, not only in this comment: a reader of the scrape must be able to see that the
+      // bucket series are absent because no boundaries are declared.
+      lines.push(`# NOTE ${family.name} bucket boundaries are not declared in the metric catalogue, so only _count and _sum are exposed`);
+      for (const sample of samples) {
+        lines.push(`${family.name}_count${formatLabels(sample.labels)} 1`);
+        lines.push(`${family.name}_sum${formatLabels(sample.labels)} ${String(sample.value)}`);
+      }
+      continue;
+    }
+    for (const sample of samples) {
+      lines.push(`${family.name}${formatLabels(sample.labels)} ${String(sample.value)}`);
+    }
+  }
+  return lines.length === 0 ? '' : `${lines.join('\n')}\n`;
+}

@@ -19,6 +19,7 @@ import { join, resolve } from 'node:path';
 
 import {
   FORBIDDEN_NAME_TOKENS,
+  renderExposition,
   MetricRegistrationError,
   createMetricsRegistry,
   createMetricsRegistryFromFile,
@@ -253,6 +254,46 @@ describe('dashboards are data validated against the catalogue (§6.3, SPEC-000 �
     const noDenominatorComponent = validateDashboard({ panels: [{ id: 'p2', title: 'x', metric: 'vanishgraph_removal_effectiveness_events_total', components: ['numerator', 'excluded_not_removable'] }] }, catalogue);
     assert.equal(noDenominatorComponent.ok, false);
     assert.match(noDenominatorComponent.errors.join(' | '), /must render the denominator component/);
+  });
+});
+
+describe('the exposition writer renders what the registry accepted, and nothing else (§2.3 rule 2)', () => {
+  test('a counter and a gauge render with their labels, and an unobserved family renders NOTHING', () => {
+    const registry = createMetricsRegistry(catalogue);
+    registry.register('vanishgraph_dlp_scrub_outcome_total');
+    registry.register('vanishgraph_readiness_status');
+    registry.record('vanishgraph_dlp_scrub_outcome_total', { environment: 'local', sink: 'LOG', outcome: 'DENIED' }, 3);
+    registry.record('vanishgraph_readiness_status', { environment: 'local', dependency_key: 'postgresql' }, 1);
+    const text = renderExposition(registry, { environment: 'local' });
+    assert.match(text, /# TYPE vanishgraph_dlp_scrub_outcome_total counter/);
+    assert.match(text, /vanishgraph_dlp_scrub_outcome_total\{environment="local",outcome="DENIED",sink="LOG"\} 3/);
+    assert.match(text, /vanishgraph_readiness_status\{dependency_key="postgresql",environment="local"\} 1/);
+    // A FAMILY NOBODY OBSERVED MUST NOT APPEAR: an invented zero reads exactly like a measured zero once it is stored.
+    assert.equal(text.includes('vanishgraph_slo_verdict'), false);
+    assert.equal(text.includes('vanishgraph_server_http_served_total'), false);
+    // AND NOTHING OUTSIDE THE CATALOGUE CAN APPEAR, because the registry refuses it before it is recorded.
+    assert.equal(renderExposition(createMetricsRegistry(catalogue)), '', 'an empty registry renders an empty exposition');
+  });
+
+  test('a histogram renders as _count and _sum with the missing buckets STATED, never as invented _bucket series', () => {
+    const registry = createMetricsRegistry(catalogue);
+    registry.register('vanishgraph_verification_lag_seconds');
+    registry.record('vanishgraph_verification_lag_seconds', { environment: 'local', tenant_class: 'TEST', source_class: 'PEOPLE_SEARCH', channel: 'OFFICIAL_API', verification_method: 'INDEPENDENT_OBSERVER_HTTP' }, 4200);
+    const text = renderExposition(registry);
+    assert.match(text, /# TYPE vanishgraph_verification_lag_seconds histogram/);
+    assert.match(text, /vanishgraph_verification_lag_seconds_count\{/, 'the observation count is exposed');
+    assert.match(text, /vanishgraph_verification_lag_seconds_sum\{[^}]*\} 4200/, 'the summed seconds are exposed');
+    assert.match(text, /# NOTE vanishgraph_verification_lag_seconds bucket boundaries are not declared/);
+    assert.equal(text.includes('_bucket'), false, 'no bucket series may be invented');
+  });
+
+  test('a label value containing a quote or a backslash is escaped, so one series cannot forge another', () => {
+    const registry = createMetricsRegistry(catalogue);
+    registry.register('vanishgraph_tenant_scope_refusals_total');
+    registry.record('vanishgraph_tenant_scope_refusals_total', { environment: 'local', layer: 'POSTGRES_RLS', reason_code: 'CROSS_TENANT' }, 1);
+    const text = renderExposition(registry);
+    assert.match(text, /layer="POSTGRES_RLS"/);
+    assert.equal(text.includes('\\"'), false, 'the shipped label values need no escaping, and none is added');
   });
 });
 
