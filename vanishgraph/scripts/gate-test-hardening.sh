@@ -43,10 +43,14 @@ fi
 } >"$LOG"
 
 # One step: run a stage, require its sentinel, and record both.
+#
+# TWO ARGUMENTS, NOT THREE, AND MEASURED WHY: the first version took (name, script, sentinel) and the call sites passed
+# `step test-unit sh scripts/test-unit.sh …`, so the function read the script as `sh` and the sentinel as the script path
+# — the gate failed on its own first run with "sh is missing; this gate's contract names it". The name was decoration
+# anyway: the script path identifies the step.
 step() {
-  name="$1"
-  script="$2"
-  sentinel="$3"
+  script="$1"
+  sentinel="$2"
   [ -f "$script" ] || fail "$script is missing; this gate's contract names it"
   echo "gate-test-hardening: running $script (expecting '$sentinel')"
   if out=$(sh "$script" 2>&1); then
@@ -64,15 +68,15 @@ step() {
   echo "gate-test-hardening: $script ok"
 }
 
-step test-unit sh scripts/test-unit.sh 'test-unit: ok'
-step test-integration sh scripts/test-integration.sh 'test-integration: ok'
-step coverage-gate sh scripts/coverage-gate.sh 'coverage: ok'
-step regression-proof sh scripts/regression-proof.sh 'regression proof: ok'
-step forced-failure sh scripts/forced-failure.sh 'forced failure: ok'
-step mutation-gate sh scripts/mutation-gate.sh 'mutation gate: ok'
-step flake-guard sh scripts/flake-guard.sh 'flake guard: ok'
-step double-boundary-guard sh scripts/double-boundary-guard.sh 'double boundary guard: ok'
-step test-collection-guard sh scripts/test-collection-guard.sh 'test collection guard: ok'
+step scripts/test-unit.sh 'test-unit: ok'
+step scripts/test-integration.sh 'test-integration: ok'
+step scripts/coverage-gate.sh 'coverage: ok'
+step scripts/regression-proof.sh 'regression proof: ok'
+step scripts/forced-failure.sh 'forced failure: ok'
+step scripts/mutation-gate.sh 'mutation gate: ok'
+step scripts/flake-guard.sh 'flake guard: ok'
+step scripts/double-boundary-guard.sh 'double boundary guard: ok'
+step scripts/test-collection-guard.sh 'test collection guard: ok'
 
 # ---------------------------------------------------------------------------------------------
 # The collection guard's NEGATIVE CONTROL: a guard that cannot fail is decoration (DOD-007).

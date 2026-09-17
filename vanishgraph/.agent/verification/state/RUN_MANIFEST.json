@@ -1,5 +1,7 @@
 {
   "registry_count": 484,
   "dod_count": 42,
-  "candidate_epoch": "GENERATION"
+  "candidate_epoch": "GENERATION",
+  "test_overlay_sha": "0562a6c83cc85485ce0a8ca8127c1aeb0acbf1a8",
+  "test_overlay_note": "the git tree hash of vanishgraph/tests at the EP-007 close candidate; the test overlay this node touched. It is a REVISION identifier, not an artifact digest: scripts/artifact-identity.sh is a loud-fail placeholder owned by EP-009 and no build artifact exists for this node."
 }

@@ -44,6 +44,7 @@ a milestone that needs a new one must add it here in the same change.
 | `sh scripts/mutation-gate.sh` | `mutation gate: ok` |
 | `sh scripts/forced-failure.sh` | `forced failure: ok` |
 | `sh scripts/regression-proof.sh` | `regression proof: ok` |
+| `sh scripts/gate-test-hardening.sh` | `gate-test-hardening: ok` |
 | `sh scripts/build.sh` | `build: ok` |
 | `sh scripts/artifact-identity.sh` | `artifact identity: ok` |
 | `sh scripts/smoke-test.sh` | `smoke test: ok` |
