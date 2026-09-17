@@ -1,84 +1,63 @@
 # Next action
 
-**EP-006 (auth/security node) is closed.** `graph-next.sh` names **EP-007**.
+**EP-007 (testing-hardening) is closed; `graph-next.sh` names EP-008.** EP-008 (observability and operations) is IN
+PROGRESS: milestones **M1–M4 are `MILESTONE_PASS`**, **M5 is partially delivered** across six `MILESTONE_NOTE` rows, and
+**M6–M9 are untouched**. EP-009 (release) and EP-010 (final accounting) have not been started.
 
-## What EP-006 verified, exactly — and what it does not claim
+## What EP-008 has built, and what each part was verified by
 
-The credential-free security controls and their negative cases pass, and — because EP-003 provisioned PostgreSQL — the
-database-backed halves that the plan recorded as `BLOCKED_CREDENTIALS` also RAN: cross-tenant denial by both layers over
-one fixture set, authority verified inside the write transaction including a revocation committed by a second
-connection, and evidence immutability at the privilege, route and rule levels.
+* **M1 telemetry identity** (`b7f76cd`) — the nine canonical resource attributes, the seven declared services, both enum
+  attributes as closed sets, prohibited substitutes refused, and the single emission path (the plan's FALLBACK: no OTel
+  SDK exists here). A run in this tree resolves **five of nine** attributes and refuses four, so it **emits nothing** —
+  the specified fail-closed behaviour. `test-unit: ok` (1247), `lint: ok`, suite 35/35, `grep -c RESOURCE_ATTR_MISSING`
+  = 9.
+* **M2 DLP scrub stage** (`c11a997`) — deny-by-default classification from versioned data, encoded prohibited values
+  refused rather than cleaned, a token-typed sink boundary, five sink adapters, and a runtime canary proof.
+  `canary egress: ok` with a disabled-rule control that **failed as required** naming the rule class and field path.
+* **M3 structured log contract** (`5702c79`) — mandatory/conditional fields, closed vocabularies, truthfulness rules,
+  `correlationId` with no substitute, and a guard that scans a capture with the same checker and proves it can fire.
+  `log contract: ok`.
+* **M4 metric catalogue** (`0cdc587`) — 42 families as validated data, a registry that refuses every prohibited series, a
+  dashboard schema, and the effectiveness figure built on the API's **own** computation so there is one denominator
+  definition. `metrics catalogue: ok`, suites 34/34 and 11/11.
+* **M5 readiness** — dependency probes with the declared actions and timeouts, the fail-closed decision, the composition
+  that writes one `ReadinessChanged` ERROR per transition, an induced-failure stage, a runbook, and the exposition writer
+  (`renderExposition`, M4's fallback).
 
-`sh scripts/gate-security.sh` → `gate-security: ok`; `sh scripts/security-check.sh` → `security check: ok`;
-`sh scripts/secret-scan.sh` → `secret scan: ok` (666 files, 0 findings); `test-unit: ok` (1074 tests);
-`test-integration: ok` (360 tests across 31 manifest files).
+## M5 is NOT finished, and this is exactly what is owed
 
-**THE HONEST STATEMENT: this does NOT mean the platform is secure, hardened, MFA-enforced, RLS-protected, compliant or
-production ready.** No realm exists, no managed KMS exists, no durable counter exists, and no human has reviewed
-anything. `RELEASE_GATE.json` remains `INCONCLUSIVE`/`FORGE_ONLY`. Do not change it.
+1. **`GET /metrics` listener.** The content is built (`renderExposition`); the **cluster-internal listener is not**, and
+   it must be unreachable from the public ingress (§2.3 rule 2).
+2. **Four dependencies cannot demonstrate their induced transition here**, and the stage honestly exits 1 without
+   printing `readiness induced failure: ok`:
+   * `job-worker` — **no worker process exists in this repository** to write a heartbeat into `job_worker.heartbeat_at`;
+   * `object-store` — **no module here can sign an S3 request**, so the declared `HeadBucket` + signed `GetObject` probe
+     is not wired;
+   * `keycloak-jwks` — no Keycloak provisioned (needs `KEYCLOAK_ISSUER`);
+   * `provider-transport` — no provider entitlement (EXTERNAL_REQUIRED).
+   `postgresql` and `valkey` **are** demonstrated (`PASS` → `FAIL` → `PASS` on the same probe path). Evidence:
+   `.agent/evidence/EP-008/induced-failure/verdict.txt`.
+3. **Findings recorded, not resolved**: the §7.2 per-probe timeouts sum to **1800 ms** against a **1500 ms** total
+   readiness budget; the `reason_code` enum is declared per metric but **not enforced at record time**; §6.1's
+   canonical label list conflicts with the ~23 labels §6.3–§6.5 declare (carried as data in `label_namespace_note`);
+   and `dependency_key` needed an `overall` token for the series §6.5 itself asks for.
 
-## The accounting, as filed in `.agent/verification/state/TEST_LEDGER.jsonl`
+## Standing facts that must not be misreported
 
-57 rows for this node's IDs: **45 `PASS`**, **1 `PARTIAL`**, **9 `BLOCKED_CREDENTIALS`**, **2 `EXTERNAL_REQUIRED`**.
+* `.agent/verification/state/RELEASE_GATE.json` is `{"verdict":"INCONCLUSIVE","reason":"FORGE_ONLY"}` and this node
+  **cannot** change it.
+* **CI has never run** (`.github/workflows/` is empty; no `CODEOWNERS`), so every CI-only check is unverified.
+* **`scripts/test-migrations.sh` does not exist**, so `db/UPGRADE_MATRIX.md` rows remain UNPROVEN.
+* **The coverage layer table does not measure the EP-008 observability modules**: `config/testing/coverage-thresholds.json`
+  is not in EP-008 §6's file list, so it was not edited and `tests/observability/**` is in no layer's suite list.
+* **No external endpoint is reachable**: every sink row reads `BLOCKED_ENVIRONMENT`, no provider was contacted, and no
+  delivery is claimed anywhere.
+* The M2 DLP counters' `sink` **label values** were reconciled to the catalogue's bounded set in M4; the counters'
+  names were unchanged.
 
-* `PARTIAL` is **VG-AUTHZ-009**: the suspension half is executed (recorded under VG-AUTHZ-012 and against a real row) and
-  the review-lane half is not — the ID is cited in no file under `src/` or `tests/`, so nothing asserts that a contested
-  grant moves the subject to `HUMAN_REQUIRED`.
-* `BLOCKED_CREDENTIALS` rows name their probe and its measured exit code (all `1`, captured in
-  `.agent/evidence/EP-006/M10-blocked-probes.txt`): the Keycloak realm's MFA policy, refresh rotation,
-  sender-constrained tokens, global sign-out and administrative revocation (`KEYCLOAK_ISSUER`); durable rate-limit and
-  replay counters (`VALKEY_URL`); managed-KMS resolution (`CLOUD_WORKLOAD_IDENTITY`, ADR-006 still OPEN); and IAL3
-  verification by a vendor under contract.
-* `EXTERNAL_REQUIRED` rows are counsel review (SPEC-005 §11) and human UAT plus assistive-technology validation
-  (DOD-039). An automated tool, an agent or the implementer cannot satisfy, impersonate or substitute for either, and no
-  sign-off exists.
+## Where to resume
 
-## Defects this node found and fixed, and one it recorded instead of half-fixing
-
-1. **The runtime role could mutate the evidence store.** `db/privileges.sql` granted `UPDATE, DELETE` on every table to
-   `vg_app` and revoked only `audit_event`/`schema_migration`. Measured before the fix:
-   `has_table_privilege('vg_app','evidence_artifact','DELETE')` returned `true` and an `UPDATE` exited 0. Revoked; the
-   owner keeps the capability because SPEC-002 §5's retention subsystem is the named path that removes evidence.
-2. **`authority_grant` had no column for three facts the execution-time check reads** (`contested_at`,
-   `cooling_off_until`, `notice_artifact_id`), so a contested grant would have passed the check after a restart.
-   Migration `0034` adds them; `src/adapters/persistence/authority-repository.ts` is written and driven by real rows.
-3. **Four citations to requirement IDs that exist in no specification** — `VG-SCOPE-020` (8 files), `VG-UI-090…093`
-   (2 files), `VG-AUTHZ-024` (this node's own suite) and `VG-DATA-013/015` (an applied migration). Every mutable
-   occurrence is corrected; the three inside applied migrations cannot be (DOD-040 checksum immutability) and are named
-   with their reason in `tests/architecture/requirement-ids.test.ts`, which now enforces the lookup across the tree.
-4. **The collection guard's preserved failure evidence named no test**, and the verification refresh did not cover
-   `tests/integration/**` or `tests/security/**`, so those suites ran while the ledger carried no row for them. Both
-   fixed, and `test_id` is now unique per test rather than per test *name*.
-
-**Recorded, NOT fixed — a cross-tenant REFERENCE is permitted by the schema.** RLS constrains the row's tenant, not the
-tenant of the row it references. Measured: a grant in tenant Q naming tenant P's `protected_subject` was accepted.
-Measured scope: **0** tenant-scoped tables carry a `(tenant_id, id)` key, so a composite foreign key is not expressible
-today, and **47** foreign keys cross the tenant boundary. This does not violate VG-TENANT-001 as written (its oracle is a
-cross-tenant *read* returning zero rows, which holds), but it is narrower than "every row is tenant-scoped". The fix is
-composite keys plus 47 composite FKs — a data-model change, not a security-node edit. Evidence:
-`.agent/evidence/EP-006/M10-cross-tenant-reference.txt`; reasoning: `ASSUMPTIONS.md` §3.56 part 4.
-
-## The provisioning actions that unblock the credential-dependent rows
-
-Each is an environment action rather than code, and none is simulated anywhere.
-
-1. **`KEYCLOAK_ISSUER`** (+ `KEYCLOAK_CLIENT_ID`/`SECRET`) — point the service at a real provider. Unblocks the five
-   realm rows and the live-login halves of VG-AUTH-020/021/026.
-2. **`VALKEY_URL`** — provision the coordination store for the durable rate-limit and replay counters.
-3. **`CLOUD_WORKLOAD_IDENTITY`** and a managed KMS (ADR-006) — unblocks wrapped-key production and secret resolution.
-4. **`DATABASE_URL`** as a deployment variable — the gates and stages provision PostgreSQL and pass the DSNs explicitly;
-   the environment-configured boot path has never been exercised.
-5. **`S3_*`** and an `EvidenceStore` — unblocks §5.12.1 upload, §5.12.3 download and §5.12.4's computed digest check.
-
-## What EP-006 leaves open for later nodes
-
-* **No notification transport**: §5.2.1 refuses to mint an `AGENT` grant at all, so no enrollment notice has ever
-  reached a subject (VG-AUTH-032's delivery half).
-* **No retention subsystem**: nothing deletes evidence, so "removed only by the retention subsystem" describes an
-  intended path rather than an executed one.
-* **`src/adapters/oidc/jwks.ts` calls the platform `fetch` directly** and is not routed through the SSRF guard — a
-  one-entry capped exception, recorded rather than hidden.
-* **No recipe verification key set** (ADR-006 open), so a signed recipe has never been verified end to end.
-* **`scripts/test-migrations.sh` does not exist**, so `db/UPGRADE_MATRIX.md`'s rows remain UNPROVEN and the integration
-  stage says so on every run.
-* **CI has never run here**, so image-layer and log-layer secret scanning and every CI-only check are unverified.
+`sh scripts/graph-next.sh` → **NEXT EP-008**. Read `.agent/execplans/EP-008-node.md` M5 for the remaining items above,
+then M6 (health runtime and the metrics listener), M7 (alerts and runbooks), M8 (SLOs, retention, access) and M9
+(close-out). Every milestone ends with its own sentinel, a ledger row and a commit; nothing here is a sentinel that has
+not been printed.
