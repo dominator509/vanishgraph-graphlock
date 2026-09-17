@@ -51,7 +51,7 @@ if (dsn.trim().length > 0) {
   const pg = await import("pg");
   const pool = new pg.default.Pool({ connectionString: dsn, max: 1, connectionTimeoutMillis: 200 });
   clients.jobWorker = probes.jobWorkerProbe({
-    windowMs: 60_000,
+    windowMs: Number(process.env.JOB_WORKER_WINDOW_MS ?? 15000),
     freshHeartbeats: async () => {
       // THE TABLE NAME IS READ FROM THE MIGRATION THAT DECLARES IT (`job_worker`, migration 0008), NOT GUESSED.
       // MEASURED: the first version of this driver queried `job_worker_heartbeat` and the control run reported

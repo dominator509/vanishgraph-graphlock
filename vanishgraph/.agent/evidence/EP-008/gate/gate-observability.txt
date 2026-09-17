@@ -1,6 +1,6 @@
-gate-observability - 2026-09-17T16:52:48Z
+gate-observability - 2026-09-17T17:04:36Z
 node: v24.14.1
-head: 2f27b8b [EP-008][M9] verdict label reports the observed induced value; two stage-level defects recorded as owed
+head: 82d5377 [EP-008][M5] job-worker probe demonstrated discriminating on the real table; stage wiring owed
 
 == stage: egress-canary-test.sh
 canary egress: ok
@@ -48,77 +48,92 @@ verdict: OK (configuration; propagation BLOCKED_ENVIRONMENT)
 retention config: ok
    sentinel: retention config: ok
 == stage: induced-failure-readiness.sh (EXPECTED to be blocked for three of six dependencies)
-== control run ==
-postgresql|PROVISIONED|PASS|-|10ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|PASS|-|21ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|FAIL|MISCONFIGURED|21ms|no worker heartbeat in the last 60000 ms: withholding heartbeats is exactly how this probe is induced to fail (§7.4)
-object-store|PROVISIONED|PASS|-|19ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
-keycloak-jwks|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for keycloak-jwks; the declared action is: OIDC discovery plus JWKS retrieval over TLS, with no token minted
-provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|71ms
-Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76
-== inducing: docker stop vanishgraph-ep003-postgres ==
-postgresql|PROVISIONED|FAIL|CONNECT_REFUSED|3ms|connect ECONNREFUSED 127.0.0.1:53589
-valkey|PROVISIONED|PASS|-|16ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|FAIL|CONNECT_REFUSED|2ms|connect ECONNREFUSED 127.0.0.1:53589
-object-store|PROVISIONED|PASS|-|17ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
-keycloak-jwks|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for keycloak-jwks; the declared action is: OIDC discovery plus JWKS retrieval over TLS, with no token minted
-provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|38ms
-Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76
-== remediating: docker start vanishgraph-ep003-postgres ==
-postgresql|PROVISIONED|PASS|-|8ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|PASS|-|17ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|FAIL|MISCONFIGURED|25ms|no worker heartbeat in the last 60000 ms: withholding heartbeats is exactly how this probe is induced to fail (§7.4)
+== control run (job-worker heartbeat runtime running as pid 1370, freshness window 15000 ms) ==
+postgresql|PROVISIONED|PASS|-|5ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|15ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|PASS|-|16ms|1 worker heartbeat(s) inside the 15000 ms freshness window
 object-store|PROVISIONED|PASS|-|16ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
 keycloak-jwks|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for keycloak-jwks; the declared action is: OIDC discovery plus JWKS retrieval over TLS, with no token minted
 provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|66ms
+overall|NOT_READY|54ms
 Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76
+== inducing: stop the worker (pid 1370) and let the 15000 ms freshness window lapse ==
+postgresql|PROVISIONED|PASS|-|12ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|25ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|PASS|-|25ms|1 worker heartbeat(s) inside the 15000 ms freshness window
+object-store|PROVISIONED|PASS|-|19ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for keycloak-jwks; the declared action is: OIDC discovery plus JWKS retrieval over TLS, with no token minted
+provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
+overall|NOT_READY|82ms
+Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76
+== remediating: restart the worker ==
+postgresql|PROVISIONED|PASS|-|7ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|13ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|PASS|-|16ms|1 worker heartbeat(s) inside the 15000 ms freshness window
+object-store|PROVISIONED|PASS|-|13ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for keycloak-jwks; the declared action is: OIDC discovery plus JWKS retrieval over TLS, with no token minted
+provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
+overall|NOT_READY|50ms
+Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76
+== inducing: docker stop vanishgraph-ep003-postgres ==
+postgresql|PROVISIONED|FAIL|CONNECT_REFUSED|6ms|connect ECONNREFUSED 127.0.0.1:53589
+valkey|PROVISIONED|PASS|-|15ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|FAIL|CONNECT_REFUSED|3ms|connect ECONNREFUSED 127.0.0.1:53589
+object-store|PROVISIONED|PASS|-|18ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for keycloak-jwks; the declared action is: OIDC discovery plus JWKS retrieval over TLS, with no token minted
+provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
+overall|NOT_READY|42ms
+Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76
+== remediating: docker start vanishgraph-ep003-postgres ==
+postgresql|PROVISIONED|PASS|-|6ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|16ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|PASS|-|20ms|1 worker heartbeat(s) inside the 15000 ms freshness window
+object-store|PROVISIONED|PASS|-|18ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for keycloak-jwks; the declared action is: OIDC discovery plus JWKS retrieval over TLS, with no token minted
+provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
+overall|NOT_READY|61ms
 == inducing: valkey-cli SHUTDOWN NOSAVE in vanishgraph-ep008-valkey ==
 [ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:56379
     at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
 [ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:56379
     at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
-postgresql|PROVISIONED|PASS|-|6ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|FAIL|UNKNOWN|7ms|Connection is closed.
-job-worker|PROVISIONED|FAIL|MISCONFIGURED|18ms|no worker heartbeat in the last 60000 ms: withholding heartbeats is exactly how this probe is induced to fail (§7.4)
-object-store|PROVISIONED|PASS|-|11ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+postgresql|PROVISIONED|PASS|-|22ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|FAIL|UNKNOWN|10ms|Connection is closed.
+job-worker|PROVISIONED|PASS|-|31ms|1 worker heartbeat(s) inside the 15000 ms freshness window
+object-store|PROVISIONED|PASS|-|19ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
 keycloak-jwks|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for keycloak-jwks; the declared action is: OIDC discovery plus JWKS retrieval over TLS, with no token minted
 provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|42ms
-Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76
+overall|NOT_READY|82ms
 == remediating: docker start vanishgraph-ep008-valkey ==
-postgresql|PROVISIONED|PASS|-|7ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|PASS|-|17ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|FAIL|MISCONFIGURED|19ms|no worker heartbeat in the last 60000 ms: withholding heartbeats is exactly how this probe is induced to fail (§7.4)
-object-store|PROVISIONED|PASS|-|18ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+postgresql|PROVISIONED|PASS|-|9ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|27ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|PASS|-|25ms|1 worker heartbeat(s) inside the 15000 ms freshness window
+object-store|PROVISIONED|PASS|-|22ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
 keycloak-jwks|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for keycloak-jwks; the declared action is: OIDC discovery plus JWKS retrieval over TLS, with no token minted
 provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|61ms
-Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76
+overall|NOT_READY|84ms
 == inducing: docker stop vanishgraph-ep008-minio ==
 object-store fixture: fetch failed
-postgresql|PROVISIONED|PASS|-|6ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|PASS|-|11ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|FAIL|MISCONFIGURED|21ms|no worker heartbeat in the last 60000 ms: withholding heartbeats is exactly how this probe is induced to fail (§7.4)
+postgresql|PROVISIONED|PASS|-|7ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|16ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|PASS|-|22ms|1 worker heartbeat(s) inside the 15000 ms freshness window
 object-store|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for object-store; the declared action is: HeadBucket plus a signed GetObject of a probe key that must return the expected digest
 keycloak-jwks|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for keycloak-jwks; the declared action is: OIDC discovery plus JWKS retrieval over TLS, with no token minted
 provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|39ms
+overall|NOT_READY|45ms
 == remediating: docker start vanishgraph-ep008-minio ==
-postgresql|PROVISIONED|PASS|-|8ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|PASS|-|19ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|FAIL|MISCONFIGURED|24ms|no worker heartbeat in the last 60000 ms: withholding heartbeats is exactly how this probe is induced to fail (§7.4)
-object-store|PROVISIONED|PASS|-|15ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+postgresql|PROVISIONED|PASS|-|11ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|24ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|PASS|-|24ms|1 worker heartbeat(s) inside the 15000 ms freshness window
+object-store|PROVISIONED|PASS|-|40ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
 keycloak-jwks|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for keycloak-jwks; the declared action is: OIDC discovery plus JWKS retrieval over TLS, with no token minted
 provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|66ms
+overall|NOT_READY|100ms
 Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76
 dependency | control | induced | remediated | verdict
 postgresql | PASS | FAIL | PASS | DEMONSTRATED (control=PASS induced=FAIL remediated=PASS on the same probe path)
 valkey | PASS | FAIL | PASS | DEMONSTRATED (control=PASS induced=FAIL remediated=PASS on the same probe path)
-job-worker | FAIL | FAIL | FAIL | INCONCLUSIVE (control=FAIL induced=FAIL remediated=FAIL)
+job-worker | PASS | FAIL | PASS | DEMONSTRATED (control=PASS induced=FAIL remediated=PASS on the same probe path)
 object-store | PASS | UNKNOWN | PASS | DEMONSTRATED (control=PASS induced=UNKNOWN remediated=PASS on the same probe path)
 keycloak-jwks | UNKNOWN | UNKNOWN | UNKNOWN | ERROR (DOD-033: not provisioned; see the provisioning attempt below)
 provider-transport | UNKNOWN | UNKNOWN | UNKNOWN | ERROR (DOD-033: not provisioned; see the provisioning attempt below)
@@ -142,53 +157,57 @@ b95dc8fa2fbc8068  .agent/evidence/EP-008/alerts/alert-catalogue-guard.txt
 e3b0c44298fc1c14  .agent/evidence/EP-008/canary/after-diff.txt
 f7d38edb263fd543  .agent/evidence/EP-008/canary/allowlist-control.json
 e3b0c44298fc1c14  .agent/evidence/EP-008/canary/baseline-diff.txt
-acfbc9ec1aeff468  .agent/evidence/EP-008/canary/canary-bundle-digest.txt
-ec6f96285399640e  .agent/evidence/EP-008/canary/canary-bundle.json
-18819f058f8b2ceb  .agent/evidence/EP-008/canary/capture-DEBUG_BUNDLE.txt
-340397e16d028636  .agent/evidence/EP-008/canary/capture-ERROR_REPORTER.txt
-4bc5fd5fbd05dda7  .agent/evidence/EP-008/canary/capture-LOG_FORWARDER.txt
-0b182dc9dd93b95e  .agent/evidence/EP-008/canary/capture-OTLP_TRACE_EXPORTER.txt
-bef109ff647ed211  .agent/evidence/EP-008/canary/capture-PR_ISSUE_EXPORTER.txt
-1cb26c9fcd2ff176  .agent/evidence/EP-008/canary/capture-digest-DEBUG_BUNDLE.txt
-3c12a4784992d58c  .agent/evidence/EP-008/canary/capture-digest-ERROR_REPORTER.txt
-a9a4a50e97a17660  .agent/evidence/EP-008/canary/capture-digest-LOG_FORWARDER.txt
-1fe2b62c20df1421  .agent/evidence/EP-008/canary/capture-digest-OTLP_TRACE_EXPORTER.txt
-9159a459b901b0aa  .agent/evidence/EP-008/canary/capture-digest-PR_ISSUE_EXPORTER.txt
-ad3b3b3ee27fda07  .agent/evidence/EP-008/canary/control-disabled-rule.txt
-d9f3f85e39575152  .agent/evidence/EP-008/canary/control-run.txt
-55728bcff748842b  .agent/evidence/EP-008/canary/generator.txt
-0888073bd8f2202b  .agent/evidence/EP-008/canary/positive-run.txt
-34ceafa6ebbea0b7  .agent/evidence/EP-008/canary/redaction-evidence.json
-7669efca43d3350d  .agent/evidence/EP-008/canary/restored-run.txt
-2563849f6eaee74d  .agent/evidence/EP-008/canary/truncation-limits.txt
-c93461375f86b846  .agent/evidence/EP-008/gate/gate-observability.txt
-d09631429c484d84  .agent/evidence/EP-008/induced-failure/control-observed.txt
-d09631429c484d84  .agent/evidence/EP-008/induced-failure/control.txt
-f1840ccee1913f28  .agent/evidence/EP-008/induced-failure/induced-objectstore.txt
-e59ea785ce64eb47  .agent/evidence/EP-008/induced-failure/induced-valkey.txt
-1493d16df915e962  .agent/evidence/EP-008/induced-failure/induced.txt
+e7d8eb1f815d4430  .agent/evidence/EP-008/canary/canary-bundle-digest.txt
+e8ded738d51158df  .agent/evidence/EP-008/canary/canary-bundle.json
+a569e75079ac39b5  .agent/evidence/EP-008/canary/capture-DEBUG_BUNDLE.txt
+95c305046c332d19  .agent/evidence/EP-008/canary/capture-ERROR_REPORTER.txt
+b1211ce20c577577  .agent/evidence/EP-008/canary/capture-LOG_FORWARDER.txt
+2e41d99095afe054  .agent/evidence/EP-008/canary/capture-OTLP_TRACE_EXPORTER.txt
+88a407b328debfa0  .agent/evidence/EP-008/canary/capture-PR_ISSUE_EXPORTER.txt
+48ed733790a042ff  .agent/evidence/EP-008/canary/capture-digest-DEBUG_BUNDLE.txt
+5c20fae8d6667c63  .agent/evidence/EP-008/canary/capture-digest-ERROR_REPORTER.txt
+d154d5bfdf05cf37  .agent/evidence/EP-008/canary/capture-digest-LOG_FORWARDER.txt
+21ac0a674d1494c5  .agent/evidence/EP-008/canary/capture-digest-OTLP_TRACE_EXPORTER.txt
+ccde8cddafb5ffcd  .agent/evidence/EP-008/canary/capture-digest-PR_ISSUE_EXPORTER.txt
+806aef57debd86f1  .agent/evidence/EP-008/canary/control-disabled-rule.txt
+b957ab86f4fc99c4  .agent/evidence/EP-008/canary/control-run.txt
+57cdb6a8e10f5210  .agent/evidence/EP-008/canary/generator.txt
+957bfce2749950f7  .agent/evidence/EP-008/canary/positive-run.txt
+af6e55060e803664  .agent/evidence/EP-008/canary/redaction-evidence.json
+5295178ea86848bf  .agent/evidence/EP-008/canary/restored-run.txt
+593195cfd23c3893  .agent/evidence/EP-008/canary/truncation-limits.txt
+20280e79855c0371  .agent/evidence/EP-008/gate/gate-observability.txt
+5242c0448fef6a0b  .agent/evidence/EP-008/induced-failure/control-observed.txt
+5242c0448fef6a0b  .agent/evidence/EP-008/induced-failure/control.txt
+8a64d96d05b4f1e6  .agent/evidence/EP-008/induced-failure/induced-jobworker.txt
+c662ab6bebe11c11  .agent/evidence/EP-008/induced-failure/induced-objectstore.txt
+eed73bb55f207ee0  .agent/evidence/EP-008/induced-failure/induced-valkey.txt
+3d4bc3083cf9f3b3  .agent/evidence/EP-008/induced-failure/induced.txt
 a6a94838ee21b98a  .agent/evidence/EP-008/induced-failure/induction.txt
-11de1adb35f3627a  .agent/evidence/EP-008/induced-failure/probe-driver.mjs
-9f0461f2ef915463  .agent/evidence/EP-008/induced-failure/provisioning-attempts.txt
-65392aafbf0fccdd  .agent/evidence/EP-008/induced-failure/remediated-objectstore.txt
-3b652e3f703c5ea2  .agent/evidence/EP-008/induced-failure/remediated-valkey.txt
-0ea74e8c76b2a008  .agent/evidence/EP-008/induced-failure/remediated.txt
-6f69b3540aa6e314  .agent/evidence/EP-008/induced-failure/verdict.txt
+e4d9f2d7c7924dde  .agent/evidence/EP-008/induced-failure/job-worker.log
+df2c2edb68713fe1  .agent/evidence/EP-008/induced-failure/jobworker-check.mjs
+e70e04efdff0599f  .agent/evidence/EP-008/induced-failure/probe-driver.mjs
+39e95e69411f4e41  .agent/evidence/EP-008/induced-failure/provisioning-attempts.txt
+95b447dc7f8921ff  .agent/evidence/EP-008/induced-failure/remediated-jobworker.txt
+b96800e99af45fcf  .agent/evidence/EP-008/induced-failure/remediated-objectstore.txt
+afa8884e630fd37c  .agent/evidence/EP-008/induced-failure/remediated-valkey.txt
+b6318a5922a8032c  .agent/evidence/EP-008/induced-failure/remediated.txt
+53e71f246c699efa  .agent/evidence/EP-008/induced-failure/verdict.txt
 c67930d2f5ea1ded  .agent/evidence/EP-008/log-contract/captured-stream.jsonl
-4ce507efd2074710  .agent/evidence/EP-008/log-contract/guard.txt
+997b3266c3f87e3e  .agent/evidence/EP-008/log-contract/guard.txt
 d3b3c8251693f5d4  .agent/evidence/EP-008/log-contract/negative-control-report.txt
 c13a3cdf2a4dc0bf  .agent/evidence/EP-008/log-contract/negative-control-stream.jsonl
 2e22da2ab1371330  .agent/evidence/EP-008/log-contract/scan.txt
-b6acf69b41cda8c1  .agent/evidence/EP-008/log-contract/suite.txt
+5d53dbe8d092e437  .agent/evidence/EP-008/log-contract/suite.txt
 bdffac9587011577  .agent/evidence/EP-008/metrics/catalogue-check.mjs
 ac3cd321cf10b6ba  .agent/evidence/EP-008/metrics/catalogue-guard.txt
 d9fcd8047d6ee840  .agent/evidence/EP-008/metrics/negative-control.txt
-a8d347945fcb5c2a  .agent/evidence/EP-008/retention/provisioning-attempts.txt
+b18dd55277ab8c2e  .agent/evidence/EP-008/retention/provisioning-attempts.txt
 e906b07c1c71eaeb  .agent/evidence/EP-008/retention/retention-check.mjs
 71148938399a3b3a  .agent/evidence/EP-008/retention/retention-config-guard.txt
 25ba5ea59d5213f0  .agent/evidence/EP-008/slo/integrity-matrix.json
-02d77659aafa7b45  .agent/evidence/EP-008/slo/provisioning-attempts.txt
-cf73f52c32548e4a  .agent/evidence/EP-008/slo/slo-driver.mjs
+a28329b451f0baae  .agent/evidence/EP-008/slo/provisioning-attempts.txt
+0056659d2bb89648  .agent/evidence/EP-008/slo/slo-driver.mjs
 e6baee6f85055ebe  .agent/evidence/EP-008/slo/slo-evaluate.txt
-evidence index: 60 file(s) with content hashes
+evidence index: 64 file(s) with content hashes
 gate-observability: ok

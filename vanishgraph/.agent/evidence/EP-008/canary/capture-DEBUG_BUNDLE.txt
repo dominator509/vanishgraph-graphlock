@@ -43,11 +43,11 @@
       "correlationId": "corr-7Q2F4M8ZC1",
       "caseId": "case-9F3B21",
       "transitionId": "T14",
-      "message": "[REDACTED:RAW_HTML][REDACTED:RAW_HTML]drapen</a></div>",
+      "message": "[REDACTED:RAW_HTML][REDACTED:RAW_HTML]corgathgath</a></div>",
       "reasonCode": "SCRUBBED"
     },
     "scrub": {
-      "token": "scrub-e7399cc50a18d64bc27d6e274095e182",
+      "token": "scrub-9c4011e9be63818f32f99831fc000433",
       "outcome": "REDACTED",
       "redactionCount": 1
     }
@@ -127,11 +127,11 @@
       "correlationId": "corr-7Q2F4M8ZC1",
       "caseId": "case-9F3B21",
       "transitionId": "T14",
-      "message": "[REDACTED:POSTAL_ADDRESS], Ashfield",
+      "message": "[REDACTED:POSTAL_ADDRESS], Oakvale",
       "reasonCode": "SCRUBBED"
     },
     "scrub": {
-      "token": "scrub-aa71d04359f06a52b3db169e10ea771a",
+      "token": "scrub-1198c5c694ca8278b39d1bc7e299dfec",
       "outcome": "REDACTED",
       "redactionCount": 1
     }
@@ -183,11 +183,11 @@
       "correlationId": "corr-7Q2F4M8ZC1",
       "caseId": "case-9F3B21",
       "transitionId": "T14",
-      "message": "[REDACTED:OPERATOR_NOTE] mivor b777be",
+      "message": "[REDACTED:OPERATOR_NOTE] milo c6b741",
       "reasonCode": "SCRUBBED"
     },
     "scrub": {
-      "token": "scrub-319af8643b3c488de35fac9985dc4300",
+      "token": "scrub-a2db1948b240565a905f498056b7640f",
       "outcome": "REDACTED",
       "redactionCount": 1
     }

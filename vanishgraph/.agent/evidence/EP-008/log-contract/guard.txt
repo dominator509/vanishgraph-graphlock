@@ -1,4 +1,4 @@
-log contract guard - 2026-09-17T16:52:53Z
+log contract guard - 2026-09-17T17:04:41Z
 suite: 25 test(s) passed
 capture: .agent/evidence/EP-008/log-contract/captured-stream.jsonl (2 record line(s) carrying a severity)
 scan: clean

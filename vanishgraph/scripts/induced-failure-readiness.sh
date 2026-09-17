@@ -102,7 +102,7 @@ if (dsn.trim().length > 0) {
   const pg = await import("pg");
   const pool = new pg.default.Pool({ connectionString: dsn, max: 1, connectionTimeoutMillis: 200 });
   clients.jobWorker = probes.jobWorkerProbe({
-    windowMs: 60_000,
+    windowMs: Number(process.env.JOB_WORKER_WINDOW_MS ?? 15000),
     freshHeartbeats: async () => {
       // THE TABLE NAME IS READ FROM THE MIGRATION THAT DECLARES IT (`job_worker`, migration 0008), NOT GUESSED.
       // MEASURED: the first version of this driver queried `job_worker_heartbeat` and the control run reported
@@ -178,9 +178,41 @@ run_driver() {
   node "$EVIDENCE/probe-driver.mjs" 2>&1 | tee "$1"
 }
 
-echo "== control run =="
+# THE WORKER STARTS BEFORE THE CONTROL RUN, because §7.2's job-worker probe asks whether a heartbeat is fresh NOW: the
+# dependency is the worker PROCESS, so the control state is "a worker is running" and the induction is "it is not". The
+# runtime is scripts/worker-heartbeat.mjs, which writes its own row in the real `job_worker` table and PROCESSES NO JOBS —
+# its header says so, and nothing here claims more than heartbeat freshness.
+JOB_WORKER_WINDOW_MS=${VG_JOB_WORKER_WINDOW_MS:-15000}
+export JOB_WORKER_WINDOW_MS
+node scripts/worker-heartbeat.mjs --worker-id vg-ep008-readiness >"$EVIDENCE/job-worker.log" 2>&1 &
+WORKER_PID=$!
+sleep 2
+echo "== control run (job-worker heartbeat runtime running as pid $WORKER_PID, freshness window ${JOB_WORKER_WINDOW_MS} ms) =="
 run_driver "$EVIDENCE/control.txt" || true
 cp "$EVIDENCE/control.txt" "$EVIDENCE/control-observed.txt"
+
+# THE DECLARED INDUCTION for job-worker: §7.4 step 2 says "withhold worker heartbeats so the freshness window lapses",
+# and the window is 15 seconds here rather than the deployment's minute so the induction is bounded; the probe code path
+# is unchanged. The worker is then restarted for the remediated run.
+if grep -q '^job-worker|PROVISIONED|PASS' "$EVIDENCE/control.txt"; then
+  echo "== inducing: stop the worker (pid $WORKER_PID) and let the ${JOB_WORKER_WINDOW_MS} ms freshness window lapse ==" | tee -a "$EVIDENCE/induction.txt"
+  kill "$WORKER_PID" 2>/dev/null || true
+  wait "$WORKER_PID" 2>/dev/null || true
+  sleep $(( (JOB_WORKER_WINDOW_MS / 1000) + 2 ))
+  run_driver "$EVIDENCE/induced-jobworker.txt" || true
+  awk -F'|' 'NR==FNR { if ($1=="job-worker") v=$0; next } { if ($1=="job-worker" && v!="") print v; else print }' "$EVIDENCE/induced-jobworker.txt" "$EVIDENCE/induced.txt" >"$EVIDENCE/induced-merged.txt"
+  mv "$EVIDENCE/induced-merged.txt" "$EVIDENCE/induced.txt"
+  echo "== remediating: restart the worker ==" | tee -a "$EVIDENCE/induction.txt"
+  node scripts/worker-heartbeat.mjs --worker-id vg-ep008-readiness >>"$EVIDENCE/job-worker.log" 2>&1 &
+  WORKER_PID=$!
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
+    sleep 1
+    run_driver "$EVIDENCE/remediated-jobworker.txt" || true
+    grep -q '^job-worker|PROVISIONED|PASS' "$EVIDENCE/remediated-jobworker.txt" && break
+  done
+  awk -F'|' 'NR==FNR { if ($1=="job-worker") v=$0; next } { if ($1=="job-worker" && v!="") print v; else print }' "$EVIDENCE/remediated-jobworker.txt" "$EVIDENCE/remediated.txt" >"$EVIDENCE/remediated-merged.txt"
+  mv "$EVIDENCE/remediated-merged.txt" "$EVIDENCE/remediated.txt"
+fi
 
 # THE DECLARED INDUCTION for postgresql, and only for postgresql: §7.4 step 2 names stopping the container.
 if grep -q '^postgresql|PROVISIONED|PASS' "$EVIDENCE/control.txt"; then
