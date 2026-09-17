@@ -1,0 +1,16 @@
+{
+  "spec": "SPEC-007 §9 (SLOs and error budgets), VG-SLO-005 (evaluation integrity); EP-008 M7(d)",
+  "environment": "local",
+  "verdict_bearing_environment": false,
+  "reason": "no staging or production environment exists here and no series store is reachable, so no induced run can produce a verdict; every row below is NOT RUN rather than a result",
+  "revocation_rule": "if any induced breach yields PASS, VG-SLO-005 is FAIL and every dependent verdict is INCONCLUSIVE",
+  "revocation_rule_proven_by": "tests/observability/slo-evaluator.test.ts drives the evaluator with exactly that matrix and asserts the FAIL and the revocation of all four dependent verdicts",
+  "verdicts_this_run": "5 objective(s), 0 FAIL, 4 DEFERRED_LONG_RUNNING, 1 INCONCLUSIVE",
+  "rows": [
+    { "objective": "availability", "induced_condition": "serve 5xx responses above the 0.1 per cent error budget, or stop the database so requests fail", "status": "NOT_RUN", "reason": "no environment to induce in" },
+    { "objective": "verification_latency", "induced_condition": "withhold verification observations past the p95 threshold for 30 days of simulated traffic", "status": "NOT_RUN", "reason": "no 30-day series store exists" },
+    { "objective": "workflow_completion", "induced_condition": "close a batch of cases as REFUSED so the completion ratio falls below 0.95", "status": "NOT_RUN", "reason": "no environment to induce in" },
+    { "objective": "reconciliation_latency", "induced_condition": "inject the induced-ambiguity fault set and never reconcile it", "status": "NOT_RUN", "reason": "no environment to induce in" }
+  ],
+  "conclusion": "the five verdicts above are INCONCLUSIVE or DEFERRED_LONG_RUNNING and none is PASS; the integrity objective is INCONCLUSIVE because no induced run has produced a verdict, which is the honest reading and not a pass"
+}

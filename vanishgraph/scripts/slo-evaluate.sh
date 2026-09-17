@@ -100,4 +100,32 @@ fi
 LINES=$(grep -c '^slo ' "$EVIDENCE/slo-evaluate.txt" || true)
 [ "$LINES" -ge 5 ] || { echo "slo: FAIL - expected at least five objective lines and found $LINES" >&2; exit 1; }
 
+# 3. THE INDUCED-BREACH INTEGRITY MATRIX (§9, VG-SLO-005), RECORDED WITH ITS ACTUAL STATUS RATHER THAN WITH A RESULT IT
+#    DID NOT PRODUCE. The matrix names, per objective, the induced condition the specification prescribes for it and the
+#    status of that run HERE — which is NOT RUN, because producing a verdict requires an expression evaluator and a
+#    series store and this repository has neither. The revocation rule is not left unproven by that: the suite drives the
+#    evaluator with a matrix in which an induced breach yielded PASS and asserts that VG-SLO-005 becomes FAIL and every
+#    dependent verdict is revoked in the same result set. What is NOT claimed anywhere is that an induced breach was
+#    actually observed failing.
+{
+  echo "{"
+  echo "  \"spec\": \"SPEC-007 §9 (SLOs and error budgets), VG-SLO-005 (evaluation integrity); EP-008 M7(d)\","
+  echo "  \"environment\": \"${VANISHGRAPH_ENVIRONMENT:-local}\","
+  echo "  \"verdict_bearing_environment\": false,"
+  echo "  \"reason\": \"no staging or production environment exists here and no series store is reachable, so no induced run can produce a verdict; every row below is NOT RUN rather than a result\","
+  echo "  \"revocation_rule\": \"if any induced breach yields PASS, VG-SLO-005 is FAIL and every dependent verdict is INCONCLUSIVE\","
+  echo "  \"revocation_rule_proven_by\": \"tests/observability/slo-evaluator.test.ts drives the evaluator with exactly that matrix and asserts the FAIL and the revocation of all four dependent verdicts\","
+  echo "  \"verdicts_this_run\": \"$(sed -n 's/^slo summary: //p' "$EVIDENCE/slo-evaluate.txt" | tail -n 1)\","
+  echo "  \"rows\": ["
+  echo "    { \"objective\": \"availability\", \"induced_condition\": \"serve 5xx responses above the 0.1 per cent error budget, or stop the database so requests fail\", \"status\": \"NOT_RUN\", \"reason\": \"no environment to induce in\" },"
+  echo "    { \"objective\": \"verification_latency\", \"induced_condition\": \"withhold verification observations past the p95 threshold for 30 days of simulated traffic\", \"status\": \"NOT_RUN\", \"reason\": \"no 30-day series store exists\" },"
+  echo "    { \"objective\": \"workflow_completion\", \"induced_condition\": \"close a batch of cases as REFUSED so the completion ratio falls below 0.95\", \"status\": \"NOT_RUN\", \"reason\": \"no environment to induce in\" },"
+  echo "    { \"objective\": \"reconciliation_latency\", \"induced_condition\": \"inject the induced-ambiguity fault set and never reconcile it\", \"status\": \"NOT_RUN\", \"reason\": \"no environment to induce in\" }"
+  echo "  ],"
+  echo "  \"conclusion\": \"the five verdicts above are INCONCLUSIVE or DEFERRED_LONG_RUNNING and none is PASS; the integrity objective is INCONCLUSIVE because no induced run has produced a verdict, which is the honest reading and not a pass\""
+  echo "}"
+} >"$EVIDENCE/integrity-matrix.json"
+node -e 'JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8"))' "$EVIDENCE/integrity-matrix.json" \
+  || { echo "slo: FAIL - the integrity matrix is not valid JSON" >&2; exit 1; }
+
 echo "slo: evaluated"

@@ -119,3 +119,35 @@ Runbook content follows the same rule as the rest of this document: each alert r
 what it **does not mean** — a stale-recipe refusal means the control worked, a DLP denial means the stage refused to leak,
 a cross-tenant refusal means the attempt was denied rather than that data was disclosed — and every one of them ends by
 saying that its induction has not been run.
+
+## 8. Service-level objectives (SPEC-007 §9)
+
+**What exists:** `config/slo/objectives.json` carries the **five objectives** — `VG-SLO-001` availability ≥ 0.999 over a
+rolling 30 d (readiness and liveness probe traffic excluded from **both** terms and measured separately), `VG-SLO-002`
+verification latency p95 ≤ 1 209 600 s and p99 ≤ 2 592 000 s with ≥ 30 completed observations and censoring of cases
+still inside their window, `VG-SLO-003` workflow completion ≥ 0.95 across the five honest destination states with
+`NOT_REMOVABLE` and `HUMAN_REQUIRED` non-suppressed, `VG-SLO-004` reconciliation p90 ≤ 14 400 s and max ≤ 86 400 s
+exercised against the induced-ambiguity fault set, and `VG-SLO-005` evaluation integrity. `WL-1` is the **versioned**
+workload model, and changing it invalidates prior verdicts. `sh scripts/slo-evaluate.sh` prints one
+`slo <objective>: <VERDICT>` line per objective and then `slo: evaluated`.
+
+**THE VERDICT VOCABULARY IS FOUR VALUES AND THE GAPS BETWEEN THEM ARE THE POINT.** `PASS` and `FAIL` are claims about a
+measured interval; `INCONCLUSIVE` says the sample cannot support either claim; `DEFERRED_LONG_RUNNING` says the objective
+is duration-bound and the campaign window cannot contain it yet (DOD-038). **A shortened trial is never reported as
+`PASS`**, and the evaluator refuses to promote an unexercised objective: zero served responses is not 100 % availability,
+fewer than 30 observations makes quantiles *not a measurement*, a missing honest destination state makes the completion
+ratio a *different number*, and a reconciliation window with no ambiguity event was never exercised.
+
+**§9 permits a verdict only in `staging` or `production`.** Neither exists here and no series store is reachable, so the
+evaluation submits an **incomplete** sample and every objective reports the gap: four `DEFERRED_LONG_RUNNING` and
+`evaluation_integrity` `INCONCLUSIVE`. The provisioning attempt log is
+`.agent/evidence/EP-008/slo/provisioning-attempts.txt`, and the matrix of induced conditions — each row `NOT_RUN` with its
+reason — is `.agent/evidence/EP-008/slo/integrity-matrix.json`. **The exit code distinguishes the two cases**: non-zero
+when any objective is `FAIL`, because DOD-022 makes a mandatory SLO failure `NO_GO`; zero when the sample is incomplete,
+because "we cannot measure it yet" is an honest result and must not be flattened into either a pass or a failure.
+
+**What is NOT claimed:** no induced breach has been observed producing `FAIL`, no undisturbed run has been observed
+producing `PASS`, and no objective has ever been reported `PASS` in this repository. The revocation rule — an induced
+breach that yields `PASS` makes `VG-SLO-005` `FAIL` and revokes every dependent verdict as `INCONCLUSIVE` — is enforced by
+the evaluator and proven by its suite, not by an executed campaign. The error-budget **consequence policy** stays open
+(SPEC-007 §13.3 item 8) and is not invented here.
