@@ -21,6 +21,26 @@
  */
 
 import { setTimeout as delay } from 'node:timers/promises';
+import { readFileSync } from 'node:fs';
+
+/**
+ * THE DSN IS LOADED FROM THE DATABASE STATE FILE WHEN NO `--dsn` IS GIVEN, AND THAT IS A MEASURED CORRECTION.
+ *
+ * The first version required `--dsn`, and passing it through a shell mangled it: the PostgreSQL client parsed a hostname
+ * of `base` out of the value and the worker failed with getaddrinfo ENOTFOUND, so it wrote no heartbeat and the probe
+ * correctly reported none. The state file is the single place this repository keeps the disposable local DSN, and
+ * reading it here takes the shell out of the path: the credential never appears on a command line (VG-SEC-002) and
+ * cannot be mangled by quoting.
+ */
+function dsnFromStateFile() {
+  const path = process.env.VG_DB_STATE_FILE ?? 'C:/tmp/vanishgraph-db.env';
+  try {
+    const text = readFileSync(path, 'utf8');
+    return /^export VG_TEST_DSN_APP=(.*)$/m.exec(text)?.[1]?.trim().replace(/^['"]|['"]$/g, '') ?? '';
+  } catch {
+    return '';
+  }
+}
 
 function parseArgs(argv) {
   const args = { dsn: process.env.VG_TEST_DSN_APP ?? '', workerId: 'vg-worker-heartbeat-1', intervalMs: 5000, once: false };
@@ -30,6 +50,7 @@ function parseArgs(argv) {
     else if (argv[index] === '--interval-ms') args.intervalMs = Number(argv[index + 1]);
     else if (argv[index] === '--once') args.once = true;
   }
+  if (args.dsn.trim().length === 0) args.dsn = dsnFromStateFile();
   return args;
 }
 
