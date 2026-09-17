@@ -79,3 +79,4 @@ tests/contract/ssrf-fetch-guard.test.ts
 tests/contract/webhook-signature-replay.test.ts
 tests/security/negative-cases.test.ts
 tests/failure/fail-closed-authority.test.ts
+tests/failure/fail-closed-dependency.test.ts
