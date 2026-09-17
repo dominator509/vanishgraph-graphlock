@@ -1,0 +1,6 @@
+log contract guard - 2026-09-17T07:25:25Z
+suite: 25 test(s) passed
+capture: .agent/evidence/EP-008/log-contract/captured-stream.jsonl (2 record line(s) carrying a severity)
+scan: clean
+negative control: reported 4 violation(s), all four expected defects named
+COMMANDS.md declarations: 1

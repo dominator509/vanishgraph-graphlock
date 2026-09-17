@@ -1,0 +1,101 @@
+EP-008 M3 EVIDENCE - the structured log contract, its guard, and what the guard actually scanned
+===============================================================================================
+
+Spec: SPEC-007 §5 (structured log contract), §10 (truthfulness), §3.2 (truth-state spans), §2.3 rule 1 (stdout is the
+only log sink). Plan: EP-008 M3. DOD-037, DOD-012, DOD-007.
+
+COMMANDS RUN, WITH THEIR RESULTS
+--------------------------------
+
+  sh scripts/test-unit.sh                                  -> `test-unit: ok` (counts in the ledger entry)
+  sh scripts/log-contract-guard.sh                         -> `log contract: ok` (exit 0)
+  node --test tests/observability/log-contract.test.ts      -> 25 tests, 25 pass, 0 fail
+  sh scripts/lint.sh                                       -> `lint: ok` (`typecheck: ok`, `import boundary: ok`)
+  grep -c 'log contract: ok' COMMANDS.md                   -> 1   (the guard checks this itself and fails otherwise)
+
+WHAT THE CAPTURE IS, AND WHAT IT IS NOT
+---------------------------------------
+
+The guard scans `.agent/evidence/EP-008/log-contract/captured-stream.jsonl`, which the SUITE writes through
+`VG_LOG_CAPTURE` while driving the real logger. So the bytes are the writer's own output, and the scan uses the same
+`scanLogStream` function the logger validates with — one definition of a valid record rather than two.
+
+  IT IS NOT AN END-TO-END SERVICE RUN, AND THIS FILE DOES NOT CLAIM ONE. The API needs a provisioned PostgreSQL and the
+  health/readiness milestone (M6) has not been reached, so the deepest real entry point available in this environment is
+  the logger itself, driven through its real contract: the record is built by the real logger, validated by the real
+  rules, serialised to a real line and captured from the real sink. The plan's FALLBACK for exactly this case says to
+  capture from the deepest real entry point available and RECORD THE CAPTURE'S COVERAGE — which is what this paragraph is.
+  When M6 lands a real readiness run, this guard's capture can be pointed at the service's stdout without changing the
+  scanner.
+
+WHAT IS BUILT
+-------------
+
+`src/adapters/observability/structured-logger.ts`:
+
+  * one JSON record per line to stdout, frozen before it is handed to the sink;
+  * the closed severity enum of §5.1, the outcome enum of §5.2 and the canonical event names of §5.4, all read from
+    `config/telemetry/allowlist.json` rather than restated in code, so the logger and the guard cannot drift apart;
+  * the ten mandatory fields of §5.2, with `timestamp` checked against RFC 3339 with millisecond precision;
+  * the conditional-required fields of §5.2 (`caseId`, `exposureId`, `actionId`) driven by the SCOPE the caller states,
+    not by the record: a record that omits a field whose entity is in scope is refused;
+  * prohibited field NAMES at any nesting depth (§5.3), a line break in any value (§5.2: a record with a newline in it is
+    two records), and a nested object where §5.5 permits only scalar shapes;
+  * `correlationId` and `tenantId` with NO default: an activity invoked without one is refused with a typed
+    `MissingIdentityError`, and no generated, zeroed or empty substitute is ever emitted. This is the §5.5 rule taken
+    literally — a substituted identifier produces a record that looks correlated and joins to nothing, which is worse
+    than no record;
+  * the §10 truthfulness rules: `SUCCEEDED` refused for the three states that never count as progress, a
+    `VERIFIED_REMOVED` record refused without its observation reference, and sampling refused for `ERROR`, `FATAL` and
+    every never-dropped event;
+  * `scanLogStream`, the same checks applied to a captured stream, with every violation prefixed by its line number;
+  * a startup failure (`createStructuredLoggerFromFile`) when the configuration cannot be validated, rather than a logger
+    with no contract.
+
+`config/telemetry/allowlist.json` gained a `log_contract` section carrying the §5 vocabularies and rules as data, with
+validation that REFUSES a document that drops one of the ten mandatory fields or one of the six severities — because a
+contract that no longer matches the specification would make every record valid against nothing.
+
+`scripts/log-contract-guard.sh` runs the suite (capture pointed at the evidence directory), scans the capture, runs its
+own negative control, checks that `COMMANDS.md` declares the command exactly once, and prints its sentinel only then.
+The scanner returns a violation for a stream with NO records, so an empty capture is a failure rather than a green over
+zero evidence (DOD-007).
+
+THE NEGATIVE CONTROL, AND WHY IT IS IN THE STAGE RATHER THAN ONLY IN THE SUITE
+-----------------------------------------------------------------------------
+
+The stage writes a two-line stream with four planted defects and requires the SAME scanner to report all four:
+
+  * `severity: "NOTICE"`                     -> `severity "NOTICE" is not canonical`
+  * `event: "RemovalComplete"`               -> `event "RemovalComplete" is not canonical`
+  * `cookie: "session=planted"`              -> `"cookie" is a prohibited field name (§5.3)`
+  * a removal claim with no observation id   -> `a VERIFIED_REMOVED record must carry vanishgraph.verification.observation_id`
+
+MEASURED DEFECT FOUND WHILE WRITING THIS CONTROL: the first version of the planted removal claim carried
+`event: "VerifiedRemoved"` but NO `truthStateTo`, so the truthfulness rule — which keys on the state, per §3.2 — did not
+fire and the guard failed with "the negative control did not report: must carry
+vanishgraph.verification.observation_id". That was the control doing its job: the planted line was not the defect the
+control claimed to plant. The line now carries `truthStateFrom`/`truthStateTo`, which is the shape alert A-01b describes.
+
+  A RELATED LIMIT, RECORDED RATHER THAN LEFT IMPLICIT: the rule keys on `truthStateTo`, so a record claiming the
+  `VerifiedRemoved` EVENT without stating the state would not trip it. The logger requires the state on a transition
+  record in practice (the event and the state travel together from the same call site), but the rule as specified is
+  about the destination state, and this file states the boundary instead of overstating the check.
+
+DEFECTS FOUND BY THE SUITE ITSELF
+---------------------------------
+
+  * THE SCANNER'S PARSE FAILURE HAD NO LINE PREFIX while every other violation had one, so a reader could not locate the
+    record that failed to parse. Caught by the suite's own negative control, which asserts that every reported defect
+    names its line. Fixed by routing the parse failure through the same `line N: ` prefix.
+
+WHAT IS NOT CLAIMED
+-------------------
+
+  * No end-to-end service run: see the capture's coverage note above.
+  * No metric catalogue, no alert definitions, no SLO evaluation, no retention configuration, no readiness proof, and no
+    OTLP/Prometheus/error-reporter transport. `OBSERVABILITY.md` names each of these as NOT BUILT in its own section, and
+    states that no result, digest or measurement is claimed by that document.
+  * The log contract is enforced on records that go through THIS logger. A component that writes to stdout without it is
+    not covered by this guard, and the guard's capture cannot see it; that is a wiring obligation for the milestones that
+    introduce such components, recorded here so it is not assumed away.

@@ -1,0 +1,4 @@
+line 1: severity "NOTICE" is not canonical
+line 1: event "RemovalComplete" is not canonical
+line 2: "cookie" is a prohibited field name (§5.3)
+line 2: a VERIFIED_REMOVED record must carry vanishgraph.verification.observation_id (SPEC-001 §4.1 T14, §3.2)

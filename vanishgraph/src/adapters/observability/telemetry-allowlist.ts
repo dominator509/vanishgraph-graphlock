@@ -43,6 +43,25 @@ export interface DlpRuleClass {
   readonly note?: string;
 }
 
+export interface ConditionalLogField {
+  readonly field: string;
+  readonly when: string;
+  readonly scopeKey: string;
+}
+
+/** SPEC-007 §5 as data: the vocabularies and rules the logger and the guard both read (EP-008 M3). */
+export interface LogContract {
+  readonly severities: readonly string[];
+  readonly outcomes: readonly string[];
+  readonly mandatoryFields: readonly string[];
+  readonly conditionalFields: readonly ConditionalLogField[];
+  readonly neverSampled: readonly string[];
+  readonly neverDroppedEvents: readonly string[];
+  readonly successNamingProhibitedFor: readonly string[];
+  readonly verifiedRemovedRequires: readonly string[];
+  readonly timestampFormat: string;
+}
+
 export interface TelemetryAllowlist {
   readonly version: string;
   readonly defaultDisposition: Disposition;
@@ -55,6 +74,7 @@ export interface TelemetryAllowlist {
   readonly prohibitedFieldNames: readonly string[];
   readonly canonicalEvents: readonly string[];
   readonly ruleClasses: readonly DlpRuleClass[];
+  readonly logContract: LogContract;
   /** Every field name the allowlist knows about, so "no entry means denied" is answerable in one lookup. */
   readonly classifiedFields: ReadonlySet<string>;
 }
@@ -178,6 +198,47 @@ function readRuleClasses(raw: unknown, errors: string[]): DlpRuleClass[] {
   return out;
 }
 
+function readLogContract(raw: unknown, errors: string[]): LogContract {
+  if (!isRecord(raw)) {
+    errors.push('log_contract must be an object carrying the §5 vocabularies and rules');
+    return { severities: [], outcomes: [], mandatoryFields: [], conditionalFields: [], neverSampled: [], neverDroppedEvents: [], successNamingProhibitedFor: [], verifiedRemovedRequires: [], timestampFormat: '' };
+  }
+  const contract: LogContract = {
+    severities: readStringArray(raw['severities'], 'log_contract.severities', errors),
+    outcomes: readStringArray(raw['outcomes'], 'log_contract.outcomes', errors),
+    mandatoryFields: readStringArray(raw['mandatory_fields'], 'log_contract.mandatory_fields', errors),
+    conditionalFields: [],
+    neverSampled: readStringArray(raw['never_sampled'], 'log_contract.never_sampled', errors),
+    neverDroppedEvents: readStringArray(raw['never_dropped_events'], 'log_contract.never_dropped_events', errors),
+    successNamingProhibitedFor: readStringArray(raw['success_naming_prohibited_for'], 'log_contract.success_naming_prohibited_for', errors),
+    verifiedRemovedRequires: readStringArray(raw['verified_removed_requires'], 'log_contract.verified_removed_requires', errors),
+    timestampFormat: typeof raw['timestamp_format'] === 'string' ? raw['timestamp_format'] : '',
+  };
+  if (contract.timestampFormat.trim().length === 0) errors.push('log_contract.timestamp_format must state the required form');
+  // THE MANDATORY FIELDS OF §5.2 ARE NAMED HERE RATHER THAN TRUSTED FROM THE DOCUMENT: a configuration that dropped one
+  // of them would make every record valid against a contract that no longer matches the specification.
+  for (const required of ['timestamp', 'severity', 'service', 'correlationId', 'tenantId', 'event', 'outcome', 'message', 'candidateEpoch', 'artifactDigest']) {
+    if (!contract.mandatoryFields.includes(required)) errors.push(`log_contract.mandatory_fields must include ${required} (§5.2)`);
+  }
+  for (const required of ['TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL']) {
+    if (!contract.severities.includes(required)) errors.push(`log_contract.severities must include ${required} (§5.1)`);
+  }
+  const conditional = raw['conditional_fields'];
+  if (!Array.isArray(conditional)) {
+    errors.push('log_contract.conditional_fields must be an array');
+    return contract;
+  }
+  const fields: ConditionalLogField[] = [];
+  for (const entry of conditional) {
+    if (!isRecord(entry) || typeof entry['field'] !== 'string' || typeof entry['when'] !== 'string' || typeof entry['scope_key'] !== 'string') {
+      errors.push('log_contract.conditional_fields entries must carry field, when and scope_key');
+      continue;
+    }
+    fields.push({ field: entry['field'], when: entry['when'], scopeKey: entry['scope_key'] });
+  }
+  return { ...contract, conditionalFields: fields };
+}
+
 function readStringArray(raw: unknown, section: string, errors: string[]): string[] {
   if (!Array.isArray(raw) || raw.some((entry) => typeof entry !== 'string')) {
     errors.push(`${section} must be an array of strings`);
@@ -219,6 +280,7 @@ export function parseTelemetryAllowlist(raw: unknown): AllowlistLoadResult {
   const prohibitedFieldNames = readStringArray(raw['prohibited_field_names'], 'prohibited_field_names', errors);
   const canonicalEvents = readStringArray(raw['canonical_events'], 'canonical_events', errors);
   const ruleClasses = readRuleClasses(raw['dlp_rule_classes'], errors);
+  const logContract = readLogContract(raw['log_contract'], errors);
 
   const classifiedFields = new Set([
     ...Object.keys(resourceKeys),
@@ -251,6 +313,7 @@ export function parseTelemetryAllowlist(raw: unknown): AllowlistLoadResult {
       prohibitedFieldNames,
       canonicalEvents,
       ruleClasses,
+      logContract,
       classifiedFields,
     }),
   };

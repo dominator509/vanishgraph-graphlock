@@ -50,6 +50,7 @@ a milestone that needs a new one must add it here in the same change.
 | `sh scripts/smoke-test.sh` | `smoke test: ok` |
 | `sh scripts/live-fire.sh` | `live-fire: ok` |
 | `sh scripts/egress-canary-test.sh` | `canary egress: ok` |
+| `sh scripts/log-contract-guard.sh` | `log contract: ok` |
 
 ## Aggregates
 

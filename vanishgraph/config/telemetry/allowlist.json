@@ -252,5 +252,21 @@
     "imageBase64",
     "attachment"
   ],
+  "log_contract": {
+    "$comment": "SPEC-007 §5 as data (EP-008 M3). The logger and the log-contract guard read THIS, so the mandatory fields, the severity enum, the outcome enum and the truthfulness rules have one definition rather than one per consumer.",
+    "severities": ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"],
+    "outcomes": ["SUCCEEDED", "REFUSED", "FAILED", "AMBIGUOUS", "GATED"],
+    "mandatory_fields": ["timestamp", "severity", "service", "correlationId", "tenantId", "event", "outcome", "message", "candidateEpoch", "artifactDigest"],
+    "conditional_fields": [
+      { "field": "caseId", "when": "a RequestCase is in scope", "scope_key": "caseId" },
+      { "field": "exposureId", "when": "an Exposure is in scope", "scope_key": "exposureId" },
+      { "field": "actionId", "when": "an ExternalAction is in scope", "scope_key": "actionId" }
+    ],
+    "never_sampled": ["ERROR", "FATAL"],
+    "never_dropped_events": ["VerifiedRemoved", "Reappeared", "NotRemovable", "SearchDelisted", "HumanRequired", "VerificationFailed"],
+    "success_naming_prohibited_for": ["REQUEST_SUBMITTED", "ACKNOWLEDGED", "SEARCH_DELISTED"],
+    "verified_removed_requires": ["vanishgraph.verification.observation_id"],
+    "timestamp_format": "RFC 3339 with millisecond precision and an explicit UTC offset, e.g. 2026-02-14T09:31:07.412Z"
+  },
   "prohibited_classes_note": "The prohibited NAME list is the second line of defence behind the deny-by-default allowlist (§5.3). It is data here so the checker and the canary generator read one list; the §4.2 CLASS list (subject names, contact details, identity documents, credentials, page and message bodies, screenshots) is what the canary generator of §4.4 shapes its values after, and it lives with that generator in EP-008 M2."
 }
