@@ -1,8 +1,7 @@
-postgresql|PROVISIONED|PASS|-|12ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|PASS|-|25ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|PASS|-|25ms|1 worker heartbeat(s) inside the 15000 ms freshness window
-object-store|PROVISIONED|PASS|-|19ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+postgresql|PROVISIONED|TIMEOUT|TIMEOUT|593ms|the probe exceeded its hard timeout (§7.2) and was aborted
+valkey|PROVISIONED|TIMEOUT|TIMEOUT|215ms|the probe exceeded its hard timeout (§7.2) and was aborted
+job-worker|PROVISIONED|PASS|-|190ms|1 worker heartbeat(s) inside the 15000 ms freshness window
+object-store|PROVISIONED|PASS|-|118ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
 keycloak-jwks|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for keycloak-jwks; the declared action is: OIDC discovery plus JWKS retrieval over TLS, with no token minted
 provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|82ms
-Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76
+overall|NOT_READY|1117ms

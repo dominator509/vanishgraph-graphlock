@@ -94,12 +94,20 @@ else
     # FAIL would have been an assertion about vocabulary rather than about behaviour.
     grep -Eq "^$key \| PASS \| (FAIL|TIMEOUT|UNKNOWN|DENIED|FAILED) \| PASS \| DEMONSTRATED" "$VERDICT" || fail "$key is not shown as PASS then NOT-PASS then PASS, so its induction was not demonstrated"
   done
+  # THE SUMMARY IS DERIVED FROM THE VERDICT FILE, NOT TYPED. The first version of this block hardcoded the demonstrated
+  # and blocked rows, and it went STALE THE MOMENT job-worker was wired: the gate printed "blocked: job-worker (no worker
+  # entry point exists in this repository)" while the verdict table on the same screen said job-worker was DEMONSTRATED.
+  # A gate whose prose and its evidence disagree teaches a reader to distrust both, so every line below is read from the
+  # verdict table the stage just wrote.
+  DEMONSTRATED_KEYS=$(grep 'DEMONSTRATED' "$VERDICT" | cut -d'|' -f1 | tr -d ' ' | paste -sd ', ' -)
+  BLOCKED_ROWS=$(grep -E 'ERROR \(DOD-033|INCONCLUSIVE' "$VERDICT" | cut -d'|' -f1,5 | tr -d ' ' | paste -sd '; ' -)
   {
     echo "   row: BLOCKED_ENVIRONMENT - readiness induced-failure could not complete for every dependency."
     echo "   required fields: verdict table ($VERDICT) and provisioning attempt log ($ATTEMPTS), both present."
-    echo "   demonstrated: postgresql, valkey, object-store (PASS -> FAIL -> PASS on the same probe path)."
-    echo "   blocked: job-worker (no worker entry point exists in this repository), keycloak-jwks (no issuer), provider-transport (no entitlement)."
-    echo "   NEXT ACTION: add a worker entry point that writes job_worker heartbeats; provision Keycloak and set KEYCLOAK_ISSUER; obtain a provider entitlement. Until then NO readiness induced failure: ok IS CLAIMED and the readiness proof is INCOMPLETE."
+    echo "   demonstrated: ${DEMONSTRATED_KEYS:-none} (control PASS, induced NOT PASS, remediated PASS, on the same probe path)."
+    echo "   blocked: ${BLOCKED_ROWS:-none}"
+    echo "   NEXT ACTION: provision or implement what each blocked row above names; its provisioning attempt log records"
+    echo "   what was tried. Until then NO readiness induced failure: ok IS CLAIMED and the readiness proof is INCOMPLETE."
   } | tee -a "$REPORT"
 fi
 
