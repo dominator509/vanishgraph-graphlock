@@ -32,9 +32,19 @@ PG_CONTAINER=${VG_PG_CONTAINER:-vanishgraph-ep003-postgres}
 VALKEY_CONTAINER=${VG_VALKEY_CONTAINER:-vanishgraph-ep008-valkey}
 MINIO_CONTAINER=${VG_MINIO_CONTAINER:-vanishgraph-ep008-minio}
 
-# THE OBJECT STORE'S OWN VARIABLES, WHEN THE ENVIRONMENT PROVIDES THEM. An unset endpoint is not an error: the row
-# then reads UNAVAILABLE and the provisioning attempt log says why.
-export VG_OBJECT_STORE_ENDPOINT VG_OBJECT_STORE_REGION VG_OBJECT_STORE_BUCKET VG_OBJECT_STORE_KEY VG_OBJECT_STORE_ACCESS_KEY VG_OBJECT_STORE_SECRET_KEY
+# THE OBJECT STORE'S OWN VARIABLES, WITH THE SAME DEFAULTS THE GATE USES. MEASURED WHY THEY ARE DEFAULTS RATHER THAN
+# SOMETHING THE CALLER MUST SET: a standalone run of this stage reported valkey UNKNOWN and object-store FAIL in its
+# CONTROL run, while the same stage passed inside `gate-observability.sh`, which exports these itself. A STAGE WHOSE
+# RESULT DEPENDS ON WHO SET THE ENVIRONMENT IS A TRAP — a green gate and a red standalone run for the same tree teach a
+# reader to distrust one of them — so the stage now defaults to the disposable local instances this node provisioned, and
+# an operator who has real ones overrides them.
+export VALKEY_URL=${VALKEY_URL:-redis://127.0.0.1:56379}
+export VG_OBJECT_STORE_ENDPOINT=${VG_OBJECT_STORE_ENDPOINT:-http://127.0.0.1:59000}
+export VG_OBJECT_STORE_REGION=${VG_OBJECT_STORE_REGION:-us-east-1}
+export VG_OBJECT_STORE_BUCKET=${VG_OBJECT_STORE_BUCKET:-vanishgraph-probe}
+export VG_OBJECT_STORE_KEY=${VG_OBJECT_STORE_KEY:-readiness/probe-object}
+export VG_OBJECT_STORE_ACCESS_KEY=${VG_OBJECT_STORE_ACCESS_KEY:-vgprobe}
+export VG_OBJECT_STORE_SECRET_KEY=${VG_OBJECT_STORE_SECRET_KEY:-vgprobe-secret}
 
 # THE DRIVER IS WRITTEN ONCE AND RUN THREE TIMES (control, induced, remediated), so all three observations come from the
 # same code path — which is the property §7.4 asks the stage to prove.
@@ -47,7 +57,13 @@ const clients = {};
 const dsn = process.env.VG_TEST_DSN_APP ?? "";
 if (dsn.trim().length > 0) {
   const pg = await import("pg");
+  // WARM THE POOL OUTSIDE THE PROBE, WHICH IS §7.2's OWN WORD: it declares a POOLED connection with a 300 ms probe
+  // timeout, so the cost of ESTABLISHING the connection belongs to startup and not to the probe. MEASURED: with a cold
+  // pool the control run reported TIMEOUT for postgresql under gate load while the same probe took 43 ms standalone — a
+  // healthy dependency reported as broken, which would have been read as a product defect. This warm-up is behaviour,
+  // not a threshold change: the timeout is unchanged at 300 ms.
   const pool = new pg.default.Pool({ connectionString: dsn, max: 1, connectionTimeoutMillis: 250 });
+  await pool.query("SELECT 1").catch(() => undefined);
   clients.postgresql = probes.postgresProbe({
     querySessionRole: async () => {
       const client = await pool.connect();

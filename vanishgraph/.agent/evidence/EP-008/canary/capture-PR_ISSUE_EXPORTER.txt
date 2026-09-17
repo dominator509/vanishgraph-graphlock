@@ -17,7 +17,7 @@ redaction rule class: RAW_HTML
 - correlationId: corr-7Q2F4M8ZC1
 - caseId: case-9F3B21
 - transitionId: T14
-- message: [REDACTED:RAW_HTML][REDACTED:RAW_HTML]fimdra</a></div>
+- message: [REDACTED:RAW_HTML][REDACTED:RAW_HTML]drapen</a></div>
 - reasonCode: SCRUBBED
 ---
 ### Repair capsule (DLP-scrubbed before egress)
@@ -72,5 +72,5 @@ redaction rule class: OPERATOR_NOTE
 - correlationId: corr-7Q2F4M8ZC1
 - caseId: case-9F3B21
 - transitionId: T14
-- message: [REDACTED:OPERATOR_NOTE] lolonyx 8627d4
+- message: [REDACTED:OPERATOR_NOTE] mivor b777be
 - reasonCode: SCRUBBED

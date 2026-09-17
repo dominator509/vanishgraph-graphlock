@@ -6,7 +6,13 @@ const clients = {};
 const dsn = process.env.VG_TEST_DSN_APP ?? "";
 if (dsn.trim().length > 0) {
   const pg = await import("pg");
+  // WARM THE POOL OUTSIDE THE PROBE, WHICH IS §7.2's OWN WORD: it declares a POOLED connection with a 300 ms probe
+  // timeout, so the cost of ESTABLISHING the connection belongs to startup and not to the probe. MEASURED: with a cold
+  // pool the control run reported TIMEOUT for postgresql under gate load while the same probe took 43 ms standalone — a
+  // healthy dependency reported as broken, which would have been read as a product defect. This warm-up is behaviour,
+  // not a threshold change: the timeout is unchanged at 300 ms.
   const pool = new pg.default.Pool({ connectionString: dsn, max: 1, connectionTimeoutMillis: 250 });
+  await pool.query("SELECT 1").catch(() => undefined);
   clients.postgresql = probes.postgresProbe({
     querySessionRole: async () => {
       const client = await pool.connect();

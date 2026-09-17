@@ -43,11 +43,11 @@
       "correlationId": "corr-7Q2F4M8ZC1",
       "caseId": "case-9F3B21",
       "transitionId": "T14",
-      "message": "[REDACTED:RAW_HTML][REDACTED:RAW_HTML]fimdra</a></div>",
+      "message": "[REDACTED:RAW_HTML][REDACTED:RAW_HTML]drapen</a></div>",
       "reasonCode": "SCRUBBED"
     },
     "scrub": {
-      "token": "scrub-9801c33ba18d37ca4ae3c91eaeee9999",
+      "token": "scrub-e7399cc50a18d64bc27d6e274095e182",
       "outcome": "REDACTED",
       "redactionCount": 1
     }
@@ -183,11 +183,11 @@
       "correlationId": "corr-7Q2F4M8ZC1",
       "caseId": "case-9F3B21",
       "transitionId": "T14",
-      "message": "[REDACTED:OPERATOR_NOTE] lolonyx 8627d4",
+      "message": "[REDACTED:OPERATOR_NOTE] mivor b777be",
       "reasonCode": "SCRUBBED"
     },
     "scrub": {
-      "token": "scrub-99936071373e86b934ac878778b5fc74",
+      "token": "scrub-319af8643b3c488de35fac9985dc4300",
       "outcome": "REDACTED",
       "redactionCount": 1
     }
