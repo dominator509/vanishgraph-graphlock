@@ -43,11 +43,11 @@
       "correlationId": "corr-7Q2F4M8ZC1",
       "caseId": "case-9F3B21",
       "transitionId": "T14",
-      "message": "[REDACTED:RAW_HTML][REDACTED:RAW_HTML]rennyx</a></div>",
+      "message": "[REDACTED:RAW_HTML][REDACTED:RAW_HTML]renkaquo</a></div>",
       "reasonCode": "SCRUBBED"
     },
     "scrub": {
-      "token": "scrub-1728cc556112992595f7494426cd31bc",
+      "token": "scrub-b69ca767a1bcbf6155a557a29a3a1285",
       "outcome": "REDACTED",
       "redactionCount": 1
     }
@@ -127,11 +127,11 @@
       "correlationId": "corr-7Q2F4M8ZC1",
       "caseId": "case-9F3B21",
       "transitionId": "T14",
-      "message": "[REDACTED:POSTAL_ADDRESS], Silverbrook",
+      "message": "[REDACTED:POSTAL_ADDRESS], Ashfield",
       "reasonCode": "SCRUBBED"
     },
     "scrub": {
-      "token": "scrub-47ef3269353dee0f34888a18084b1272",
+      "token": "scrub-aa71d04359f06a52b3db169e10ea771a",
       "outcome": "REDACTED",
       "redactionCount": 1
     }
@@ -183,11 +183,11 @@
       "correlationId": "corr-7Q2F4M8ZC1",
       "caseId": "case-9F3B21",
       "transitionId": "T14",
-      "message": "[REDACTED:OPERATOR_NOTE] lopenpen ccc9bd",
+      "message": "[REDACTED:OPERATOR_NOTE] penquo 7a1a23",
       "reasonCode": "SCRUBBED"
     },
     "scrub": {
-      "token": "scrub-6576c391a959e8154d4324778424bd3e",
+      "token": "scrub-45ca0bc88b38978e5a89392dcc394b38",
       "outcome": "REDACTED",
       "redactionCount": 1
     }

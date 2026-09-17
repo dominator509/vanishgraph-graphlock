@@ -17,7 +17,7 @@ redaction rule class: RAW_HTML
 - correlationId: corr-7Q2F4M8ZC1
 - caseId: case-9F3B21
 - transitionId: T14
-- message: [REDACTED:RAW_HTML][REDACTED:RAW_HTML]rennyx</a></div>
+- message: [REDACTED:RAW_HTML][REDACTED:RAW_HTML]renkaquo</a></div>
 - reasonCode: SCRUBBED
 ---
 ### Repair capsule (DLP-scrubbed before egress)
@@ -50,7 +50,7 @@ redaction rule class: POSTAL_ADDRESS
 - correlationId: corr-7Q2F4M8ZC1
 - caseId: case-9F3B21
 - transitionId: T14
-- message: [REDACTED:POSTAL_ADDRESS], Silverbrook
+- message: [REDACTED:POSTAL_ADDRESS], Ashfield
 - reasonCode: SCRUBBED
 ---
 ### Repair capsule (DLP-scrubbed before egress)
@@ -72,5 +72,5 @@ redaction rule class: OPERATOR_NOTE
 - correlationId: corr-7Q2F4M8ZC1
 - caseId: case-9F3B21
 - transitionId: T14
-- message: [REDACTED:OPERATOR_NOTE] lopenpen ccc9bd
+- message: [REDACTED:OPERATOR_NOTE] penquo 7a1a23
 - reasonCode: SCRUBBED

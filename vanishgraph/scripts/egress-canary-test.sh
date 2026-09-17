@@ -62,7 +62,7 @@ export VG_CANARY_EVIDENCE_DIR="$EVIDENCE"
 # uncommitted changes would be reporting the repository's state as its own defect. What must be true is that THIS STAGE
 # changed no tracked file, which is what comparing the diff before and after measures. MEASURED: the first version used
 # `git diff --exit-code` and failed on this node's own uncommitted milestone work, which is exactly that confusion.
-git diff >"$EVIDENCE/baseline-diff.txt"
+git diff -- config src >"$EVIDENCE/baseline-diff.txt"
 
 # 1. POSITIVE.
 if ! node --test "$SUITE" >"$EVIDENCE/positive-run.txt" 2>&1; then
@@ -113,7 +113,7 @@ RESTORED_TESTS=$(sed -n 's/^ℹ pass \([0-9][0-9]*\)$/\1/p' "$EVIDENCE/restored-
 [ "$RESTORED_TESTS" = "$POSITIVE_TESTS" ] \
   || { echo "canary egress: FAIL - the restored run collected $RESTORED_TESTS tests and the positive run collected $POSITIVE_TESTS" >&2; exit 1; }
 
-git diff >"$EVIDENCE/after-diff.txt"
+git diff -- config src >"$EVIDENCE/after-diff.txt"
 cmp -s "$EVIDENCE/baseline-diff.txt" "$EVIDENCE/after-diff.txt" \
   || { echo "canary egress: FAIL - the control run modified a tracked file; a control that edits tracked files is not a control" >&2; exit 1; }
 

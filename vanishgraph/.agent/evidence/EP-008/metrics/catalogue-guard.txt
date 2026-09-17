@@ -2,7 +2,7 @@ catalogue: 42 families, all names, labels, owners and meanings valid
 dashboards: 1 file(s), 9 panel(s), every referenced metric registered and every ratio panel naming its denominator
 alerts: 20 entr(ies), every referenced metric registered
 indicators: 5 entr(ies), every referenced metric registered
-prohibited names: scanned 168 file(s) under config/, src/ and docs/, 0 hit(s)
+prohibited names: scanned 169 file(s) under config/, src/ and docs/, 0 hit(s)
 verdict: OK
 negative control: planted vanishgraph_permanent_deletion_total and the phrase 'permanent deletion rate' in a
 temporary file under config/; the same scan refused it, naming both, and the file was removed afterwards.

@@ -1,4 +1,4 @@
-retention guard - 2026-09-17T16:26:48Z
+retention guard - 2026-09-17T16:45:35Z
 attempt: is a partitioned telemetry store reachable? (the expiry job drops partitions from one)
   TRACE_BACKEND_URL=<unset>
   LOG_STORE_URL=<unset>
