@@ -51,6 +51,7 @@ a milestone that needs a new one must add it here in the same change.
 | `sh scripts/live-fire.sh` | `live-fire: ok` |
 | `sh scripts/egress-canary-test.sh` | `canary egress: ok` |
 | `sh scripts/log-contract-guard.sh` | `log contract: ok` |
+| `sh scripts/metrics-catalogue-guard.sh` | `metrics catalogue: ok` |
 
 ## Aggregates
 

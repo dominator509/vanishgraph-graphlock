@@ -33,6 +33,7 @@ import { join, resolve } from 'node:path';
 import {
   DLP_SINKS,
   CANARY_DETECTIONS_COUNTER,
+  SINK_LABEL_VALUES,
   EGRESS_DENIED_COUNTER,
   SCRUB_OUTCOME_COUNTER,
   createEgressGate,
@@ -541,7 +542,10 @@ describe('the counters the alerts select (§4.1, §8 A-06 and A-06c)', () => {
     assert.equal(counters[`${SCRUB_OUTCOME_COUNTER}{outcome="DENIED"}`], 2);
     assert.equal(counters[`${EGRESS_DENIED_COUNTER}{reason_code="CANARY_DETECTED"}`], 1);
     assert.equal(counters[`${EGRESS_DENIED_COUNTER}{reason_code="NOT_ALLOWLISTED"}`], 1);
-    assert.equal(counters[`${CANARY_DETECTIONS_COUNTER}{sink="ERROR_REPORTER"}`], 1);
+    // THE LABEL VALUE IS THE CATALOGUE'S, NOT THE ADAPTER'S NAME (EP-008 M4 reconciled the two): §6.5 bounds the `sink`
+    // label to {TRACE, LOG, ERROR_REPORT, PR_ISSUE, DEBUG_BUNDLE}, so the series carries ERROR_REPORT while this adapter
+    // calls the sink ERROR_REPORTER. Asserting the mapping rather than the literal keeps the two in step.
+    assert.equal(counters[`${CANARY_DETECTIONS_COUNTER}{sink="${SINK_LABEL_VALUES['ERROR_REPORTER']}"}`], 1);
     assert.equal(fresh.refusals().length, 2, 'every denial is observable rather than inferred');
     assert.equal(fresh.disabledRuleClasses().length, 0, 'the shipped configuration disables nothing');
   });

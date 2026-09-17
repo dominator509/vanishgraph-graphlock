@@ -1,0 +1,62 @@
+{
+  "$comment": "Dashboard definitions are DATA validated against the metric catalogue (SPEC-007 §6.3, SPEC-000 §7.4; EP-008 M4(d)). A panel may only reference a registered metric family, a ratio panel MUST name the denominator series it is a ratio of, and an effectiveness ratio panel must render the interval's three ci values because §6.3 requires numerator, denominator and interval together. `sh scripts/metrics-catalogue-guard.sh` runs this validation, and a ratio panel without a denominator is the defect the schema check exists to catch.",
+  "spec": "SPEC-007 §6.3, §6.4, §6.5; SPEC-000 §7.4",
+  "dashboards": [
+    {
+      "id": "removal-effectiveness",
+      "title": "Removal effectiveness (VG-OBS-002)",
+      "note": "READ THIS BEFORE READING ANY PANEL: the ratio is independently verified removals divided by eligible confirmed matches, and it is never rendered without its denominator and its interval. A month with no eligible match has no ratio at all, not a zero.",
+      "panels": [
+        {
+          "id": "effectiveness-ratio",
+          "title": "Verified removals / eligible confirmed matches, with the 95% Wilson interval",
+          "metric": "vanishgraph_removal_effectiveness_ratio",
+          "denominatorMetric": "vanishgraph_removal_effectiveness_events_total",
+          "ci": ["point", "lower", "upper"]
+        },
+        {
+          "id": "effectiveness-events",
+          "title": "Raw effectiveness events, by component",
+          "metric": "vanishgraph_removal_effectiveness_events_total",
+          "components": ["numerator", "denominator", "excluded_not_removable", "excluded_human_required"]
+        },
+        {
+          "id": "truth-state-backlog",
+          "title": "Current exposures per truth state (backlog, not success)",
+          "metric": "vanishgraph_truth_state_current"
+        },
+        {
+          "id": "truth-state-transitions",
+          "title": "Truth-state transitions by destination state",
+          "metric": "vanishgraph_truth_state_transitions_total"
+        },
+        {
+          "id": "reappearance-rate",
+          "title": "Reappearances / verified removals, by window since removal",
+          "metric": "vanishgraph_reappearance_rate_ratio",
+          "denominatorMetric": "vanishgraph_truth_state_transitions_total"
+        },
+        {
+          "id": "verification-lag",
+          "title": "Acknowledgement to independent observation, p50/p95",
+          "metric": "vanishgraph_verification_lag_seconds"
+        },
+        {
+          "id": "dlp-outcomes",
+          "title": "DLP scrub outcomes by sink",
+          "metric": "vanishgraph_dlp_scrub_outcome_total"
+        },
+        {
+          "id": "telemetry-identity",
+          "title": "Dropped telemetry by reason (RESOURCE_ATTR_MISSING is alert A-11)",
+          "metric": "vanishgraph_telemetry_egress_failures_total"
+        },
+        {
+          "id": "readiness",
+          "title": "Readiness per dependency",
+          "metric": "vanishgraph_readiness_status"
+        }
+      ]
+    }
+  ]
+}

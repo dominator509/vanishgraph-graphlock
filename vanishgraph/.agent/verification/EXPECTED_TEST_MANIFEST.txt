@@ -98,3 +98,5 @@ tests/regression/live-fire-proof-08.test.ts
 tests/observability/telemetry-identity.test.ts
 tests/observability/egress-canary.test.ts
 tests/observability/log-contract.test.ts
+tests/observability/metrics-catalogue.test.ts
+tests/observability/effectiveness-metric.test.ts

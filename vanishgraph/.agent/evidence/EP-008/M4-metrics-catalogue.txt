@@ -1,0 +1,120 @@
+EP-008 M4 EVIDENCE - the metric catalogue, the registry, the effectiveness metric and the guard
+==============================================================================================
+
+Spec: SPEC-007 §6.1 (namespace, types, units), §6.2 (label cardinality and privacy), §6.3 (effectiveness), §6.4
+(truth-state counters), §6.5 (quality, cost, provider, DLP, readiness, SLO, HTTP), §6.6 (derivation rule); SPEC-003
+§5.16.3; SPEC-000 §7.4. Plan: EP-008 M4. DOD-022, DOD-037.
+
+COMMANDS RUN, WITH THEIR RESULTS
+--------------------------------
+
+  sh scripts/test-unit.sh                                    -> `test-unit: ok` (counts in the ledger entry)
+  sh scripts/metrics-catalogue-guard.sh                      -> `metrics catalogue: ok` (exit 0)
+  grep -c '"name"' config/metrics/catalogue.json             -> 42, asserted in the suite as well as by the guard
+  node --test tests/observability/metrics-catalogue.test.ts  -> 31 tests, 31 pass, 0 fail
+  node --test tests/observability/effectiveness-metric.test.ts -> 11 tests, 11 pass, 0 fail
+  sh scripts/lint.sh                                         -> `lint: ok` (`typecheck: ok`, `import boundary: ok`)
+
+THE GUARD'S OWN OUTPUT, VERBATIM (it prints what it checked, including what it could NOT check):
+
+  catalogue: 42 families, all names, labels, owners and meanings valid
+  dashboards: 1 file(s), 9 panel(s), every referenced metric registered and every ratio panel naming its denominator
+  alerts: PENDING - ./config/alerts/catalogue.json does not exist yet and is owned by EP-008 M7; this check did not run
+  indicators: PENDING - ./config/slo/objectives.json does not exist yet and is owned by EP-008 M8; this check did not run
+  prohibited names: scanned 145 file(s) under config/, src/ and docs/, 0 hit(s)
+  verdict: OK
+
+THE NEGATIVE CONTROL, AND THE DEFECT IT FOUND IN THE CHECK ITSELF
+-----------------------------------------------------------------
+
+A zero-hit scan means nothing unless the scanner can hit, so the guard plants a prohibited identifier and a prohibited
+phrase in a temporary file under `config/`, requires the SAME scan to refuse it naming both, and removes the file:
+
+  prohibited names: scanned 146 file(s) under config/, src/ and docs/, 3 hit(s)
+    - config/metrics/negative-control-prohibited.json:1: prohibited metric identifier vanishgraph_permanent_deletion_total
+    - config/metrics/negative-control-prohibited.json:1: prohibited metric phrasing "permanent deletion"
+    - config/metrics/negative-control-prohibited.json:1: prohibited metric phrasing "deletion rate"
+
+  MEASURED DEFECT, FOUND BY THAT CONTROL: the first version of the identifier check split a metric name on `_` and
+  compared whole tokens, so `vanishgraph_permanent_deletion_total` produced the tokens permanent, deletion, total and the
+  compound ban `permanent_deletion` could NEVER match — the scan reported zero hits on a file that carried the prohibited
+  name. It now matches `_`-bounded segments, so both the compound and the single-token bans fire. That is the second time
+  this node has found a check that could not fire by running a control against it, and it is recorded rather than
+  quietly fixed.
+  A second defect in the same script: the check was written into the evidence directory and imported its module with a
+  relative specifier, which Node resolved against the EVIDENCE directory (`ERR_MODULE_NOT_FOUND`,
+  `.agent/evidence/EP-008/metrics/src/...`). It now imports by absolute URL from the working directory.
+
+WHAT WAS BUILT
+--------------
+
+`config/metrics/catalogue.json` — exactly 42 families, one entry each, with `name`, `type`, `unit`, `labels`,
+`owner_service` and `meaning`, transcribed from §6.3-§6.5. The file also carries, as data: the §6.2 prohibited-label
+list, the canonical label names, the bounded value set for every label that has one, a named SOURCE of the bound for the
+five labels whose bound is versioned data elsewhere, the prohibited metric-name list, and a `label_namespace_note`
+recording a specification conflict found while building it (below).
+
+`src/adapters/observability/metrics-registry.ts` — the catalogue as a validated contract, with refusals at
+REGISTRATION time: an uncatalogued name, a name without the namespace, a name carrying a forbidden synonym or asserting
+a prohibited outcome, a type outside {counter, gauge, histogram}, a missing unit, a placeholder meaning, an owner that is
+not one of the seven declared services, a prohibited label, a label declared nowhere, a label with no bounded value set
+and no declared source, a float cost, an implicit currency and a non-finite value. It also carries `validateDashboard`,
+the dashboard schema: a panel may only reference a registered family, a RATIO PANEL MUST NAME THE DENOMINATOR SERIES it
+is a ratio of (SPEC-000 §7.4), an effectiveness ratio panel must render all three `ci` values, and an effectiveness
+events panel must render the denominator component — because a panel that renders the ratio without the denominator, or
+the exclusions without the cohort, is the defect §6.3 describes.
+
+`src/adapters/observability/effectiveness-metric.ts` — the figure, built on the API's own computation:
+`wilson` and `figure` and `DENOMINATOR_DEFINED_AS` are IMPORTED from `src/adapters/persistence/coverage.ts` (the module
+the §5.16.3 route reads), not re-derived. §6.3 requires one denominator definition and §13.3 item 9 records that a
+divergence of exactly this kind once produced two different published numbers from one dataset, so the parity test
+asserts the two planes agree at every boundary including 0/0. The module adds the four `component` series, the three
+`ci` series, the `no_data` status and the range refusals (a negative or fractional count, and a numerator above its
+denominator).
+
+  ONE DEFINITION, AND IT COST A TWO-LINE CHANGE OUTSIDE EP-008 §6: `wilson`, `round4`, `figure` and
+  `DENOMINATOR_DEFINED_AS` were module-private in `src/adapters/persistence/coverage.ts`, so the metric plane could only
+  have used them by re-implementing them — a second computation, which the plan forbids in as many words. They are now
+  exported, and nothing about their behaviour changed. This is recorded as a deliberate deviation from §6's file list
+  and it is the smallest change that satisfies the plan's own requirement.
+
+`config/dashboards/removal-effectiveness.json` — one dashboard, nine panels, validated by the guard and the suite.
+
+`tests/observability/metrics-catalogue.test.ts` (31 tests) and `tests/observability/effectiveness-metric.test.ts`
+(11 tests). The effectiveness suite recomputes the tally and the Wilson interval INDEPENDENTLY from a raw event list, so
+the arithmetic is checked against the specification's definitions rather than against the module's own helpers; three of
+the eleven exposures in the workload are ineligible for the cohort and one removal came through the acting path, so the
+test fails if either rule is dropped.
+
+`REMOVAL_EFFECTIVENESS_METRICS.md` — the definitions, the two series, the always-together rule, the exclusion
+components, the prohibition list, and a closing section naming what is built and what is not.
+
+FINDINGS RECORDED RATHER THAN RESOLVED BY SILENCE
+-------------------------------------------------
+
+1. SPEC-007 §6.1 LIST VERSUS §6.3-§6.5 LABEL SETS — A REAL CONFLICT IN THE SPECIFICATION. §6.1 names fourteen canonical
+   label names and says "No other label name is permitted without a specification change". §6.3-§6.5 then declare, per
+   metric, labels that are not in that list: component, ci, reappearance_window, verification_method, reason_code,
+   gate_kind, currency, auth_mode, budget_key, sink, data_class, objective, direction, service, layer, detection_path,
+   path_distinct, has_verification_reference, workflow_name, state, route, method, status_class. Both are specification
+   text, and the catalogue could not be built from §6.3-§6.5 without violating §6.1 as written. The catalogue therefore
+   validates every label against the UNION of both lists and refuses any label declared nowhere in SPEC-007, and the
+   conflict is recorded as data in the file's own `label_namespace_note` for the specification change that should resolve
+   it. Nothing was renamed and no rule was weakened.
+2. THE ALERT AND SLO CROSS-CHECKS CANNOT RUN YET. §6.5 requires every metric referenced by an alert expression (§8) or
+   an SLO indicator (§9) to be registered, and M4(e) asks the guard to check both catalogues — which EP-008 M7 and M8
+   build. The guard reports `PENDING` with the owning milestone and the file it needs, so the absence is visible in the
+   guard's own output rather than passing as a check that ran.
+3. A PARITY DEFECT BETWEEN MILESTONES, FOUND AND FIXED. The M2 DLP counters emitted this module's own sink identifiers
+   (`LOG_FORWARDER`, `OTLP_TRACE_EXPORTER`, …) as the `sink` LABEL VALUE, while §6.5 bounds that label to
+   {TRACE, LOG, ERROR_REPORT, PR_ISSUE, DEBUG_BUNDLE}. A series outside a bounded label set is exactly what §6.2
+   prohibits, and alert A-06 grouping by `sink` would have grouped values the specification does not declare. The gate
+   now maps its internal name to the catalogue's label value through `SINK_LABEL_VALUES`, and the catalogue suite asserts
+   every mapping lands inside the declared set.
+4. THE PROHIBITED-NAME SCAN'S INTERPRETATION IS STATED, NOT IMPLIED. M4(e) says no prohibited metric name may appear in
+   `config/`, `src/` or `docs/`. Read literally, a document that says "permanent deletion is prohibited" would be a
+   defect, which cannot be the intent. The scan therefore looks for metric-SHAPED identifiers everywhere and for the
+   human-readable phrases in `config/` only, and the guard's header states that reading. The checker itself and the
+   catalogue's own prohibition list are excluded by name, with the reason recorded in the script.
+5. NOT BUILT, AND NAMED IN THE DOCUMENT: no Prometheus client and no `GET /metrics`, so no series is scraped; no
+   recording rule evaluates the ratio outside this process; the alert and SLO catalogues are M7/M8 work.

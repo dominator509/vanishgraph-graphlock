@@ -74,6 +74,26 @@ export const EGRESS_DENIED_COUNTER = 'vanishgraph_dlp_egress_denied_total';
 export const CANARY_DETECTIONS_COUNTER = 'vanishgraph_dlp_canary_detections_total';
 
 /**
+ * The `sink` LABEL VALUES ARE THE CATALOGUE'S, NOT THIS MODULE'S NAMES.
+ *
+ * `vanishgraph_dlp_scrub_outcome_total`, `vanishgraph_dlp_egress_denied_total` and
+ * `vanishgraph_dlp_canary_detections_total` declare `sink` ∈ {TRACE, LOG, ERROR_REPORT, PR_ISSUE, DEBUG_BUNDLE}
+ * (SPEC-007 §6.5), and §6.2 prohibits a label whose value set is not a bounded enum. MEASURED: this module's first
+ * version emitted its own identifiers (`LOG_FORWARDER`, `OTLP_TRACE_EXPORTER`, …) as the label value, which is outside
+ * that bounded set — a series the alerts A-06/A-06c would match on the metric name and then fail to group correctly, and
+ * a catalogue violation the metrics guard reports. The adapter's internal name and the metric's label value are
+ * therefore two values, with one mapping between them, and `tests/observability/metrics-catalogue.test.ts` asserts the
+ * mapping lands inside the catalogue's declared set.
+ */
+export const SINK_LABEL_VALUES: Readonly<Record<DlpSinkName, string>> = Object.freeze({
+  OTLP_TRACE_EXPORTER: 'TRACE',
+  LOG_FORWARDER: 'LOG',
+  ERROR_REPORTER: 'ERROR_REPORT',
+  PR_ISSUE_EXPORTER: 'PR_ISSUE',
+  DEBUG_BUNDLE: 'DEBUG_BUNDLE',
+});
+
+/**
  * The brand that makes a payload acceptable to a sink. It is declared here and applied only by `accept()`, so an object
  * literal cannot satisfy `AcceptedPayload`: the type system refuses it before the runtime does.
  */
@@ -256,7 +276,7 @@ export function createEgressGate(options: EgressGateOptions): EgressGate {
   ): ScrubRefusal => {
     bump(`${SCRUB_OUTCOME_COUNTER}{outcome="${outcome}"}`);
     bump(`${EGRESS_DENIED_COUNTER}{reason_code="${reasonCode}"}`);
-    if (reasonCode === 'CANARY_DETECTED') bump(`${CANARY_DETECTIONS_COUNTER}{sink="${sink}"}`);
+    if (reasonCode === 'CANARY_DETECTED') bump(`${CANARY_DETECTIONS_COUNTER}{sink="${SINK_LABEL_VALUES[sink]}"}`);
     const refusal: ScrubRefusal = Object.freeze({ ok: false as const, outcome, reasonCode, detail, fieldPath, ruleClass });
     refusals.push(refusal);
     return refusal;

@@ -38,7 +38,7 @@ import type { TenantTransaction } from '../../http/plugins/tenancy.ts';
 const Z_95 = 1.959963984540054;
 
 /** Round to four decimals, the precision §5.16.3's example shows for a ratio. */
-function round4(value: number): number {
+export function round4(value: number): number {
   return Number(value.toFixed(4));
 }
 
@@ -49,7 +49,7 @@ function round4(value: number): number {
  * lives: a service with no verified removals in a window has a numerator of 0, and the normal approximation would
  * report a NEGATIVE lower bound — a confidence interval that cannot be true.
  */
-function wilson(
+export function wilson(
   numerator: number,
   denominator: number,
 ): { readonly level: number; readonly low: number; readonly high: number } | null {
@@ -67,11 +67,11 @@ function wilson(
   };
 }
 
-const DENOMINATOR_DEFINED_AS =
+export const DENOMINATOR_DEFINED_AS =
   'exposures whose transition into MATCH_CONFIRMED falls in the interval and whose case carries a policy ' +
   'decision (a resolved legal basis and channel), counted once per exposure';
 
-function figure(numerator: number, denominator: number): EffectivenessFigure {
+export function figure(numerator: number, denominator: number): EffectivenessFigure {
   return {
     eligibleConfirmedMatchDenominator: denominator,
     verifiedRemovedNumerator: numerator,
