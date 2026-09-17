@@ -151,3 +151,17 @@ producing `PASS`, and no objective has ever been reported `PASS` in this reposit
 breach that yields `PASS` makes `VG-SLO-005` `FAIL` and revokes every dependent verdict as `INCONCLUSIVE` — is enforced by
 the evaluator and proven by its suite, not by an executed campaign. The error-budget **consequence policy** stays open
 (SPEC-007 §13.3 item 8) and is not invented here.
+
+## 9. Retention, deletion and access (SPEC-007 §11)
+
+`config/observability/retention.json` carries one explicit window per data class, and `sh scripts/retention-config-guard.sh`
+(`retention config: ok`) refuses a class with no window, a window that is unbounded in any form, and a deletion outcome
+the metric catalogue cannot express. Deletion is by **whole-partition drop**; a sealed-partition rewrite is **refused** and
+recorded, never silently skipped; every deletion logs at **INFO** and never at `DEBUG`. Raw telemetry reads need an
+authenticated, observability-roled, MFA-backed caller, are tenant-scoped, and write an `AuditEvent` with the actor, purpose
+code, query scope and result count but **no result contents**.
+
+**Measured state: the propagation rows are `BLOCKED_ENVIRONMENT`.** There is no partitioned telemetry store and no expiry
+job in this environment (`TRACE_BACKEND_URL`, `LOG_STORE_URL` and `PROMETHEUS_URL` are unset, recorded in
+`.agent/evidence/EP-008/retention/provisioning-attempts.txt`), so what is validated is the configuration and the dry-run
+plan — **no deletion has been observed executing**, and the configuration check was not relaxed to make the guard pass.

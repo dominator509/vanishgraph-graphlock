@@ -103,3 +103,4 @@ tests/observability/effectiveness-metric.test.ts
 tests/observability/readiness-fail-closed.test.ts
 tests/observability/alert-definitions.test.ts
 tests/observability/slo-evaluator.test.ts
+tests/observability/retention-and-access.test.ts

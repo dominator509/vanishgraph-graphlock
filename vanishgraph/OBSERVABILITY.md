@@ -134,3 +134,30 @@ runbooks (EP-008 M7); SLO evaluation and error budgets (M8); retention and acces
 (M8); the readiness/liveness induced-failure proof (M6); the metrics catalogue (M5). **NO RESULT, DIGEST OR MEASUREMENT IS
 CLAIMED BY THIS DOCUMENT.** The evidence for what is built lives under `.agent/evidence/EP-008/`, and the ledger records
 each milestone with its sentinels.
+
+## 8b. Retention, deletion and access control (SPEC-007 §11)
+
+`config/observability/retention.json` gives **one explicit window per data class**: traces 7 d hot / 30 d cold; structured
+logs 30 d / 90 d; the **security-relevant subset** 400 d, selected by `severity ∈ {ERROR, FATAL}` and the events
+`CrossTenantAccessRefused`, `EgressDenied`, `StaleRecipeRefused`, `DuplicateEffectDetected`; metrics 15 d full
+resolution then 5-minute downsampling for 13 months; exemplars 72 h; error reports 90 d; alert history and SLO verdicts
+13 months; redaction evidence and debug bundles **per the evidence store policy**, not per a second number invented here.
+`sh scripts/retention-config-guard.sh` (sentinel `retention config: ok`) validates the file against §11.1, refuses an
+**unbounded** window in every form, and checks the deletion counter and its outcome vocabulary against the metric
+catalogue — a deletion whose outcome the catalogue cannot express would happen without a signal.
+
+**Deletion propagates by WHOLE-PARTITION DROP only.** A request that would rewrite records inside a **sealed** partition
+is refused and recorded as `REFUSED_SEALED_REWRITE` rather than silently skipped: sealing is what makes a stored artifact
+evidence, and a job that could edit it would destroy the property the store exists for. Every deletion emits one **INFO**
+record and is **never** reported at `DEBUG` — a retention job that runs quietly is indistinguishable from one that has
+stopped, which is how a window silently becomes infinite in practice.
+
+**Raw telemetry reads** require an authenticated caller, an observability role and an MFA-backed assurance level, are
+scoped to the caller's tenant, and emit an `AuditEvent` carrying actor, purpose code, query scope and result count but
+**no result contents**; an unaudited privileged read is a **failure**, because it is indistinguishable from exfiltration.
+A cross-tenant read returns **nothing** (not an error — a distinguishable refusal would reveal that the other tenant's
+data exists) and increments `vanishgraph_tenant_scope_refusals_total{layer="EVIDENCE_READBACK"}`.
+
+**Not built, and recorded rather than implied:** no expiry job and no partitioned telemetry store exist here, so the
+deletion **propagation** rows are `BLOCKED_ENVIRONMENT` with their attempt log
+(`.agent/evidence/EP-008/retention/provisioning-attempts.txt`), and no deletion has been observed executing.
