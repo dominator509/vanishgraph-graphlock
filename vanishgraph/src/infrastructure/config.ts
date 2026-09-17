@@ -37,6 +37,19 @@ export interface ServiceConfig {
   readonly port: number;
   readonly host: string;
   readonly logLevel: string;
+  /**
+   * The metrics scrape path of SPEC-007 §2.3 (`VANISHGRAPH_METRICS_PATH`, default `/metrics`).
+   *
+   * DECLARED HERE BECAUSE THE ENDPOINT IS CLUSTER-INTERNAL BY SPECIFICATION: §2.3 rule 2 requires `GET /metrics` to be
+   * served on the process's metrics listener and to be unreachable from the public ingress, so its path and its bind
+   * address are configuration rather than a route on the public server. The LISTENER itself is not built yet (EP-008
+   * M5's outstanding item); this is the surface it will read, and nothing here claims it is being served.
+   */
+  readonly metricsPath: string;
+  /** The cluster-internal bind address for the metrics listener. Defaults to the public host, never to 0.0.0.0. */
+  readonly metricsHost: string;
+  /** 0 means "no metrics listener"; tests leave it 0 so nothing binds a port. */
+  readonly metricsPort: number;
 }
 
 /**
@@ -121,7 +134,24 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServiceConfig 
     port: optionalPort(env),
     host: env.HOST ?? '127.0.0.1',
     logLevel: env.LOG_LEVEL ?? 'info',
+    // THE METRICS SURFACE DEFAULTS TO CLUSTER-INTERNAL AND OFF: the default bind address is the same loopback the
+    // service already uses, never 0.0.0.0, and port 0 means no listener. An operator must opt in to exposing a scrape
+    // endpoint, and §2.3 rule 2 forbids it on the public ingress.
+    metricsPath: (env.VANISHGRAPH_METRICS_PATH ?? '/metrics').trim() || '/metrics',
+    metricsHost: env.VANISHGRAPH_METRICS_HOST ?? env.HOST ?? '127.0.0.1',
+    metricsPort: optionalMetricsPort(env),
   };
+}
+
+/** The metrics listener's port. 0 (the default) means the listener is not started. */
+function optionalMetricsPort(env: NodeJS.ProcessEnv): number {
+  const raw = env.VANISHGRAPH_METRICS_PORT;
+  if (raw === undefined || raw.trim().length === 0) return 0;
+  const parsed = Number(raw);
+  if (!Number.isInteger(parsed) || parsed < 0 || parsed > 65535) {
+    throw new ConfigurationError('dependency unavailable: VANISHGRAPH_METRICS_PORT is not a valid TCP port', 'VANISHGRAPH_METRICS_PORT');
+  }
+  return parsed;
 }
 
 /**
