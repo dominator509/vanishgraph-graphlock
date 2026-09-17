@@ -1,0 +1,38 @@
+EP-008 M5 - THE STAND-IN QUESTION FOR keycloak-jwks, DECIDED AND RECORDED RATHER THAN TAKEN QUIETLY
+==================================================================================================
+
+THE TEMPTATION, STATED PLAINLY: keycloak-jwks is one of the two remaining rows that cannot be induced here (no Keycloak
+image is cached and no network pull is available), and it would be easy to stand up a LOCAL HTTPS OIDC SERVER, point
+VANISHGRAPH at it, stop it to induce the failure, and record the row DEMONSTRATED. The probe would really run, the
+transition would really happen, and the verdict table would read four of six.
+
+WHY THAT WAS NOT DONE IN THIS ROUND, AND IT IS A JUDGEMENT RATHER THAN AN OVERSIGHT:
+
+  1. THE DECLARED DEPENDENCY IS EXTERNAL AND SOMEBODY ELSE'S. `keycloak-jwks` means the deployment identity provider. A
+     local stub proves that the probe can fetch a discovery document and a JWKS over TLS from a server that this
+     repository itself controls — it does NOT prove the probe works against a real Keycloak realm's issuer, its key
+     rotation, or its TLS chain. Recording it as DEMONSTRATED would put a stand-in in the same column as postgresql,
+     valkey and object-store, which were demonstrated against the REAL dependencies.
+  2. THE PLAN'S INDUCTION ACTION IS SPECIFIC: "stop the Keycloak frontend so discovery/JWKS fetch fails". Stopping a
+     stub is not stopping the Keycloak frontend, and the stage's own verdict vocabulary has no word for "demonstrated
+     against a stand-in", so using DEMONSTRATED would require inventing one inside the sentence rather than in the data.
+  3. THE PLAN'S OWN RULE FOR THIS NODE IS TO STAY OPEN RATHER THAN OVERSTATE: the dependencies that cannot be provisioned
+     are recorded ERROR per DOD-033 with the provisioning attempt log, and the sentinel is not printed. A stand-in would
+     not change the sentinel (job-worker and provider-transport would still block it), so the ONLY thing it would change
+     is the meaning of one row — in the direction of overstating.
+  4. THE HONESTY MANDATE IS EXPLICIT that a claimed result counts only if the check is shown to work against the thing it
+     names. A stub named keycloak-jwks is not that thing.
+
+WHAT WOULD MAKE IT LEGITIMATE, IF A LATER ROUND OR A HUMAN DECIDES TO DO IT: a new verdict value that says
+`DEMONSTRATED_AGAINST_STAND_IN` in the DATA rather than in prose, the stand-in named in the row (image or process, port,
+and the fact that it is this repository's own), and the stage's sentinel still withheld until every declared dependency
+is demonstrated against itself. Until that vocabulary exists, the row stays ERROR with its provisioning attempt, and this
+file is the record of the decision.
+
+MEASURED THIS ROUND: sh scripts/test-unit.sh -> test-unit: ok, 1397 tests, 308 suites, 0 fail, exit 0 — the tree is green
+after the object-store wiring and the SigV4 signer, and nothing about this decision required a code change.
+
+STATE OF THE ROW: keycloak-jwks remains ERROR (DOD-033), with `KEYCLOAK_ISSUER` unset and no Keycloak image cached;
+provider-transport remains EXTERNAL_REQUIRED; job-worker remains INCONCLUSIVE because no worker entry point exists in this
+repository. postgresql, valkey and object-store are DEMONSTRATED. THE STAGE EXITS 1 AND NO
+`readiness induced failure: ok` HAS BEEN PRINTED.
