@@ -19,6 +19,8 @@
  */
 
 import { loadConfig, ConfigurationError, missingVariables } from './config.ts';
+import { createMetricsRegistryFromFile } from '../adapters/observability/metrics-registry.ts';
+import { startMetricsListener } from './observability/compose-telemetry.ts';
 import { buildServer, listen } from '../http/server.ts';
 import type { ProbeResult } from '../http/routes/health.ts';
 import { AUDIENCES, verifyToken } from '../adapters/oidc/verify.ts';
@@ -131,6 +133,10 @@ function configuredProbe(name: string, envName: string): () => Promise<ProbeResu
     };
   };
 }
+
+// The catalogue path is a repository-relative constant rather than a variable: the metrics endpoint serves the ONE
+// registered catalogue, and a second path would be a second source of truth for what a metric is.
+const METRICS_CATALOGUE_PATH = 'config/metrics/catalogue.json';
 
 async function main(): Promise<number> {
   let config;
@@ -270,8 +276,28 @@ async function main(): Promise<number> {
   // never logged (VG-SEC-002).
   console.log(`serve: listening on http://${bound.host}:${bound.port}/v1`);
 
+  // THE METRICS LISTENER IS A SECOND, CLUSTER-INTERNAL LISTENER AND NOT A ROUTE (SPEC-007 §2.3 rule 2; EP-008 M5). It
+  // binds its own address, serves exactly one path, and starts only when the configuration asks for it
+  // (`VANISHGRAPH_METRICS_PORT` is 0 by default), so exposing a scrape endpoint is a deliberate operator choice rather
+  // than something a running service does by accident. A catalogue that cannot be validated stops startup: an endpoint
+  // that would serve nothing is worse than none, because it looks like a healthy scrape target.
+  let metricsListener: Awaited<ReturnType<typeof startMetricsListener>> | null = null;
+  if (config.metricsPort > 0) {
+    metricsListener = await startMetricsListener({
+      registry: createMetricsRegistryFromFile(METRICS_CATALOGUE_PATH),
+      path: config.metricsPath,
+      host: config.metricsHost,
+      port: config.metricsPort,
+      environment: process.env.VANISHGRAPH_ENVIRONMENT ?? 'local',
+    });
+    // The URL is printed because the bind port may have been chosen by the operating system; no configuration VALUE is
+    // printed, only the address the operator asked for.
+    console.log(`serve: metrics listening on ${metricsListener.url} (cluster-internal only)`);
+  }
+
   const shutdown = async (signal: string): Promise<void> => {
     console.log(`serve: ${signal} received, closing`);
+    if (metricsListener !== null) await metricsListener.close();
     await app.close();
     // Close the pool so in-flight transactions finish and no connection is left open.
     await runner.close();
