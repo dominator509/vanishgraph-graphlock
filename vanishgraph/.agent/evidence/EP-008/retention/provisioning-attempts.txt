@@ -1,0 +1,8 @@
+retention guard - 2026-09-17T16:23:12Z
+attempt: is a partitioned telemetry store reachable? (the expiry job drops partitions from one)
+  TRACE_BACKEND_URL=<unset>
+  LOG_STORE_URL=<unset>
+  PROMETHEUS_URL=<unset>
+consequence: the propagation rows (a seeded expired record absent after expiry, a sealed rewrite refused at run
+time) are BLOCKED_ENVIRONMENT per DOD-033 and are NOT counted as demonstrated; the configuration and the dry-run
+plan are validated instead, and the configuration check is never relaxed.

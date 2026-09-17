@@ -1,0 +1,33 @@
+{
+  "$comment": "Retention and deletion for observability data (SPEC-007 §11.1, §12.1 VG-OBS-008, §12.7 VG-OBS-034/VG-OBS-035; EP-008 M8(a)). ONE EXPLICIT WINDOW PER DATA CLASS, AND A MISSING WINDOW IS A DEPLOY-GATE FAILURE THAT NEVER DEFAULTS TO INFINITE: an unbounded window is the one configuration mistake that silently turns a retention policy into a permanent record, and the guard refuses it rather than warning about it. Every class below names its own hot window, its cold window where it has one, and the mechanism that removes it.",
+  "spec": "SPEC-007 §11.1 (retention windows), §11.2 (deletion propagation), §11.3 (access control on observability data), §12.1, §12.7",
+  "principle": "Deletion propagates BY WHOLE-PARTITION DROP ONLY. A deletion that rewrites records inside a sealed partition is refused — the append-only evidence store's immutability is what makes it evidence (VG-EVIDENCE-003), and a retention job that could edit it would destroy the property the store exists for.",
+  "classes": [
+    { "data_class": "TRACE", "hot": "7d", "cold": "30d", "resolution": "full", "deletion": "PARTITION_DROP", "owner": "vanishgraph-api", "note": "traces are diagnostic, not evidence: the shortest window of any class" },
+    { "data_class": "LOG", "hot": "30d", "cold": "90d", "resolution": "full", "deletion": "PARTITION_DROP", "owner": "vanishgraph-api", "note": "structured logs, JSON lines on stdout, forwarded by the platform agent" },
+    { "data_class": "LOG_SECURITY", "hot": "400d", "cold": "400d", "resolution": "full", "deletion": "PARTITION_DROP", "owner": "vanishgraph-api", "note": "the SECURITY-RELEVANT SUBSET of logs, selected by severity in ERROR or FATAL, and by the events CrossTenantAccessRefused, EgressDenied, StaleRecipeRefused and DuplicateEffectDetected; retained far longer than the rest because these are the records an incident review and a security audit read" },
+    { "data_class": "METRIC", "hot": "15d", "cold": "13 months", "resolution": "5m downsampling after the hot window", "deletion": "PARTITION_DROP", "owner": "vanishgraph-scheduler", "note": "full resolution for 15 days, then downsampled to 5-minute resolution for 13 months" },
+    { "data_class": "EXEMPLAR", "hot": "72h", "cold": null, "resolution": "full", "deletion": "PARTITION_DROP", "owner": "vanishgraph-api", "note": "exemplars carry trace identifiers and are scrubbed under the same DLP rules as every other payload (§2.3 rule 3)" },
+    { "data_class": "ERROR_REPORT", "hot": "90d", "cold": null, "resolution": "full", "deletion": "PARTITION_DROP", "owner": "vanishgraph-api", "note": "the error reporter project per environment" },
+    { "data_class": "ALERT_HISTORY", "hot": "13 months", "cold": null, "resolution": "full", "deletion": "PARTITION_DROP", "owner": "vanishgraph-scheduler", "note": "alert fires and resolutions, kept long enough to review a year of incidents" },
+    { "data_class": "SLO_VERDICT", "hot": "13 months", "cold": null, "resolution": "full", "deletion": "PARTITION_DROP", "owner": "vanishgraph-scheduler", "note": "SLO verdicts and budget figures, kept long enough to compare a year of objectives" },
+    { "data_class": "REDACTION_EVIDENCE", "hot": "per the evidence store policy", "cold": null, "resolution": "full", "deletion": "EVIDENCE_STORE_POLICY", "owner": "vanishgraph-api", "note": "redaction evidence is an EvidenceArtifact: its retention is the evidence store's policy (VG-EVIDENCE-001…003), NOT this file's, and this file says so rather than inventing a second number for it" },
+    { "data_class": "DEBUG_BUNDLE", "hot": "per the evidence store policy", "cold": null, "resolution": "full", "deletion": "EVIDENCE_STORE_POLICY", "owner": "vanishgraph-api", "note": "debug bundles are attached to repair capsules and follow the evidence store policy for the same reason" }
+  ],
+  "deletion": {
+    "mechanism": "WHOLE_PARTITION_DROP",
+    "sealed_partition_rewrite": "REFUSED",
+    "sealed_partition_rule": "A deletion request that would rewrite records inside a sealed partition is refused, and the refusal is recorded as outcome REFUSED_SEALED_REWRITE rather than silently skipped. Sealing is what makes a stored artifact evidence; a job that could edit it would make the store unusable for the purpose it exists for.",
+    "counter": "vanishgraph_telemetry_deletions_total",
+    "counter_labels": ["environment", "data_class", "outcome"],
+    "outcomes": ["PARTITION_DROPPED", "REFUSED_SEALED_REWRITE", "FAILED"],
+    "log_rule": "Every deletion emits one INFO structured log record naming the class, the window and the outcome. DELETION IS NEVER SILENT AND IS NEVER REPORTED AT DEBUG — a retention job that runs quietly is indistinguishable from one that has stopped, which is how a window silently becomes infinite in practice.",
+    "dry_run_rule": "The expiry job must produce a dry-run plan listing, per class, the partitions it would drop and the ones it would refuse. The guard validates the PLAN when no partitioned store is reachable (DOD-033 fallback), so the configuration is checked even where propagation cannot be executed."
+  },
+  "access": {
+    "raw_telemetry_read_requires": ["an authenticated caller", "an observability role", "an MFA-backed assurance level for the privileged read"],
+    "tenant_scoping": "Every raw telemetry read is scoped to the caller's tenant. A cross-tenant read returns NOTHING and increments vanishgraph_tenant_scope_refusals_total with layer EVIDENCE_READBACK — an empty result rather than an error, because a distinguishable refusal tells the caller that the other tenant's data exists.",
+    "audit_rule": "A privileged raw-telemetry read emits an AuditEvent carrying the ACTOR, the PURPOSE CODE, the QUERY SCOPE and the RESULT COUNT, and NO RESULT CONTENTS. A privileged read that produces no audit row is a failure rather than a warning: an unaudited read of raw telemetry is indistinguishable from exfiltration.",
+    "not_built_here": "This file declares the access rules. The role, the MFA step-up and the audit write are implemented by the API and security nodes; the suite asserts the rules that are implemented and records the rest with its reason."
+  }
+}

@@ -1,0 +1,6 @@
+classes: 10 configured, 8 with a §11.1 window and 2 following the evidence store policy
+windows: no class is unbounded and the security subset is longer than the rest of the logs
+deletion: WHOLE_PARTITION_DROP with sealed rewrites REFUSED, counter vanishgraph_telemetry_deletions_total carrying environment, data_class, outcome
+access: raw telemetry reads require 3 condition(s), are tenant-scoped, and are audited without result contents
+propagation: BLOCKED_ENVIRONMENT - no partitioned store is reachable, so the expiry job's DRY-RUN PLAN is validated instead of an executed deletion; that row is NOT counted as demonstrated
+verdict: OK (configuration; propagation BLOCKED_ENVIRONMENT)
