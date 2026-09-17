@@ -2,6 +2,10 @@
   "$comment": "The alert catalogue (SPEC-007 §8, §12.6; EP-008 M6(a)). Exactly 20 alert rows, each with its exact PromQL expression, threshold, `for` duration, severity, routing lane and runbook path, transcribed from §8's table. A placeholder in any field is a defect. Every metric named in an expression must be registered in config/metrics/catalogue.json (VG-OBS-016), and `sh scripts/metrics-catalogue-guard.sh` refuses an expression that refers to an unregistered metric. ROUTING LANES MEAN WHAT §8 SAYS: page (on-call paging, 5-minute acknowledgement objective), page-security (security on-call), ticket (operations queue, 1-business-day review), advisory (business hours, 4-hour working response objective).",
   "spec": "SPEC-007 §8 (alerting), §12.6; routing lanes and the required critical set are §8's own",
   "required_critical_set": ["A-01", "A-02", "A-03", "A-04", "A-05", "A-06", "A-07", "A-08", "A-09", "A-10"],
+  "coverage_rule_1_conflicts": {
+    "$comment": "A SPECIFICATION CONFLICT FOUND BY RUNNING THE GUARD, RECORDED RATHER THAN RESOLVED SILENTLY. §8's coverage rule 1 says 'The required critical set is exactly: A-01 … A-10', while §8's OWN TABLE marks six of those ten as severity `warning`: A-02 (14 d p95 lag), A-03 (3x baseline), A-06 (>5 denials), A-07 (80 % budget), A-09 (>2 auth failures) and A-10 (readiness flapping). A row cannot be both critical and warning. THIS CATALOGUE TRANSCRIBES THE TABLE, because the table is the per-alert fact and rule 1 is a summary sentence; the disagreement is listed here so the guard can require that it stays VISIBLE, and so a later specification change can resolve it in one place. Resolving it here by editing either the severity or the rule would hide a contradiction between two normative statements.",
+    "ids_marked_warning_by_the_table_but_required_critical_by_rule_1": ["A-02", "A-03", "A-06", "A-07", "A-09", "A-10"]
+  },
   "routing_lanes": {
     "page": "on-call paging with a 5-minute acknowledgement objective",
     "page-security": "security on-call",

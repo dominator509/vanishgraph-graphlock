@@ -1,0 +1,9 @@
+alerts: 20 rows, 20 unique ids, all fields present and non-placeholder
+conditions: 12 stated in the expression, 8 in the threshold column (the specification puts them in both places)
+routing lanes: advisory, page, page-security, ticket
+coverage rule 1: 10 id(s) present as rows; 6 row(s) where rule 1 and the table disagree, RECORDED rather than silently resolved
+runbooks: 16 document(s), all present and non-empty
+metrics: every metric named in every expression is registered (histogram suffixes resolved to their family)
+success phrasing: no alert name or expression carries success vocabulary
+induction: NOT RUN - there is no expression evaluator and no series store in this repository, so no alert has been demonstrated firing or resolving; the sentinel covers the structural checks only
+verdict: OK (structural; induction NOT RUN)

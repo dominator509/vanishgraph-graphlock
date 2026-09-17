@@ -52,6 +52,7 @@ a milestone that needs a new one must add it here in the same change.
 | `sh scripts/egress-canary-test.sh` | `canary egress: ok` |
 | `sh scripts/log-contract-guard.sh` | `log contract: ok` |
 | `sh scripts/metrics-catalogue-guard.sh` | `metrics catalogue: ok` |
+| `sh scripts/alert-catalogue-guard.sh` | `alert catalogue: ok` |
 | `sh scripts/induced-failure-readiness.sh` | `readiness induced failure: ok` |
 
 ## Aggregates
