@@ -72,7 +72,7 @@ describe('forced failure: credentials fail closed (DOD-014)', () => {
     const env = completeEnv();
     const secretName = 'SESSION_SECRET';
     assert.ok(SECURITY_ENV_VARS.includes(secretName), `${secretName} must be a declared variable`);
-    env[secretName] = 'shortval-truncated-secret-0123456789';
+    env[secretName] = 'canary-short-val';
     const refusal = refusalOf(() => readSecurityConfig(env));
     assert.ok(refusal instanceof Error, `a short ${secretName} must be refused`);
     assert.match(refusal.message, /32-character minimum/, 'the refusal must state the requirement');
@@ -80,7 +80,7 @@ describe('forced failure: credentials fail closed (DOD-014)', () => {
     // contain the literal 'short' and failed — because the message says "shorter than the 32-character minimum", so a
     // substring test on a short generic word reports a leak that is not there. The value is now distinctive enough that
     // a match could only be the value itself.
-    assert.equal(refusal.message.includes('shortval-truncated-secret-0123456789'), false, 'and must not echo the value');
+    assert.equal(refusal.message.includes('canary-short-val'), false, 'and must not echo the value');
     assert.equal(
       refusal instanceof SecurityConfigError,
       false,
