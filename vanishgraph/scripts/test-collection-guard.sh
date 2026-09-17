@@ -50,7 +50,14 @@ command -v node >/dev/null 2>&1 || { echo "test collection guard: FAIL - node is
 # that the guard and the stage it guards must name the same roots. MEASURED: after the security suite was added to the
 # manifest and NOT to this glob, the guard failed with "expected suite produced no results" while `test-unit.sh` was
 # running it and passing — the two disagreed about what the unit suite is, which is the defect this file exists to prevent.
-GLOB="${VG_TEST_GLOB:-tests/domain/**/*.test.ts tests/harness/**/*.test.ts tests/architecture/**/*.test.ts tests/contract/**/*.test.ts tests/security/**/*.test.ts tests/regression/**/*.test.ts tests/failure/**/*.test.ts}"
+#
+# `tests/observability/**` IS IN THE DEFAULT SET FROM EP-008 M1, for the third time and the same reason: `test-unit.sh`
+# collects every `tests/**/*.test.ts` outside its service-dependent exclusion list, so the new identity suite runs in the
+# unit stage, and `EXPECTED_TEST_MANIFEST.txt` names it. Leaving this glob alone would have failed the guard with
+# "expected suite produced no results" on a suite that passes — the guard would have been measuring a smaller set than the
+# stage it claims to guard. NOTE THE DIRECTION OF THAT CHANGE: adding the root makes the guard RUN the new suite rather
+# than skip it, so this is not a relaxation.
+GLOB="${VG_TEST_GLOB:-tests/domain/**/*.test.ts tests/harness/**/*.test.ts tests/architecture/**/*.test.ts tests/contract/**/*.test.ts tests/security/**/*.test.ts tests/regression/**/*.test.ts tests/failure/**/*.test.ts tests/observability/**/*.test.ts}"
 MANIFEST="${VG_EXPECTED_MANIFEST:-.agent/verification/EXPECTED_TEST_MANIFEST.txt}"
 
 [ -f "$MANIFEST" ] || { echo "test collection guard: FAIL - expected-test manifest $MANIFEST is missing" >&2; exit 1; }

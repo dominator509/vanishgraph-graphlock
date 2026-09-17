@@ -1,0 +1,392 @@
+EP-008 M1 DISCOVERY EVIDENCE (SPEC-007 §2.1/§2.3; EP-008 M1(d))
+Captured with the four declared discovery commands, in order, from the repository root.
+captured_at_utc: 2026-09-17T06:47:56Z
+cwd: C:\dev\vanishgraph-graphlock\vanishgraph
+
+=== COMMAND 1: cat package.json ===
+{
+  "name": "vanishgraph",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "VanishGraph Privacy Removal OS - evidence-first, multi-tenant privacy removal service. See PROJECT_BRIEF.md and .agent/specs/SPEC-000-product-scope.md.",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "packageManager": "npm@11.11.0",
+  "scripts": {
+    "typecheck": "sh scripts/typecheck.sh",
+    "lint": "sh scripts/lint.sh",
+    "format-check": "sh scripts/format-check.sh",
+    "build": "sh scripts/build.sh",
+    "test:unit": "sh scripts/test-unit.sh",
+    "test:collection-guard": "sh scripts/test-collection-guard.sh",
+    "reality-gate": "sh scripts/reality-gate.sh",
+    "dependency-audit": "sh scripts/dependency-audit.sh",
+    "gate:foundation": "sh scripts/gate-foundation.sh",
+    "verify": "sh scripts/verify.sh",
+    "serve": "node src/infrastructure/main.ts",
+    "test:contract": "node --test \"tests/contract/**/*.test.ts\"",
+    "test:integration": "sh scripts/test-integration.sh",
+    "scan:truth-state": "node scripts/scan-truth-state-input.ts",
+    "gate:api": "sh scripts/gate-api.sh",
+    "gate:data": "sh scripts/gate-data.sh",
+    "build:web": "node scripts/emit-route-manifest.ts && vite build",
+    "dev:web": "vite",
+    "test:ui": "playwright test",
+    "test:a11y": "playwright test --project=a11y"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "1.63.0",
+    "@types/node": "24.10.1",
+    "@types/pg": "8.23.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "axe-core": "4.13.0",
+    "jsdom": "29.1.1",
+    "typescript": "5.9.3",
+    "vite": "8.3.0"
+  },
+  "dependencies": {
+    "@fastify/type-provider-json-schema-to-ts": "5.0.0",
+    "@tanstack/react-query": "5.103.0",
+    "@tanstack/react-router": "1.170.36",
+    "fastify": "5.12.4",
+    "ioredis": "6.0.0",
+    "jose": "6.2.12",
+    "pg": "8.23.0",
+    "pino": "10.3.1",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "zod": "4.6.5"
+  }
+}
+
+=== COMMAND 2: git ls-files 'src/**' | sort ===
+src/adapters/agent/tool-registry.ts
+src/adapters/config/security-config.ts
+src/adapters/coordination/rate-limit.ts
+src/adapters/coordination/replay-store.ts
+src/adapters/crypto/local-key-provider.ts
+src/adapters/crypto/managed-kms-key-provider.ts
+src/adapters/crypto/retention.ts
+src/adapters/idempotency/postgres-store.ts
+src/adapters/masking.ts
+src/adapters/oidc/authorization-code.ts
+src/adapters/oidc/factors.ts
+src/adapters/oidc/jwks.ts
+src/adapters/oidc/revocation.ts
+src/adapters/oidc/verify.ts
+src/adapters/persistence/actions.ts
+src/adapters/persistence/appeals.ts
+src/adapters/persistence/audit-queries.ts
+src/adapters/persistence/audit-sink.ts
+src/adapters/persistence/authority-repository.ts
+src/adapters/persistence/cases.ts
+src/adapters/persistence/controller-responses.ts
+src/adapters/persistence/coverage.ts
+src/adapters/persistence/deadlines.ts
+src/adapters/persistence/discovery.ts
+src/adapters/persistence/evidence.ts
+src/adapters/persistence/exposures.ts
+src/adapters/persistence/observations.ts
+src/adapters/persistence/policies.ts
+src/adapters/persistence/postgres-runner.ts
+src/adapters/persistence/sources.ts
+src/adapters/persistence/subject-commands.ts
+src/adapters/persistence/subjects.ts
+src/adapters/persistence/transitions.ts
+src/adapters/persistence/webhook-bindings.ts
+src/adapters/persistence/webhook-deliveries.ts
+src/adapters/queue/postgres-job-queue.ts
+src/adapters/secrets/secret-resolver.ts
+src/adapters/ssrf/fetch-guard.ts
+src/adapters/ssrf/target-classifier.ts
+src/application/contracts/action-queries.ts
+src/application/contracts/appeal-queries.ts
+src/application/contracts/audit-queries.ts
+src/application/contracts/case-queries.ts
+src/application/contracts/controller-response-queries.ts
+src/application/contracts/coverage-queries.ts
+src/application/contracts/deadline-queries.ts
+src/application/contracts/discovery-queries.ts
+src/application/contracts/evidence-queries.ts
+src/application/contracts/exposure-queries.ts
+src/application/contracts/identity.ts
+src/application/contracts/index.ts
+src/application/contracts/observation-queries.ts
+src/application/contracts/policy-queries.ts
+src/application/contracts/replay-store.ts
+src/application/contracts/request-context.ts
+src/application/contracts/source-queries.ts
+src/application/contracts/subject-commands.ts
+src/application/contracts/subject-queries.ts
+src/application/contracts/transition-queries.ts
+src/application/contracts/webhook-bindings.ts
+src/application/contracts/webhook-deliveries.ts
+src/application/ports/index.ts
+src/application/ports/job-queue.ts
+src/application/security/agent-tool-policy.ts
+src/application/security/authority-service.ts
+src/application/security/authorization-matrix.ts
+src/application/security/effect-budget.ts
+src/application/security/egress-gate.ts
+src/application/security/enrollment-controls.ts
+src/application/security/entitlement.ts
+src/application/security/rate-limit-policy.ts
+src/application/security/role-bundles.ts
+src/application/security/scope-catalogue.ts
+src/application/security/step-up-policy.ts
+src/application/security/support-access-service.ts
+src/application/security/webhook-gate.ts
+src/domain/commands.ts
+src/domain/entities.ts
+src/domain/errors.ts
+src/domain/events.ts
+src/domain/identifiers.ts
+src/domain/invariants.ts
+src/domain/ports/audit-sink.ts
+src/domain/ports/authority-repository.ts
+src/domain/ports/idempotency-store.ts
+src/domain/ports/index.ts
+src/domain/ports/key-provider.ts
+src/domain/ports/secret-resolver.ts
+src/domain/state-machine.ts
+src/domain/truth-state.ts
+src/domain/values.ts
+src/http/dto/page.ts
+src/http/errors/code-registry.ts
+src/http/errors/envelope.ts
+src/http/openapi/document.ts
+src/http/openapi/registry.ts
+src/http/pagination/cursor.ts
+src/http/plugins/correlation.ts
+src/http/plugins/error-handler.ts
+src/http/plugins/idempotency.ts
+src/http/plugins/identity.ts
+src/http/plugins/rate-limit.ts
+src/http/plugins/raw-body.ts
+src/http/plugins/scope-guard.ts
+src/http/plugins/step-up.ts
+src/http/plugins/support-access.ts
+src/http/plugins/tenancy.ts
+src/http/query/filters.ts
+src/http/query/strict.ts
+src/http/routes/actions.ts
+src/http/routes/appeals.ts
+src/http/routes/audit.ts
+src/http/routes/cases.ts
+src/http/routes/controller-responses.ts
+src/http/routes/coverage.ts
+src/http/routes/deadlines.ts
+src/http/routes/discovery.ts
+src/http/routes/evidence.ts
+src/http/routes/exposures.ts
+src/http/routes/handler-context.ts
+src/http/routes/health.ts
+src/http/routes/idempotent-write.ts
+src/http/routes/observations.ts
+src/http/routes/policies.ts
+src/http/routes/preconditions.ts
+src/http/routes/sources.ts
+src/http/routes/subjects.ts
+src/http/routes/webhook-ingress.ts
+src/http/server.ts
+src/http/webhooks/verify.ts
+src/infrastructure/config.ts
+src/infrastructure/database/migrate.ts
+src/infrastructure/database/provision.ts
+src/infrastructure/database/psql.ts
+src/infrastructure/main.ts
+=== COMMAND 3: node --version ===
+v24.14.1
+=== COMMAND 4: git ls-files 'scripts/**' | sort ===
+scripts/anti-gaming-scan.py
+scripts/artifact-identity.sh
+scripts/backup-drill.sh
+scripts/build.sh
+scripts/check-rls-coverage.sh
+scripts/copy-lint-gate.sh
+scripts/copy-lint-gate.ts
+scripts/count-tests.mjs
+scripts/coverage-gate.sh
+scripts/db-provision.sh
+scripts/db-teardown.sh
+scripts/dependency-audit.sh
+scripts/dod-gate.sh
+scripts/double-boundary-guard.sh
+scripts/emit-route-manifest.ts
+scripts/evidence-index.sh
+scripts/flake-guard.sh
+scripts/forced-failure.sh
+scripts/format-check.sh
+scripts/gate-api.sh
+scripts/gate-data.sh
+scripts/gate-domain.sh
+scripts/gate-foundation.sh
+scripts/gate-security.sh
+scripts/gate-test-hardening.sh
+scripts/gate-toolchain.sh
+scripts/gate-ui.sh
+scripts/generate-rls.ts
+scripts/graph-next.sh
+scripts/harness-accounting.sh
+scripts/harness-init.sh
+scripts/harness-next.sh
+scripts/harness-run-stage.sh
+scripts/harness-validate.sh
+scripts/import-boundary.sh
+scripts/install.sh
+scripts/ledger.sh
+scripts/lib/doubles-scan.mjs
+scripts/lib/loud-fail.sh
+scripts/lib/mutations.ts
+scripts/lint.sh
+scripts/live-fire.sh
+scripts/materialize-atomic-sources.sh
+scripts/migrate.sh
+scripts/mutation-check.sh
+scripts/mutation-gate.sh
+scripts/openapi-document.ts
+scripts/preflight.sh
+scripts/probes/cloud_identity.sh
+scripts/probes/database_url.sh
+scripts/probes/github_app.sh
+scripts/probes/keycloak.sh
+scripts/probes/local_model.sh
+scripts/probes/object_store.sh
+scripts/probes/postal_api.sh
+scripts/probes/search_api_key.sh
+scripts/probes/stripe.sh
+scripts/probes/valkey_url.sh
+scripts/production-readiness-check.sh
+scripts/reality-gate.sh
+scripts/refresh-verification-state.ts
+scripts/regression-proof.sh
+scripts/route-coverage.ts
+scripts/scan-truth-state-input.ts
+scripts/secret-scan.sh
+scripts/security-check.sh
+scripts/smoke-test.sh
+scripts/test-collection-guard.sh
+scripts/test-e2e.sh
+scripts/test-integration.sh
+scripts/test-unit.sh
+scripts/typecheck.sh
+scripts/validate-env.sh
+scripts/validate-generated-pack.py
+scripts/verify.sh
+=== ANALYSIS: WHICH CLIENTS ALREADY EXIST VERSUS MUST BE ADDED (EP-008 M1(d)) ===
+
+MEASURED, from the dependency list in command 1 above:
+  * OpenTelemetry: NONE. No '@opentelemetry/*' package is present in "dependencies" or "devDependencies".
+  * Prometheus client: NONE. No 'prom-client', 'prometheus-api-metrics' or equivalent is present.
+  * Error reporter (GlitchTip/Sentry-compatible): NONE. No '@sentry/*' or GlitchTip client is present.
+  * Structured logger: PRESENT AND ALREADY WIRED. 'pino' 10.3.1 is a runtime dependency and 'src/http/server.ts' builds the
+    server with it. That is the log sink SPEC-007 §2.3 rule 1 describes: single-line JSON records to standard output.
+  * Cross-checked by name across the whole tracked tree: 'git grep -il "opentelemetry|prom-client|prometheus|sentry|glitchtip"'
+    returns only specification, planning, documentation and unrelated source files (SPEC-007, SPEC-003, ARCHITECTURE.md,
+    DECISIONS.md, OBSERVABILITY.md, NOTICE, PROJECT_RESEARCH_BRIEF.md, the verification source library). The three src/
+    matches are FALSE POSITIVES and were each checked: 'src/adapters/persistence/exposures.ts',
+    'src/application/contracts/exposure-queries.ts' and 'src/http/routes/exposures.ts' match only because the identifier
+    'ConfidenceBasisEntry' contains the substring 'sEntry'. NO import of any telemetry, metrics or error-reporting client
+    exists in src/.
+
+DECISION TAKEN IN THIS MILESTONE, AND WHAT IT IS BASED ON. §7 of the node plan requires the transport choice to be made in
+M1 from repository evidence and pinned exactly, and forbids adding a telemetry dependency without an ADR. The evidence
+above is that the repository has NO telemetry, metrics or error-reporting client, so the choice is between adding three
+dependencies or building the emission path on what is present. THIS MILESTONE ADDS NO DEPENDENCY, and therefore triggers
+none of §6's DECISIONS.md / ARCHITECTURE.md conditions:
+  * SPEC-007 §2.1 rule 4 requires the nine resource attributes to be attached at the SDK's resource layer so a new call
+    site cannot omit them. With no SDK, the plan's FALLBACK applies verbatim: the attributes are attached in ONE
+    composition function that wraps every producer and is the only exported emission path
+    ('src/infrastructure/observability/compose-telemetry.ts'). The property §2.1 rule 4 exists to protect is preserved:
+    there is no second way to emit.
+  * The alternative — adding '@opentelemetry/sdk-node', a Prometheus client and an error-reporter client in M1 — would
+    pin three dependencies before any milestone has established what the metrics catalogue (§6), the alert catalogue (§8),
+    the SLO evaluator (§9) or the health endpoints (§7) need from them, and the dependency rules require the pin to come
+    from the decision, not before it. Later milestones that need a client take the ADR route then.
+  * CONSEQUENCE, STATED SO IT IS NOT DISCOVERED LATER: OTLP trace export, the Prometheus scrape endpoint on GET /metrics,
+    and the error-reporter POST are NOT implemented by M1 and are not claimed by it. M1 implements the identity layer and
+    the single emission path they will be attached to.
+
+=== THE FAIL-CLOSED PATH, MEASURED IN THIS WORKING TREE ===
+
+WHAT THE NINE-KEY RESOLUTION CAN AND CANNOT RESOLVE HERE, recorded as data in
+'.agent/verification/state/RUN_MANIFEST.json' under "telemetry_resource":
+  * STATIC (read from this repository): 'service.version' from package.json ("0.1.0"); 'vanishgraph.candidate_epoch' from
+    the manifest's own "candidate_epoch" ("GENERATION").
+  * PROCESS_INPUT (supplied by the process, closed sets): 'service.name' (seven declared services, SPEC-007 §2.2),
+    'deployment.environment.name' (five tokens), 'vanishgraph.tenant.class' (five enum members).
+  * EXTERNAL_REQUIRED (the source of truth does not exist in this tree): 'vanishgraph.artifact.digest' and
+    'vanishgraph.build.inputs_digest' (build/release output; 'scripts/build.sh' and 'scripts/artifact-identity.sh' are
+    loud-fail placeholders owned by EP-009), 'vanishgraph.policy.version' (no component loads a versioned policy SET),
+    'vanishgraph.recipe.set_digest' (no component loads a signed RemovalRecipe set).
+
+SO A RUN IN THIS TREE RESOLVES FIVE OF THE NINE AND REFUSES THE OTHER FOUR. That refusal is the specified behaviour of
+SPEC-007 §2.1 rule 1 and it is exactly the case EP-008 §9 item 2 describes ("a run with an unresolved artifact digest
+emits zero records, one TelemetryIdentityMissing record, and a non-zero
+vanishgraph_telemetry_egress_failures_total{reason_code='RESOURCE_ATTR_MISSING'}"). MEASURED by
+'tests/observability/telemetry-identity.test.ts': zero records reached the sink, exactly one TelemetryIdentityMissing
+local structured error was written, and the counter series carried the refusal count. THIS MILESTONE DOES NOT CLAIM THAT
+THIS REPOSITORY EMITS TELEMETRY TODAY; it claims that the identity layer refuses to emit unattributed telemetry and that
+the refusal is observed rather than asserted.
+
+=== FINDINGS AND TENSIONS RECORDED, NOT RESOLVED BY SILENCE ===
+
+1. §5.2 VERSUS A RECORD THAT CANNOT CARRY ITS OWN IDENTITY. §5.2 makes 'tenantId', 'candidateEpoch' and 'artifactDigest'
+   mandatory on every log record, while §2.1 rule 1 requires a producer whose artifact digest is unresolved to "record the
+   refusal as a local structured error". The two cannot both hold for that one record: it is the record that says the
+   identity is missing, so it cannot carry the identity. This milestone writes the diagnostic to STANDARD ERROR rather
+   than to standard output, because §2.3 rule 1 makes standard output the only log sink and putting a record there that
+   cannot satisfy §5.2 would be a non-compliant log record rather than a local error. The fields it does carry are
+   'event' (§5.4's declared TelemetryIdentityMissing), 'severity', 'message', 'reasonCode', the counter series and the
+   unresolved key names. THE LOG-CONTRACT MILESTONE (M3) OWNS THE RESOLUTION and must not resolve it by inventing values
+   for the missing fields.
+2. §5.3 PROHIBITS THE FIELD NAME 'name' WHILE §2.1 MANDATES 'service.name' AND 'deployment.environment.name'. The
+   allowlist records the conflict and its exact boundary ('resource_key_note' in 'config/telemetry/allowlist.json'): the
+   leaf-name rule does not apply to a resource attribute, the exemption is exactly those two keys, and a checker must
+   raise the conflict rather than generalise the exemption. The suite asserts both halves.
+3. THE COVERAGE LAYER TABLE DOES NOT MEASURE THE TWO NEW MODULES. 'config/testing/coverage-thresholds.json' binds each
+   layer to the suites that measure it; 'tests/observability/**' is in no layer's suite list, so
+   'src/adapters/observability/telemetry-resource.ts' and 'src/infrastructure/observability/compose-telemetry.ts' are
+   loaded by no measured run and therefore appear in no layer's aggregate. That file is NOT in EP-008 §6 and §6 says
+   nothing outside its list may change, so it was NOT edited here. The consequence is stated plainly: the coverage gate
+   does not measure the two files this milestone adds. Adding the root to the 'adapters' and 'infrastructure' layers is a
+   one-line change for whichever milestone owns that file, and the numbers recorded at the EP-007 close (adapters
+   93.34/78.39/93.19, infrastructure 69.69/62.96/80.95) remain valid for the sets they were measured over.
+4. ONE FILE OUTSIDE EP-008 §6 CHANGED, AND WHY: 'scripts/test-collection-guard.sh'. EP-008 §6's Modified list names
+   '.agent/verification/EXPECTED_TEST_MANIFEST.txt' — which must carry the new suite — but not the guard whose default
+   glob is compared against that manifest. Left alone, the guard would have failed with "expected suite produced no
+   results" for a suite that passes, because the unit stage collects every 'tests/**/*.test.ts' outside its
+   service-dependent exclusion list while the guard named seven roots. The change is one glob entry
+   ('tests/observability/**/*.test.ts') in the strict direction: the guard now RUNS the new suite instead of skipping it.
+   The file's own recorded rule — the guard and the stage it guards must name the same roots — is the reason, and the
+   alternative was a guard that disagrees with its stage about what the unit suite is.
+5. 'scripts/refresh-verification-state.ts' WAS ALSO LEFT ALONE, deliberately, and the gap is recorded here: its suite
+   pattern lists do not name 'tests/observability/**', so '.agent/verification/state/TEST_LEDGER.jsonl' will carry no rows
+   for the new suite until a later milestone adds the root. No gate currently asserts that the expected-test manifest and
+   the test ledger describe the same set, so nothing is broken today; the accounting is incomplete and is reported as
+   incomplete rather than left to be discovered.
+6. 'pino' IS PRESENT BUT M1 DOES NOT ROUTE THROUGH IT. M1's emission path hands records to an injected sink and does not
+   choose the log sink; wiring the structured log contract to the logger that already exists is M3's work (SPEC-007 §5).
+   Stated here so that "the logger exists" is not read as "the log contract is implemented".
+
+=== COMMANDS RUN FOR THIS MILESTONE AND THEIR SENTINELS ===
+
+  node --version                                     -> v24.14.1
+  grep -c 'RESOURCE_ATTR_MISSING' config/telemetry/allowlist.json -> 9 (one per canonical resource key)
+  node --test "tests/observability/**/*.test.ts"      -> 35 tests, 35 pass, 0 fail
+  sh scripts/test-unit.sh                            -> `test-unit: ok` (1247 tests, 273 suites, 0 fail, exit 0)
+  sh scripts/lint.sh                                 -> `lint: ok` (`typecheck: ok`, `import boundary: ok`, exit 0)
+
+THREE MUTATION CONTROLS WERE RUN AGAINST THE NEW SUITE, each reverting the source byte-identically afterwards (verified by
+SHA-256 of the restored file):
+  * prohibited substitute accepted instead of refused -> 2 tests failed (the suite sees a substituted value);
+  * a duplicated internal diagnostic -> 11 tests failed AFTER the gap was closed (see below);
+  * the refusal counter frozen at zero -> 11 tests failed (the suite sees a counter that does not carry refusals).
+THE SECOND CONTROL FOUND A REAL GAP: the first version of the suite asserted only what reached the local sink, so a
+producer that reported two diagnostics and wrote one passed every assertion. The suite now asserts the producer's own
+diagnostic list against the sink's, and the control fails as it must. That gap is recorded rather than quietly fixed.

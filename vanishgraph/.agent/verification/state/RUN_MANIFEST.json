@@ -3,5 +3,73 @@
   "dod_count": 42,
   "candidate_epoch": "GENERATION",
   "test_overlay_sha": "0562a6c83cc85485ce0a8ca8127c1aeb0acbf1a8",
-  "test_overlay_note": "the git tree hash of vanishgraph/tests at the EP-007 close candidate; the test overlay this node touched. It is a REVISION identifier, not an artifact digest: scripts/artifact-identity.sh is a loud-fail placeholder owned by EP-009 and no build artifact exists for this node."
+  "test_overlay_note": "the git tree hash of vanishgraph/tests at the EP-007 close candidate; the test overlay this node touched. It is a REVISION identifier, not an artifact digest: scripts/artifact-identity.sh is a loud-fail placeholder owned by EP-009 and no build artifact exists for this node.",
+  "telemetry_resource": {
+    "note": "EP-008 M1. The nine canonical resource attributes of SPEC-007 §2.1, each with its source of truth, the value this repository can resolve for a run, and — where it cannot — why. THE RESOLUTION VOCABULARY IS CLOSED: STATIC means the value is read from a file in this repository and `value` records it; PROCESS_INPUT means the value is supplied by the process or its deployment manifest and the run fails closed without it, so `value` is null and `allowed` names the closed set; EXTERNAL_REQUIRED means the source of truth does not exist in this tree yet, so `value` is null and `reason` names the owner. THIS FILE IS NOT A CLAIM THAT TELEMETRY WORKS: it records which of the nine attributes a run in this tree can and cannot resolve, and the answer today is that four cannot be resolved, so a producer here refuses to emit and increments vanishgraph_telemetry_egress_failures_total{reason_code=\"RESOURCE_ATTR_MISSING\"}. That refusal is the specified behaviour (§2.1 rule 1), not a defect, and tests/observability/telemetry-identity.test.ts asserts it against this file rather than against a copied list.",
+    "keys": {
+      "service.name": {
+        "source": "Deployment manifest (SPEC-007 §2.1)",
+        "resolution": "PROCESS_INPUT",
+        "value": null,
+        "allowed": [
+          "vanishgraph-api",
+          "vanishgraph-web",
+          "vanishgraph-worker-discovery",
+          "vanishgraph-worker-action",
+          "vanishgraph-worker-verify",
+          "vanishgraph-scheduler",
+          "vanishgraph-mcp"
+        ],
+        "reason": "the name is assigned per process by the deployment manifest, and this repository contains no deployment manifest; a process declares one of the seven names at startup and fails startup if it cannot (SPEC-007 §2.2)"
+      },
+      "service.version": {
+        "source": "Build output (package.json version)",
+        "resolution": "STATIC",
+        "value": "0.1.0"
+      },
+      "deployment.environment.name": {
+        "source": "Deployment manifest (SPEC-007 §2.1)",
+        "resolution": "PROCESS_INPUT",
+        "value": null,
+        "allowed": ["local", "ci", "preview", "staging", "production"],
+        "reason": "the environment is declared by the deployment manifest, which this repository does not contain; a run supplies one of the five tokens and any other value is an unresolved attribute"
+      },
+      "vanishgraph.tenant.class": {
+        "source": "Tenant policy data (SPEC-007 §2.1)",
+        "resolution": "PROCESS_INPUT",
+        "value": null,
+        "allowed": ["INTERNAL", "TEST", "PILOT_TENANT", "PRODUCTION_TENANT", "EXTERNAL_REQUIRED"],
+        "reason": "the class comes from tenant policy data for the scope the process serves; this repository holds no static tenant policy source, so the process supplies the class of its scope and the attribute is never a tenant identifier (§2.1 rule 3)"
+      },
+      "vanishgraph.candidate_epoch": {
+        "source": "RUN_MANIFEST (DOD-029)",
+        "resolution": "STATIC",
+        "value": "GENERATION"
+      },
+      "vanishgraph.artifact.digest": {
+        "source": "Build/release output (DOD-003, DOD-029)",
+        "resolution": "EXTERNAL_REQUIRED",
+        "value": null,
+        "reason": "no build artifact exists in this repository: scripts/build.sh and scripts/artifact-identity.sh are loud-fail placeholders owned by EP-009, so there is no release digest to record and a digest-shaped invention is prohibited by §2.1 rule 1"
+      },
+      "vanishgraph.build.inputs_digest": {
+        "source": "Build output (SPEC-007 §2.1)",
+        "resolution": "EXTERNAL_REQUIRED",
+        "value": null,
+        "reason": "nothing in this tree declares or digests the build inputs; the declaration and the digest arrive with EP-009's artifact identity, and until then a value here would be a fabricated measurement"
+      },
+      "vanishgraph.policy.version": {
+        "source": "Versioned policy data (VG-POLICY-001)",
+        "resolution": "EXTERNAL_REQUIRED",
+        "value": null,
+        "reason": "jurisdiction policies are rows in the jurisdiction_policy table read per decision; no component loads a versioned policy SET and records its version, so there is no set version to attribute telemetry to"
+      },
+      "vanishgraph.recipe.set_digest": {
+        "source": "Recipe registry (VG-CHANNEL-003)",
+        "resolution": "EXTERNAL_REQUIRED",
+        "value": null,
+        "reason": "no component in this tree loads a signed RemovalRecipe set, so no set digest exists; the loader and its digest are follow-on work and the key stays unresolved until then"
+      }
+    }
+  }
 }
