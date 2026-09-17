@@ -2,7 +2,7 @@ catalogue: 42 families, all names, labels, owners and meanings valid
 dashboards: 1 file(s), 9 panel(s), every referenced metric registered and every ratio panel naming its denominator
 alerts: PENDING - ./config/alerts/catalogue.json does not exist yet and is owned by EP-008 M7; this check did not run
 indicators: PENDING - ./config/slo/objectives.json does not exist yet and is owned by EP-008 M8; this check did not run
-prohibited names: scanned 146 file(s) under config/, src/ and docs/, 0 hit(s)
+prohibited names: scanned 148 file(s) under config/, src/ and docs/, 0 hit(s)
 verdict: OK
 negative control: planted vanishgraph_permanent_deletion_total and the phrase 'permanent deletion rate' in a
 temporary file under config/; the same scan refused it, naming both, and the file was removed afterwards.

@@ -39,6 +39,18 @@
     "source_class": ["PEOPLE_SEARCH", "DATA_BROKER", "SOCIAL_MEDIA", "PUBLIC_RECORD", "SEARCH_ENGINE", "COURT_RECORD", "OTHER"],
     "status_class": ["2XX", "3XX", "4XX", "5XX"]
   },
+  "per_family_label_value_sets": {
+    "$comment": "LABEL VALUE SETS THAT ARE BOUNDED PER METRIC RATHER THAN GLOBALLY (EP-008 M5, closing a gap the readiness work recorded). SPEC-007 §6.3-§6.5 bound reason_code PER METRIC - each metric row declares its own enum - and the registry could not enforce a bound it could not see, so an out-of-enum reason code was accepted at record time. This section carries those bounds where the row declares one; a family absent from it still names its source in label_value_set_sources, and the remaining families are owed.",
+    "vanishgraph_dependency_probe_failures_total": {
+      "reason_code": ["TIMEOUT", "CONNECT_REFUSED", "AUTH_FAILED", "DNS_FAILED", "TLS_FAILED", "HTTP_5XX", "MISCONFIGURED", "UNKNOWN"]
+    },
+    "vanishgraph_dlp_egress_denied_total": {
+      "reason_code": ["NOT_ALLOWLISTED", "PROHIBITED_CLASS", "PROHIBITED_FIELD_NAME", "POLICY_ABSENT", "SCRUB_FAILED", "CANARY_DETECTED"]
+    },
+    "vanishgraph_telemetry_egress_failures_total": {
+      "reason_code": ["COLLECTOR_UNREACHABLE", "DSN_MISSING", "RESOURCE_ATTR_MISSING", "SCRUB_FAILED", "SCHEMA_INVALID"]
+    }
+  },
   "label_value_set_sources": {
     "$comment": "§6.2 prohibits a label whose value set is not a bounded enum. Every remaining label's bound is named here rather than left implicit: four are open identifiers whose bound is the versioned data that issues them, and reason_code is bounded PER METRIC by the enum in its own §6.3-§6.5 row.",
     "reason_code": "the per-metric enum in the family's own SPEC-007 §6.3-§6.5 row",
