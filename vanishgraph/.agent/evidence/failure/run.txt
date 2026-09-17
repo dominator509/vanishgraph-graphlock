@@ -1,0 +1,7 @@
+forced failure - 2026-09-17T00:36:26Z
+
+tests/failure/fail-closed-authority.test.ts exit=0 {"tests":7,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":1,"manifestChecked":0,"failed":[],"verdict":"OK"}
+tests/failure/fail-closed-dependency.test.ts exit=0 {"tests":4,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":1,"manifestChecked":0,"failed":[],"verdict":"OK"}
+tests/failure/fail-closed-credentials.test.ts exit=0 {"tests":6,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":1,"manifestChecked":0,"failed":[],"verdict":"OK"}
+tests/failure/fail-closed-egress.test.ts exit=0 {"tests":7,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":1,"manifestChecked":0,"failed":[],"verdict":"OK"}
+tests/failure/fail-closed-recipe.test.ts exit=0 {"tests":6,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":1,"manifestChecked":0,"failed":[],"verdict":"OK"}
