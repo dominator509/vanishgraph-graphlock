@@ -1,0 +1,6 @@
+slo availability: DEFERRED_LONG_RUNNING
+slo verification_latency: DEFERRED_LONG_RUNNING
+slo workflow_completion: DEFERRED_LONG_RUNNING
+slo reconciliation_latency: DEFERRED_LONG_RUNNING
+slo evaluation_integrity: INCONCLUSIVE
+slo summary: 5 objective(s), 0 FAIL, 4 DEFERRED_LONG_RUNNING, 1 INCONCLUSIVE

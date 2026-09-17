@@ -53,6 +53,7 @@ a milestone that needs a new one must add it here in the same change.
 | `sh scripts/log-contract-guard.sh` | `log contract: ok` |
 | `sh scripts/metrics-catalogue-guard.sh` | `metrics catalogue: ok` |
 | `sh scripts/alert-catalogue-guard.sh` | `alert catalogue: ok` |
+| `sh scripts/slo-evaluate.sh` | `slo: evaluated` (plus one `slo <objective>: <VERDICT>` line per objective) |
 | `sh scripts/induced-failure-readiness.sh` | `readiness induced failure: ok` |
 
 ## Aggregates
