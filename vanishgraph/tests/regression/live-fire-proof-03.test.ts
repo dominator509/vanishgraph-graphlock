@@ -32,7 +32,7 @@ import {
 
 /** The channel names sorted by the documented priority, lowest number first. */
 const byPriority = (): readonly ChannelName[] =>
-  [...CHANNEL_NAMES].sort((left, right) => priorityOf(left) - priorityOf(right));
+  [...CHANNEL_NAMES].sort((left, right) => priorityOf(left).value - priorityOf(right).value);
 
 /** A channel that is available. */
 const available = (channel: ChannelName): ChannelOption => ({ channel, unavailableKind: null, unavailableReason: null });
@@ -59,11 +59,17 @@ describe('LIVE-FIRE-PROOF-03: escalation follows the documented priority (VG-CHA
     const ordered = byPriority();
     assert.equal(ordered.length, CHANNEL_NAMES.length);
     assert.deepEqual(
-      ordered.map((channel) => priorityOf(channel)),
-      [...ordered.map((channel) => priorityOf(channel))].sort((a, b) => a - b),
+      // `.value` on both sides: `ChannelPriority` is a branded value object, not a plain number, which the typechecker
+      // caught after this suite had already passed at runtime (EP-007 M2 — the suite was green while `tsc` was red).
+      ordered.map((channel) => priorityOf(channel).value),
+      [...ordered.map((channel) => priorityOf(channel).value)].sort((a, b) => a - b),
       'priority values must be strictly increasing in the sorted order',
     );
-    assert.equal(new Set(ordered.map((channel) => priorityOf(channel))).size, ordered.length, 'no two channels share a priority');
+    assert.equal(
+      new Set(ordered.map((channel) => priorityOf(channel).value)).size,
+      ordered.length,
+      'no two channels share a priority',
+    );
   });
 
   test('the HIGHEST-priority available channel is selected, whatever order the options arrive in', () => {

@@ -64,8 +64,8 @@ describe('LIVE-FIRE-PROOF-06: an unknown route cannot write, and a gated one nee
   test('NEGATIVE CASE: a GATED channel cannot be selected without a recorded reason', () => {
     // The approval this outcome requires is not an assumption about the caller: an option marked GATED is only usable
     // once something has recorded why it is gated, and the selector refuses it otherwise.
-    const top = [...CHANNEL_NAMES].sort((left, right) => priorityOf(left) - priorityOf(right))[0];
-    const second = [...CHANNEL_NAMES].sort((left, right) => priorityOf(left) - priorityOf(right))[1];
+    const top = [...CHANNEL_NAMES].sort((left, right) => priorityOf(left).value - priorityOf(right).value)[0];
+    const second = [...CHANNEL_NAMES].sort((left, right) => priorityOf(left).value - priorityOf(right).value)[1];
     assert.ok(top !== undefined && second !== undefined);
     const unrecorded: ChannelOption = { channel: top, unavailableKind: 'GATED', unavailableReason: null };
     const refusal = refusalOf(() => selectChannel([unrecorded, { channel: second, unavailableKind: null, unavailableReason: null }]));

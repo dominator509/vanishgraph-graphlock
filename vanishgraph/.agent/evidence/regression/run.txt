@@ -1,4 +1,4 @@
-regression proof - 2026-09-17T04:18:39Z
+regression proof - 2026-09-17T04:29:43Z
 
 tests/regression/live-fire-proof-01.test.ts exit=0 {"tests":6,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":1,"manifestChecked":0,"failed":[],"verdict":"OK"}
 tests/regression/live-fire-proof-02.test.ts exit=0 {"tests":6,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":1,"manifestChecked":0,"failed":[],"verdict":"OK"}

@@ -38,15 +38,6 @@ const willingScrubber: DlpScrubber = () => ({
   removedClasses: [],
 });
 
-/** The refusal an operation produced, or `undefined` when it did not refuse. */
-function refusalOf(operation: () => unknown): unknown {
-  try {
-    operation();
-    return undefined;
-  } catch (error) {
-    return error;
-  }
-}
 
 describe('LIVE-FIRE-PROOF-07: protected data does not leave, and tenant isolation has its own proof (VG-EGRESS-001)', () => {
   test('the deny-by-default set is exactly the four classes the specification names', () => {
