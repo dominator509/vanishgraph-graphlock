@@ -90,3 +90,32 @@ as unbuilt in its own section.
 4. **Removal claims look too good** — check the effectiveness metric's denominator and its `excluded_*` components
    together; a ratio without its denominator is a defect, and a denominator that quietly dropped `NOT_REMOVABLE` or
    `HUMAN_REQUIRED` reads as a smaller cohort and a higher ratio for the same outcomes.
+
+## 7. Alerts (SPEC-007 §8)
+
+**What exists:** `config/alerts/catalogue.json` carries exactly **20 alert rows** — A-01, A-01b, A-02, A-03, A-04, A-05,
+A-06, A-06b, A-06c, A-07, A-07b, A-08, A-09, A-09b, A-10, A-11, A-12, A-13, A-14, A-15 — each with its exact PromQL
+expression, threshold, `for` duration, severity, routing lane and runbook path. Routing lanes: `page` and
+`page-security` acknowledge within 5 minutes, `ticket` reviews within 1 business day, `advisory` responds within 4
+working hours. Every row points at a runbook under `docs/runbooks/alerts/`, and `sh scripts/alert-catalogue-guard.sh`
+(sentinel `alert catalogue: ok`) refuses a row whose runbook is missing or empty, a placeholder in any field, a routing
+lane outside the four, an expression naming an unregistered metric, an alert phrased as success, and a coverage-rule
+disagreement that is not recorded.
+
+**TWO THINGS AN OPERATOR MUST KNOW BEFORE TRUSTING THIS TABLE.**
+
+1. **NO ALERT HAS BEEN DEMONSTRATED FIRING, AND NONE HAS BEEN DEMONSTRATED RESOLVING.** §8 requires each alert to be
+   shown firing under an induced condition with correct labels and to resolve after remediation. That needs an expression
+   evaluator and a series store; this repository has neither — no Prometheus server, no recording rules, no loaded alert
+   rules. The guard prints `induction: NOT RUN` with that reason on every run, and the alert-definitions suite asserts
+   that no evaluator module exists, so the absence cannot be quietly forgotten.
+2. **§8 CONTRADICTS ITSELF ABOUT SIX ROWS, AND THE CONTRADICTION IS KEPT VISIBLE.** Coverage rule 1 calls A-01…A-10 the
+   required critical set, while §8's own table marks A-02, A-03, A-06, A-07, A-09 and A-10 as `warning`. The catalogue
+   transcribes the table (the per-alert fact) and lists the six ids in `coverage_rule_1_conflicts`; the guard and the
+   suite both REQUIRE that list to name exactly the rows that disagree, so nobody can make a check green by editing one
+   of two normative statements.
+
+Runbook content follows the same rule as the rest of this document: each alert runbook states what a firing **means** and
+what it **does not mean** — a stale-recipe refusal means the control worked, a DLP denial means the stage refused to leak,
+a cross-tenant refusal means the attempt was denied rather than that data was disclosed — and every one of them ends by
+saying that its induction has not been run.
