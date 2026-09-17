@@ -24,7 +24,7 @@
  * operator runbook, not smoothed over.
  */
 
-import { createHash } from 'node:crypto';
+import { createHash, createHmac } from 'node:crypto';
 
 import type { MetricsRegistry } from './metrics-registry.ts';
 
@@ -387,6 +387,122 @@ export const objectStoreProbeUnavailable: Probe = async () => {
     'MISCONFIGURED',
   );
 };
+
+/* ----------------------------------------------------------------------------------------------------------------
+ * §7.2 object-store: HeadBucket plus a SIGNED GetObject (EP-008 M5)
+ *
+ * THE SIGNER IS HERE BECAUSE THE PROVISIONING ATTEMPT LOG PROVED THE BLOCKER WAS CODE, NOT ENVIRONMENT: an object store
+ * can be started from a locally cached image at any time, and the probe still could not run because nothing in this
+ * repository could sign an S3 request. This is that signer — AWS Signature Version 4, header-based, single chunk — and
+ * nothing more: it signs a HEAD and a GET, and it exists so the declared probe action can actually be performed rather
+ * than reported as impossible.
+ *
+ * WHY HAND-WRITTEN RATHER THAN A DEPENDENCY: the dependency rules forbid adding an S3 client without an ADR, and §7.2
+ * needs exactly two signed requests. A general-purpose client would be a much larger surface than the probe it serves.
+ * ---------------------------------------------------------------------------------------------------------------- */
+
+function sha256Hex(data: string | Buffer): string {
+  return createHash('sha256').update(data).digest('hex');
+}
+
+function hmac(key: Buffer | string, data: string): Buffer {
+  return createHmac('sha256', key).update(data).digest();
+}
+
+/** The signing key chain of SigV4: date, region, service, then `aws4_request`. */
+function signingKey(secretAccessKey: string, dateStamp: string, region: string, service: string): Buffer {
+  return hmac(hmac(hmac(hmac(`AWS4${secretAccessKey}`, dateStamp), region), service), 'aws4_request');
+}
+
+export interface SignedRequest {
+  readonly url: string;
+  readonly method: 'HEAD' | 'GET' | 'PUT';
+  readonly headers: Readonly<Record<string, string>>;
+}
+
+/**
+ * Sign one S3 request with SigV4.
+ *
+ * THE PAYLOAD HASH DESCRIBES THE BYTES THAT ARE SENT. MEASURED REASON FOR THE PARAMETER: the first version hardcoded the
+ * EMPTY-string digest, which is correct for the two declared probe requests (HEAD and GET, neither carrying a body) and
+ * WRONG for a PUT with a body — a bucket-creation attempt against a real MinIO was refused with HTTP 403 because the
+ * signed payload hash did not describe the bytes that were sent. The streaming form is still not supported, and this
+ * comment says so rather than implying general S3 support.
+ */
+export function signS3Request(options: {
+  readonly method: 'HEAD' | 'GET' | 'PUT';
+  readonly endpoint: string;
+  readonly canonicalPath: string;
+  readonly region: string;
+  readonly service?: string;
+  readonly accessKeyId: string;
+  readonly secretAccessKey: string;
+  readonly at: Date;
+  /** The request body, when there is one. Its digest becomes the signed payload hash (SigV4, single chunk). */
+  readonly payload?: string;
+}): SignedRequest {
+  const service = options.service ?? 's3';
+  const amzDate = options.at.toISOString().replace(/[:-]|\.\d{3}/g, '');
+  const dateStamp = amzDate.slice(0, 8);
+  const host = new URL(options.endpoint).host;
+  const payloadHash = sha256Hex(options.payload ?? '');
+  const canonicalHeaders = `host:${host}\nx-amz-content-sha256:${payloadHash}\nx-amz-date:${amzDate}\n`;
+  const signedHeaders = 'host;x-amz-content-sha256;x-amz-date';
+  const canonicalRequest = [options.method, options.canonicalPath, '', canonicalHeaders, signedHeaders, payloadHash].join('\n');
+  const scope = `${dateStamp}/${options.region}/${service}/aws4_request`;
+  const stringToSign = ['AWS4-HMAC-SHA256', amzDate, scope, sha256Hex(canonicalRequest)].join('\n');
+  const signature = createHmac('sha256', signingKey(options.secretAccessKey, dateStamp, options.region, service)).update(stringToSign).digest('hex');
+  return {
+    url: `${options.endpoint.replace(/\/$/, '')}${options.canonicalPath}`,
+    method: options.method,
+    headers: {
+      host,
+      'x-amz-date': amzDate,
+      'x-amz-content-sha256': payloadHash,
+      authorization: `AWS4-HMAC-SHA256 Credential=${options.accessKeyId}/${scope}, SignedHeaders=${signedHeaders}, Signature=${signature}`,
+    },
+  };
+}
+
+export interface ObjectStoreProbeOptions {
+  readonly endpoint: string;
+  readonly bucket: string;
+  readonly region: string;
+  readonly accessKeyId: string;
+  readonly secretAccessKey: string;
+  /** The probe object's key and the digest its content MUST have: a read that returns something else has failed. */
+  readonly probeKey: string;
+  readonly expectedDigest: string;
+  readonly fetchImpl?: typeof fetch;
+  readonly at?: () => Date;
+}
+
+/** §7.2 object-store: HeadBucket, then a signed GetObject whose content must match the expected digest. */
+export function objectStoreProbe(options: ObjectStoreProbeOptions): Probe {
+  return async () => {
+    const doFetch = options.fetchImpl ?? fetch;
+    const at = options.at ?? ((): Date => new Date());
+    const bucketPath = `/${options.bucket}`;
+    const head = signS3Request({ method: 'HEAD', endpoint: options.endpoint, canonicalPath: bucketPath, region: options.region, accessKeyId: options.accessKeyId, secretAccessKey: options.secretAccessKey, at: at() });
+    const headResponse = await doFetch(head.url, { method: head.method, headers: head.headers });
+    if (!headResponse.ok) {
+      // 403 IS AUTHENTICATION, NOT REACHABILITY, and saying which is what lets on-call act on the cause.
+      throw new ProbeUnavailableError(`HeadBucket answered HTTP ${String(headResponse.status)}`, headResponse.status === 403 || headResponse.status === 401 ? 'AUTH_FAILED' : headResponse.status >= 500 ? 'HTTP_5XX' : 'MISCONFIGURED');
+    }
+    const objectPath = `/${options.bucket}/${options.probeKey}`;
+    const get = signS3Request({ method: 'GET', endpoint: options.endpoint, canonicalPath: objectPath, region: options.region, accessKeyId: options.accessKeyId, secretAccessKey: options.secretAccessKey, at: at() });
+    const getResponse = await doFetch(get.url, { method: get.method, headers: get.headers });
+    if (!getResponse.ok) throw new ProbeUnavailableError(`the signed GetObject answered HTTP ${String(getResponse.status)}`, getResponse.status >= 500 ? 'HTTP_5XX' : 'AUTH_FAILED');
+    const body = Buffer.from(await getResponse.arrayBuffer());
+    const digest = sha256Hex(body);
+    if (digest !== options.expectedDigest) {
+      // A READ THAT RETURNS THE WRONG BYTES IS A FAILURE, which is why §7.2 requires the expected digest rather than a
+      // successful status: an object store serving stale or substituted content is not a working dependency.
+      throw new ProbeUnavailableError(`the signed GetObject returned content whose digest is ${digest} and not the expected ${options.expectedDigest}`, 'MISCONFIGURED');
+    }
+    return `HeadBucket and signed GetObject verified for ${options.bucket}/${options.probeKey}`;
+  };
+}
 
 export interface JwksProbeOptions {
   /** OIDC discovery plus JWKS retrieval, over TLS, minting no token. */
