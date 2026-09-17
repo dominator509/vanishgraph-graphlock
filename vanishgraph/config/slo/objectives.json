@@ -1,0 +1,69 @@
+{
+  "$comment": "The service-level objectives (SPEC-007 §9, §12.7; EP-008 M7(a)). Five objectives transcribed from §9, each with its indicator, threshold, window, workload model and verdict rule. THRESHOLD WEAKENING TO OBTAIN A PASS IS PROHIBITED (DOD-027): changing an objective, a window or the workload model requires a specification change, a recorded rationale, and a rerun of every affected verdict. An ABSENT OR INCOMPLETE SAMPLE IS INCONCLUSIVE AND NEVER PASS, and a duration-bound objective that cannot complete inside the campaign window is DEFERRED_LONG_RUNNING (DOD-038) — a shortened trial is never reported as PASS.",
+  "spec": "SPEC-007 §9 (SLOs and error budgets), §12.7; DOD-022 (automated thresholds, mandatory failure is NO_GO), DOD-038 (long-running deferral)",
+  "verdict_values": ["PASS", "FAIL", "INCONCLUSIVE", "DEFERRED_LONG_RUNNING"],
+  "workload_models": {
+    "WL-1": {
+      "description": "The declared evaluation workload: the recorded series of one environment over the objective's own window, with readiness and liveness probe traffic EXCLUDED from both terms of every availability ratio and measured separately.",
+      "excluded_traffic": ["readiness probe requests", "liveness probe requests"],
+      "version": "WL-1",
+      "invalidation_rule": "A change to this model invalidates every prior verdict, because a verdict is only meaningful against the workload it was computed over."
+    }
+  },
+  "objectives": [
+    {
+      "id": "VG-SLO-001",
+      "objective": "availability",
+      "indicator": "vanishgraph_server_http_served_total with status_class in 2XX/3XX over all served responses",
+      "threshold": ">= 0.999",
+      "window": "rolling 30d",
+      "workload": "WL-1",
+      "verdictRule": "PASS when the ratio is at or above the threshold with a complete window; FAIL when it is below; INCONCLUSIVE when the window is incomplete or either term is missing; DEFERRED_LONG_RUNNING when a complete 30-day window cannot exist yet. Readiness and liveness probe traffic is excluded from BOTH terms and measured separately, so a probe storm cannot move the objective."
+    },
+    {
+      "id": "VG-SLO-002",
+      "objective": "verification_latency",
+      "indicator": "vanishgraph_verification_lag_seconds (ACKNOWLEDGED to recorded VerificationObservation)",
+      "threshold": "p95 <= 1209600 s and p99 <= 2592000 s",
+      "window": "rolling 30d",
+      "workload": "WL-1",
+      "verdictRule": "PASS when BOTH quantiles are at or below their thresholds AND at least 30 completed observations exist; INCONCLUSIVE below 30 observations, because a quantile over a handful of samples is not a measurement; cases still inside their observation window are CENSORED rather than counted as slow."
+    },
+    {
+      "id": "VG-SLO-003",
+      "objective": "workflow_completion",
+      "indicator": "vanishgraph_truth_state_transitions_total across the five honest destination states",
+      "threshold": ">= 0.95",
+      "window": "rolling 30d",
+      "workload": "WL-1",
+      "verdictRule": "PASS only when the ratio meets the threshold AND every one of the five honest destination states is individually present in the window with NOT_REMOVABLE and HUMAN_REQUIRED non-suppressed; a missing state makes the verdict INCONCLUSIVE, because a completion ratio computed over a subset of destinations is a different number."
+    },
+    {
+      "id": "VG-SLO-004",
+      "objective": "reconciliation_latency",
+      "indicator": "vanishgraph_reconciliation_lag_seconds (ambiguity detected to reconciliation resolved)",
+      "threshold": "p90 <= 14400 s and max <= 86400 s",
+      "window": "rolling 30d",
+      "workload": "WL-1",
+      "verdictRule": "PASS when both the p90 and the maximum are within their thresholds; this objective is exercised against the induced-ambiguity fault set, and a run with no ambiguity events at all is INCONCLUSIVE rather than PASS, because nothing was exercised."
+    },
+    {
+      "id": "VG-SLO-005",
+      "objective": "evaluation_integrity",
+      "indicator": "the integrity matrix of induced conditions and verdicts for VG-SLO-001…VG-SLO-004",
+      "threshold": "every induced breach yields FAIL and every undisturbed run yields PASS",
+      "window": "per evaluation campaign",
+      "workload": "WL-1",
+      "verdictRule": "PASS only when every induced breach produced FAIL and every undisturbed run produced PASS. IF ANY INDUCED BREACH YIELDS PASS, THIS OBJECTIVE IS FAIL AND EVERY DEPENDENT VERDICT IS REVOKED AS INCONCLUSIVE — a verdict that cannot be made to fail is not a verdict."
+    }
+  ],
+  "indicators": [
+    { "objective_id": "VG-SLO-001", "objective": "availability", "metrics": ["vanishgraph_server_http_served_total"], "window": "30d", "verdict_metric": "vanishgraph_slo_verdict", "bad_events_metric": "vanishgraph_slo_bad_events_total", "allowed_bad_events_metric": "vanishgraph_slo_allowed_bad_events", "burn_ratio_metric": "vanishgraph_slo_error_budget_burn_ratio" },
+    { "objective_id": "VG-SLO-002", "objective": "verification_latency", "metrics": ["vanishgraph_verification_lag_seconds"], "window": "30d", "verdict_metric": "vanishgraph_slo_verdict", "bad_events_metric": "vanishgraph_slo_bad_events_total", "allowed_bad_events_metric": "vanishgraph_slo_allowed_bad_events", "burn_ratio_metric": "vanishgraph_slo_error_budget_burn_ratio" },
+    { "objective_id": "VG-SLO-003", "objective": "workflow_completion", "metrics": ["vanishgraph_truth_state_transitions_total", "vanishgraph_truth_state_current"], "window": "30d", "verdict_metric": "vanishgraph_slo_verdict", "bad_events_metric": "vanishgraph_slo_bad_events_total", "allowed_bad_events_metric": "vanishgraph_slo_allowed_bad_events", "burn_ratio_metric": "vanishgraph_slo_error_budget_burn_ratio" },
+    { "objective_id": "VG-SLO-004", "objective": "reconciliation_latency", "metrics": ["vanishgraph_reconciliation_lag_seconds", "vanishgraph_reconciliation_events_total"], "window": "30d", "verdict_metric": "vanishgraph_slo_verdict", "bad_events_metric": "vanishgraph_slo_bad_events_total", "allowed_bad_events_metric": "vanishgraph_slo_allowed_bad_events", "burn_ratio_metric": "vanishgraph_slo_error_budget_burn_ratio" },
+    { "objective_id": "VG-SLO-005", "objective": "evaluation_integrity", "metrics": ["vanishgraph_slo_verdict", "vanishgraph_slo_bad_events_total"], "window": "campaign", "verdict_metric": "vanishgraph_slo_verdict", "bad_events_metric": "vanishgraph_slo_bad_events_total", "allowed_bad_events_metric": "vanishgraph_slo_allowed_bad_events", "burn_ratio_metric": "vanishgraph_slo_error_budget_burn_ratio" }
+  ],
+  "consequence_policy_note": "SPEC-007 §13.3 item 8 stays OPEN: no specification states what happens operationally when a rolling error budget is exhausted mid-window. This file defines the verdict machinery and the burn ratio and FLAGS the consequence policy as an open item for SPEC-008 rather than inventing a feature-freeze rule.",
+  "staging_note": "SPEC-007 §9 states that local and CI environments may run the evaluation harness but may NOT produce an SLO verdict. This repository has no staging environment provisioned, so every verdict produced here is INCONCLUSIVE with its reason recorded, and no objective is reported as PASS."
+}
