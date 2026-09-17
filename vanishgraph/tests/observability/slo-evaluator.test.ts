@@ -132,9 +132,9 @@ describe('the evaluator refuses to promote anything it did not measure', () => {
   });
 
   test('NEGATIVE CASE: an objective with no evaluation rule is INCONCLUSIVE, never PASS', () => {
-    const unknown: SloObjectivesDocument = { ...objectives, objectives: [...objectives.objectives, { id: 'VG-SLO-099', objective: 'invented', indicator: 'x', threshold: '>= 0', window: '30d', workload: 'WL-1', verdictRule: 'none' }] };
+    const unknown: SloObjectivesDocument = { ...objectives, objectives: [...objectives.objectives, { id: 'NOT-A-SPEC-OBJECTIVE', objective: 'invented', indicator: 'x', threshold: '>= 0', window: '30d', workload: 'WL-1', verdictRule: 'none' }] };
     const result = evaluateObjectives({ objectives: unknown, sample: GOOD, environment: 'staging' });
-    assert.equal(result.verdicts.find((verdict) => verdict.id === 'VG-SLO-099')?.verdict, 'INCONCLUSIVE');
+    assert.equal(result.verdicts.find((verdict) => verdict.id === 'NOT-A-SPEC-OBJECTIVE')?.verdict, 'INCONCLUSIVE');
   });
 });
 
