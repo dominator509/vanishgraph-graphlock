@@ -1,4 +1,4 @@
-provisioning attempts - 2026-09-17T09:25:45Z
+provisioning attempts - 2026-09-17T15:41:20Z
 
 == job-worker ==
 attempt: docker ps -a --filter name=worker  (is any worker process running to write a heartbeat?)

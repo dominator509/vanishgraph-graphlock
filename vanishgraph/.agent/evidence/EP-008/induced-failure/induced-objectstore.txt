@@ -1,8 +1,8 @@
-postgresql|PROVISIONED|FAIL|CONNECT_REFUSED|10ms|connect ECONNREFUSED 127.0.0.1:53589
-valkey|PROVISIONED|FAIL|UNKNOWN|9ms|Connection is closed.
-job-worker|PROVISIONED|FAIL|CONNECT_REFUSED|5ms|connect ECONNREFUSED 127.0.0.1:53589
+object-store fixture: fetch failed
+postgresql|PROVISIONED|PASS|-|53ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|16ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|FAIL|MISCONFIGURED|23ms|no worker heartbeat in the last 60000 ms: withholding heartbeats is exactly how this probe is induced to fail (§7.4)
 object-store|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for object-store; the declared action is: HeadBucket plus a signed GetObject of a probe key that must return the expected digest
 keycloak-jwks|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for keycloak-jwks; the declared action is: OIDC discovery plus JWKS retrieval over TLS, with no token minted
 provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|58ms
-Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76
+overall|NOT_READY|92ms

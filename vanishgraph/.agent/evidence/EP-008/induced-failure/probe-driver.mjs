@@ -56,15 +56,60 @@ if (dsn.trim().length > 0) {
   });
 }
 
-// object-store: NOT WIRED ANYWHERE IN THIS REPOSITORY — the declared action needs S3 request signing (M5 evidence).
-clients.objectStore = probes.objectStoreProbeUnavailable;
+// object-store: WIRED WHEN THE ENVIRONMENT PROVIDES AN ENDPOINT AND CREDENTIALS, through the real SigV4 probe — the same
+// declared action (HeadBucket plus a signed GetObject whose content must match the expected digest). When the environment
+// provides nothing, the probe that REFUSES TO PRETEND is used instead, so the row reads UNAVAILABLE rather than pass.
+const objectStoreEndpoint = process.env.VG_OBJECT_STORE_ENDPOINT ?? "";
+if (objectStoreEndpoint.trim().length > 0) {
+  const { createHash } = await import("node:crypto");
+  const crypto = await import("node:crypto");
+  const payload = "vanishgraph object-store probe payload";
+  const region = process.env.VG_OBJECT_STORE_REGION ?? "us-east-1";
+  const bucket = process.env.VG_OBJECT_STORE_BUCKET ?? "vanishgraph-probe";
+  const key = process.env.VG_OBJECT_STORE_KEY ?? "readiness/probe-object";
+  const credentials = {
+    accessKeyId: process.env.VG_OBJECT_STORE_ACCESS_KEY ?? "",
+    secretAccessKey: process.env.VG_OBJECT_STORE_SECRET_KEY ?? "",
+  };
+  const sign = (method, canonicalPath, body) =>
+    probes.signS3Request({ method, endpoint: objectStoreEndpoint, canonicalPath, region, ...credentials, at: new Date(), ...(body === undefined ? {} : { payload: body }) });
+  // THE PROBE OBJECT IS WRITTEN THROUGH THE SAME SIGNER THE PROBE READS WITH, so the fixture cannot drift from the code
+  // under test. A PUT that fails is reported loudly: a probe that fails because its fixture is missing would be
+  // indistinguishable from a dependency that is down.
+  try {
+    const mk = sign("PUT", `/${bucket}`);
+    const created = await fetch(mk.url, { method: "PUT", headers: mk.headers });
+    const sp = sign("PUT", `/${bucket}/${key}`, payload);
+    const put = await fetch(sp.url, { method: "PUT", headers: { ...sp.headers, "content-length": String(Buffer.byteLength(payload)) }, body: payload });
+    if (put.status >= 400) console.error(`object-store fixture: PUT answered ${put.status}`);
+    if (created.status >= 400 && created.status !== 409) console.error(`object-store fixture: bucket create answered ${created.status}`);
+    clients.objectStore = probes.objectStoreProbe({
+      endpoint: objectStoreEndpoint,
+      bucket,
+      region,
+      ...credentials,
+      probeKey: key,
+      expectedDigest: createHash("sha256").update(payload).digest("hex"),
+      fetchImpl: fetch,
+    });
+    void crypto;
+  } catch (error) {
+    console.error(`object-store fixture: ${error.message}`);
+  }
+} else {
+  clients.objectStore = probes.objectStoreProbeUnavailable;
+}
 
 // keycloak-jwks and provider-transport: no issuer and no provider entitlement are provisioned in this environment, and
 // the stage reports that rather than faking a probe.
 const runner = probes.createProbeRunner({ clients });
 const evaluation = await runner.evaluate();
 for (const check of evaluation.checks) {
-  const state = clients[check.name === "job-worker" ? "jobWorker" : check.name === "keycloak-jwks" ? "keycloakJwks" : check.name === "provider-transport" ? "providerTransport" : check.name] === undefined ? "UNAVAILABLE" : "PROVISIONED";
+  // THE NAME MAPPING IS THE DRIVER'S OWN DEFECT SOURCE AND WAS MEASURED: object-store was missing from the ternary that
+  // used to sit here, so a WIRED object-store client was still reported UNAVAILABLE and its induction block never fired
+  // — the verdict read "not provisioned" while the probe was in fact passing. The mapping is now exhaustive.
+  const CLIENT_KEY = { "job-worker": "jobWorker", "keycloak-jwks": "keycloakJwks", "provider-transport": "providerTransport", "object-store": "objectStore" };
+  const state = clients[CLIENT_KEY[check.name] ?? check.name] === undefined ? "UNAVAILABLE" : "PROVISIONED";
   console.log(`${check.name}|${state}|${check.status}|${check.reasonCode ?? "-"}|${check.latencyMs}ms|${check.detail.replace(/\|/g, "/")}`);
 }
 console.log(`overall|${evaluation.dependencyState}|${evaluation.totalLatencyMs}ms`);

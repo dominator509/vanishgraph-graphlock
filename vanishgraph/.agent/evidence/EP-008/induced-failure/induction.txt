@@ -5,3 +5,7 @@ vanishgraph-ep003-postgres
 == inducing: valkey-cli SHUTDOWN NOSAVE in vanishgraph-ep008-valkey ==
 == remediating: docker start vanishgraph-ep008-valkey ==
 vanishgraph-ep008-valkey
+== inducing: docker stop vanishgraph-ep008-minio ==
+vanishgraph-ep008-minio
+== remediating: docker start vanishgraph-ep008-minio ==
+vanishgraph-ep008-minio
