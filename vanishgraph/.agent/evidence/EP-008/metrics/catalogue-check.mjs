@@ -45,7 +45,16 @@ for (const [file, owner, key] of [["./config/alerts/catalogue.json", "EP-008 M7"
   for (const entry of entries) {
     const names = metricTokens(JSON.stringify(entry));
     if (names.length === 0) problems.push(`${file}: ${entry.id ?? "an entry"} refers to no metric`);
-    for (const name of names) if (!registered.has(name)) problems.push(`${file}: ${entry.id ?? "an entry"} refers to unregistered metric ${name} (VG-OBS-016)`);
+    for (const name of names) {
+      // HISTOGRAM SUFFIXES ARE DERIVED SERIES OF A REGISTERED FAMILY, NOT SEPARATE METRICS. MEASURED: the first version
+      // of this check reported `vanishgraph_verification_lag_seconds_bucket` as unregistered, because the histogram's
+      // own bucket series carries a suffix the catalogue never names — a false positive that would have forced either a
+      // fake catalogue entry or a weakened expression. The lookup strips the suffix and the family must then exist.
+      const base = name.replace(/_(bucket|sum|count)$/, "");
+      if (!registered.has(name) && !registered.has(base)) {
+        problems.push(`${file}: ${entry.id ?? "an entry"} refers to unregistered metric ${name} (VG-OBS-016)`);
+      }
+    }
   }
   console.log(`${key}: ${entries.length} entr(ies), every referenced metric registered`);
 }
