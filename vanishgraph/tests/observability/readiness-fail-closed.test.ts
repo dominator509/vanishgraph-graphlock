@@ -35,6 +35,9 @@ import {
   type ProbeResult,
 } from '../../src/adapters/observability/dependency-probes.ts';
 import { createMetricsRegistry, loadMetricCatalogue, type MetricCatalogue } from '../../src/adapters/observability/metrics-registry.ts';
+import { loadTelemetryAllowlist, type TelemetryAllowlist } from '../../src/adapters/observability/telemetry-allowlist.ts';
+import { readinessTransitionRecord, toHealthDependencies } from '../../src/http/health-routes.ts';
+import { composeReadiness } from '../../src/infrastructure/observability/compose-telemetry.ts';
 
 const ROOT = resolve(import.meta.dirname, '..', '..');
 const loaded = loadMetricCatalogue(join(ROOT, 'config/metrics/catalogue.json'));
@@ -210,6 +213,114 @@ describe('the decision is fail-closed on the FIRST failing evaluation (§7.3)', 
     // A handler that always returns 200 IS the static handler this negative case is about, and the assertion above
     // rejects it. Without this case, a green §7.4 procedure would not distinguish a real check from a fabricated one.
     assert.throws(() => assertReadinessAgreesWithProbes('READY', evaluation.checks), /contradicts 1 failing required probe/);
+  });
+});
+
+describe('the readiness composition: one ReadinessChanged ERROR per transition, through the real logger (§7.3)', () => {
+  const allowlist = (() => {
+    const result = loadTelemetryAllowlist(join(ROOT, 'config/telemetry/allowlist.json'));
+    assert.equal(result.ok, true);
+    return (result as { ok: true; allowlist: TelemetryAllowlist }).allowlist;
+  })();
+
+  test('the transition rule is pure: no record on the first evaluation, none while unready, none on recovery', () => {
+    const decision = (state: 'READY' | 'NOT_READY', failed: string[] = []) => ({
+      dependencyState: state,
+      failedChecks: failed,
+      checks: failed.map((name) => ({ name, ok: false, latencyMs: 1, reasonCode: 'CONNECT_REFUSED' })),
+      budgetExceeded: false,
+      totalLatencyMs: 1,
+    });
+    assert.equal(readinessTransitionRecord(null, decision('NOT_READY', ['valkey'])), null, 'the first evaluation is not a transition');
+    assert.equal(readinessTransitionRecord('READY', decision('READY')), null);
+    assert.equal(readinessTransitionRecord('NOT_READY', decision('NOT_READY', ['valkey'])), null, 'a steadily unready instance must not write one record per evaluation');
+    assert.equal(readinessTransitionRecord('NOT_READY', decision('READY')), null, 'recovery is not an ERROR record');
+    const record = readinessTransitionRecord('READY', decision('NOT_READY', ['valkey', 'postgresql']));
+    assert.equal(record?.event, 'ReadinessChanged');
+    assert.equal(record?.severity, 'ERROR');
+    assert.equal(record?.dependencyKey, 'valkey', 'the record names the FIRST failing dependency');
+    assert.equal(record?.reasonCode, 'CONNECT_REFUSED');
+    assert.match(record?.message ?? '', /NOT_READY: valkey, postgresql/);
+  });
+
+  test('the composition writes exactly one ERROR record across ready, unready, still-unready and recovered', async () => {
+    const lines: string[] = [];
+    // THE PROBE SET IS SNAPSHOTTED AT CONSTRUCTION, so the failure is induced behind a mutable flag rather than by
+    // replacing the function: the runner holds the probe it was given, which is what keeps the probe set fixed for the
+    // life of the process. MEASURED: the first version of this test replaced `clients.valkey` after construction and the
+    // verdict stayed READY, which is the snapshot behaving as designed rather than a defect.
+    let valkeyDown = false;
+    const clients = passingClients();
+    clients.valkey = async () => {
+      if (valkeyDown) throw Object.assign(new Error('valkey refused the connection'), { code: 'ECONNREFUSED' });
+      return 'valkey PING and write/read/delete round trip verified';
+    };
+    const composition = composeReadiness({
+      allowlist,
+      clients,
+      service: 'vanishgraph-api',
+      candidateEpoch: 'GENERATION',
+      artifactDigest: `sha256:${'a'.repeat(64)}`,
+      correlationId: 'corr-7Q2F4M8ZC1',
+      tenantId: 'ten-4KQ7',
+      sink: (line) => lines.push(line),
+      now: () => new Date('2026-02-14T09:31:07.412Z'),
+    });
+
+    const ready = await composition.port.decide();
+    assert.equal(ready.dependencyState, 'READY');
+    assert.deepEqual(lines, [], 'a ready instance writes no readiness record');
+
+    // INDUCE THE FAILURE AT THE PORT: valkey stops answering, which is §7.4 step 2 for that dependency.
+    valkeyDown = true;
+    const unready = await composition.port.decide();
+    assert.equal(unready.dependencyState, 'NOT_READY');
+    assert.deepEqual([...unready.failedChecks], ['valkey']);
+    assert.equal(composition.records.length, 1);
+    assert.equal(lines.length, 1, '§7.3: one structured record on the transition to unready');
+    const parsed = JSON.parse(lines[0] ?? '{}') as Record<string, unknown>;
+    assert.equal(parsed['event'], 'ReadinessChanged');
+    assert.equal(parsed['severity'], 'ERROR', 'failures are never reported at INFO');
+    assert.equal(parsed['dependencyKey'], 'valkey');
+    assert.equal(parsed['reasonCode'], 'CONNECT_REFUSED');
+    assert.equal(parsed['correlationId'], 'corr-7Q2F4M8ZC1');
+    assert.equal(parsed['tenantId'], 'ten-4KQ7');
+
+    // STILL UNREADY: no second record. The stream must let an operator tell one outage from a flap.
+    await composition.port.decide();
+    assert.equal(composition.records.length, 1);
+    assert.equal(lines.length, 1);
+
+    // REMEDIATED: ready again, and recovery adds no ERROR record.
+    valkeyDown = false;
+    const recovered = await composition.port.decide();
+    assert.equal(recovered.dependencyState, 'READY');
+    assert.equal(composition.records.length, 1);
+    assert.equal(lines.length, 1);
+  });
+
+  test('the health-dependency adapter names every declared dependency, so a response can never list only failures', async () => {
+    const clients = passingClients();
+    clients.postgresql = failing('28P01', 'password authentication failed');
+    const composition = composeReadiness({
+      allowlist,
+      clients,
+      service: 'vanishgraph-api',
+      candidateEpoch: 'GENERATION',
+      artifactDigest: `sha256:${'a'.repeat(64)}`,
+      correlationId: 'corr-1',
+      tenantId: 'ten-1',
+      sink: () => undefined,
+      now: () => new Date('2026-02-14T09:31:07.412Z'),
+    });
+    const decision = await composition.port.decide();
+    const deps = toHealthDependencies(decision, { now: () => new Date('2026-02-14T09:31:07.412Z'), startedAt: new Date('2026-02-14T09:30:00.000Z'), decide: () => composition.port.decide() });
+    assert.equal(deps.probes.length, 6, 'all six declared dependencies, not only the failing one');
+    const results = await Promise.all(deps.probes.map((probe) => probe()));
+    assert.deepEqual(results.map((result) => result.name).sort(), [...DEPENDENCY_KEYS].sort());
+    const failedProbe = results.find((result) => result.name === 'postgresql');
+    assert.equal(failedProbe?.ok, false);
+    assert.equal(failedProbe?.reason, 'AUTH_FAILED', 'the reason is the classified cause and carries no DSN');
   });
 });
 

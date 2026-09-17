@@ -306,6 +306,109 @@ export function createTelemetryProducer(options: TelemetryProducerOptions): Tele
 /** The keys a record must carry, exposed so a test asserts against the declaration rather than a copy of it. */
 export const RESOURCE_KEYS: readonly CanonicalResourceKey[] = CANONICAL_RESOURCE_KEYS;
 
+/* ----------------------------------------------------------------------------------------------------------------
+ * The readiness composition (EP-008 M5(b))
+ *
+ * WHY THIS LIVES HERE AND NOT IN `src/http/health-routes.ts`: the import-boundary check refuses `src/http` importing
+ * `src/adapters` or `src/infrastructure`, so the route layer declares the `ReadinessDecisionPort` shape and THIS module —
+ * the composition root — implements it over the real probes, the real metrics registry and the real structured logger.
+ * MEASURED: the first version of the route file imported the runner and the logger directly and the boundary check
+ * refused it; the check was not relaxed (DOD-027).
+ *
+ * THE RECORD RULE IS IN THE ROUTE LAYER (`readinessTransitionRecord`, pure and testable) and the WRITING is here, so the
+ * rule cannot drift between the two and the logger never enters `src/http`.
+ * ---------------------------------------------------------------------------------------------------------------- */
+
+import type { ReadinessChangedRecord, ReadinessDecision, ReadinessDecisionPort } from '../../http/health-routes.ts';
+import { createProbeRunner, type DependencyClients, type DependencyKey } from '../../adapters/observability/dependency-probes.ts';
+import { createStructuredLogger, type StructuredLogger } from '../../adapters/observability/structured-logger.ts';
+import type { MetricsRegistry } from '../../adapters/observability/metrics-registry.ts';
+import type { TelemetryAllowlist } from '../../adapters/observability/telemetry-allowlist.ts';
+
+export interface ReadinessComposition {
+  readonly port: ReadinessDecisionPort;
+  /** The `ReadinessChanged` records written, in order, so a caller can observe the transitions rather than infer them. */
+  readonly records: readonly ReadinessChangedRecord[];
+  readonly logger: StructuredLogger;
+}
+
+export interface ReadinessCompositionOptions {
+  readonly allowlist: TelemetryAllowlist;
+  readonly clients: DependencyClients;
+  readonly registry?: MetricsRegistry;
+  readonly service: string;
+  /** The process's build identity. Supplied, never invented: a zero digest is a prohibited substitute (M1). */
+  readonly candidateEpoch: string;
+  readonly artifactDigest: string;
+  readonly correlationId: string;
+  readonly tenantId: string;
+  readonly sink?: (line: string) => void;
+  readonly now?: () => Date;
+}
+
+/**
+ * Build the readiness decision port.
+ *
+ * THE READINESS EVALUATION AND THE METRICS COME FROM ONE RUN: the port calls the probe runner once per decision, so the
+ * counters and the HTTP answer describe the same evaluation rather than two that happened to be close together.
+ */
+export function composeReadiness(options: ReadinessCompositionOptions): ReadinessComposition {
+  const now = options.now ?? ((): Date => new Date());
+  const logger = createStructuredLogger({
+    allowlist: options.allowlist,
+    context: { service: options.service, candidateEpoch: options.candidateEpoch, artifactDigest: options.artifactDigest },
+    ...(options.sink === undefined ? {} : { sink: options.sink }),
+    now: () => now().toISOString(),
+  });
+  const runner = createProbeRunner({
+    clients: options.clients,
+    service: options.service,
+    ...(options.registry === undefined ? {} : { registry: options.registry }),
+    now: () => now().getTime(),
+  });
+  const records: ReadinessChangedRecord[] = [];
+  let previous: ReadinessDecision['dependencyState'] | null = null;
+
+  return {
+    logger,
+    records,
+    port: {
+      decide: async () => {
+        const evaluation = await runner.evaluate();
+        const decision: ReadinessDecision = Object.freeze({
+          dependencyState: evaluation.dependencyState,
+          failedChecks: evaluation.failedChecks,
+          checks: Object.freeze(evaluation.checks.map((check) => Object.freeze({ name: check.name, ok: check.status === 'PASS', latencyMs: check.latencyMs, reasonCode: check.reasonCode }))),
+          budgetExceeded: evaluation.budgetExceeded,
+          totalLatencyMs: evaluation.totalLatencyMs,
+        });
+        // THE TRANSITION RULE IS THE ROUTE LAYER'S, IMPORTED RATHER THAN RESTATED (see the note above).
+        const { readinessTransitionRecord } = await import('../../http/health-routes.ts');
+        const record = readinessTransitionRecord(previous, decision);
+        if (record !== null) {
+          logger.log(
+            { correlationId: options.correlationId, tenantId: options.tenantId },
+            {
+              severity: 'ERROR',
+              event: 'ReadinessChanged',
+              outcome: 'FAILED',
+              message: record.message,
+              dependencyKey: record.dependencyKey,
+              reasonCode: record.reasonCode,
+            },
+          );
+          records.push(record);
+        }
+        previous = decision.dependencyState;
+        return decision;
+      },
+    },
+  };
+}
+
+/** The six declared dependency keys, re-exported so the process entry point names them from one place. */
+export const READINESS_DEPENDENCY_KEYS: readonly DependencyKey[] = ['postgresql', 'valkey', 'job-worker', 'object-store', 'keycloak-jwks', 'provider-transport'];
+
 /** Re-exported so a caller of this composition root needs one import for the refusal vocabulary. */
 export { RESOURCE_ATTR_MISSING_COUNTER, RESOURCE_ATTR_MISSING_REASON, RESOURCE_ATTR_MISSING_SERIES };
 export type { CanonicalResourceKey, ResolvedResourceInput, TelemetryIdentityRefusal };
