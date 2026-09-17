@@ -28,7 +28,7 @@ if (dsn.trim().length > 0) {
 const valkeyUrl = process.env.VALKEY_URL ?? "";
 if (valkeyUrl.trim().length > 0) {
   const { default: Redis } = await import("ioredis");
-  const redis = new Redis(valkeyUrl, { lazyConnect: true, connectTimeout: 150, maxRetriesPerRequest: 1, enableOfflineQueue: false });
+  const redis = new Redis(valkeyUrl, { lazyConnect: true, connectTimeout: 150, maxRetriesPerRequest: 1, enableOfflineQueue: false, retryStrategy: () => null });
   clients.valkey = probes.valkeyProbe({
     roundTrip: async (key) => {
       await redis.connect().catch(() => undefined);
@@ -68,3 +68,5 @@ for (const check of evaluation.checks) {
   console.log(`${check.name}|${state}|${check.status}|${check.reasonCode ?? "-"}|${check.latencyMs}ms|${check.detail.replace(/\|/g, "/")}`);
 }
 console.log(`overall|${evaluation.dependencyState}|${evaluation.totalLatencyMs}ms`);
+// THE DRIVER EXITS EXPLICITLY. MEASURED: with a CONNECTED valkey client the process never returned to the shell, because an open socket keeps the event loop alive, and the stage hung until the executor killed it at its 600-second cap - the control run never finished and the induction never ran. Closing the clients is not enough on its own when a client is mid-retry, so the exit is explicit.
+process.exit(0);

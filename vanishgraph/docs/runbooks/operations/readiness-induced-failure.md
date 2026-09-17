@@ -41,8 +41,10 @@ probe.
 the work list: a `DEFECT` means the probe must be fixed, an `ERROR` means the dependency must be provisioned — and the
 readiness endpoint must not be reported as proven while any of them stands.
 
-**State of this repository, as measured.** Only `postgresql` is provisioned here; its induction is demonstrated
-(`PASS` → `CONNECT_REFUSED` → `PASS`). `valkey`, `keycloak-jwks` and `provider-transport` are not provisioned (no
-`VALKEY_URL`, no Keycloak, no provider entitlement); the `object-store` probe is not wired because no module in this
+**State of this repository, as measured.** Two of the six dependencies are provisioned here and both are DEMONSTRATED:
+`postgresql` (`PASS` → `CONNECT_REFUSED` → `PASS`, induced by stopping the test container) and `valkey`
+(`PASS` → `FAIL` → `PASS`, induced by the declared `valkey-cli SHUTDOWN NOSAVE` inside the provisioned
+`vanishgraph-ep008-valkey` container and remediated by starting it again). `keycloak-jwks` and `provider-transport` are
+not provisioned (no Keycloak, no provider entitlement); the `object-store` probe is not wired because no module in this
 repository can sign an S3 request; and `job-worker` reports no fresh heartbeat because no worker process exists to write
 one. **The sentinel has therefore NOT been printed**, and the readiness proof is incomplete.

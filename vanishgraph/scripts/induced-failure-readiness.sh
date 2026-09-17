@@ -29,6 +29,7 @@ if [ -f "$STATE_FILE" ]; then
 fi
 
 PG_CONTAINER=${VG_PG_CONTAINER:-vanishgraph-ep003-postgres}
+VALKEY_CONTAINER=${VG_VALKEY_CONTAINER:-vanishgraph-ep008-valkey}
 
 # THE DRIVER IS WRITTEN ONCE AND RUN THREE TIMES (control, induced, remediated), so all three observations come from the
 # same code path — which is the property §7.4 asks the stage to prove.
@@ -63,7 +64,7 @@ if (dsn.trim().length > 0) {
 const valkeyUrl = process.env.VALKEY_URL ?? "";
 if (valkeyUrl.trim().length > 0) {
   const { default: Redis } = await import("ioredis");
-  const redis = new Redis(valkeyUrl, { lazyConnect: true, connectTimeout: 150, maxRetriesPerRequest: 1, enableOfflineQueue: false });
+  const redis = new Redis(valkeyUrl, { lazyConnect: true, connectTimeout: 150, maxRetriesPerRequest: 1, enableOfflineQueue: false, retryStrategy: () => null });
   clients.valkey = probes.valkeyProbe({
     roundTrip: async (key) => {
       await redis.connect().catch(() => undefined);
@@ -103,6 +104,8 @@ for (const check of evaluation.checks) {
   console.log(`${check.name}|${state}|${check.status}|${check.reasonCode ?? "-"}|${check.latencyMs}ms|${check.detail.replace(/\|/g, "/")}`);
 }
 console.log(`overall|${evaluation.dependencyState}|${evaluation.totalLatencyMs}ms`);
+// THE DRIVER EXITS EXPLICITLY. MEASURED: with a CONNECTED valkey client the process never returned to the shell, because an open socket keeps the event loop alive, and the stage hung until the executor killed it at its 600-second cap - the control run never finished and the induction never ran. Closing the clients is not enough on its own when a client is mid-retry, so the exit is explicit.
+process.exit(0);
 DRIVER_EOF
 
 run_driver() {
@@ -129,6 +132,29 @@ if grep -q '^postgresql|PROVISIONED|PASS' "$EVIDENCE/control.txt"; then
 else
   echo "postgresql|UNAVAILABLE|not provisioned: no application DSN was available; provisioning attempt: sh scripts/db-provision.sh (state file $STATE_FILE)" >>"$EVIDENCE/induced.txt"
   cp "$EVIDENCE/induced.txt" "$EVIDENCE/remediated.txt"
+fi
+
+# THE DECLARED INDUCTION FOR valkey: §7.4 step 2 names `valkey-cli SHUTDOWN NOSAVE`, which is run INSIDE the container so
+# the induction is the specified one rather than a proxy for it. Remediation is starting the container again, and the
+# stage waits for the round trip to work before it believes the recovery.
+if grep -q '^valkey|PROVISIONED|PASS' "$EVIDENCE/control.txt"; then
+  echo "== inducing: valkey-cli SHUTDOWN NOSAVE in $VALKEY_CONTAINER ==" | tee -a "$EVIDENCE/induction.txt"
+  docker exec "$VALKEY_CONTAINER" valkey-cli SHUTDOWN NOSAVE >>"$EVIDENCE/induction.txt" 2>&1 || true
+  sleep 2
+  run_driver "$EVIDENCE/induced-valkey.txt" || true
+  # THE INDUCED RUN IS THE UNION OF BOTH INDUCED OBSERVATIONS: each dependency is judged on its own row, and merging
+  # keeps one file per phase instead of one file per dependency per phase.
+  awk -F'|' 'NR==FNR { if ($1=="valkey") v=$0; next } { if ($1=="valkey" && v!="") print v; else print }' "$EVIDENCE/induced-valkey.txt" "$EVIDENCE/induced.txt" >"$EVIDENCE/induced-merged.txt"
+  mv "$EVIDENCE/induced-merged.txt" "$EVIDENCE/induced.txt"
+  echo "== remediating: docker start $VALKEY_CONTAINER ==" | tee -a "$EVIDENCE/induction.txt"
+  docker start "$VALKEY_CONTAINER" >>"$EVIDENCE/induction.txt" 2>&1 || { echo "readiness induced failure: ERROR - could not restart $VALKEY_CONTAINER" >&2; exit 1; }
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
+    sleep 1
+    run_driver "$EVIDENCE/remediated-valkey.txt" || true
+    grep -q '^valkey|PROVISIONED|PASS' "$EVIDENCE/remediated-valkey.txt" && break
+  done
+  awk -F'|' 'NR==FNR { if ($1=="valkey") v=$0; next } { if ($1=="valkey" && v!="") print v; else print }' "$EVIDENCE/remediated-valkey.txt" "$EVIDENCE/remediated.txt" >"$EVIDENCE/remediated-merged.txt"
+  mv "$EVIDENCE/remediated-merged.txt" "$EVIDENCE/remediated.txt"
 fi
 
 # THE VERDICT, PER DEPENDENCY, FROM THE THREE OBSERVATIONS.
