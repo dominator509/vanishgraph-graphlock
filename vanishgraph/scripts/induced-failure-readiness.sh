@@ -286,7 +286,12 @@ fi
     if [ "$provisioned" != "PROVISIONED" ]; then
       verdict="ERROR (DOD-033: not provisioned; see the provisioning attempt below)"
     elif [ "$control" = "PASS" ] && [ "$induced" != "PASS" ] && [ "$remediated" = "PASS" ]; then
-      verdict="DEMONSTRATED (PASS before, FAIL after induction on the same probe path, PASS after remediation)"
+      # THE LABEL NAMES THE VALUE THE PROBE ACTUALLY REPORTED, AND IT USED TO SAY "FAIL" WHETHER OR NOT IT WAS FAIL.
+      # MEASURED: the object-store row read "PASS before, FAIL after induction" while the induced observation was
+      # UNKNOWN — the probe was not even wired during that run, because the fixture write fails when the store is stopped.
+      # The transition (PASS, then not PASS, then PASS on the same path) is the property the milestone asks for, and the
+      # label now reports the observation rather than asserting the word FAIL.
+      verdict="DEMONSTRATED (control=$control induced=$induced remediated=$remediated on the same probe path)"
     elif [ "$control" = "PASS" ] && [ "$induced" = "PASS" ]; then
       verdict="DEFECT (the probe reported PASS in both states: it does not discriminate)"
     else

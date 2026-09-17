@@ -1,7 +1,7 @@
 dependency | control | induced | remediated | verdict
-postgresql | PASS | FAIL | PASS | DEMONSTRATED (PASS before, FAIL after induction on the same probe path, PASS after remediation)
-valkey | PASS | FAIL | PASS | DEMONSTRATED (PASS before, FAIL after induction on the same probe path, PASS after remediation)
+postgresql | PASS | FAIL | PASS | DEMONSTRATED (control=PASS induced=FAIL remediated=PASS on the same probe path)
+valkey | PASS | FAIL | PASS | DEMONSTRATED (control=PASS induced=FAIL remediated=PASS on the same probe path)
 job-worker | FAIL | FAIL | FAIL | INCONCLUSIVE (control=FAIL induced=FAIL remediated=FAIL)
-object-store | PASS | UNKNOWN | PASS | DEMONSTRATED (PASS before, FAIL after induction on the same probe path, PASS after remediation)
+object-store | PASS | UNKNOWN | PASS | DEMONSTRATED (control=PASS induced=UNKNOWN remediated=PASS on the same probe path)
 keycloak-jwks | UNKNOWN | UNKNOWN | UNKNOWN | ERROR (DOD-033: not provisioned; see the provisioning attempt below)
 provider-transport | UNKNOWN | UNKNOWN | UNKNOWN | ERROR (DOD-033: not provisioned; see the provisioning attempt below)

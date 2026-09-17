@@ -2,10 +2,10 @@
     at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
 [ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:56379
     at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
-postgresql|PROVISIONED|PASS|-|28ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|FAIL|UNKNOWN|5ms|Connection is closed.
-job-worker|PROVISIONED|FAIL|MISCONFIGURED|13ms|no worker heartbeat in the last 60000 ms: withholding heartbeats is exactly how this probe is induced to fail (§7.4)
-object-store|PROVISIONED|PASS|-|11ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+postgresql|PROVISIONED|PASS|-|123ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|FAIL|UNKNOWN|8ms|Connection is closed.
+job-worker|PROVISIONED|FAIL|MISCONFIGURED|59ms|no worker heartbeat in the last 60000 ms: withholding heartbeats is exactly how this probe is induced to fail (§7.4)
+object-store|PROVISIONED|PASS|-|39ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
 keycloak-jwks|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for keycloak-jwks; the declared action is: OIDC discovery plus JWKS retrieval over TLS, with no token minted
 provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|57ms
+overall|NOT_READY|230ms
