@@ -33,15 +33,15 @@ fail() { echo "artifact reproducible: FAIL - $1" >&2; exit 1; }
 DIRTY=$(git status --porcelain | grep -vE '(dist/|dist-repro-[ab]/|ARTIFACT_IDENTITY\.json$)' || true)
 [ -z "$DIRTY" ] || fail "the working tree is not clean, so the two builds would not be builds of the same source: $DIRTY"
 
-rm -rf dist-repro-a dist-repro-b
-VG_DIST_DIR=dist-repro-a sh scripts/build-artifact.sh >/dev/null || fail "the first build failed"
-VG_DIST_DIR=dist-repro-b sh scripts/build-artifact.sh >/dev/null || fail "the second build failed"
+REPRO_BASE=${TMPDIR:-/tmp}/vg-repro-$$; rm -rf "$REPRO_BASE"; mkdir -p "$REPRO_BASE"
+VG_DIST_DIR="$REPRO_BASE/a" sh scripts/build-artifact.sh >/dev/null || fail "the first build failed"
+VG_DIST_DIR="$REPRO_BASE/b" sh scripts/build-artifact.sh >/dev/null || fail "the second build failed"
 
 VERSION=$(node -e 'process.stdout.write(JSON.parse(require("node:fs").readFileSync("package.json","utf8")).version)')
 NAME=$(node -e 'process.stdout.write(JSON.parse(require("node:fs").readFileSync("package.json","utf8")).name)')
 
 # 1. THE TARBALL BY CONTENT MANIFEST.
-for dir in dist-repro-a dist-repro-b; do
+for dir in "$REPRO_BASE/a" "$REPRO_BASE/b"; do
   rm -rf "$dir/extracted"
   mkdir -p "$dir/extracted"
   tar -xzf "$dir/${NAME}-${VERSION}.tgz" -C "$dir/extracted" || fail "could not extract $dir/${NAME}-${VERSION}.tgz"
@@ -51,7 +51,7 @@ for dir in dist-repro-a dist-repro-b; do
     done > "../content-manifest.txt" )
   [ -s "$dir/content-manifest.txt" ] || fail "$dir produced no content manifest"
 done
-cmp -s dist-repro-a/content-manifest.txt dist-repro-b/content-manifest.txt \
+cmp -s "$REPRO_BASE/a/content-manifest.txt" "$REPRO_BASE/b/content-manifest.txt" \
   || fail "the two tarballs contain DIFFERENT FILES; that is a content difference, not archive metadata"
 
 # 2. THE SBOM AFTER REMOVING THE FIELDS THAT IDENTIFY A RUN RATHER THAN A DEPENDENCY CLOSURE.
@@ -67,15 +67,15 @@ const canonical = (p) => {
 const one = canonical(a); const two = canonical(b);
 if (one !== two) { console.error("the SBOM dependency closure differs between the two builds"); process.exit(1); }
 process.stdout.write("sbom-identical\n");
-' "dist-repro-a/${NAME}-${VERSION}.cdx.json" "dist-repro-b/${NAME}-${VERSION}.cdx.json" >/dev/null || fail "the SBOM is not reproducible"
+' "$REPRO_BASE/a/${NAME}-${VERSION}.cdx.json" "$REPRO_BASE/b/${NAME}-${VERSION}.cdx.json" >/dev/null || fail "the SBOM is not reproducible"
 
 # 3. PROVENANCE AND CHECKSUMS BYTE FOR BYTE.
-cmp -s dist-repro-a/provenance.json dist-repro-b/provenance.json || fail "provenance.json differs between the two builds, and it carries no timestamp, so it must not"
-cmp -s dist-repro-a/SHA256SUMS dist-repro-b/SHA256SUMS || fail "SHA256SUMS differs between the two builds"
+cmp -s "$REPRO_BASE/a/provenance.json" "$REPRO_BASE/b/provenance.json" || fail "provenance.json differs between the two builds, and it carries no timestamp, so it must not"
+cmp -s "$REPRO_BASE/a/SHA256SUMS" "$REPRO_BASE/b/SHA256SUMS" || fail "SHA256SUMS differs between the two builds"
 
-DIGEST_A=$(node -e 'const c=require("node:crypto"),f=require("node:fs");process.stdout.write(c.createHash("sha256").update(f.readFileSync(process.argv[1])).digest("hex"))' "dist-repro-a/${NAME}-${VERSION}.tgz")
-DIGEST_B=$(node -e 'const c=require("node:crypto"),f=require("node:fs");process.stdout.write(c.createHash("sha256").update(f.readFileSync(process.argv[1])).digest("hex"))' "dist-repro-b/${NAME}-${VERSION}.tgz")
-ENTRIES_A=$(wc -l <dist-repro-a/content-manifest.txt | tr -d ' ')
+DIGEST_A=$(node -e 'const c=require("node:crypto"),f=require("node:fs");process.stdout.write(c.createHash("sha256").update(f.readFileSync(process.argv[1])).digest("hex"))' "$REPRO_BASE/a/${NAME}-${VERSION}.tgz")
+DIGEST_B=$(node -e 'const c=require("node:crypto"),f=require("node:fs");process.stdout.write(c.createHash("sha256").update(f.readFileSync(process.argv[1])).digest("hex"))' "$REPRO_BASE/b/${NAME}-${VERSION}.tgz")
+ENTRIES_A=$(wc -l <"$REPRO_BASE/a/content-manifest.txt" | tr -d ' ')
 
 # THE RECONCILIATION IS WRITTEN INTO THE IDENTITY FILE, so a reader of the artifact's identity sees BOTH the
 # container digests AND why they may differ, instead of a single digest presented as "the" build.
@@ -96,5 +96,5 @@ identity.reproducibility = {
 fs.writeFileSync(path, `${JSON.stringify(identity, null, 2)}\n`);
 ' .agent/verification/state/ARTIFACT_IDENTITY.json "$DIGEST_A" "$DIGEST_B" "$ENTRIES_A"
 
-rm -rf dist-repro-a dist-repro-b
+REPRO_BASE=${TMPDIR:-/tmp}/vg-repro-$$; rm -rf "$REPRO_BASE"; mkdir -p "$REPRO_BASE"
 echo "artifact reproducible: ok (content manifests identical over $(printf '%s' "$ENTRIES_A") entries; provenance and checksums byte-identical; container digests recorded with their reconciliation)"
