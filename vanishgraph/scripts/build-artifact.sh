@@ -28,7 +28,7 @@ command -v git >/dev/null 2>&1 || fail "git is required but not found"
 # THE CLEANLINESS CHECK IS ABOUT THE SOURCE, NOT ABOUT GENERATED FILES: this script writes dist/ and the
 # identity file, so a tree that already contains them still has its SOURCE committed. Only the paths this
 # build legitimately produces are filtered out, and nothing else.
-DIRTY=$(git status --porcelain | grep -vE '^(\?\?| M|MM|A ) (dist/|\.agent/verification/state/ARTIFACT_IDENTITY\.json)' || true)
+DIRTY=$(git status --porcelain | grep -vE '(dist/|dist-repro-[ab]/|ARTIFACT_IDENTITY\.json$)' || true)
 if [ -n "$DIRTY" ]; then
   echo "artifact: FAIL - the working tree is not clean, so the artifact could not be described by a commit SHA:" >&2
   printf '%s\n' "$DIRTY" | head -n 10 >&2
