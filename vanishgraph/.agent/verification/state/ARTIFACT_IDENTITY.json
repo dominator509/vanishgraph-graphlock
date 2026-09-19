@@ -1,0 +1,37 @@
+{
+  "source_commit_sha": "34663351961b03a595fdf2fe23aeb3b5def8ee5a",
+  "base_revision": "34663351961b03a595fdf2fe23aeb3b5def8ee5a",
+  "lockfile_digests": {
+    "package-lock.json": "sha256:3be2892e7558559ae9e8fcde4c24228cdcddf356eece6735519bd8ac11f27ee4"
+  },
+  "builder_identity": {
+    "tool": "node",
+    "version": "v24.14.1",
+    "package_manager": "npm@11.11.0"
+  },
+  "build_command": "sh scripts/build-artifact.sh",
+  "artifact_paths": [
+    "dist/vanishgraph-0.1.0.tgz",
+    "dist/vanishgraph-0.1.0.cdx.json",
+    "dist/provenance.json",
+    "dist/SHA256SUMS"
+  ],
+  "artifact_digests": {
+    "dist/vanishgraph-0.1.0.tgz": "sha256:367160dd29bc678c876acd2022faddc59bcbaf321f273e20ef9c1b0d9b64ead7",
+    "dist/vanishgraph-0.1.0.cdx.json": "sha256:8c1a1df80eda992f10c6b53c6d2f4269b98050763cb48a132d3e4965bf5e0459",
+    "dist/provenance.json": "sha256:3e5f98a29ffc025a1ceac5513d8c6cff5337c8ea9ed6bd9ab00b5fbae56a8f47",
+    "dist/SHA256SUMS": "sha256:e1b4b629a588525e42d774eb4e20a63a9f09dd2dbbf3c02cf5676a301a6bbd8d"
+  },
+  "sbom_reference": "dist/vanishgraph-0.1.0.cdx.json",
+  "provenance_reference": "dist/provenance.json",
+  "signature": {
+    "status": "EXTERNAL_REQUIRED",
+    "reason": "no signing key or managed KMS exists in this environment (ADR-006 open); an unsigned artifact is recorded as unsigned rather than represented as signed"
+  },
+  "oci_image": {
+    "status": "BLOCKED_ON_IMPLEMENTATION",
+    "reason": "no container build definition exists in this repository"
+  },
+  "downstream_test_bindings": [],
+  "recorded_at_round": "EP-009 M1"
+}
