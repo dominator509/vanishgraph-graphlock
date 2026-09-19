@@ -9,10 +9,10 @@ produced but not digest-pinned, is a `FAIL` of DOD-003.
 
 | # | format | exact build command | output path pattern | digest | consumer |
 |---|---|---|---|---|---|
-| 1 | Package tarball (`npm pack`) | `npm pack --pack-destination dist` | `dist/vanishgraph-<version>.tgz` | SHA-256 | `scripts/install.sh`; the installable surface a consumer installs |
-| 2 | Software bill of materials | `npm sbom --sbom-format cyclonedx` | `dist/vanishgraph-<version>.cdx.json` | SHA-256 | `scripts/gate-release.sh`; dependency-closure evidence |
+| 1 | Package tarball (`npm pack`) | `npm pack --pack-destination dist` | `dist/vanishgraph-<version>.tgz` | SHA-256 | the installable surface a consumer installs; `scripts/install.sh` installs it |
+| 2 | Software bill of materials | `npm sbom --sbom-format cyclonedx` | `dist/vanishgraph-<version>.cdx.json` | SHA-256 | dependency-closure evidence; the M7 release gate reads it |
 | 3 | Build provenance | `sh scripts/build-artifact.sh` (records tool and source identity) | `dist/provenance.json` | SHA-256 | `scripts/artifact-identity.sh`; the §7.3 identity fields |
-| 4 | Checksums | `sh scripts/build-artifact.sh` | `dist/SHA256SUMS` | SHA-256 of each entry | `scripts/gate-release.sh`; every downstream stage verifies against it |
+| 4 | Checksums | `sh scripts/build-artifact.sh` | `dist/SHA256SUMS` | SHA-256 of each entry | every downstream stage verifies against it; `scripts/artifact-identity.sh` resolves them |
 
 **Toolchain, measured:** `node v24.14.1`, `npm 11.11.0`, `git` present, `docker 29.7.2`.
 
@@ -28,16 +28,29 @@ without being produced, and no later gate may represent an image as "the artifac
 
 ## What the deployment targets consume
 
-| target | consumes | notes |
+**There is no `deploy/` tree in this repository (measured: `Get-ChildItem deploy` returns nothing), so no
+deployment path is claimed here as existing.** What the declared formats are for is fixed by the spec: an
+artifact-bound stage consumes the artifact, never a source tree (SPEC-008 VG-SHIP-021). The M4 staging
+deployment and the M6 rollback/restore drills own the procedures, and production deployment is manual-only
+and authorized by an external participant (SPEC-008 §9, VG-SCOPE-009) — an agent may not perform or
+simulate it.
+
+| consumer (present or owed) | consumes | notes |
 |---|---|---|
-| `deploy/staging/` | the tarball plus `SHA256SUMS` plus the SBOM and provenance | artifact-bound verification compares the digest it deployed with the digest in `ARTIFACT_IDENTITY.json`; a mismatch fails the stage |
-| `deploy/production/` | the same set | the procedure is manual-only and contains no executable deployment (EP-009 §7.7) |
-| `scripts/gate-release.sh` | every declared format plus its digest | a declared format that is missing, empty, or unhashed fails the gate |
-| `scripts/artifact-identity.sh` | every digest | it prints `artifact identity: ok` only when every §7.3 field is populated and every digest resolves |
+| `scripts/artifact-identity.sh` | every digest | present; prints `artifact identity: ok` only when every §7.3 field is populated and every digest resolves against the bytes on disk |
+| `scripts/install.sh` | the tarball | present; M5 owns executing the published install and upgrade commands as written (VG-SHIP-029) |
+| the M7 release gate | every declared format plus its digest | **OWED — the script does not exist yet.** A declared format that is missing, empty, or unhashed must fail that gate; until it exists no `gate-release` sentinel exists and none is claimed |
+| the M4 staging verification | the tarball plus `SHA256SUMS` plus the SBOM and provenance | **OWED and `EXTERNAL_REQUIRED`**: no staging host, credential or endpoint was reached in this environment, so no deployment is claimed |
 
 ## Reproducibility
 
-`sh scripts/build-reproducibility.sh` builds the declared formats twice from two clean checkouts of the
-same commit and requires **byte-identical** outputs. A format with documented non-determinism is either
-made reproducible or removed from this set with a recorded rationale here; the reconciliation for any
-accepted exception is recorded in `ARTIFACT_IDENTITY.json`, never assumed.
+`sh scripts/build-reproducibility.sh` builds the declared formats twice and requires **byte-identical**
+outputs, except for formats with documented non-determinism whose reconciliation is recorded in
+`ARTIFACT_IDENTITY.json` rather than assumed. The two builds run from **one verified-clean tree** into two
+scratch output directories (`${TMPDIR}/vg-repro-<pid>/{a,b}`), which is a recorded deviation from §3's
+wording "two clean checkouts of the same commit": a second checkout of the lockfile-carrying tree would
+need its own dependency installation (in an offline environment, from a warm cache) for `npm sbom` to see
+the dependency closure, so a same-tree double build is what is measured here. **What this does exercise:**
+output-path independence, container-metadata non-determinism, and the identity document itself. **What it
+does not exercise:** dependence of the build on the absolute path of the source directory. That gap is
+recorded, not hidden, and closes only with a second checkout that can install its own dependencies.

@@ -137,6 +137,7 @@ mkdir -p .agent/evidence/EP-009
   echo "date-of-record: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "source commit: $(git rev-parse HEAD)"
   echo "builds compared: VG_DIST_DIR=$REPRO_BASE/a and $REPRO_BASE/b, both from this tree"
+  echo "checkout deviation, recorded not hidden: both builds run from ONE verified-clean tree into two scratch output directories, where section 3 says two clean checkouts; a second checkout would need its own dependency installation for npm sbom to see the closure. Exercised: output-path independence and container-metadata non-determinism. NOT exercised: dependence on the absolute path of the source directory. See docs/release/supported-formats.md."
   echo "tarball content manifest entries: $ENTRIES_A (identical in both builds, per-file SHA-256)"
   echo "tarball container digest, first build:  sha256:$DIGEST_A"
   echo "tarball container digest, second build: sha256:$DIGEST_B"

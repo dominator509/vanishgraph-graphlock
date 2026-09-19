@@ -46,6 +46,8 @@ a milestone that needs a new one must add it here in the same change.
 | `sh scripts/regression-proof.sh` | `regression proof: ok` |
 | `sh scripts/gate-test-hardening.sh` | `gate-test-hardening: ok` |
 | `sh scripts/build.sh` | `build: ok` |
+| `sh scripts/build-artifact.sh` | `artifact: built` |
+| `sh scripts/build-reproducibility.sh` | `artifact reproducible: ok` |
 | `sh scripts/artifact-identity.sh` | `artifact identity: ok` |
 | `sh scripts/smoke-test.sh` | `smoke test: ok` |
 | `sh scripts/live-fire.sh` | `live-fire: ok` |
@@ -72,6 +74,18 @@ a milestone that needs a new one must add it here in the same change.
   artifact-identity, artifact-bound smoke, artifact-bound E2E, artifact-bound
   live-fire. It stops at the first failing stage and prints no sentinel unless all
   fifteen genuinely pass.
+- `sh scripts/build-artifact.sh` produces the four declared formats under `dist/`
+  (package tarball, CycloneDX SBOM, provenance, checksums) and publishes the §7.3
+  identity. It refuses to build from a tree whose source is not committed, because an
+  artifact that cannot be described by a commit SHA cannot be bound to a test. A
+  build into a scratch directory keeps its identity inside that directory and does
+  not publish, so a reproducibility run can never overwrite the identity that
+  describes `dist/`.
+- The OCI container-image format of SPEC-008 §7.2 is NOT produced: no container
+  build definition exists anywhere in this repository. The status and the named next
+  action are recorded in `docs/release/supported-formats.md`, and `RELEASE.md`
+  states that container-format support is not claimed. Container-format support must
+  not be reported as available.
 - A stage that is not yet implemented exits non-zero with the mandated
   `ERROR: <stage> is an unimplemented placeholder; ...` signature. **Placeholder
   stages never pass silently** — that is a deliberate, load-bearing property.
