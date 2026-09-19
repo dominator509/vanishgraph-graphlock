@@ -3,10 +3,10 @@
 Everything below was produced in this session. Nothing in this file is a claim about a remote CI run: **the
 pipeline has never run on the hosting platform**, and the reason is recorded here with its probe.
 
-## The pipeline definition
+## 1. The pipeline definition
 
 `.github/workflows/ci.yml` — 17 jobs. `sh scripts/ci-guard.sh` parses it with PyYAML and validates it
-structurally; it printed `ci pipeline: ok` with these notes:
+structurally. Measured output:
 
 ```
 workflow: 17 job(s) parsed: artifact-build, artifact-identity, build, dependency-audit, e2e, format-check,
@@ -21,40 +21,57 @@ ci pipeline: ok
 
 `grep -c 'jobs:' .github/workflows/ci.yml` prints `1`, which the milestone's RUN list requires to be non-zero.
 
-## The guard's own negative controls, executed and recorded
+The guard parses `scripts/verify.sh`'s `STAGES` block rather than restating it, requires a job for every one of
+the fifteen stages, requires each stage job to run exactly `sh scripts/<script>.sh`, requires that script to
+exist on disk, requires `COMMANDS.md` to declare that command with a sentinel, and then checks the `needs`
+graph: no stage may depend on a stage verify.sh runs after it, and the artifact-bound stages must form a chain
+(`artifact-build` → `artifact-identity` → `smoke` → `e2e` → `live-fire`).
+
+## 2. The guard's own negative controls, executed and recorded
 
 A guard that cannot fail is a placebo, so four mutations were applied to the workflow, each was required to
 produce its own typed finding, and the file was restored from a copy afterwards:
 
 | control | mutation | result |
 |---|---|---|
-| `MASK_CONTINUE_ON_ERROR` | add `continue-on-error: true` to a gate step | refused with `MASK_CONTINUE_ON_ERROR` |
+| `MASK_CONTINUE_ON_ERROR` | allow a gate step to fail without failing the job | refused with `MASK_CONTINUE_ON_ERROR` |
 | `JOB_MISSING` | rename the `live-fire` job | refused with `JOB_MISSING` |
-| `UPLOAD_EMPTY_ALLOWED` | `if-no-files-found: error` → `warn` | refused with `UPLOAD_EMPTY_ALLOWED` |
+| `UPLOAD_EMPTY_ALLOWED` | make the artifact upload tolerate missing files | refused with `UPLOAD_EMPTY_ALLOWED` |
 | `ARTIFACT_CHAIN_BROKEN` | make `smoke` depend on `build` instead of `artifact-identity` | refused with `ARTIFACT_CHAIN_BROKEN` |
 
-The restoration was proven by re-running the guard: `ci pipeline: ok`, exit 0.
+Restoration was proven by re-running the guard: `ci pipeline: ok`, exit 0.
 
-**A defect this guard found in its own author's workflow, and the fix:** the first version gave the artifact
-build the job name `build`, which is verify.sh's stage for `scripts/build.sh`. `ci-guard.sh` reported
-`STAGE_COMMAND_MISMATCH` — the pipeline was claiming a digest-keyed upload from a job that is not the stage
-verify.sh runs. The artifact production is now a separate `artifact-build` job, and `build` runs
-`sh scripts/build.sh`.
+## 3. Four defects found while writing this milestone, and what was done about each
 
-**A defect this guard found in itself, and the fix:** its first masking scan read the raw file and reported
-three findings that were the words `continue-on-error`, `|| true` and `if: always()` inside the workflow's own
-comment saying those are forbidden. A comment cannot mask a failure. The scan now reads the **parsed**
-workflow, because every executable line of a workflow lives in a `run` string or an action input, so the
-parsed structure covers every place a failure can be hidden and nothing else.
+**(a) The pipeline conflated two different facts.** The first version named the artifact build `build`, which
+is verify.sh's stage for `scripts/build.sh`. The guard reported `STAGE_COMMAND_MISMATCH`: the pipeline was
+claiming a digest-keyed upload from a job that is not the stage verify.sh runs. The artifact production is now
+a separate `artifact-build` job, and `build` runs `sh scripts/build.sh`.
 
-## Stage order equals the local gate
+**(b) The guard's own masking scan read prose.** Its first version scanned the raw file and reported three
+findings that were the forbidden constructs *named inside the workflow's own comment saying they are
+forbidden*. A comment cannot mask a failure, and a check that fails on prose trains its reader to ignore it.
+The scan now reads the **parsed** workflow, because every executable line of a workflow lives in a `run` string
+or an action input, so the parsed structure covers every place a failure can be hidden and nothing else.
 
-The guard parses `scripts/verify.sh`'s `STAGES` block rather than restating it, requires a job for every one of
-the fifteen stages, requires each stage job to run exactly `sh scripts/<script>.sh`, requires that script to
-exist, and requires `COMMANDS.md` to declare that command with a sentinel. It then checks the `needs` graph:
-no stage may depend on a stage verify.sh runs after it, and the artifact-bound stages must form a chain.
+**(c) The repository's own masking scan flagged the guard.** `tests/security/masking-patterns.test.ts` and
+step 4 of `scripts/security-check.sh` scan `scripts/*.sh` for the masking constructs, and a validator must
+contain the patterns it searches for. The repository already solves that for its scanners by excluding them
+**by name** — and that is exactly where a real masking construct would hide, so this guard is not added to that
+list. The patterns are data instead: `config/ci/masking-patterns.json`. Every line of the script stays
+scannable, the guard fails loudly (`PATTERNS_UNREADABLE`) if that file is missing, and the negative control in
+section 2 proves each pattern still fires.
 
-## Remote observation: BLOCKED_CREDENTIALS
+**(d) A proof test asserted the absence of any pipeline, which EP-009 M3 requires.**
+`tests/regression/live-fire-proof-10.test.ts` asserted `readdirSync('.github/workflows')` was empty, and its own
+comment said so: *"true vacuously: there is no pipeline to do either"*. Creating the pipeline broke it, and the
+options were to abandon the milestone or to leave a red suite. The assertion now reads the pipeline's
+**content**: no auto-merge, no deploy, no release, no production environment, in every workflow file present —
+the property the test's title always named. It is not weaker in the property it states and it can now fail for
+a real reason; the suite gained a positive control that plants each forbidden shape and requires the scan to
+fire, plus a harmless sample it must not fire on, so it cannot pass by looking at nothing.
+
+## 4. Remote observation: BLOCKED_CREDENTIALS
 
 The declared observation credentials are the GitHub App values in `PREFLIGHT.md`. Measured:
 
@@ -69,24 +86,86 @@ exit=1
 state as `BLOCKED_CREDENTIALS`.
 
 **A credential that exists here and was deliberately NOT used, recorded rather than quietly substituted:** a
-`gh` CLI is installed and authenticated in this environment (`gh auth status`: logged in to github.com, scopes
-include `repo` and `workflow`), and the repository has a working `origin` remote, so a run could in principle be
-triggered by pushing the workflow. It was not, for three reasons: the declared observation credential is the
-GitHub **App** and the plan's own instruction is to record `BLOCKED_CREDENTIALS` when it is unprovisioned; a
-triggered run would be red by design today, because `live-fire` is a loud-fail placeholder owned by EP-010 and
-the artifact-bound `smoke`/`e2e` stages need the digest binding EP-009 M4 adds; and substituting an interactive
-human CLI session for a declared machine credential is the kind of undeclared substitution this pack forbids.
-The operator can enable it with one push once the App values are provisioned.
+`gh` CLI is installed and authenticated in this environment (`gh auth status`: logged in to github.com, token
+scopes include `repo` and `workflow`), and the repository has a working `origin` remote, so a run could in
+principle be triggered by pushing the workflow. It was not, for three reasons: the declared observation
+credential is the GitHub **App** and the plan's own instruction is to record `BLOCKED_CREDENTIALS` when it is
+unprovisioned; a triggered run would be red by design today, because `smoke` and `live-fire` are loud-fail
+placeholders owned by EP-009 M4 and EP-010; and substituting an interactive human CLI session for a declared
+machine credential is the kind of undeclared substitution this pack forbids. The operator can enable it with
+one push once the App values are provisioned.
 
-## The step sequence executed locally, with `CI=true`
+## 5. The step sequence executed locally with `CI=true`, at the frozen commit `0078676`
 
 Run in verify.sh's order, each stage's exit code recorded, the sequence NOT stopping at the first failure
-because the point is to report which stages are runnable today and which are not. **This is a local run of the
-same steps and is NOT described as a green pipeline.**
+because the point is to report which stages are runnable today. **This is a local run of the same steps and is
+NOT described as a green pipeline.**
 
-```
-LOCAL PIPELINE SEQUENCE, CI=true, in verify.sh order; each stage's own exit code recorded
-```
+| stage | exit | meaning |
+|---|---|---|
+| preflight | 0 | `preflight: ok`, with the BLOCKED_CREDENTIALS notice above |
+| lint | 0 | |
+| format-check | 0 | |
+| typecheck | 0 | |
+| unit | 0 | full suite green after the fixes in section 3 |
+| integration | 0 | `test-integration: ok`, 360 tests, provisioned its own disposable PostgreSQL |
+| security-check | 0 | `security check: ok`, secret scan 912 files, 0 findings |
+| dependency-audit | **1** | PRE-EXISTING, not caused by this milestone (see below) |
+| reality-gate | **1** | PRE-EXISTING, not caused by this milestone (see below) |
+| test-collection-guard | 0 | |
+| build | 0 | `build: ok` |
+| artifact-identity | **1** | the published identity is STALE by design here (section 6) |
+| smoke | **1** | `scripts/smoke-test.sh` is still a loud-fail placeholder; EP-009 M4 owns it |
+| e2e | 0 | 36 browser tests pass and print `end-to-end tests: ok` — a SOURCE-LEVEL suite, which SPEC-008 §7 (VG-SHIP-022) says cannot satisfy release acceptance until M4 binds it to the artifact digest |
+| live-fire | **1** | `scripts/live-fire.sh` is still a loud-fail placeholder; EP-010 owns it |
+| config-validate | 0 | `config: ok` |
+| ci-guard | 0 | `ci pipeline: ok` |
 
-The per-stage results are appended above this line by the run itself; a stage that is still a loud-fail
-placeholder exits non-zero, which is the honest state of this tree and not a masked pass.
+### The two pre-existing failures, with the evidence that they are pre-existing
+
+- **`dependency-audit`** fails because the script's rule 2 is *"there are no runtime dependencies, so the
+  shipped surface has no third-party runtime supply chain at all (LICENSE_POLICY.md)"*, and this product has
+  eleven. **Measured at the EP-008 close revision `f172bf9`** (`git show f172bf9:vanishgraph/package.json`): the
+  `dependencies` block is already present with `fastify`, `pg`, `react` and `zod` among others. The stage
+  therefore fails at that revision too. Resolving it means either changing the product's dependency stance or
+  changing the license policy — a **legal/licensing judgement**, which AGENTS.md names as a stop condition, so
+  it is recorded here rather than decided by an agent. It is NOT on `gate-release.sh`'s path (section 7).
+- **`reality-gate`** reports three hits, and all three are prose rather than placeholder behaviour:
+  `src/adapters/observability/dependency-probes.ts:20` (a comment stating what is NOT implemented),
+  `src/adapters/observability/metrics-registry.ts:168` (a validator's error message that refuses a placeholder
+  meaning), `src/infrastructure/observability/compose-telemetry.ts:58` (a comment referring to a loud-fail
+  placeholder dependency). **Measured at `f172bf9`**: the line at `dependency-probes.ts:20` is identical there,
+  so the stage fails at that revision too. The repository's own policy in `.agent/reality-allow` is explicit
+  that a false positive is fixed by making the rule precise rather than by growing an allow-list, and that the
+  allow-list "stays empty until a hit is genuinely simulated, unfinished, or fabricated". All three hits are
+  comments or a message, so neither an allow entry nor a rule change was made here: the finding is recorded,
+  and the rule change belongs to the node that owns those files. It is NOT on `gate-release.sh`'s path.
+
+### One interaction worth naming
+
+`scripts/build.sh` removes `dist/`, and verify.sh's stage order is `build` → `artifact-identity`. In a full
+verify.sh run the artifact is therefore gone by the time the identity stage looks for it, independent of the
+staleness recorded below. `gate-release.sh`'s order does not have this problem (`build-artifact` and
+`artifact-identity` are adjacent, with nothing that cleans `dist/` between them), so the milestone's own gate is
+unaffected — but `verify: ok` cannot be reached while those two stages interact this way, and that is recorded
+as an open finding for the node that owns `verify.sh`.
+
+## 6. The published identity is stale at this commit, and that is the guard working
+
+The identity published at M2 describes commit `ff801c4`. M3 changed the artifact's source surface
+(`COMMANDS.md`, `config/ci/masking-patterns.json`, `scripts/ci-guard.sh`), so `sh scripts/artifact-identity.sh`
+correctly refused it with *"the source surface changed after the artifact was built … the identity is STALE and
+the artifact must be rebuilt"*. The identity is refreshed by rebuilding in the same commit that closes M3, and
+the refresh is recorded in the ledger.
+
+## 7. What this milestone does NOT claim
+
+- No remote pipeline run, green or otherwise: remote observation is `BLOCKED_CREDENTIALS` with the probe above.
+- No claim that `verify: ok` is reachable: three of its stages cannot pass today for the reasons recorded in
+  section 5.
+- No claim that `smoke` or `live-fire` works: both are loud-fail placeholders, and they fail rather than print a
+  sentinel, which is the behaviour SPEC-008 §10 (VG-SHIP-033) requires of them until they are implemented.
+- No claim that `e2e` is acceptance: it is source-level until M4 binds it to the digest.
+- The pipeline's correctness is asserted structurally by `ci-guard.sh`; the workflow has never been executed by
+  GitHub, so its runtime behaviour (action versions, runner images, service availability) is unverified and is
+  stated as such.
