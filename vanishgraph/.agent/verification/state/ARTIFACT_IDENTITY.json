@@ -1,6 +1,6 @@
 {
-  "source_commit_sha": "34663351961b03a595fdf2fe23aeb3b5def8ee5a",
-  "base_revision": "34663351961b03a595fdf2fe23aeb3b5def8ee5a",
+  "source_commit_sha": "a0f139a4758db04a0062565414afef04fdf73ef0",
+  "base_revision": "a0f139a4758db04a0062565414afef04fdf73ef0",
   "lockfile_digests": {
     "package-lock.json": "sha256:3be2892e7558559ae9e8fcde4c24228cdcddf356eece6735519bd8ac11f27ee4"
   },
@@ -11,18 +11,18 @@
   },
   "build_command": "sh scripts/build-artifact.sh",
   "artifact_paths": [
-    "dist/vanishgraph-0.1.0.tgz",
-    "dist/vanishgraph-0.1.0.cdx.json",
+    "dist-repro-a/vanishgraph-0.1.0.tgz",
+    "dist-repro-a/vanishgraph-0.1.0.cdx.json",
     "dist/provenance.json",
     "dist/SHA256SUMS"
   ],
   "artifact_digests": {
-    "dist/vanishgraph-0.1.0.tgz": "sha256:367160dd29bc678c876acd2022faddc59bcbaf321f273e20ef9c1b0d9b64ead7",
-    "dist/vanishgraph-0.1.0.cdx.json": "sha256:8c1a1df80eda992f10c6b53c6d2f4269b98050763cb48a132d3e4965bf5e0459",
+    "dist-repro-a/vanishgraph-0.1.0.tgz": "sha256:e8e65d449ba187bbb3479d74f3c65c29a7de22a87e338fd6076cf81b67418d7f",
+    "dist-repro-a/vanishgraph-0.1.0.cdx.json": "sha256:35ed6244766a68a1c07b6a44c2d80bbae8c6f85a0d0a2c9663bea66ae6cc0daa",
     "dist/provenance.json": "sha256:3e5f98a29ffc025a1ceac5513d8c6cff5337c8ea9ed6bd9ab00b5fbae56a8f47",
     "dist/SHA256SUMS": "sha256:e1b4b629a588525e42d774eb4e20a63a9f09dd2dbbf3c02cf5676a301a6bbd8d"
   },
-  "sbom_reference": "dist/vanishgraph-0.1.0.cdx.json",
+  "sbom_reference": "dist-repro-a/vanishgraph-0.1.0.cdx.json",
   "provenance_reference": "dist/provenance.json",
   "signature": {
     "status": "EXTERNAL_REQUIRED",

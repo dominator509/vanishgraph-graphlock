@@ -44,3 +44,6 @@ ui/dist/
 # EP-005: the render harness mirror (tests/contract/render-support.ts). An ARTEFACT of a test run, never committed.
 # It holds transpiled copies of ui/src, and Node refuses to load .ts under node_modules, which is why it is here.
 .cache-ui-render/
+# Build outputs are artifacts, not source: they are produced by scripts/build-artifact.sh and are never committed.
+dist/
+dist-*/

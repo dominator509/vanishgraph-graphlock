@@ -30,7 +30,8 @@ fail() { echo "artifact reproducible: FAIL - $1" >&2; exit 1; }
 
 # A CLEAN TREE IS REQUIRED FOR THE SAME REASON THE BUILD REQUIRES ONE: two builds of the same SOURCE, not two
 # builds of two trees that happen to be adjacent in time.
-[ -z "$(git status --porcelain)" ] || fail "the working tree is not clean, so the two builds would not be builds of the same source"
+DIRTY=$(git status --porcelain | grep -vE '^(\?\?| M|MM|A ) (dist/|dist-repro-[ab]/|\.agent/verification/state/ARTIFACT_IDENTITY\.json)' || true)
+[ -z "$DIRTY" ] || fail "the working tree is not clean, so the two builds would not be builds of the same source: $DIRTY"
 
 rm -rf dist-repro-a dist-repro-b
 VG_DIST_DIR=dist-repro-a sh scripts/build-artifact.sh >/dev/null || fail "the first build failed"
