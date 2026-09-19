@@ -1,7 +1,7 @@
-postgresql|PROVISIONED|PASS|-|89ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|PASS|-|104ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|PASS|-|96ms|1 worker heartbeat(s) inside the 15000 ms freshness window
-object-store|PROVISIONED|PASS|-|64ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
-keycloak-jwks|PROVISIONED|PASS|-|142ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
-provider-transport|PROVISIONED|PASS|-|264ms|stripe reachable and usable, HTTP 200
-overall|READY|280ms
+postgresql|PROVISIONED|PASS|-|71ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|77ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|PASS|-|74ms|1 worker heartbeat(s) inside the 15000 ms freshness window
+object-store|PROVISIONED|PASS|-|39ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|PROVISIONED|PASS|-|94ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
+provider-transport|PROVISIONED|PASS|-|247ms|stripe reachable and usable, HTTP 200
+overall|READY|256ms

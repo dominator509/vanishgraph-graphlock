@@ -111,9 +111,9 @@ describe('the declared dependencies are §7.2\'s six, and the reason codes are t
 
   test('the per-probe timeouts sum ABOVE the total budget, and the runner surfaces the breach instead of hiding it', () => {
     const sum = DECLARED_DEPENDENCIES.reduce((total, dependency) => total + dependency.timeoutMs, 0);
-    // MEASURED, AND IT IS A SPECIFICATION FINDING: §7.2 declares these six timeouts (1800 ms in total) and a 1500 ms
+    // MEASURED: §7.2 declares these six timeouts (2400 ms in total, after the provider-transport amendment measured below)
     // total readiness budget. A run in which several dependencies hang cannot satisfy both, so the breach is reported.
-    assert.equal(sum, 1800);
+    assert.equal(sum, 2400);
     assert.ok(sum > READINESS_BUDGET_MS, 'if this ever stops being true, the finding below is resolved and must be re-read');
   });
 });

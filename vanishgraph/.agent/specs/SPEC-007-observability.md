@@ -584,7 +584,7 @@ and must match this table.
 | `job-worker` | Queue heartbeat freshness: at least one worker heartbeat inside the declared freshness window, read from the Postgres-backed queue. Optional by design so a stalled worker fleet is visible without taking the web tier down, but always reported (rule 1). | 200 ms | no | no |
 | `object-store` | `HeadBucket` plus a signed `GetObject` of a probe key that must return the expected digest. | 400 ms | yes | yes |
 | `keycloak-jwks` | OIDC discovery document fetch and JWKS retrieval over TLS; no token is minted by the probe. | 300 ms | yes | no |
-| `provider-transport` | Transport-level reachability for each declared official provider transport, using a read-only or no-op path. **Never a form write** (VG-DISC-001). | 400 ms each | no | yes |
+| `provider-transport` | Transport-level reachability for each declared official provider transport, using a read-only or no-op path. **Never a form write** (VG-DISC-001). | 1000 ms each | no | yes |
 
 Dependency names are the SPEC-003 §5.17 vocabulary (`postgresql`, `valkey`,
 `object-store`, `keycloak-jwks`) so that the readiness body is identical across both

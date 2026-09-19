@@ -1,7 +1,7 @@
-postgresql|PROVISIONED|FAIL|CONNECT_REFUSED|31ms|connect ECONNREFUSED 127.0.0.1:53589
-valkey|PROVISIONED|FAIL|UNKNOWN|46ms|Connection is closed.
-job-worker|PROVISIONED|FAIL|CONNECT_REFUSED|30ms|connect ECONNREFUSED 127.0.0.1:53589
+postgresql|PROVISIONED|FAIL|CONNECT_REFUSED|36ms|connect ECONNREFUSED 127.0.0.1:53589
+valkey|PROVISIONED|FAIL|UNKNOWN|71ms|Connection is closed.
+job-worker|PROVISIONED|FAIL|CONNECT_REFUSED|39ms|connect ECONNREFUSED 127.0.0.1:53589
 object-store|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for object-store; the declared action is: HeadBucket plus a signed GetObject of a probe key that must return the expected digest
-keycloak-jwks|PROVISIONED|FAIL|UNKNOWN|40ms|fetch failed
-provider-transport|PROVISIONED|PASS|-|220ms|stripe reachable and usable, HTTP 200
-overall|NOT_READY|228ms
+keycloak-jwks|PROVISIONED|FAIL|UNKNOWN|32ms|fetch failed
+provider-transport|PROVISIONED|FAIL|AUTH_FAILED|287ms|stripe rejected the request with HTTP 401: the transport is reachable but not usable, and §7.4 step 2 names an auth rejection as the induced failure
+overall|NOT_READY|402ms

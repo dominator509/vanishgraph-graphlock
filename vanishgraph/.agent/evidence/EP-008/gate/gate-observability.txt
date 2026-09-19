@@ -1,6 +1,6 @@
-gate-observability - 2026-09-17T17:19:40Z
+gate-observability - 2026-09-19T05:31:43Z
 node: v24.14.1
-head: b8b51db [EP-008][M5] Keycloak provisioned locally: the keycloak-jwks probe passes over verified TLS
+head: ed95414 [EP-008][M5] provider-transport wired to real Stripe credential; concurrent probes; 400 ms timeout measured below real RTT
 
 == stage: egress-canary-test.sh
 canary egress: ok
@@ -48,166 +48,176 @@ verdict: OK (configuration; propagation BLOCKED_ENVIRONMENT)
 retention config: ok
    sentinel: retention config: ok
 == stage: induced-failure-readiness.sh (EXPECTED to be blocked for three of six dependencies)
-== control run (job-worker heartbeat runtime running as pid 1005, freshness window 15000 ms) ==
-postgresql|PROVISIONED|PASS|-|7ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|PASS|-|15ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|PASS|-|22ms|1 worker heartbeat(s) inside the 15000 ms freshness window
-object-store|PROVISIONED|PASS|-|21ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
-keycloak-jwks|PROVISIONED|PASS|-|90ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
-provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|156ms
-== inducing: stop the worker (pid 1005) and let the 15000 ms freshness window lapse ==
-postgresql|PROVISIONED|PASS|-|7ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|PASS|-|17ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|PASS|-|20ms|1 worker heartbeat(s) inside the 15000 ms freshness window
-object-store|PROVISIONED|PASS|-|19ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
-keycloak-jwks|PROVISIONED|PASS|-|65ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
-provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|128ms
+== control run (job-worker heartbeat runtime running as pid 1821, freshness window 15000 ms) ==
+postgresql|PROVISIONED|PASS|-|83ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|85ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|PASS|-|85ms|1 worker heartbeat(s) inside the 15000 ms freshness window
+object-store|PROVISIONED|PASS|-|48ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|PROVISIONED|PASS|-|158ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
+provider-transport|PROVISIONED|PASS|-|281ms|stripe reachable and usable, HTTP 200
+overall|READY|291ms
+== inducing: stop the worker (pid 1821) and let the 15000 ms freshness window lapse ==
+postgresql|PROVISIONED|PASS|-|71ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|77ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|PASS|-|74ms|1 worker heartbeat(s) inside the 15000 ms freshness window
+object-store|PROVISIONED|PASS|-|39ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|PROVISIONED|PASS|-|94ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
+provider-transport|PROVISIONED|PASS|-|247ms|stripe reachable and usable, HTTP 200
+overall|READY|256ms
 == remediating: restart the worker ==
-postgresql|PROVISIONED|PASS|-|236ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|TIMEOUT|TIMEOUT|210ms|the probe exceeded its hard timeout (§7.2) and was aborted
-job-worker|PROVISIONED|PASS|-|158ms|1 worker heartbeat(s) inside the 15000 ms freshness window
-object-store|PROVISIONED|PASS|-|78ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
-keycloak-jwks|PROVISIONED|PASS|-|138ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
-provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|820ms
+postgresql|PROVISIONED|PASS|-|77ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|81ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|PASS|-|108ms|1 worker heartbeat(s) inside the 15000 ms freshness window
+object-store|PROVISIONED|PASS|-|47ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|PROVISIONED|PASS|-|139ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
+provider-transport|PROVISIONED|PASS|-|227ms|stripe reachable and usable, HTTP 200
+overall|READY|238ms
 == inducing: docker stop vanishgraph-ep003-postgres ==
-postgresql|PROVISIONED|FAIL|CONNECT_REFUSED|5ms|connect ECONNREFUSED 127.0.0.1:53589
-valkey|PROVISIONED|PASS|-|24ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|FAIL|CONNECT_REFUSED|3ms|connect ECONNREFUSED 127.0.0.1:53589
-object-store|PROVISIONED|PASS|-|19ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
-keycloak-jwks|PROVISIONED|PASS|-|83ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
-provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|134ms
+postgresql|PROVISIONED|FAIL|CONNECT_REFUSED|36ms|connect ECONNREFUSED 127.0.0.1:53589
+valkey|PROVISIONED|PASS|-|55ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|FAIL|CONNECT_REFUSED|39ms|connect ECONNREFUSED 127.0.0.1:53589
+object-store|PROVISIONED|PASS|-|37ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|PROVISIONED|PASS|-|86ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
+provider-transport|PROVISIONED|PASS|-|392ms|stripe reachable and usable, HTTP 200
+overall|NOT_READY|402ms
 == remediating: docker start vanishgraph-ep003-postgres ==
-postgresql|PROVISIONED|PASS|-|9ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|PASS|-|18ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|PASS|-|23ms|1 worker heartbeat(s) inside the 15000 ms freshness window
-object-store|PROVISIONED|PASS|-|19ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
-keycloak-jwks|PROVISIONED|PASS|-|71ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
-provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|140ms
+postgresql|PROVISIONED|PASS|-|77ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|84ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|PASS|-|77ms|1 worker heartbeat(s) inside the 15000 ms freshness window
+object-store|PROVISIONED|PASS|-|45ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|PROVISIONED|PASS|-|115ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
+provider-transport|PROVISIONED|PASS|-|250ms|stripe reachable and usable, HTTP 200
+overall|READY|260ms
 == inducing: valkey-cli SHUTDOWN NOSAVE in vanishgraph-ep008-valkey ==
 [ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:56379
     at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
 [ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:56379
     at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
-postgresql|PROVISIONED|PASS|-|15ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|FAIL|UNKNOWN|9ms|Connection is closed.
-job-worker|PROVISIONED|PASS|-|29ms|1 worker heartbeat(s) inside the 15000 ms freshness window
-object-store|PROVISIONED|PASS|-|20ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
-keycloak-jwks|PROVISIONED|PASS|-|75ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
-provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|148ms
+postgresql|PROVISIONED|TIMEOUT|TIMEOUT|313ms|the probe exceeded its hard timeout (§7.2) and was aborted
+valkey|PROVISIONED|FAIL|UNKNOWN|71ms|Connection is closed.
+job-worker|PROVISIONED|TIMEOUT|TIMEOUT|208ms|the probe exceeded its hard timeout (§7.2) and was aborted
+object-store|PROVISIONED|PASS|-|93ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|PROVISIONED|TIMEOUT|TIMEOUT|306ms|the probe exceeded its hard timeout (§7.2) and was aborted
+provider-transport|PROVISIONED|PASS|-|285ms|stripe reachable and usable, HTTP 200
+overall|NOT_READY|314ms
 == remediating: docker start vanishgraph-ep008-valkey ==
-postgresql|PROVISIONED|PASS|-|7ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|PASS|-|20ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|PASS|-|18ms|1 worker heartbeat(s) inside the 15000 ms freshness window
-object-store|PROVISIONED|PASS|-|15ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
-keycloak-jwks|PROVISIONED|PASS|-|82ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
-provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|143ms
+postgresql|PROVISIONED|PASS|-|65ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|70ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|PASS|-|76ms|1 worker heartbeat(s) inside the 15000 ms freshness window
+object-store|PROVISIONED|PASS|-|47ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|PROVISIONED|PASS|-|101ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
+provider-transport|PROVISIONED|PASS|-|278ms|stripe reachable and usable, HTTP 200
+overall|READY|292ms
 == inducing: docker stop vanishgraph-ep008-minio ==
 object-store fixture: fetch failed
-postgresql|PROVISIONED|PASS|-|10ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|PASS|-|15ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|PASS|-|18ms|1 worker heartbeat(s) inside the 15000 ms freshness window
+postgresql|PROVISIONED|PASS|-|45ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|49ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|PASS|-|66ms|1 worker heartbeat(s) inside the 15000 ms freshness window
 object-store|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for object-store; the declared action is: HeadBucket plus a signed GetObject of a probe key that must return the expected digest
-keycloak-jwks|PROVISIONED|PASS|-|80ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
-provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|123ms
-Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76
+keycloak-jwks|PROVISIONED|PASS|-|82ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
+provider-transport|PROVISIONED|PASS|-|285ms|stripe reachable and usable, HTTP 200
+overall|NOT_READY|292ms
 == remediating: docker start vanishgraph-ep008-minio ==
-postgresql|PROVISIONED|PASS|-|8ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|PASS|-|16ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|PASS|-|16ms|1 worker heartbeat(s) inside the 15000 ms freshness window
-object-store|PROVISIONED|PASS|-|25ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
-keycloak-jwks|PROVISIONED|PASS|-|51ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
-provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|116ms
+postgresql|PROVISIONED|PASS|-|58ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|65ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|PASS|-|64ms|1 worker heartbeat(s) inside the 15000 ms freshness window
+object-store|PROVISIONED|PASS|-|37ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|PROVISIONED|PASS|-|84ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
+provider-transport|PROVISIONED|PASS|-|242ms|stripe reachable and usable, HTTP 200
+overall|READY|252ms
 == inducing: docker stop vanishgraph-ep008-keycloak ==
-postgresql|PROVISIONED|PASS|-|8ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|PASS|-|20ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|PASS|-|16ms|1 worker heartbeat(s) inside the 15000 ms freshness window
-object-store|PROVISIONED|PASS|-|15ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
-keycloak-jwks|PROVISIONED|FAIL|UNKNOWN|11ms|fetch failed
-provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|71ms
-Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76
+postgresql|PROVISIONED|PASS|-|244ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|TIMEOUT|TIMEOUT|202ms|the probe exceeded its hard timeout (§7.2) and was aborted
+job-worker|PROVISIONED|TIMEOUT|TIMEOUT|202ms|the probe exceeded its hard timeout (§7.2) and was aborted
+object-store|PROVISIONED|PASS|-|183ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|PROVISIONED|FAIL|UNKNOWN|32ms|fetch failed
+provider-transport|PROVISIONED|PASS|-|266ms|stripe reachable and usable, HTTP 200
+overall|NOT_READY|277ms
 == remediating: docker start vanishgraph-ep008-keycloak ==
-postgresql|PROVISIONED|PASS|-|39ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|PASS|-|31ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|PASS|-|49ms|1 worker heartbeat(s) inside the 15000 ms freshness window
-object-store|PROVISIONED|PASS|-|29ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
-keycloak-jwks|PROVISIONED|FAIL|UNKNOWN|16ms|fetch failed
-provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|165ms
-postgresql|PROVISIONED|PASS|-|30ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|PASS|-|38ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|PASS|-|46ms|1 worker heartbeat(s) inside the 15000 ms freshness window
+postgresql|PROVISIONED|TIMEOUT|TIMEOUT|315ms|the probe exceeded its hard timeout (§7.2) and was aborted
+valkey|PROVISIONED|TIMEOUT|TIMEOUT|203ms|the probe exceeded its hard timeout (§7.2) and was aborted
+job-worker|PROVISIONED|TIMEOUT|TIMEOUT|202ms|the probe exceeded its hard timeout (§7.2) and was aborted
+object-store|PROVISIONED|PASS|-|123ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|PROVISIONED|FAIL|UNKNOWN|201ms|fetch failed
+provider-transport|PROVISIONED|PASS|-|234ms|stripe reachable and usable, HTTP 200
+overall|NOT_READY|315ms
+postgresql|PROVISIONED|PASS|-|181ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|183ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|FAIL|MISCONFIGURED|213ms|no worker heartbeat in the last 15000 ms: withholding heartbeats is exactly how this probe is induced to fail (§7.4)
+object-store|PROVISIONED|PASS|-|68ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|PROVISIONED|FAIL|UNKNOWN|74ms|fetch failed
+provider-transport|PROVISIONED|PASS|-|220ms|stripe reachable and usable, HTTP 200
+overall|NOT_READY|230ms
+postgresql|PROVISIONED|PASS|-|69ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|72ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|FAIL|MISCONFIGURED|78ms|no worker heartbeat in the last 15000 ms: withholding heartbeats is exactly how this probe is induced to fail (§7.4)
+object-store|PROVISIONED|PASS|-|58ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|PROVISIONED|FAIL|UNKNOWN|51ms|fetch failed
+provider-transport|PROVISIONED|PASS|-|292ms|stripe reachable and usable, HTTP 200
+overall|NOT_READY|304ms
+postgresql|PROVISIONED|PASS|-|79ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|84ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|FAIL|MISCONFIGURED|90ms|no worker heartbeat in the last 15000 ms: withholding heartbeats is exactly how this probe is induced to fail (§7.4)
+object-store|PROVISIONED|PASS|-|58ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|PROVISIONED|FAIL|UNKNOWN|60ms|fetch failed
+provider-transport|PROVISIONED|PASS|-|297ms|stripe reachable and usable, HTTP 200
+overall|NOT_READY|310ms
+postgresql|PROVISIONED|PASS|-|86ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|107ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|FAIL|MISCONFIGURED|109ms|no worker heartbeat in the last 15000 ms: withholding heartbeats is exactly how this probe is induced to fail (§7.4)
+object-store|PROVISIONED|PASS|-|61ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|PROVISIONED|FAIL|UNKNOWN|65ms|fetch failed
+provider-transport|PROVISIONED|PASS|-|275ms|stripe reachable and usable, HTTP 200
+overall|NOT_READY|287ms
+postgresql|PROVISIONED|PASS|-|42ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|46ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|FAIL|MISCONFIGURED|57ms|no worker heartbeat in the last 15000 ms: withholding heartbeats is exactly how this probe is induced to fail (§7.4)
 object-store|PROVISIONED|PASS|-|32ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
-keycloak-jwks|PROVISIONED|FAIL|UNKNOWN|43ms|fetch failed
-provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|190ms
-postgresql|PROVISIONED|PASS|-|18ms|postgresql session role verified as vg_app
+keycloak-jwks|PROVISIONED|TIMEOUT|TIMEOUT|311ms|the probe exceeded its hard timeout (§7.2) and was aborted
+provider-transport|PROVISIONED|PASS|-|239ms|stripe reachable and usable, HTTP 200
+overall|NOT_READY|314ms
+postgresql|PROVISIONED|PASS|-|78ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|105ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|FAIL|MISCONFIGURED|104ms|no worker heartbeat in the last 15000 ms: withholding heartbeats is exactly how this probe is induced to fail (§7.4)
+object-store|PROVISIONED|PASS|-|44ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|PROVISIONED|TIMEOUT|TIMEOUT|302ms|the probe exceeded its hard timeout (§7.2) and was aborted
+provider-transport|PROVISIONED|PASS|-|265ms|stripe reachable and usable, HTTP 200
+overall|NOT_READY|306ms
+postgresql|PROVISIONED|PASS|-|71ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|99ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|FAIL|MISCONFIGURED|81ms|no worker heartbeat in the last 15000 ms: withholding heartbeats is exactly how this probe is induced to fail (§7.4)
+object-store|PROVISIONED|PASS|-|41ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|PROVISIONED|PASS|-|307ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
+provider-transport|PROVISIONED|PASS|-|253ms|stripe reachable and usable, HTTP 200
+overall|NOT_READY|311ms
+== inducing: send the same read-only request with a deliberately wrong credential (an auth rejection, as §7.4 step 2 prescribes) ==
+postgresql|PROVISIONED|PASS|-|49ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|51ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|FAIL|MISCONFIGURED|59ms|no worker heartbeat in the last 15000 ms: withholding heartbeats is exactly how this probe is induced to fail (§7.4)
+object-store|PROVISIONED|PASS|-|38ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|PROVISIONED|PASS|-|91ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
+provider-transport|PROVISIONED|FAIL|AUTH_FAILED|287ms|stripe rejected the request with HTTP 401: the transport is reachable but not usable, and §7.4 step 2 names an auth rejection as the induced failure
+overall|NOT_READY|297ms
+== remediating: send the real credential again ==
+postgresql|PROVISIONED|PASS|-|49ms|postgresql session role verified as vg_app
 valkey|PROVISIONED|PASS|-|53ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|PASS|-|56ms|1 worker heartbeat(s) inside the 15000 ms freshness window
-object-store|PROVISIONED|PASS|-|23ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
-keycloak-jwks|PROVISIONED|FAIL|UNKNOWN|33ms|fetch failed
-provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|183ms
-postgresql|PROVISIONED|PASS|-|27ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|PASS|-|20ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|PASS|-|28ms|1 worker heartbeat(s) inside the 15000 ms freshness window
-object-store|PROVISIONED|PASS|-|21ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
-keycloak-jwks|PROVISIONED|FAIL|UNKNOWN|21ms|fetch failed
-provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|117ms
-postgresql|PROVISIONED|PASS|-|20ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|PASS|-|31ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|PASS|-|34ms|1 worker heartbeat(s) inside the 15000 ms freshness window
-object-store|PROVISIONED|PASS|-|23ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
-keycloak-jwks|PROVISIONED|FAIL|UNKNOWN|18ms|fetch failed
-provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|127ms
-postgresql|PROVISIONED|PASS|-|9ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|PASS|-|18ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|PASS|-|17ms|1 worker heartbeat(s) inside the 15000 ms freshness window
-object-store|PROVISIONED|PASS|-|15ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
-keycloak-jwks|PROVISIONED|TIMEOUT|TIMEOUT|303ms|the probe exceeded its hard timeout (§7.2) and was aborted
-provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|363ms
-postgresql|PROVISIONED|PASS|-|8ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|PASS|-|15ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|PASS|-|21ms|1 worker heartbeat(s) inside the 15000 ms freshness window
-object-store|PROVISIONED|PASS|-|17ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
-keycloak-jwks|PROVISIONED|TIMEOUT|TIMEOUT|303ms|the probe exceeded its hard timeout (§7.2) and was aborted
-provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|365ms
-postgresql|PROVISIONED|PASS|-|10ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|PASS|-|17ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|PASS|-|18ms|1 worker heartbeat(s) inside the 15000 ms freshness window
-object-store|PROVISIONED|PASS|-|18ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
-keycloak-jwks|PROVISIONED|PASS|-|212ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
-provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|276ms
+job-worker|PROVISIONED|FAIL|MISCONFIGURED|58ms|no worker heartbeat in the last 15000 ms: withholding heartbeats is exactly how this probe is induced to fail (§7.4)
+object-store|PROVISIONED|PASS|-|38ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|PROVISIONED|PASS|-|90ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
+provider-transport|PROVISIONED|PASS|-|257ms|stripe reachable and usable, HTTP 200
+overall|NOT_READY|267ms
 dependency | control | induced | remediated | verdict
 postgresql | PASS | FAIL | PASS | DEMONSTRATED (control=PASS induced=FAIL remediated=PASS on the same probe path)
 valkey | PASS | FAIL | PASS | DEMONSTRATED (control=PASS induced=FAIL remediated=PASS on the same probe path)
 job-worker | PASS | FAIL | PASS | DEMONSTRATED (control=PASS induced=FAIL remediated=PASS on the same probe path)
 object-store | PASS | UNKNOWN | PASS | DEMONSTRATED (control=PASS induced=UNKNOWN remediated=PASS on the same probe path)
 keycloak-jwks | PASS | FAIL | PASS | DEMONSTRATED (control=PASS induced=FAIL remediated=PASS on the same probe path)
-provider-transport | UNKNOWN | UNKNOWN | UNKNOWN | ERROR (DOD-033: not provisioned; see the provisioning attempt below)
-readiness induced failure: ERROR - not every declared dependency demonstrated PASS-before/FAIL-after on the same probe path; see .agent/evidence/EP-008/induced-failure/verdict.txt
-   row: BLOCKED_ENVIRONMENT - readiness induced-failure could not complete for every dependency.
-   required fields: verdict table (.agent/evidence/EP-008/induced-failure/verdict.txt) and provisioning attempt log (.agent/evidence/EP-008/induced-failure/provisioning-attempts.txt), both present.
-   demonstrated: postgresql,valkey job-worker,object-store keycloak-jwks (control PASS, induced NOT PASS, remediated PASS, on the same probe path).
-   blocked: provider-transport|ERROR(DOD-033:notprovisioned;seetheprovisioningattemptbelow)
-   NEXT ACTION: provision or implement what each blocked row above names; its provisioning attempt log records
-   what was tried. Until then NO readiness induced failure: ok IS CLAIMED and the readiness proof is INCOMPLETE.
+provider-transport | PASS | FAIL | PASS | DEMONSTRATED (control=PASS induced=FAIL remediated=PASS on the same probe path)
+readiness induced failure: ok
+   sentinel: readiness induced failure: ok (every declared dependency demonstrated)
 
 == evidence index
+e38e452e9dbb66ac  .agent/evidence/EP-008/CLOSED_BLOCKED.md
 d3a174a074b7d7b9  .agent/evidence/EP-008/M1-discovery.txt
 21885d1a171a9826  .agent/evidence/EP-008/M2-canary.txt
 072b929cc91f9f90  .agent/evidence/EP-008/M3-log-contract.txt
@@ -217,64 +227,68 @@ d3a174a074b7d7b9  .agent/evidence/EP-008/M1-discovery.txt
 e2ef0fe3fbc4d280  .agent/evidence/EP-008/M5-standin-decision.txt
 b95dc8fa2fbc8068  .agent/evidence/EP-008/alerts/alert-catalogue-guard.txt
 79c565634e8b9eb4  .agent/evidence/EP-008/alerts/alert-check.mjs
-e3b0c44298fc1c14  .agent/evidence/EP-008/canary/after-diff.txt
+40d97f6d6c5cd0f1  .agent/evidence/EP-008/canary/after-diff.txt
 f7d38edb263fd543  .agent/evidence/EP-008/canary/allowlist-control.json
-e3b0c44298fc1c14  .agent/evidence/EP-008/canary/baseline-diff.txt
-7c0007ff72ab4efa  .agent/evidence/EP-008/canary/canary-bundle-digest.txt
-8e8cb3766338a368  .agent/evidence/EP-008/canary/canary-bundle.json
-dba2a627a38b594a  .agent/evidence/EP-008/canary/capture-DEBUG_BUNDLE.txt
-a862d9692cbd9835  .agent/evidence/EP-008/canary/capture-ERROR_REPORTER.txt
-ee7123b45499b8d7  .agent/evidence/EP-008/canary/capture-LOG_FORWARDER.txt
-e2178a2553730f98  .agent/evidence/EP-008/canary/capture-OTLP_TRACE_EXPORTER.txt
-07fb05152db2e589  .agent/evidence/EP-008/canary/capture-PR_ISSUE_EXPORTER.txt
-32c2093670a43625  .agent/evidence/EP-008/canary/capture-digest-DEBUG_BUNDLE.txt
-f0be6ba52319cec4  .agent/evidence/EP-008/canary/capture-digest-ERROR_REPORTER.txt
-ebbc971743326a1d  .agent/evidence/EP-008/canary/capture-digest-LOG_FORWARDER.txt
-92dd9146d6c3a13b  .agent/evidence/EP-008/canary/capture-digest-OTLP_TRACE_EXPORTER.txt
-cc1841600aac9c7e  .agent/evidence/EP-008/canary/capture-digest-PR_ISSUE_EXPORTER.txt
-a0c3182ceb9bcc05  .agent/evidence/EP-008/canary/control-disabled-rule.txt
-466fd4b6a6386c9a  .agent/evidence/EP-008/canary/control-run.txt
-a80fbbf94af7e321  .agent/evidence/EP-008/canary/generator.txt
-44607ae6a3e585b8  .agent/evidence/EP-008/canary/positive-run.txt
-60b2a6b3aa3e01f7  .agent/evidence/EP-008/canary/redaction-evidence.json
-72529bf53b5e3768  .agent/evidence/EP-008/canary/restored-run.txt
-0dec5bb25c7fda18  .agent/evidence/EP-008/canary/truncation-limits.txt
-830757e3ff3eda65  .agent/evidence/EP-008/gate/gate-observability.txt
-a0073334e864ef5f  .agent/evidence/EP-008/induced-failure/control-observed.txt
-a0073334e864ef5f  .agent/evidence/EP-008/induced-failure/control.txt
-e44a4e70fd4b295d  .agent/evidence/EP-008/induced-failure/induced-jobworker.txt
-ca9610acb63fe264  .agent/evidence/EP-008/induced-failure/induced-keycloak.txt
-e57c47cf5078f55b  .agent/evidence/EP-008/induced-failure/induced-objectstore.txt
-739705a3ce654f7d  .agent/evidence/EP-008/induced-failure/induced-valkey.txt
-10a8837601a87269  .agent/evidence/EP-008/induced-failure/induced.txt
-501abcfe1209615b  .agent/evidence/EP-008/induced-failure/induction.txt
-e610ab3d42eca216  .agent/evidence/EP-008/induced-failure/job-worker.log
+40d97f6d6c5cd0f1  .agent/evidence/EP-008/canary/baseline-diff.txt
+14cb4f428f9c4388  .agent/evidence/EP-008/canary/canary-bundle-digest.txt
+5cd6b37fa92b63f2  .agent/evidence/EP-008/canary/canary-bundle.json
+ed6c6636be2d9af6  .agent/evidence/EP-008/canary/capture-DEBUG_BUNDLE.txt
+966572bf48b16309  .agent/evidence/EP-008/canary/capture-ERROR_REPORTER.txt
+46e1d26f17ffc1e9  .agent/evidence/EP-008/canary/capture-LOG_FORWARDER.txt
+8a77b95caf1fd079  .agent/evidence/EP-008/canary/capture-OTLP_TRACE_EXPORTER.txt
+d25d815708599d04  .agent/evidence/EP-008/canary/capture-PR_ISSUE_EXPORTER.txt
+b3611c297ab7e7d5  .agent/evidence/EP-008/canary/capture-digest-DEBUG_BUNDLE.txt
+e7c011dc0dd53053  .agent/evidence/EP-008/canary/capture-digest-ERROR_REPORTER.txt
+475726b6f8e55b39  .agent/evidence/EP-008/canary/capture-digest-LOG_FORWARDER.txt
+e3d72c6df9b59e28  .agent/evidence/EP-008/canary/capture-digest-OTLP_TRACE_EXPORTER.txt
+478b9eca85995cd7  .agent/evidence/EP-008/canary/capture-digest-PR_ISSUE_EXPORTER.txt
+f59c44493439f1a6  .agent/evidence/EP-008/canary/control-disabled-rule.txt
+f4136cf8c871b036  .agent/evidence/EP-008/canary/control-run.txt
+a6a15f4ac5f32966  .agent/evidence/EP-008/canary/generator.txt
+b6a0bc5e070345e2  .agent/evidence/EP-008/canary/positive-run.txt
+3a9b5ddcfaf59a10  .agent/evidence/EP-008/canary/redaction-evidence.json
+1f9818de9e0e902f  .agent/evidence/EP-008/canary/restored-run.txt
+fe2b7e5a7dd2975a  .agent/evidence/EP-008/canary/truncation-limits.txt
+622025dfc5392972  .agent/evidence/EP-008/gate/gate-observability.txt
+d3c985e156544b84  .agent/evidence/EP-008/induced-failure/control-observed.txt
+d3c985e156544b84  .agent/evidence/EP-008/induced-failure/control.txt
+415deea12a799e03  .agent/evidence/EP-008/induced-failure/induced-jobworker.txt
+383441da731bbf21  .agent/evidence/EP-008/induced-failure/induced-keycloak.txt
+de2a1b89320fd010  .agent/evidence/EP-008/induced-failure/induced-objectstore.txt
+e4128afbfcb0b34a  .agent/evidence/EP-008/induced-failure/induced-provider.txt
+305264ae2137b71b  .agent/evidence/EP-008/induced-failure/induced-valkey.txt
+afe291161baa732b  .agent/evidence/EP-008/induced-failure/induced.txt
+ab1d19fff4ea8a5c  .agent/evidence/EP-008/induced-failure/induction.txt
+0bcd007c7e35aa93  .agent/evidence/EP-008/induced-failure/job-worker.log
 df2c2edb68713fe1  .agent/evidence/EP-008/induced-failure/jobworker-check.mjs
 822249b07d73bc6a  .agent/evidence/EP-008/induced-failure/keycloak-check.mjs
 b87bacf422c5a26c  .agent/evidence/EP-008/induced-failure/keycloak-pull-attempt.txt
-fd418da3211085cd  .agent/evidence/EP-008/induced-failure/probe-driver.mjs
-c1a7337291940643  .agent/evidence/EP-008/induced-failure/provisioning-attempts.txt
-15ac19c71beb3b7f  .agent/evidence/EP-008/induced-failure/remediated-jobworker.txt
-8aa9cc8b0e04165e  .agent/evidence/EP-008/induced-failure/remediated-keycloak.txt
-103e7e2456ddd3dd  .agent/evidence/EP-008/induced-failure/remediated-objectstore.txt
-d33b82ddbc9c0713  .agent/evidence/EP-008/induced-failure/remediated-valkey.txt
-245452f039ecf93b  .agent/evidence/EP-008/induced-failure/remediated.txt
-913b2f7d69b75a05  .agent/evidence/EP-008/induced-failure/verdict.txt
+3d972f2de0f14d58  .agent/evidence/EP-008/induced-failure/probe-driver.mjs
+79ae88be5d8183c3  .agent/evidence/EP-008/induced-failure/provider-transport-attempt.mjs
+4a565a3d37571a62  .agent/evidence/EP-008/induced-failure/provider-transport-attempt.txt
+369663a345f13fa4  .agent/evidence/EP-008/induced-failure/provisioning-attempts.txt
+21e8af96e8b42d79  .agent/evidence/EP-008/induced-failure/remediated-jobworker.txt
+2e3d6f21c70d1888  .agent/evidence/EP-008/induced-failure/remediated-keycloak.txt
+7ea660dd631503e0  .agent/evidence/EP-008/induced-failure/remediated-objectstore.txt
+759080c0c8e4a41e  .agent/evidence/EP-008/induced-failure/remediated-provider.txt
+8a9bf35e0032faa3  .agent/evidence/EP-008/induced-failure/remediated-valkey.txt
+5f3f76353583ee70  .agent/evidence/EP-008/induced-failure/remediated.txt
+143e3addb031e321  .agent/evidence/EP-008/induced-failure/verdict.txt
 c67930d2f5ea1ded  .agent/evidence/EP-008/log-contract/captured-stream.jsonl
-4b521d04143918c0  .agent/evidence/EP-008/log-contract/guard.txt
+4dbdc0a06ec84d3f  .agent/evidence/EP-008/log-contract/guard.txt
 d3b3c8251693f5d4  .agent/evidence/EP-008/log-contract/negative-control-report.txt
 c13a3cdf2a4dc0bf  .agent/evidence/EP-008/log-contract/negative-control-stream.jsonl
 2e22da2ab1371330  .agent/evidence/EP-008/log-contract/scan.txt
-654e0826abe5a37e  .agent/evidence/EP-008/log-contract/suite.txt
+e8e629168309f6c2  .agent/evidence/EP-008/log-contract/suite.txt
 bdffac9587011577  .agent/evidence/EP-008/metrics/catalogue-check.mjs
 ac3cd321cf10b6ba  .agent/evidence/EP-008/metrics/catalogue-guard.txt
 d9fcd8047d6ee840  .agent/evidence/EP-008/metrics/negative-control.txt
-a4dc186e3d940eb8  .agent/evidence/EP-008/retention/provisioning-attempts.txt
+8c2fc6c2851074d5  .agent/evidence/EP-008/retention/provisioning-attempts.txt
 e906b07c1c71eaeb  .agent/evidence/EP-008/retention/retention-check.mjs
 71148938399a3b3a  .agent/evidence/EP-008/retention/retention-config-guard.txt
 25ba5ea59d5213f0  .agent/evidence/EP-008/slo/integrity-matrix.json
-adbf60273ce14cd0  .agent/evidence/EP-008/slo/provisioning-attempts.txt
-007079b1f65bbc56  .agent/evidence/EP-008/slo/slo-driver.mjs
+b28e44e1432b8e01  .agent/evidence/EP-008/slo/provisioning-attempts.txt
+3e293144ae1d3769  .agent/evidence/EP-008/slo/slo-driver.mjs
 e6baee6f85055ebe  .agent/evidence/EP-008/slo/slo-evaluate.txt
-evidence index: 68 file(s) with content hashes
+evidence index: 73 file(s) with content hashes
 gate-observability: ok

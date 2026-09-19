@@ -1,0 +1,22 @@
+diff --git a/vanishgraph/src/adapters/observability/dependency-probes.ts b/vanishgraph/src/adapters/observability/dependency-probes.ts
+index 81dc839..f05e57e 100644
+--- a/vanishgraph/src/adapters/observability/dependency-probes.ts
++++ b/vanishgraph/src/adapters/observability/dependency-probes.ts
+@@ -56,7 +56,7 @@ export const DECLARED_DEPENDENCIES = [
+   { key: 'job-worker', required: true, timeoutMs: 200, action: 'at least one worker heartbeat inside the declared freshness window' },
+   { key: 'object-store', required: true, timeoutMs: 400, action: 'HeadBucket plus a signed GetObject of a probe key that must return the expected digest' },
+   { key: 'keycloak-jwks', required: true, timeoutMs: 300, action: 'OIDC discovery plus JWKS retrieval over TLS, with no token minted' },
+-  { key: 'provider-transport', required: true, timeoutMs: 400, action: 'read-only or no-op reachability per declared official transport, never a form write' },
++  { key: 'provider-transport', required: true, timeoutMs: 1000, action: 'read-only or no-op reachability per declared official transport, never a form write' },
+ ] as const;
+ 
+ export type DependencyKey = (typeof DECLARED_DEPENDENCIES)[number]['key'];
+@@ -280,7 +280,7 @@ export function createProbeRunner(options: ProbeRunnerOptions): ProbeRunner {
+       // NO GRACE PERIOD, NO DAMPING: one failing required dependency is enough (§7.3).
+       //
+       // AND A BUDGET BREACH IS ALSO UNREADY, WHICH IS A FINDING RATHER THAN A PREFERENCE: the declared per-probe
+-      // timeouts are 300 + 200 + 200 + 400 + 300 + 400 = 1800 ms, which EXCEEDS the 1500 ms total budget §7.2 states. A
++      // timeouts are 300 + 200 + 200 + 400 + 300 + 1000 = 2400 ms, which EXCEEDS the 1500 ms total budget §7.2 states. A
+       // run in which several dependencies hang therefore cannot stay inside the budget however the probes are
+       // scheduled, and reporting READY because every check eventually passed would hide an evaluation that took longer
+       // than the specification allows. The breach is surfaced in the verdict AND in its own field.

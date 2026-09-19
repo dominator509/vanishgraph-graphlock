@@ -1,8 +1,8 @@
 object-store fixture: fetch failed
-postgresql|PROVISIONED|PASS|-|38ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|PASS|-|42ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|PASS|-|56ms|1 worker heartbeat(s) inside the 15000 ms freshness window
+postgresql|PROVISIONED|PASS|-|45ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|49ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|PASS|-|66ms|1 worker heartbeat(s) inside the 15000 ms freshness window
 object-store|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for object-store; the declared action is: HeadBucket plus a signed GetObject of a probe key that must return the expected digest
-keycloak-jwks|PROVISIONED|PASS|-|74ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
-provider-transport|PROVISIONED|PASS|-|222ms|stripe reachable and usable, HTTP 200
-overall|NOT_READY|229ms
+keycloak-jwks|PROVISIONED|PASS|-|82ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
+provider-transport|PROVISIONED|PASS|-|285ms|stripe reachable and usable, HTTP 200
+overall|NOT_READY|292ms

@@ -13,3 +13,5 @@ vanishgraph-ep008-minio
 vanishgraph-ep008-keycloak
 == remediating: docker start vanishgraph-ep008-keycloak ==
 vanishgraph-ep008-keycloak
+== inducing: send the same read-only request with a deliberately wrong credential (an auth rejection, as §7.4 step 2 prescribes) ==
+== remediating: send the real credential again ==

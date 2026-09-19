@@ -13,7 +13,9 @@
 #   retention-config-guard    retention config: ok
 #   induced-failure-readiness readiness induced failure: ok   <-- SEE THE EXCEPTION BELOW
 #
-# THE ONE EXCEPTION, AND WHY IT IS NOT A WEAKENING. `scripts/induced-failure-readiness.sh` prints its sentinel only when
+# THE ONE EXCEPTION, KEPT FOR THE ENVIRONMENT THAT NEEDS IT. It read "three of six dependencies cannot be induced" until the last
+# two were provisioned; it is a CONDITIONAL now, and the branch below either takes the sentinel or records the blocked row.
+# THE CONDITION, AND WHY IT IS NOT A WEAKENING. `scripts/induced-failure-readiness.sh` prints its sentinel only when
 # EVERY declared dependency demonstrated PASS → FAIL → PASS on the same probe path. Three of the six cannot be induced in
 # this environment, and the milestone's own FALLBACK (DOD-033) prescribes recording them ERROR with a provisioning
 # attempt log rather than skipping them. EP-008 M9's EXPECT then says the node "may still close only when each such row
@@ -75,7 +77,7 @@ run_stage slo-evaluate.sh "slo: evaluated"
 run_stage retention-config-guard.sh "retention config: ok"
 
 # THE NAMED EXCEPTION, CHECKED RATHER THAN TRUSTED.
-echo "== stage: induced-failure-readiness.sh (EXPECTED to be blocked for three of six dependencies)" | tee -a "$REPORT"
+echo "== stage: induced-failure-readiness.sh (the sentinel needs every declared dependency demonstrated; a blocked row is recorded instead)" | tee -a "$REPORT"
 VERDICT=.agent/evidence/EP-008/induced-failure/verdict.txt
 ATTEMPTS=.agent/evidence/EP-008/induced-failure/provisioning-attempts.txt
 if sh scripts/induced-failure-readiness.sh >>"$REPORT" 2>&1; then

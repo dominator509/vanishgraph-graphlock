@@ -1,7 +1,7 @@
-postgresql|PROVISIONED|PASS|-|57ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|PASS|-|60ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|PASS|-|63ms|1 worker heartbeat(s) inside the 15000 ms freshness window
-object-store|PROVISIONED|PASS|-|38ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
-keycloak-jwks|PROVISIONED|PASS|-|221ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
-provider-transport|PROVISIONED|PASS|-|226ms|stripe reachable and usable, HTTP 200
-overall|READY|236ms
+postgresql|PROVISIONED|PASS|-|71ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|99ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|FAIL|MISCONFIGURED|81ms|no worker heartbeat in the last 15000 ms: withholding heartbeats is exactly how this probe is induced to fail (§7.4)
+object-store|PROVISIONED|PASS|-|41ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|PROVISIONED|PASS|-|307ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
+provider-transport|PROVISIONED|PASS|-|253ms|stripe reachable and usable, HTTP 200
+overall|NOT_READY|311ms

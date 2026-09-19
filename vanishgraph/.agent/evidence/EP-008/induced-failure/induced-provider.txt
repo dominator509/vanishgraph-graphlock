@@ -1,7 +1,7 @@
-postgresql|PROVISIONED|PASS|-|8ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|PASS|-|24ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|PASS|-|41ms|1 worker heartbeat(s) inside the 15000 ms freshness window
-object-store|PROVISIONED|PASS|-|24ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
-keycloak-jwks|PROVISIONED|PASS|-|70ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
-provider-transport|PROVISIONED|FAIL|AUTH_FAILED|302ms|stripe rejected the request with HTTP 401: the transport is reachable but not usable, and §7.4 step 2 names an auth rejection as the induced failure
-overall|NOT_READY|469ms
+postgresql|PROVISIONED|PASS|-|49ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|51ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|FAIL|MISCONFIGURED|59ms|no worker heartbeat in the last 15000 ms: withholding heartbeats is exactly how this probe is induced to fail (§7.4)
+object-store|PROVISIONED|PASS|-|38ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|PROVISIONED|PASS|-|91ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
+provider-transport|PROVISIONED|FAIL|AUTH_FAILED|287ms|stripe rejected the request with HTTP 401: the transport is reachable but not usable, and §7.4 step 2 names an auth rejection as the induced failure
+overall|NOT_READY|297ms

@@ -1,7 +1,7 @@
-postgresql|PROVISIONED|PASS|-|51ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|PASS|-|52ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|PASS|-|55ms|1 worker heartbeat(s) inside the 15000 ms freshness window
-object-store|PROVISIONED|PASS|-|41ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
-keycloak-jwks|PROVISIONED|FAIL|UNKNOWN|40ms|fetch failed
-provider-transport|PROVISIONED|PASS|-|241ms|stripe reachable and usable, HTTP 200
-overall|NOT_READY|250ms
+postgresql|PROVISIONED|PASS|-|244ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|TIMEOUT|TIMEOUT|202ms|the probe exceeded its hard timeout (§7.2) and was aborted
+job-worker|PROVISIONED|TIMEOUT|TIMEOUT|202ms|the probe exceeded its hard timeout (§7.2) and was aborted
+object-store|PROVISIONED|PASS|-|183ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|PROVISIONED|FAIL|UNKNOWN|32ms|fetch failed
+provider-transport|PROVISIONED|PASS|-|266ms|stripe reachable and usable, HTTP 200
+overall|NOT_READY|277ms

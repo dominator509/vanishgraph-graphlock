@@ -14,9 +14,9 @@ Six dependencies are declared, each with one discriminating probe and a hard tim
 | `job-worker` | at least one worker heartbeat inside the declared freshness window (`job_worker.heartbeat_at`) | 200 ms | **Not demonstrable**: no worker process exists in this repository to write a heartbeat |
 | `object-store` | `HeadBucket` plus a **signed** `GetObject` of a probe key returning the expected digest | 400 ms | **Not wired**: no module here can sign an S3 request |
 | `keycloak-jwks` | OIDC discovery plus JWKS retrieval over TLS, no token minted | 300 ms | **Not provisioned**: no Keycloak in this environment |
-| `provider-transport` | read-only or no-op reachability per declared official transport, **never a form write** | 400 ms | **Not provisioned**: no provider entitlement |
+| `provider-transport` | read-only or no-op reachability per declared official transport, **never a form write** | 1000 ms | **Wired** to a real Stripe test credential; read-only, induced by a deliberately wrong credential |
 
-**A budget finding, measured:** the six timeouts sum to **1800 ms** against §7.2's declared **1500 ms** total readiness
+**A budget finding, measured:** the six timeouts sum to **2400 ms** against §7.2's declared **1500 ms** total readiness
 budget, so a run in which several dependencies hang cannot satisfy both. The runner reports `budgetExceeded` and treats a
 breach as `NOT_READY` rather than hiding it.
 

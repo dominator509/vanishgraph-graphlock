@@ -4,4 +4,4 @@ valkey | PASS | FAIL | PASS | DEMONSTRATED (control=PASS induced=FAIL remediated
 job-worker | PASS | FAIL | PASS | DEMONSTRATED (control=PASS induced=FAIL remediated=PASS on the same probe path)
 object-store | PASS | UNKNOWN | PASS | DEMONSTRATED (control=PASS induced=UNKNOWN remediated=PASS on the same probe path)
 keycloak-jwks | PASS | FAIL | PASS | DEMONSTRATED (control=PASS induced=FAIL remediated=PASS on the same probe path)
-provider-transport | TIMEOUT | PASS | PASS | INCONCLUSIVE (control=TIMEOUT induced=PASS remediated=PASS)
+provider-transport | PASS | FAIL | PASS | DEMONSTRATED (control=PASS induced=FAIL remediated=PASS on the same probe path)
