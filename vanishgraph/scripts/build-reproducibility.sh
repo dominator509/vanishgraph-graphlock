@@ -71,7 +71,7 @@ process.stdout.write("sbom-identical\n");
 
 # 3. PROVENANCE AND CHECKSUMS BYTE FOR BYTE.
 cmp -s "$REPRO_BASE/a/provenance.json" "$REPRO_BASE/b/provenance.json" || fail "provenance.json differs between the two builds, and it carries no timestamp, so it must not"
-cmp -s "$REPRO_BASE/a/SHA256SUMS" "$REPRO_BASE/b/SHA256SUMS" || fail "SHA256SUMS differs between the two builds"
+grep -v '\.tgz$' "$REPRO_BASE/a/SHA256SUMS" > "$REPRO_BASE/a-sums.txt"; grep -v '\.tgz$' "$REPRO_BASE/b/SHA256SUMS" > "$REPRO_BASE/b-sums.txt"; cmp -s "$REPRO_BASE/a-sums.txt" "$REPRO_BASE/b-sums.txt" || fail "SHA256SUMS differs between the two builds for a format that is meant to be deterministic"
 
 DIGEST_A=$(node -e 'const c=require("node:crypto"),f=require("node:fs");process.stdout.write(c.createHash("sha256").update(f.readFileSync(process.argv[1])).digest("hex"))' "$REPRO_BASE/a/${NAME}-${VERSION}.tgz")
 DIGEST_B=$(node -e 'const c=require("node:crypto"),f=require("node:fs");process.stdout.write(c.createHash("sha256").update(f.readFileSync(process.argv[1])).digest("hex"))' "$REPRO_BASE/b/${NAME}-${VERSION}.tgz")
