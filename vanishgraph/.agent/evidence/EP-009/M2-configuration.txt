@@ -1,0 +1,70 @@
+EP-009 M2 configuration evidence
+captured from a shell with NO credentials exported, so every probe below reads an unprovisioned environment
+
+== sh scripts/config-validate.sh ==
+config: note - code surface: 24 key(s) read by src/ (DATABASE_URL, HOST, KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET, KEYCLOAK_ISSUER, KEYCLOAK_MCP_AUDIENCE, KEYCLOAK_PORTAL_AUDIENCE, KEYCLOAK_SERVICE_AUDIENCE, KEYCLOAK_STEP_UP_ACR, LOG_LEVEL, PORT, RECIPE_VERIFICATION_KEYS, SESSION_SECRET, VALKEY_URL, VANISHGRAPH_ENVIRONMENT, VANISHGRAPH_METRICS_HOST, VANISHGRAPH_METRICS_PATH, VANISHGRAPH_METRICS_PORT, VG_COMMIT, VG_DB_CONTAINER, VG_DB_STATE_FILE, VG_POSTGRES_IMAGE, VG_REPLAY_LOG, VG_TEST_DSN_OWNER)
+config: note - dependency table: postgresql(web=yes,worker=yes,300ms) valkey(web=yes,worker=yes,200ms) job-worker(web=no,worker=no,200ms) object-store(web=yes,worker=yes,400ms) keycloak-jwks(web=yes,worker=no,300ms) provider-transport(web=no,worker=yes,1000ms)
+config: note - control missing-required-key: refused with MISSING_REQUIRED_KEY naming DATABASE_URL, and no value was printed
+config: note - control empty-required-value: refused with EMPTY_VALUE naming SESSION_SECRET, and no value was printed
+config: note - control prohibited-substitute: refused with PROHIBITED_SUBSTITUTE naming KEYCLOAK_CLIENT_SECRET, and no value was printed
+config: note - control malformed-value: refused with MALFORMED_VALUE naming S3_BUCKET, and no value was printed
+config: note - control unknown-key: refused with UNKNOWN_KEY naming CONFIG_FIXTURE_UNKNOWN_KEY, and no value was printed
+config: note - restoration: the untouched fixture validates cleanly after every control
+config: validation complete (43 declared keys, 3 environment classes, 2 service roles)
+config: ok
+exit=0
+
+== sh scripts/validate-env.sh ==
+env validation: PREFLIGHT.md declares 28 variables (18 REQUIRED, 10 OPTIONAL); .env.example matches
+env validation: ok
+env validation: NOTICE - unprovisioned REQUIRED credentials; state BLOCKED_CREDENTIALS, blocking only their dependent work (DOD-032):
+  - DATABASE_URL
+  - VALKEY_URL
+  - S3_ENDPOINT
+  - S3_ACCESS_KEY_ID
+  - S3_SECRET_ACCESS_KEY
+  - S3_BUCKET
+  - KEYCLOAK_ISSUER
+  - KEYCLOAK_CLIENT_ID
+  - KEYCLOAK_CLIENT_SECRET
+  - SESSION_SECRET
+  - KEYCLOAK_PORTAL_AUDIENCE
+  - KEYCLOAK_SERVICE_AUDIENCE
+  - KEYCLOAK_MCP_AUDIENCE
+  - KEYCLOAK_STEP_UP_ACR
+  - LOCAL_MODEL_ENDPOINT
+  - GITHUB_APP_ID
+  - GITHUB_APP_PRIVATE_KEY
+  - GITHUB_INSTALLATION_ID
+env validation: see PREFLIGHT.md and .env.example; provision then re-run.
+exit=0
+
+== declared probes, exit code only (BLOCKED_CREDENTIALS is the expected state here) ==
+scripts/probes/database_url.sh exit=1
+scripts/probes/valkey_url.sh exit=1
+scripts/probes/object_store.sh exit=1
+scripts/probes/keycloak.sh exit=1
+scripts/probes/local_model.sh exit=1
+scripts/probes/github_app.sh exit=1
+scripts/probes/cloud_identity.sh exit=1
+scripts/probes/search_api_key.sh exit=1
+scripts/probes/postal_api.sh exit=1
+scripts/probes/stripe.sh exit=1
+
+== the two counts the EP-009 M2 plan expects ==
+grep -c PROVISION_ME .env.example = 28 (plan expects 25)
+grep -c '^[A-Z0-9_]*|' PREFLIGHT.md = 28 (plan expects 25)
+grep -c '^[A-Z_]*|' PREFLIGHT.md (digit-free pattern) = 23 (plan expects 20)
+
+== what the guard found and the tree now declares ==
+src/adapters/config/security-config.ts requires eight variables and aborts when any is unset.
+KEYCLOAK_PORTAL_AUDIENCE, KEYCLOAK_SERVICE_AUDIENCE, KEYCLOAK_MCP_AUDIENCE and KEYCLOAK_STEP_UP_ACR were declared in NEITHER .env.example NOR PREFLIGHT.md before this milestone; the guard reports that class of gap as REQUIRED_KEY_UNDECLARED. They are now declared in both files and classified REQUIRED_BEFORE_E2E.
+
+== self-test, executed by the guard on every run ==
+control missing-required-key: refused with MISSING_REQUIRED_KEY naming DATABASE_URL
+control empty-required-value: refused with EMPTY_VALUE naming SESSION_SECRET
+control prohibited-substitute: refused with PROHIBITED_SUBSTITUTE naming KEYCLOAK_CLIENT_SECRET
+control malformed-value: refused with MALFORMED_VALUE naming S3_BUCKET
+control unknown-key: refused with UNKNOWN_KEY naming CONFIG_FIXTURE_UNKNOWN_KEY
+restoration: the untouched fixture validates cleanly after every control
+no value was printed in any control run: the guard asserts that with canary values

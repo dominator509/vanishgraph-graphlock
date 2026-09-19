@@ -1,0 +1,510 @@
+{
+  "schema_version": 1,
+  "purpose": "The declared configuration surface of this repository: every key a deployment must know about, classified before startup, validated by sh scripts/config-validate.sh. A key that exists in the code and not here is a key an operator cannot discover; a key here that the code does not read is a key that lies about being used.",
+  "declared_by": [
+    "PREFLIGHT.md (the PREFLIGHT-TABLE credential contract)",
+    ".env.example (the documented example surface)",
+    "src/infrastructure/config.ts (REQUIRED_VARIABLES and the documented optional keys)",
+    "src/adapters/config/security-config.ts (SECURITY_ENV_VARS)",
+    "the env-literal reads recorded in each key's declared_in"
+  ],
+  "environment_classes": ["clean-local", "staging", "production"],
+  "environment_class_notes": {
+    "clean-local": "A developer or CI machine with the disposable local services of TEST_ENVIRONMENT_MANIFEST.md. Mirrors the telemetry environment token `local`, and a CI run uses the same class with the token `ci`.",
+    "staging": "A deployed stack that is not production. Requires every credential whose lane is at or before REQUIRED_BEFORE_DEPLOY.",
+    "production": "The production stack. Same credential requirement as staging; the deployment itself is manual and authorized by a named operator (SPEC-008 section 9)."
+  },
+  "lanes": [
+    "REQUIRED_NOW",
+    "REQUIRED_BEFORE_INTEGRATION",
+    "REQUIRED_BEFORE_E2E",
+    "REQUIRED_BEFORE_DEPLOY",
+    "OPTIONAL",
+    "HUMAN_EXTERNAL"
+  ],
+  "lane_notes": {
+    "REQUIRED_NOW": "The graph cannot run its current stages without it; its absence is BLOCKED_CREDENTIALS, not a defect.",
+    "REQUIRED_BEFORE_INTEGRATION": "Needed before integration tests can be honest.",
+    "REQUIRED_BEFORE_E2E": "Needed before end-to-end verification; before that it is declared and unprovisioned.",
+    "REQUIRED_BEFORE_DEPLOY": "Needed by a deployed stack. Declared now so a deployment is not a discovery.",
+    "OPTIONAL": "The product runs without it; a feature that depends on it fails closed and names it.",
+    "HUMAN_EXTERNAL": "Only a human can supply it: no automation may derive, guess or default it."
+  },
+  "formats": {
+    "POSTGRES_DSN": "A URL whose scheme is postgres or postgresql and which carries a host.",
+    "REDIS_URL": "A URL whose scheme is redis or rediss and which carries a host.",
+    "HTTP_URL": "A URL whose scheme is http or https and which carries a host.",
+    "HTTPS_URL": "A URL whose scheme is https and which carries a host. Issuer endpoints are not allowed to be plaintext.",
+    "SECRET": "An opaque credential: non-empty after trimming, at least minimum_length characters when declared, and never one of the prohibited substitutes.",
+    "IDENTIFIER": "A non-secret name or identifier: letters, digits and . _ : @ - only.",
+    "NUMERIC_ID": "Digits only. A GitHub App id and installation id are numeric; a value that is not is a mistyped credential, not a username.",
+    "PEM_PRIVATE_KEY": "A PEM block: it must contain a BEGIN line and an END line of the same label, with content between them.",
+    "S3_BUCKET_NAME": "An S3 bucket name: 3 to 63 characters, lowercase letters, digits, dots and hyphens, starting and ending with a letter or digit.",
+    "RUNNER_HANDLE": "An external runner handle supplied by a human: letters, digits and . _ - only.",
+    "CLOUD_IDENTITY": "A workload-identity reference (an ARN-shaped or path-shaped identifier): letters, digits and . _ : / @ - only.",
+    "TCP_PORT": "An integer from 0 to 65535. 0 means the listener does not bind.",
+    "HOST_ADDRESS": "An IPv4 address, an IPv6 address or a DNS name.",
+    "LOG_LEVEL": "One of the pino levels this service accepts.",
+    "URI_PATH": "An absolute path beginning with / and carrying no whitespace.",
+    "FILE_PATH": "A filesystem path; it may be relative or absolute and carries no NUL or newline.",
+    "ENVIRONMENT_TOKEN": "One of the five environment tokens of SPEC-007 section 2.1. The telemetry identity layer refuses any other value, so the configuration boundary refuses it before a process starts.",
+    "COMMIT_SHA": "A git commit reference: 7 to 64 hex characters, or the literal token `unknown` when a build has no recorded commit. `unknown` is permitted HERE and only here, because VG_COMMIT feeds a telemetry attribute whose absence has its own declared handling, and a build with no commit must not pretend to have one.",
+    "CONTAINER_NAME": "A container name: letters, digits and . _ - only.",
+    "IMAGE_REFERENCE": "A container image reference: a repository path with optional :tag or @digest."
+  },
+  "prohibited_substitutes": [
+    "PROVISION_ME",
+    "CHANGEME",
+    "CHANGE_ME",
+    "TODO",
+    "FIXME",
+    "PLACEHOLDER",
+    "EXAMPLE",
+    "DEFAULT",
+    "PASSWORD",
+    "SECRET",
+    "NONE",
+    "NULL",
+    "UNDEFINED",
+    "UNKNOWN",
+    "N/A",
+    "NA",
+    "-"
+  ],
+  "prohibited_substitute_notes": "A required key set to any of these is ABSENT, not configured, and the guard reports it with the reason code PROHIBITED_SUBSTITUTE. The list is compared case-insensitively. `localhost` is deliberately NOT on it: a clean-local DATABASE_URL legitimately points at a local host, and forbidding that would push an operator towards a remote database to satisfy a validator.",
+  "keys": [
+    {
+      "name": "DATABASE_URL",
+      "required": true,
+      "lane": "REQUIRED_NOW",
+      "format": "POSTGRES_DSN",
+      "secret": true,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": "scripts/probes/database_url.sh",
+      "note": "Carries credentials in its userinfo, so it is treated as secret: the guard never prints it."
+    },
+    {
+      "name": "VALKEY_URL",
+      "required": true,
+      "lane": "REQUIRED_NOW",
+      "format": "REDIS_URL",
+      "secret": true,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": "scripts/probes/valkey_url.sh",
+      "note": null
+    },
+    {
+      "name": "S3_ENDPOINT",
+      "required": true,
+      "lane": "REQUIRED_NOW",
+      "format": "HTTP_URL",
+      "secret": false,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": "scripts/probes/object_store.sh",
+      "note": null
+    },
+    {
+      "name": "S3_ACCESS_KEY_ID",
+      "required": true,
+      "lane": "REQUIRED_NOW",
+      "format": "IDENTIFIER",
+      "secret": false,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": null,
+      "note": "An access key ID is not the secret; the secret is S3_SECRET_ACCESS_KEY."
+    },
+    {
+      "name": "S3_SECRET_ACCESS_KEY",
+      "required": true,
+      "lane": "REQUIRED_NOW",
+      "format": "SECRET",
+      "secret": true,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": null,
+      "note": null
+    },
+    {
+      "name": "S3_BUCKET",
+      "required": true,
+      "lane": "REQUIRED_NOW",
+      "format": "S3_BUCKET_NAME",
+      "secret": false,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": null,
+      "note": null
+    },
+    {
+      "name": "KEYCLOAK_ISSUER",
+      "required": true,
+      "lane": "REQUIRED_NOW",
+      "format": "HTTPS_URL",
+      "secret": false,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": "scripts/probes/keycloak.sh",
+      "note": "TLS only: the token issuer is contacted over verified TLS (the local Keycloak uses a self-signed certificate supplied through NODE_EXTRA_CA_CERTS)."
+    },
+    {
+      "name": "KEYCLOAK_CLIENT_ID",
+      "required": true,
+      "lane": "REQUIRED_NOW",
+      "format": "IDENTIFIER",
+      "secret": false,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": null,
+      "note": null
+    },
+    {
+      "name": "KEYCLOAK_CLIENT_SECRET",
+      "required": true,
+      "lane": "REQUIRED_NOW",
+      "format": "SECRET",
+      "secret": true,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": null,
+      "note": null
+    },
+    {
+      "name": "SESSION_SECRET",
+      "required": true,
+      "lane": "REQUIRED_NOW",
+      "format": "SECRET",
+      "minimum_length": 32,
+      "secret": true,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": null,
+      "note": "The 32-character minimum is the one src/adapters/config/security-config.ts already enforces; the schema mirrors it rather than inventing a second number."
+    },
+    {
+      "name": "KEYCLOAK_PORTAL_AUDIENCE",
+      "required": true,
+      "lane": "REQUIRED_BEFORE_E2E",
+      "format": "IDENTIFIER",
+      "secret": false,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": null,
+      "note": "READ BY src/adapters/config/security-config.ts, WHICH ABORTS WHEN IT IS UNSET. Until EP-009 M2 it was declared in NO operator file, and sh scripts/config-validate.sh reports that class of gap as REQUIRED_KEY_UNDECLARED; it is now declared in PREFLIGHT.md and .env.example, because an operator provisioning from those files otherwise could not learn that the boundary requires it. No runtime path calls readSecurityConfig yet, so its absence blocks nothing today. The value comes from the realm client registration, which is a human task."
+    },
+    {
+      "name": "KEYCLOAK_SERVICE_AUDIENCE",
+      "required": true,
+      "lane": "REQUIRED_BEFORE_E2E",
+      "format": "IDENTIFIER",
+      "secret": false,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": null,
+      "note": "Same boundary and same reasoning as KEYCLOAK_PORTAL_AUDIENCE: the service audience is a second registered audience, never the portal one."
+    },
+    {
+      "name": "KEYCLOAK_MCP_AUDIENCE",
+      "required": true,
+      "lane": "REQUIRED_BEFORE_E2E",
+      "format": "IDENTIFIER",
+      "secret": false,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": null,
+      "note": "Same boundary. SPEC-005 declares three audiences; a single shared audience would make a service token acceptable to the portal surface."
+    },
+    {
+      "name": "KEYCLOAK_STEP_UP_ACR",
+      "required": true,
+      "lane": "REQUIRED_BEFORE_E2E",
+      "format": "IDENTIFIER",
+      "secret": false,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": null,
+      "note": "The single declared acr value of SPEC-003 section 3.2 item 6; the six step-up classes compare against it."
+    },
+    {
+      "name": "LOCAL_MODEL_ENDPOINT",
+      "required": true,
+      "lane": "REQUIRED_BEFORE_INTEGRATION",
+      "format": "HTTP_URL",
+      "secret": false,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": "scripts/probes/local_model.sh",
+      "note": null
+    },
+    {
+      "name": "SEARCH_API_KEY",
+      "required": false,
+      "lane": "OPTIONAL",
+      "format": "SECRET",
+      "secret": true,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": "scripts/probes/search_api_key.sh",
+      "note": "The declared name of the search-provider key in this tree. Recorded discrepancy: the EP-009 plan expects a key count that only adds up if a differently named key (SERPAPI_API_KEY) is present, and no module reads that name. The tree's declared name is authoritative here and the discrepancy is recorded in the ledger rather than resolved by renaming a live contract."
+    },
+    {
+      "name": "LOB_API_KEY",
+      "required": false,
+      "lane": "OPTIONAL",
+      "format": "SECRET",
+      "secret": true,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": "scripts/probes/postal_api.sh",
+      "note": null
+    },
+    {
+      "name": "CLICK2MAIL_API_KEY",
+      "required": false,
+      "lane": "OPTIONAL",
+      "format": "SECRET",
+      "secret": true,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": "scripts/probes/postal_api.sh",
+      "note": "This tree declares an API key only. The provider's transport also accepts HTTP Basic credentials, and those variable names are NOT declared anywhere in this repository; the provider probe therefore reports what it can reach and never invents a credential."
+    },
+    {
+      "name": "POSTGRID_API_KEY",
+      "required": false,
+      "lane": "OPTIONAL",
+      "format": "SECRET",
+      "secret": true,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": "scripts/probes/postal_api.sh",
+      "note": null
+    },
+    {
+      "name": "STRIPE_SECRET_KEY",
+      "required": false,
+      "lane": "OPTIONAL",
+      "format": "SECRET",
+      "secret": true,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": "scripts/probes/stripe.sh",
+      "note": "A vendor key format (sk_live_/sk_test_/rk_) is DOCUMENTED here and deliberately NOT enforced: a rotated format would be misread as a defect, and the probe already proves what the key can reach."
+    },
+    {
+      "name": "STRIPE_WEBHOOK_SECRET",
+      "required": false,
+      "lane": "OPTIONAL",
+      "format": "SECRET",
+      "secret": true,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": null,
+      "note": "Same reasoning as STRIPE_SECRET_KEY about the whsec_ prefix."
+    },
+    {
+      "name": "GITHUB_APP_ID",
+      "required": true,
+      "lane": "REQUIRED_BEFORE_DEPLOY",
+      "format": "NUMERIC_ID",
+      "secret": false,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": "scripts/probes/github_app.sh",
+      "note": null
+    },
+    {
+      "name": "GITHUB_APP_PRIVATE_KEY",
+      "required": true,
+      "lane": "REQUIRED_BEFORE_DEPLOY",
+      "format": "PEM_PRIVATE_KEY",
+      "secret": true,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": null,
+      "note": null
+    },
+    {
+      "name": "GITHUB_INSTALLATION_ID",
+      "required": true,
+      "lane": "REQUIRED_BEFORE_DEPLOY",
+      "format": "NUMERIC_ID",
+      "secret": false,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": null,
+      "note": null
+    },
+    {
+      "name": "CODEX_RUNNER_HANDLE",
+      "required": false,
+      "lane": "HUMAN_EXTERNAL",
+      "format": "RUNNER_HANDLE",
+      "secret": false,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": null,
+      "note": "An external runner identity. No stage in EP-000 through EP-009 delegates to an external runner, so an unset handle blocks nothing today; a human must supply it before any stage that does."
+    },
+    {
+      "name": "CLAUDE_RUNNER_HANDLE",
+      "required": false,
+      "lane": "HUMAN_EXTERNAL",
+      "format": "RUNNER_HANDLE",
+      "secret": false,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": null,
+      "note": "Same as CODEX_RUNNER_HANDLE."
+    },
+    {
+      "name": "GROK_RUNNER_HANDLE",
+      "required": false,
+      "lane": "HUMAN_EXTERNAL",
+      "format": "RUNNER_HANDLE",
+      "secret": false,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": null,
+      "note": "Same as CODEX_RUNNER_HANDLE."
+    },
+    {
+      "name": "CLOUD_WORKLOAD_IDENTITY",
+      "required": false,
+      "lane": "OPTIONAL",
+      "format": "CLOUD_IDENTITY",
+      "secret": false,
+      "declared_in": ["PREFLIGHT.md", ".env.example"],
+      "probe": "scripts/probes/cloud_identity.sh",
+      "note": "PREFLIGHT.md classifies it OPTIONAL, so the schema does too; a deployment that resolves outbound credentials by workload identity instead of a static secret requires it, and the guard reports it missing rather than substituting a static credential (SPEC-006 section 7.1 item 16)."
+    },
+    {
+      "name": "PORT",
+      "required": false,
+      "lane": "OPTIONAL",
+      "format": "TCP_PORT",
+      "secret": false,
+      "declared_in": ["code"],
+      "probe": null,
+      "note": "Read by src/infrastructure/config.ts; defaults to 0, which binds no port."
+    },
+    {
+      "name": "HOST",
+      "required": false,
+      "lane": "OPTIONAL",
+      "format": "HOST_ADDRESS",
+      "secret": false,
+      "declared_in": ["code"],
+      "probe": null,
+      "note": "Defaults to 127.0.0.1, never 0.0.0.0."
+    },
+    {
+      "name": "LOG_LEVEL",
+      "required": false,
+      "lane": "OPTIONAL",
+      "format": "LOG_LEVEL",
+      "enum": ["trace", "debug", "info", "warn", "error", "fatal", "silent"],
+      "secret": false,
+      "declared_in": ["code"],
+      "probe": null,
+      "note": "Defaults to info. The enum is the closed set of levels this service accepts; an unknown level is refused here rather than silently ignored by the logger."
+    },
+    {
+      "name": "VANISHGRAPH_ENVIRONMENT",
+      "required": false,
+      "lane": "OPTIONAL",
+      "format": "ENVIRONMENT_TOKEN",
+      "enum": ["local", "ci", "preview", "staging", "production"],
+      "secret": false,
+      "declared_in": ["code"],
+      "probe": null,
+      "note": "Defaults to local. The enum is the five tokens of SPEC-007 section 2.1, read from src/adapters/observability/telemetry-resource.ts rather than restated: a sixth token here would let a process start and then refuse to emit telemetry."
+    },
+    {
+      "name": "VANISHGRAPH_METRICS_PATH",
+      "required": false,
+      "lane": "OPTIONAL",
+      "format": "URI_PATH",
+      "secret": false,
+      "declared_in": ["code"],
+      "probe": null,
+      "note": "Defaults to /metrics. SPEC-007 section 2.3 rule 2 keeps the metrics endpoint off the public ingress."
+    },
+    {
+      "name": "VANISHGRAPH_METRICS_HOST",
+      "required": false,
+      "lane": "OPTIONAL",
+      "format": "HOST_ADDRESS",
+      "secret": false,
+      "declared_in": ["code"],
+      "probe": null,
+      "note": "Defaults to HOST, then to 127.0.0.1."
+    },
+    {
+      "name": "VANISHGRAPH_METRICS_PORT",
+      "required": false,
+      "lane": "OPTIONAL",
+      "format": "TCP_PORT",
+      "secret": false,
+      "declared_in": ["code"],
+      "probe": null,
+      "note": "0 means the metrics listener is not started."
+    },
+    {
+      "name": "VG_COMMIT",
+      "required": false,
+      "lane": "OPTIONAL",
+      "format": "COMMIT_SHA",
+      "secret": false,
+      "declared_in": ["code"],
+      "probe": null,
+      "note": "Feeds the build-identity telemetry attribute; defaults to the literal token unknown."
+    },
+    {
+      "name": "VG_REPLAY_LOG",
+      "required": false,
+      "lane": "OPTIONAL",
+      "format": "FILE_PATH",
+      "secret": false,
+      "declared_in": ["code"],
+      "probe": null,
+      "note": "The webhook replay log path; defaults to a temporary directory."
+    },
+    {
+      "name": "RECIPE_VERIFICATION_KEYS",
+      "required": false,
+      "lane": "OPTIONAL",
+      "format": "FILE_PATH",
+      "secret": false,
+      "declared_in": ["code"],
+      "probe": null,
+      "note": "The key material used to verify recipe signatures. Absent means recipes cannot be verified, which the recipe guard already treats as unverifiable rather than fresh (SPEC-006 section 7.1 item 7)."
+    },
+    {
+      "name": "VG_DB_STATE_FILE",
+      "required": false,
+      "lane": "OPTIONAL",
+      "format": "FILE_PATH",
+      "secret": false,
+      "declared_in": ["code"],
+      "probe": null,
+      "note": "Local provisioning state written by src/infrastructure/database/provision.ts."
+    },
+    {
+      "name": "VG_DB_CONTAINER",
+      "required": false,
+      "lane": "OPTIONAL",
+      "format": "CONTAINER_NAME",
+      "secret": false,
+      "declared_in": ["code"],
+      "probe": null,
+      "note": "The disposable PostgreSQL container name; not a deployment artifact."
+    },
+    {
+      "name": "VG_POSTGRES_IMAGE",
+      "required": false,
+      "lane": "OPTIONAL",
+      "format": "IMAGE_REFERENCE",
+      "secret": false,
+      "declared_in": ["code"],
+      "probe": null,
+      "note": "The image the local provisioning path runs. It is recorded in the SBOM-bearing build only as a source string; no container image of this product is produced (docs/release/supported-formats.md)."
+    },
+    {
+      "name": "VG_TEST_DSN_OWNER",
+      "required": false,
+      "lane": "OPTIONAL",
+      "format": "POSTGRES_DSN",
+      "secret": true,
+      "declared_in": ["code"],
+      "probe": null,
+      "note": "The owner-role DSN used by the migration stage; test-only and never read by the service."
+    },
+    {
+      "name": "VG_TEST_DSN_APP",
+      "required": false,
+      "lane": "OPTIONAL",
+      "format": "POSTGRES_DSN",
+      "secret": true,
+      "declared_in": ["code"],
+      "probe": null,
+      "note": "The tenant-scoped application DSN used by the integration stage, which is how RLS enforcement is exercised."
+    }
+  ]
+}

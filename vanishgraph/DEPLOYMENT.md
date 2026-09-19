@@ -15,13 +15,19 @@ This file states the deployment contract and the true status of every deployment
 2. **Verify the artifact before it is used**: `sh scripts/artifact-identity.sh` must print
    `artifact identity: ok` in the environment that will consume the artifact. A digest that does not
    resolve is a stop condition, not a warning.
-3. **Verify the dependencies the artifact needs** before declaring a deployment healthy:
+3. **Validate the configuration before the artifact starts**, not after it fails: `PREFLIGHT.md` and
+   `.env.example` are the declared contract, `config/environment/required.json` gives the exact required set
+   for the environment class being deployed, and `sh scripts/config-validate.sh --environment <class> --file
+   <env-file>` refuses a missing, empty, placeholder, malformed or out-of-enum value and refuses an unknown
+   key. It prints key names and reason codes and never a value, so its output is safe to attach to a change
+   record. A deployment that skips this step is deploying an environment nobody validated.
+4. **Verify the dependencies the artifact needs** before declaring a deployment healthy:
    `sh scripts/induced-failure-readiness.sh` exercises every declared dependency's probe and prints
    `readiness induced failure: ok` only when each one's induced state was observed. That command proves the
    probes; it is not evidence that a deployment succeeded.
-4. **Roll back by digest, not by rebuild**: the previous artifact digest is redeployed as-is. The procedure
+5. **Roll back by digest, not by rebuild**: the previous artifact digest is redeployed as-is. The procedure
    and its ownership are in `ROLLBACK.md`; the drill that proves it is EP-009 M6 and has not been run.
-5. **Production deployment is a mandatory external gate** (SPEC-008 §9): manual only, performed and
+6. **Production deployment is a mandatory external gate** (SPEC-008 §9): manual only, performed and
    authorized by a named human operator (VG-SCOPE-009). An agent may not perform it, simulate it, or record
    it as done. It is unauthorized in this run.
 

@@ -49,6 +49,7 @@ a milestone that needs a new one must add it here in the same change.
 | `sh scripts/build-artifact.sh` | `artifact: built` |
 | `sh scripts/build-reproducibility.sh` | `artifact reproducible: ok` |
 | `sh scripts/artifact-identity.sh` | `artifact identity: ok` |
+| `sh scripts/config-validate.sh` | `config: ok` |
 | `sh scripts/smoke-test.sh` | `smoke test: ok` |
 | `sh scripts/live-fire.sh` | `live-fire: ok` |
 | `sh scripts/egress-canary-test.sh` | `canary egress: ok` |
@@ -86,6 +87,12 @@ a milestone that needs a new one must add it here in the same change.
   action are recorded in `docs/release/supported-formats.md`, and `RELEASE.md`
   states that container-format support is not claimed. Container-format support must
   not be reported as available.
+- `sh scripts/config-validate.sh` validates the declared configuration surface
+  against itself, against the code, and against SPEC-007 §7.2, and then validates a
+  real environment when one is named (`--environment <class> --file <path>`). It
+  never prints a value, only key names and reason codes, and it executes its own
+  negative controls on every run: a control that stops discriminating fails the
+  guard. See `ENVIRONMENT.md`.
 - A stage that is not yet implemented exits non-zero with the mandated
   `ERROR: <stage> is an unimplemented placeholder; ...` signature. **Placeholder
   stages never pass silently** — that is a deliberate, load-bearing property.

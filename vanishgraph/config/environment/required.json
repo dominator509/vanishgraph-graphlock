@@ -1,0 +1,143 @@
+{
+  "purpose": "The exact required set per environment class and per service role. Dependencies mirror the SPEC-007 section 7.2 table; credentials mirror PREFLIGHT.md and the lane classification in config/environment/schema.json. sh scripts/config-validate.sh re-derives both sides and fails on any drift, so this file cannot quietly disagree with the specification it mirrors.",
+  "derived_from": [
+    "SPEC-007 section 7.2 (the dependency/role table; parsed by the guard, not restated from memory)",
+    "PREFLIGHT.md (the credential contract)",
+    "config/environment/schema.json (required flags, lanes, formats)"
+  ],
+  "lane_progression": ["REQUIRED_NOW", "REQUIRED_BEFORE_INTEGRATION", "REQUIRED_BEFORE_E2E", "REQUIRED_BEFORE_DEPLOY"],
+  "environment_classes": {
+    "clean-local": {
+      "lanes_required": ["REQUIRED_NOW"],
+      "required_credentials": [
+        "DATABASE_URL",
+        "VALKEY_URL",
+        "S3_ENDPOINT",
+        "S3_ACCESS_KEY_ID",
+        "S3_SECRET_ACCESS_KEY",
+        "S3_BUCKET",
+        "KEYCLOAK_ISSUER",
+        "KEYCLOAK_CLIENT_ID",
+        "KEYCLOAK_CLIENT_SECRET",
+        "SESSION_SECRET"
+      ],
+      "required_dependencies": ["postgresql", "valkey", "object-store", "keycloak-jwks", "provider-transport"],
+      "note": "A developer or CI machine with the disposable local services. The audience values are NOT required here, because no local path mints or validates a real token yet: they become required at the E2E lane."
+    },
+    "staging": {
+      "lanes_required": ["REQUIRED_NOW", "REQUIRED_BEFORE_INTEGRATION", "REQUIRED_BEFORE_E2E", "REQUIRED_BEFORE_DEPLOY"],
+      "required_credentials": [
+        "DATABASE_URL",
+        "VALKEY_URL",
+        "S3_ENDPOINT",
+        "S3_ACCESS_KEY_ID",
+        "S3_SECRET_ACCESS_KEY",
+        "S3_BUCKET",
+        "KEYCLOAK_ISSUER",
+        "KEYCLOAK_CLIENT_ID",
+        "KEYCLOAK_CLIENT_SECRET",
+        "KEYCLOAK_PORTAL_AUDIENCE",
+        "KEYCLOAK_SERVICE_AUDIENCE",
+        "KEYCLOAK_MCP_AUDIENCE",
+        "KEYCLOAK_STEP_UP_ACR",
+        "SESSION_SECRET",
+        "LOCAL_MODEL_ENDPOINT",
+        "GITHUB_APP_ID",
+        "GITHUB_APP_PRIVATE_KEY",
+        "GITHUB_INSTALLATION_ID"
+      ],
+      "required_dependencies": ["postgresql", "valkey", "object-store", "keycloak-jwks", "provider-transport"],
+      "note": "A deployed non-production stack: every credential whose lane is at or before REQUIRED_BEFORE_DEPLOY."
+    },
+    "production": {
+      "lanes_required": ["REQUIRED_NOW", "REQUIRED_BEFORE_INTEGRATION", "REQUIRED_BEFORE_E2E", "REQUIRED_BEFORE_DEPLOY"],
+      "required_credentials": [
+        "DATABASE_URL",
+        "VALKEY_URL",
+        "S3_ENDPOINT",
+        "S3_ACCESS_KEY_ID",
+        "S3_SECRET_ACCESS_KEY",
+        "S3_BUCKET",
+        "KEYCLOAK_ISSUER",
+        "KEYCLOAK_CLIENT_ID",
+        "KEYCLOAK_CLIENT_SECRET",
+        "KEYCLOAK_PORTAL_AUDIENCE",
+        "KEYCLOAK_SERVICE_AUDIENCE",
+        "KEYCLOAK_MCP_AUDIENCE",
+        "KEYCLOAK_STEP_UP_ACR",
+        "SESSION_SECRET",
+        "LOCAL_MODEL_ENDPOINT",
+        "GITHUB_APP_ID",
+        "GITHUB_APP_PRIVATE_KEY",
+        "GITHUB_INSTALLATION_ID"
+      ],
+      "required_dependencies": ["postgresql", "valkey", "object-store", "keycloak-jwks", "provider-transport"],
+      "note": "The credential requirement is identical to staging; the deployment itself is manual and authorized by a named operator (SPEC-008 section 9), and nothing in this repository may perform it."
+    }
+  },
+  "service_roles": {
+    "web": {
+      "required_dependencies": ["postgresql", "valkey", "object-store", "keycloak-jwks"],
+      "optional_dependencies": ["job-worker", "provider-transport"],
+      "required_credentials": [
+        "DATABASE_URL",
+        "VALKEY_URL",
+        "S3_ENDPOINT",
+        "S3_ACCESS_KEY_ID",
+        "S3_SECRET_ACCESS_KEY",
+        "S3_BUCKET",
+        "KEYCLOAK_ISSUER",
+        "KEYCLOAK_CLIENT_ID",
+        "KEYCLOAK_CLIENT_SECRET",
+        "SESSION_SECRET"
+      ],
+      "credentials_note": "The five variables of src/infrastructure/config.ts REQUIRED_VARIABLES plus the object-store credentials, because object-store is required for this role by SPEC-007 section 7.2. The audience values are required before E2E rather than at startup for this role.",
+      "does_not_require": ["provider-transport"]
+    },
+    "worker": {
+      "required_dependencies": ["postgresql", "valkey", "object-store", "provider-transport"],
+      "optional_dependencies": ["job-worker", "keycloak-jwks"],
+      "required_credentials": [
+        "DATABASE_URL",
+        "VALKEY_URL",
+        "S3_ENDPOINT",
+        "S3_ACCESS_KEY_ID",
+        "S3_SECRET_ACCESS_KEY",
+        "S3_BUCKET",
+        "SESSION_SECRET"
+      ],
+      "credentials_note": "The same storage and secret material as the web role, without the Keycloak credentials, because SPEC-007 section 7.2 makes keycloak-jwks NOT required for this role. The provider keys the worker role reaches through provider-transport are OPTIONAL entitlements in PREFLIGHT.md, so they are declared and not required; a missing entitlement fails closed at the transport and is reported as BLOCKED_CREDENTIALS rather than substituted.",
+      "does_not_require": ["keycloak-jwks"]
+    }
+  },
+  "optional_dependency_notes": {
+    "job-worker": "Required for NO role, by design: a stalled worker fleet must be visible in the readiness body without taking the web tier down (SPEC-007 section 7.2). It is reported, never silently dropped."
+  },
+  "not_required_anywhere": {
+    "CLOUD_WORKLOAD_IDENTITY": "OPTIONAL: required only by a deployment that resolves outbound credentials by workload identity.",
+    "SEARCH_API_KEY": "OPTIONAL entitlement.",
+    "LOB_API_KEY": "OPTIONAL entitlement.",
+    "CLICK2MAIL_API_KEY": "OPTIONAL entitlement.",
+    "POSTGRID_API_KEY": "OPTIONAL entitlement.",
+    "STRIPE_SECRET_KEY": "OPTIONAL entitlement.",
+    "STRIPE_WEBHOOK_SECRET": "OPTIONAL: required only where the payment webhook is enabled.",
+    "CODEX_RUNNER_HANDLE": "HUMAN_EXTERNAL: no stage in this graph delegates to an external runner.",
+    "CLAUDE_RUNNER_HANDLE": "HUMAN_EXTERNAL.",
+    "GROK_RUNNER_HANDLE": "HUMAN_EXTERNAL.",
+    "PORT": "Has a default; 0 binds no port.",
+    "HOST": "Has a default of 127.0.0.1.",
+    "LOG_LEVEL": "Has a default of info.",
+    "VANISHGRAPH_ENVIRONMENT": "Has a default of local.",
+    "VANISHGRAPH_METRICS_PATH": "Has a default of /metrics.",
+    "VANISHGRAPH_METRICS_HOST": "Has a default.",
+    "VANISHGRAPH_METRICS_PORT": "Has a default of 0, which starts no metrics listener.",
+    "VG_COMMIT": "Has a default of the literal token unknown.",
+    "VG_REPLAY_LOG": "Has a default path in a temporary directory.",
+    "RECIPE_VERIFICATION_KEYS": "Absent means recipe signatures cannot be verified, which the recipe guard already treats as unverifiable rather than fresh.",
+    "VG_DB_STATE_FILE": "Local provisioning state.",
+    "VG_DB_CONTAINER": "Local provisioning container name.",
+    "VG_POSTGRES_IMAGE": "Local provisioning image reference.",
+    "VG_TEST_DSN_OWNER": "Test-only, read by the migration stage.",
+    "VG_TEST_DSN_APP": "Test-only, read by the integration stage."
+  }
+}
