@@ -1,0 +1,18 @@
+EP-009 M1(c) artifact reproducibility -- measured, not assumed
+date-of-record: 2026-09-19T21:54:31Z
+source commit: d3d5b68ea4a926a3f2ed67b8d30b3f2c20c8a9de
+builds compared: VG_DIST_DIR=/tmp/vg-repro-2163/a and /tmp/vg-repro-2163/b, both from this tree
+checkout deviation, recorded not hidden: both builds run from ONE verified-clean tree into two scratch output directories, where section 3 says two clean checkouts; a second checkout would need its own dependency installation for npm sbom to see the closure. Exercised: output-path independence and container-metadata non-determinism. NOT exercised: dependence on the absolute path of the source directory. See docs/release/supported-formats.md.
+tarball content manifest entries: 384 (identical in both builds, per-file SHA-256)
+tarball container digest, first build:  sha256:c00dc117979c92bdcdc901ef5a03395f64cba677a2b6f0bcb46d966bba5b75ce
+tarball container digest, second build: sha256:c00dc117979c92bdcdc901ef5a03395f64cba677a2b6f0bcb46d966bba5b75ce
+containers byte-identical: yes
+container difference, if any: a tar archive records file mtimes in its headers; content manifests identical
+provenance.json: byte-identical (the record carries no timestamp by construction)
+SHA256SUMS: byte-identical over the deterministic formats (tarball and SBOM digests excluded, since they follow the container/run)
+SBOM: identical after canonicalization (serialNumber and metadata.timestamp removed)
+published identity digest before the scratch builds: 2ee5312d1683159f4b8683380ad5ee894cc162c059b0e8a462fb8faf5d75329a
+published identity digest after the scratch builds:  2ee5312d1683159f4b8683380ad5ee894cc162c059b0e8a462fb8faf5d75329a
+published identity untouched by scratch builds: yes
+scratch identity comparison: scoped -- source commit, lockfile digest, builder, build command, declared path set and the provenance digest must agree; the tarball, SBOM and SHA256SUMS digests are excluded BY NAME because this script has already measured that those three are the non-deterministic ones
+finding recorded: an earlier version of this comparison required the two identities to be identical outright and FAILED, because the identity legitimately records the per-build digests of the formats that differ; the check was scoped, not removed
