@@ -21,6 +21,12 @@
 # written into ARTIFACT_IDENTITY.json under `reproducibility`, and the sentinel is printed only when every
 # comparison above matched. A format that cannot be made to match is removed from the declared set with a
 # recorded rationale rather than left in it.
+#
+# THE PUBLISHED IDENTITY IS CHECKED BEFORE AND AFTER, AND MUST BE UNCHANGED: this script runs two scratch builds
+# and those builds ONCE overwrote .agent/verification/state/ARTIFACT_IDENTITY.json with identities describing
+# scratch files that this run then deleted -- the published identity stopped describing the published artifact.
+# The scratch builds no longer publish, and this script now proves it by digesting the published identity before
+# and after rather than trusting the fix. The reconciliation below is the ONLY legitimate write it makes.
 set -eu
 export CI=true GIT_TERMINAL_PROMPT=0 GIT_PAGER=cat PAGER=cat DEBIAN_FRONTEND=noninteractive
 cd "$(dirname "$0")/.."
@@ -34,8 +40,35 @@ DIRTY=$(git status --porcelain | grep -vE '(dist/|dist-repro-[ab]/|ARTIFACT_IDEN
 [ -z "$DIRTY" ] || fail "the working tree is not clean, so the two builds would not be builds of the same source: $DIRTY"
 
 REPRO_BASE=${TMPDIR:-/tmp}/vg-repro-$$; rm -rf "$REPRO_BASE"; mkdir -p "$REPRO_BASE"
+
+# THE PUBLISHED IDENTITY MUST EXIST BEFORE THE COMPARISON, and must survive it untouched. Its digest is taken
+# here, before either scratch build runs.
+IDENTITY=.agent/verification/state/ARTIFACT_IDENTITY.json
+[ -f "$IDENTITY" ] || fail "$IDENTITY is missing: run sh scripts/build-artifact.sh first, so the reconciliation attaches to a published identity instead of creating one"
+sha256_of() { node -e 'const c=require("node:crypto"),f=require("node:fs");process.stdout.write(c.createHash("sha256").update(f.readFileSync(process.argv[1])).digest("hex"))' "$1"; }
+IDENTITY_BEFORE=$(sha256_of "$IDENTITY")
+
 VG_DIST_DIR="$REPRO_BASE/a" sh scripts/build-artifact.sh >/dev/null || fail "the first build failed"
 VG_DIST_DIR="$REPRO_BASE/b" sh scripts/build-artifact.sh >/dev/null || fail "the second build failed"
+
+IDENTITY_AFTER=$(sha256_of "$IDENTITY")
+[ "$IDENTITY_BEFORE" = "$IDENTITY_AFTER" ] \
+  || fail "the scratch builds MODIFIED the published artifact identity ($IDENTITY_BEFORE -> $IDENTITY_AFTER); a scratch build must never publish, because its artifact paths are deleted when this run ends"
+
+# THE IDENTITY DOCUMENT ITSELF IS ALSO COMPARED BETWEEN THE TWO SCRATCH BUILDS, after replacing each scratch
+# output path with a token: everything else -- commit, lockfile digests, builder, declared artifact set -- must
+# agree, or the identity is a record of a run rather than of the source.
+node -e '
+const fs = require("node:fs");
+const [base, aPath, bPath] = process.argv.slice(1);
+const normalize = (p, which) => fs.readFileSync(p, "utf8").split(`${base}/${which}`).join("<SCRATCH_OUT>");
+const one = normalize(aPath, "a"); const two = normalize(bPath, "b");
+if (one !== two) { console.error("the two scratch artifact identities differ in more than their output path"); process.exit(1); }
+const parsed = JSON.parse(one);
+if (!Array.isArray(parsed.artifact_paths) || parsed.artifact_paths.length !== 4) { console.error("a scratch identity does not declare the four produced formats"); process.exit(1); }
+process.stdout.write(`scratch identities identical over ${Object.keys(parsed.artifact_digests).length} digest(s)\n`);
+' "$REPRO_BASE" "$REPRO_BASE/a/ARTIFACT_IDENTITY.json" "$REPRO_BASE/b/ARTIFACT_IDENTITY.json" >/dev/null \
+  || fail "the artifact identity document is not reproducible between the two scratch builds"
 
 VERSION=$(node -e 'process.stdout.write(JSON.parse(require("node:fs").readFileSync("package.json","utf8")).version)')
 NAME=$(node -e 'process.stdout.write(JSON.parse(require("node:fs").readFileSync("package.json","utf8")).name)')
@@ -96,5 +129,26 @@ identity.reproducibility = {
 fs.writeFileSync(path, `${JSON.stringify(identity, null, 2)}\n`);
 ' .agent/verification/state/ARTIFACT_IDENTITY.json "$DIGEST_A" "$DIGEST_B" "$ENTRIES_A"
 
-REPRO_BASE=${TMPDIR:-/tmp}/vg-repro-$$; rm -rf "$REPRO_BASE"; mkdir -p "$REPRO_BASE"
-echo "artifact reproducible: ok (content manifests identical over $(printf '%s' "$ENTRIES_A") entries; provenance and checksums byte-identical; container digests recorded with their reconciliation)"
+# THE EVIDENCE IS WRITTEN BEFORE THE SCRATCH TREES ARE REMOVED, because the digests it records are of files that
+# will no longer exist; the published identity carries the same digests for the same reason.
+mkdir -p .agent/evidence/EP-009
+{
+  echo "EP-009 M1(c) artifact reproducibility -- measured, not assumed"
+  echo "date-of-record: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  echo "source commit: $(git rev-parse HEAD)"
+  echo "builds compared: VG_DIST_DIR=$REPRO_BASE/a and $REPRO_BASE/b, both from this tree"
+  echo "tarball content manifest entries: $ENTRIES_A (identical in both builds, per-file SHA-256)"
+  echo "tarball container digest, first build:  sha256:$DIGEST_A"
+  echo "tarball container digest, second build: sha256:$DIGEST_B"
+  echo "containers byte-identical: $([ "$DIGEST_A" = "$DIGEST_B" ] && echo yes || echo no)"
+  echo "container difference, if any: a tar archive records file mtimes in its headers; content manifests identical"
+  echo "provenance.json: byte-identical (the record carries no timestamp by construction)"
+  echo "SHA256SUMS: byte-identical over the deterministic formats (tarball and SBOM digests excluded, since they follow the container/run)"
+  echo "SBOM: identical after canonicalization (serialNumber and metadata.timestamp removed)"
+  echo "published identity digest before the scratch builds: $IDENTITY_BEFORE"
+  echo "published identity digest after the scratch builds:  $IDENTITY_AFTER"
+  echo "published identity untouched by scratch builds: $([ "$IDENTITY_BEFORE" = "$IDENTITY_AFTER" ] && echo yes || echo no)"
+} > .agent/evidence/EP-009/M1-reproducibility.txt
+
+rm -rf "$REPRO_BASE"
+echo "artifact reproducible: ok (content manifests identical over $(printf '%s' "$ENTRIES_A") entries; provenance and checksums byte-identical; published identity untouched by the scratch builds; container digests recorded with their reconciliation)"

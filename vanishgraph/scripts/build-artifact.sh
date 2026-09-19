@@ -106,12 +106,25 @@ const identity = {
   downstream_test_bindings: [],
   recorded_at_round: "EP-009 M1"
 };
-fs.mkdirSync(".agent/verification/state", { recursive: true });
 fs.writeFileSync(out, `${JSON.stringify(identity, null, 2)}\n`);
-' .agent/verification/state/ARTIFACT_IDENTITY.json "$TARBALL" "$OUT/${NAME}-${VERSION}.cdx.json" "$COMMIT" "$NODE_VERSION" "$NPM_VERSION"
+' "$OUT/ARTIFACT_IDENTITY.json" "$TARBALL" "$OUT/${NAME}-${VERSION}.cdx.json" "$COMMIT" "$NODE_VERSION" "$NPM_VERSION"
+
+# THE PUBLISHED IDENTITY IS WRITTEN ONLY BY A CANONICAL BUILD. This was a measured defect, not a precaution: the
+# reproducibility check builds twice into ${TMPDIR}/vg-repro-<pid>/{a,b}, and because those scratch builds ran
+# from this same tree they each overwrote .agent/verification/state/ARTIFACT_IDENTITY.json with an identity whose
+# artifact paths were scratch files that the run then deleted. The published identity described artifacts that no
+# longer existed, and sh scripts/artifact-identity.sh caught exactly that. A scratch build now keeps its identity
+# inside its own output directory and cannot publish.
+if [ "$OUT" = "dist" ]; then
+  mkdir -p .agent/verification/state
+  cp "$OUT/ARTIFACT_IDENTITY.json" .agent/verification/state/ARTIFACT_IDENTITY.json
+  echo "artifact: identity published to .agent/verification/state/ARTIFACT_IDENTITY.json"
+else
+  echo "artifact: identity kept inside $OUT (a scratch build does not publish, so the canonical identity stands)"
+fi
 
 for f in "$TARBALL" "$OUT/${NAME}-${VERSION}.cdx.json" "$OUT/provenance.json" "$OUT/SHA256SUMS"; do
   [ -s "$f" ] || fail "a declared format is missing or empty: $f"
 done
 
-echo "artifact: built ($(find "$OUT" -type f | wc -l | tr -d ' ') file(s) under $OUT; identity in .agent/verification/state/ARTIFACT_IDENTITY.json)"
+echo "artifact: built ($(find "$OUT" -type f | wc -l | tr -d ' ') file(s) under $OUT; identity in $OUT/ARTIFACT_IDENTITY.json)"
