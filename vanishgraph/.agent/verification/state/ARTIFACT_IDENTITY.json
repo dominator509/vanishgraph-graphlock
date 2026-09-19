@@ -1,6 +1,6 @@
 {
-  "source_commit_sha": "ff801c45e46119dff953b96a03523cd168a0d8b4",
-  "base_revision": "ff801c45e46119dff953b96a03523cd168a0d8b4",
+  "source_commit_sha": "f97cbe637ab93e5d5c39ecb3e13bcc80b9374b5a",
+  "base_revision": "f97cbe637ab93e5d5c39ecb3e13bcc80b9374b5a",
   "lockfile_digests": {
     "package-lock.json": "sha256:3be2892e7558559ae9e8fcde4c24228cdcddf356eece6735519bd8ac11f27ee4"
   },
@@ -17,10 +17,10 @@
     "dist/SHA256SUMS"
   ],
   "artifact_digests": {
-    "dist/vanishgraph-0.1.0.tgz": "sha256:7d22633f5d12f5ed30fb7f8c034ad6963cea101ea2a607a29277ec3736261c31",
-    "dist/vanishgraph-0.1.0.cdx.json": "sha256:903be95940e3e07d9ef5f2804c9a64e7f7d114ae2fcbf633425b0192521ad445",
-    "dist/provenance.json": "sha256:1f60b53f03fb927f63c6f68bb8ddf26f1b325fef135c5baf79fe7a12e3e74cbd",
-    "dist/SHA256SUMS": "sha256:5d2486445daf181ceef2e4d78d3e98906ff76eef5f7deef8b5f710731658383d"
+    "dist/vanishgraph-0.1.0.tgz": "sha256:2e437938f94bcc6f7e371b30b3255fbc7003e5884fbcf89e19f47edfd6d95fec",
+    "dist/vanishgraph-0.1.0.cdx.json": "sha256:3e0585a16e2872ac2ae6a6bdfc3e0e0fa21a5dd3ef04f9e8cb56c92485007b9c",
+    "dist/provenance.json": "sha256:309e365426edc96d055f0301e44d67be18ce4c14fbfcb774e18104eb34624fc0",
+    "dist/SHA256SUMS": "sha256:b02bb3d89c8b46117ebfd019c3315c4a43c3d22d5cbc4026080c6dd03e747186"
   },
   "sbom_reference": "dist/vanishgraph-0.1.0.cdx.json",
   "provenance_reference": "dist/provenance.json",
@@ -36,10 +36,10 @@
   "recorded_at_round": "EP-009 M1",
   "reproducibility": {
     "verdict": "CONTENT_IDENTICAL",
-    "content_manifest_entries": 387,
+    "content_manifest_entries": 389,
     "tarball_container_digests": {
-      "first_build": "sha256:7d22633f5d12f5ed30fb7f8c034ad6963cea101ea2a607a29277ec3736261c31",
-      "second_build": "sha256:7d22633f5d12f5ed30fb7f8c034ad6963cea101ea2a607a29277ec3736261c31"
+      "first_build": "sha256:2e437938f94bcc6f7e371b30b3255fbc7003e5884fbcf89e19f47edfd6d95fec",
+      "second_build": "sha256:2e437938f94bcc6f7e371b30b3255fbc7003e5884fbcf89e19f47edfd6d95fec"
     },
     "tarball_containers_identical": true,
     "reconciliation": "none needed: the two tarball containers are byte-identical",
