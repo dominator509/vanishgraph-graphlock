@@ -1,0 +1,278 @@
+# Continuous integration (EP-009 M3; SPEC-008 section 10 no-masking rules).
+#
+# THE STAGE ORDER MIRRORS scripts/verify.sh EXACTLY, and sh scripts/ci-guard.sh fails if it stops doing so:
+# a pipeline that runs a different sequence from the local gate is a second, quieter contract, and the two
+# drifting apart is how a green pipeline and a red local gate coexist.
+#
+# NO FAILURE IS MASKED ANYWHERE IN THIS FILE: no `continue-on-error`, no `|| true`, no `if: always()` on a
+# gating job, no ignored exit code, no filtered failure output. `ci-guard.sh` asserts all of that structurally
+# rather than trusting the author, and it also asserts that every declared format is uploaded under a
+# digest-derived name and that a missing artifact fails the upload instead of producing an empty one.
+#
+# THIS PIPELINE HAS NEVER RUN REMOTELY. The declared observation credentials (GITHUB_APP_ID,
+# GITHUB_APP_PRIVATE_KEY, GITHUB_INSTALLATION_ID) are unprovisioned in this environment, so remote observation
+# is recorded BLOCKED_CREDENTIALS with the probe command and exit code (EP-009 M3, CONTENT (c)). Nothing here
+# claims a green pipeline. MEASURED by running this sequence locally with CI=true (see
+# .agent/evidence/EP-009/M3-ci-pipeline.txt): `smoke` fails because scripts/smoke-test.sh is still a loud-fail
+# placeholder owned by EP-009 M4, `live-fire` fails because scripts/live-fire.sh is a placeholder owned by
+# EP-010, and `e2e` PASSES as a source-level browser suite — which SPEC-008 section 7 (VG-SHIP-022) says cannot
+# satisfy release acceptance until it is bound to the artifact digest in M4. Two further stages of verify.sh,
+# `reality-gate` and `dependency-audit`, fail for pre-existing reasons recorded in the ledger; they are not
+# part of this pipeline's jobs because they are not part of gate-release.sh either.
+name: ci
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CI: 'true'
+  GIT_TERMINAL_PROMPT: '0'
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: sh scripts/preflight.sh
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: sh scripts/lint.sh
+
+  format-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: sh scripts/format-check.sh
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: sh scripts/typecheck.sh
+
+  unit:
+    needs: [preflight, lint, format-check, typecheck]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: sh scripts/test-unit.sh
+
+  integration:
+    needs: [unit]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      # The stage provisions its own disposable PostgreSQL container through scripts/db-provision.sh and
+      # reports BLOCKED_ENVIRONMENT rather than skipping when it cannot, so no service block is declared here
+      # and no skip can masquerade as a pass.
+      - run: sh scripts/test-integration.sh
+
+  security-check:
+    needs: [unit]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: sh scripts/security-check.sh
+
+  dependency-audit:
+    needs: [unit]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: sh scripts/dependency-audit.sh
+
+  reality-gate:
+    needs: [unit]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: sh scripts/reality-gate.sh
+
+  test-collection-guard:
+    needs: [unit]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: sh scripts/test-collection-guard.sh
+
+  build:
+    needs: [preflight, lint, format-check, typecheck]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      # THIS IS verify.sh's `build` STAGE, which is scripts/build.sh. The production artifact is a SEPARATE job
+      # (artifact-build) because they are different facts: this one says the tree compiles, that one says the
+      # declared formats exist with digests. Conflating them let the pipeline claim a digest-keyed upload from a
+      # stage that never produced one, and ci-guard.sh reported it as STAGE_COMMAND_MISMATCH.
+      - run: sh scripts/build.sh
+
+  artifact-build:
+    needs: [preflight, lint, format-check, typecheck]
+    runs-on: ubuntu-latest
+    outputs:
+      tarball_sha256: ${{ steps.identify.outputs.tarball_sha256 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: sh scripts/build-artifact.sh
+      - id: identify
+        # THE UPLOAD NAME IS THE DIGEST, NOT A RUN NUMBER: an artifact identified by the run that produced it
+        # cannot be bound to by a downstream stage, and the whole point of the artifact-bound stages is that
+        # they consume an exact digest (SPEC-008 section 7, DOD-004).
+        run: |
+          node -e "const i=require('./.agent/verification/state/ARTIFACT_IDENTITY.json');const p=i.artifact_paths.find((x)=>x.endsWith('.tgz'));const d=i.artifact_digests[p].replace('sha256:','');require('node:fs').appendFileSync(process.env.GITHUB_OUTPUT,'tarball_sha256='+d+'\n');"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vanishgraph-artifact-sha256-${{ steps.identify.outputs.tarball_sha256 }}
+          path: |
+            dist/
+            .agent/verification/state/ARTIFACT_IDENTITY.json
+          if-no-files-found: error
+
+  artifact-identity:
+    needs: [artifact-build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: vanishgraph-artifact-sha256-${{ needs.artifact-build.outputs.tarball_sha256 }}
+          path: .
+      # THIS RUNS ON A DIFFERENT RUNNER FROM THE BUILD, against the downloaded bytes: the digests resolve only
+      # if what arrived is what was uploaded, which is the property a deployment depends on.
+      - run: sh scripts/artifact-identity.sh
+
+  sbom-provenance:
+    needs: [artifact-build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: vanishgraph-artifact-sha256-${{ needs.artifact-build.outputs.tarball_sha256 }}
+          path: .
+      - name: the SBOM and the provenance record are present and usable
+        run: |
+          sh scripts/artifact-identity.sh
+          node -e "const fs=require('node:fs');const i=require('./.agent/verification/state/ARTIFACT_IDENTITY.json');const s=JSON.parse(fs.readFileSync(i.sbom_reference,'utf8'));if(s.bomFormat!=='CycloneDX'||!Array.isArray(s.components)||s.components.length===0){console.error('the SBOM is not a usable CycloneDX document');process.exit(1);}const p=JSON.parse(fs.readFileSync(i.provenance_reference,'utf8'));if(!p.source_commit||!p.builder||!Array.isArray(p.formats)||p.formats.length===0){console.error('the provenance record is incomplete');process.exit(1);}if(/timestamp|recorded_at|generated_at/.test(JSON.stringify(p))){console.error('the provenance record carries a time field, so it is not reproducible');process.exit(1);}console.log('sbom and provenance: usable, and the provenance record carries no time field');"
+
+  smoke:
+    needs: [artifact-identity]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: sh scripts/build-artifact.sh
+      - run: sh scripts/smoke-test.sh
+
+  e2e:
+    needs: [smoke]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: sh scripts/build-artifact.sh
+      - run: sh scripts/test-e2e.sh
+
+  live-fire:
+    needs: [e2e]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: sh scripts/build-artifact.sh
+      - run: sh scripts/live-fire.sh

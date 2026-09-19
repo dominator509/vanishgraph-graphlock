@@ -8,12 +8,14 @@
  * data in any of the three free-text fields, so a capsule cannot leave the boundary carrying what it exists to remove.
  * The dedup key is also structural: `fingerprint` is required and NOT NULL in the table.
  *
- * THE AUTO-MERGE HALF IS AN ABSENCE IN THIS REPOSITORY, AND IT IS RECORDED AS ONE RATHER THAN PRESENTED AS A CONTROL —
- * MEASURED: `.github/workflows/` exists and is EMPTY, there is no `CODEOWNERS` at the root or under `.github/`, and the
- * plan's own file list names `.github/workflows/ci.yml` as a file to modify, which does not exist here. So "cannot
- * auto-merge or auto-deploy" is true vacuously: there is no pipeline to do either, and equally no protected-path
- * enforcement. That distinction is the honest content of this suite's second half, and the requirement it leaves
- * unenforced is named.
+ * THE AUTO-MERGE HALF WAS AN ABSENCE IN THIS REPOSITORY AND IS NOW ASSERTED OVER THE PIPELINE'S CONTENT. MEASURED at
+ * EP-007 M2: `.github/workflows/` existed and was EMPTY, so "cannot auto-merge or auto-deploy" was true vacuously and
+ * the assertion could only fail if someone created a pipeline at all. EP-009 M3 REQUIRES that pipeline, so a test that
+ * fails on its existence would have to be deleted or the milestone abandoned — neither of which is an option here.
+ * The assertion is therefore made over what the pipeline CONTAINS: no merge, no deploy, no release, no production
+ * environment, in any workflow file that exists. That is the property this suite's title always named, and it is
+ * strictly more informative than emptiness, because it can now fail for a real reason. The scan has its own positive
+ * control below, so it cannot pass by looking at nothing.
  */
 
 import { describe, test } from 'node:test';
@@ -26,6 +28,19 @@ import { TenantId } from '../../src/domain/identifiers.ts';
 
 const ROOT = resolve(import.meta.dirname, '..', '..');
 const TENANT = new TenantId('11111111-1111-4111-8111-111111111111');
+
+/**
+ * What a pipeline must never contain, with a sample that proves the pattern fires.
+ *
+ * The shapes are the acts, not the words: merging without review, deploying anywhere, publishing a release, and
+ * binding a job to a production environment. A CI pipeline that tests and builds is not one of them.
+ */
+const FORBIDDEN_PIPELINE_SHAPES = [
+  { id: 'auto-merge', pattern: /gh\s+pr\s+merge|enable-pull-request-automerge|--auto\b|merge_pull_request/, sample: 'run: gh pr merge --auto\n' },
+  { id: 'auto-deploy', pattern: /kubectl\s+apply|helm\s+upgrade|aws\s+deploy|gcloud\s+run\s+deploy|az\s+webapp\s+deploy|vercel\s+--prod|netlify\s+deploy|actions\/deploy/, sample: 'run: kubectl apply -f deploy/\n' },
+  { id: 'auto-release', pattern: /gh\s+release\s+create|npm\s+publish|semantic-release/, sample: 'run: npm publish\n' },
+  { id: 'production-environment', pattern: /environment:\s*production/i, sample: 'environment: production\n' },
+] as const;
 
 /** The refusal an operation produced, or `undefined` when it did not refuse. */
 function refusalOf(operation: () => unknown): unknown {
@@ -88,18 +103,40 @@ describe('LIVE-FIRE-PROOF-10: a crash capsule is sanitized and deduplicated befo
     );
   });
 
-  test('NO AUTO-MERGE OR AUTO-DEPLOY PATH EXISTS HERE, asserted as an absence rather than presented as a control', () => {
+  test('NO AUTO-MERGE OR AUTO-DEPLOY PATH EXISTS HERE, asserted over the pipeline that now exists', () => {
     const workflows = resolve(ROOT, '.github/workflows');
     const files = existsSync(workflows) ? readdirSync(workflows) : [];
-    assert.deepEqual(files, [], 'MEASURED: the workflows directory is empty, so no pipeline can merge or deploy anything');
+    assert.ok(files.length > 0, 'the pipeline exists as of EP-009 M3, so the property is asserted over its content');
+    const findings: string[] = [];
+    for (const file of files) {
+      for (const shape of FORBIDDEN_PIPELINE_SHAPES) {
+        if (shape.pattern.test(readFileSync(resolve(workflows, file), 'utf8'))) findings.push(`${file}: ${shape.id}`);
+      }
+    }
+    assert.deepEqual(findings, [], `a pipeline can merge, deploy or release: ${findings.join('; ')}`);
     assert.equal(existsSync(resolve(ROOT, 'CODEOWNERS')), false, 'and there is no root CODEOWNERS');
     assert.equal(existsSync(resolve(ROOT, '.github/CODEOWNERS')), false, 'nor one under .github/');
     // The consequence, stated where a reader will find it: the protected-path rule is UNENFORCED BY MACHINE here.
     assert.equal(
       existsSync(resolve(ROOT, '.github/workflows/ci.yml')),
-      false,
-      'the plan names .github/workflows/ci.yml; it does not exist, which is why CI has never run',
+      true,
+      'the plan names .github/workflows/ci.yml; EP-009 M3 created it, and it has never run remotely (BLOCKED_CREDENTIALS)',
     );
+  });
+
+  test('the pipeline scan fires on every shape it looks for, so the assertion above is not vacuous', () => {
+    // THE POSITIVE CONTROL. Without it the test above passes for any workflow text that happens to lack these
+    // strings, and a scanner that matches nothing looks exactly like a repository that does nothing.
+    for (const shape of FORBIDDEN_PIPELINE_SHAPES) {
+      assert.ok(
+        shape.pattern.test(shape.sample),
+        `${shape.id} must be reported for its own sample, or the scan proves nothing`,
+      );
+    }
+    const harmless = 'jobs:\n  unit:\n    steps:\n      - run: sh scripts/test-unit.sh\n';
+    for (const shape of FORBIDDEN_PIPELINE_SHAPES) {
+      assert.equal(shape.pattern.test(harmless), false, `${shape.id} must not fire on a test-only pipeline`);
+    }
   });
 
   test('the prohibition on autonomous deployment is in the specification, read from the spec that owns it', () => {

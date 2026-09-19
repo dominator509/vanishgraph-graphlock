@@ -31,6 +31,17 @@ This file states the deployment contract and the true status of every deployment
    authorized by a named human operator (VG-SCOPE-009). An agent may not perform it, simulate it, or record
    it as done. It is unauthorized in this run.
 
+## Continuous integration
+
+`.github/workflows/ci.yml` mirrors `scripts/verify.sh`'s fifteen stages and adds the artifact build, the
+SBOM/provenance check and a digest-keyed artifact upload; `sh scripts/ci-guard.sh` validates it structurally,
+including that no construct in it can hide a failure and that its stage order cannot contradict the local gate.
+**The pipeline has never run remotely.** The declared observation credentials (`GITHUB_APP_ID`,
+`GITHUB_APP_PRIVATE_KEY`, `GITHUB_INSTALLATION_ID`) are unprovisioned, so remote observation is
+`BLOCKED_CREDENTIALS` with the probe evidence in `.agent/evidence/EP-009/M3-ci-pipeline.txt`. Two stages would
+fail today by design — `live-fire` is a placeholder owned by EP-010 and `smoke`/`e2e` need the digest binding of
+EP-009 M4 — so a green pipeline is not claimed and must not be reported until it is observed.
+
 ## Status of each path
 
 | path | status | reason and next action |

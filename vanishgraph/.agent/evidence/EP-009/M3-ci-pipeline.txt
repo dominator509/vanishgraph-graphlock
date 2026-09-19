@@ -1,0 +1,92 @@
+# EP-009 M3 — CI/CD pipeline with no failure masking: evidence
+
+Everything below was produced in this session. Nothing in this file is a claim about a remote CI run: **the
+pipeline has never run on the hosting platform**, and the reason is recorded here with its probe.
+
+## The pipeline definition
+
+`.github/workflows/ci.yml` — 17 jobs. `sh scripts/ci-guard.sh` parses it with PyYAML and validates it
+structurally; it printed `ci pipeline: ok` with these notes:
+
+```
+workflow: 17 job(s) parsed: artifact-build, artifact-identity, build, dependency-audit, e2e, format-check,
+integration, lint, live-fire, preflight, reality-gate, sbom-provenance, security-check, smoke,
+test-collection-guard, typecheck, unit
+local gate: 15 stage(s) parsed from scripts/verify.sh
+masking scan: 6 construct(s) checked in the PARSED workflow, 0 present
+artifact binding: 1 upload(s), 2 download(s), digest keyed
+ci pipeline: validated (17 job(s))
+ci pipeline: ok
+```
+
+`grep -c 'jobs:' .github/workflows/ci.yml` prints `1`, which the milestone's RUN list requires to be non-zero.
+
+## The guard's own negative controls, executed and recorded
+
+A guard that cannot fail is a placebo, so four mutations were applied to the workflow, each was required to
+produce its own typed finding, and the file was restored from a copy afterwards:
+
+| control | mutation | result |
+|---|---|---|
+| `MASK_CONTINUE_ON_ERROR` | add `continue-on-error: true` to a gate step | refused with `MASK_CONTINUE_ON_ERROR` |
+| `JOB_MISSING` | rename the `live-fire` job | refused with `JOB_MISSING` |
+| `UPLOAD_EMPTY_ALLOWED` | `if-no-files-found: error` → `warn` | refused with `UPLOAD_EMPTY_ALLOWED` |
+| `ARTIFACT_CHAIN_BROKEN` | make `smoke` depend on `build` instead of `artifact-identity` | refused with `ARTIFACT_CHAIN_BROKEN` |
+
+The restoration was proven by re-running the guard: `ci pipeline: ok`, exit 0.
+
+**A defect this guard found in its own author's workflow, and the fix:** the first version gave the artifact
+build the job name `build`, which is verify.sh's stage for `scripts/build.sh`. `ci-guard.sh` reported
+`STAGE_COMMAND_MISMATCH` — the pipeline was claiming a digest-keyed upload from a job that is not the stage
+verify.sh runs. The artifact production is now a separate `artifact-build` job, and `build` runs
+`sh scripts/build.sh`.
+
+**A defect this guard found in itself, and the fix:** its first masking scan read the raw file and reported
+three findings that were the words `continue-on-error`, `|| true` and `if: always()` inside the workflow's own
+comment saying those are forbidden. A comment cannot mask a failure. The scan now reads the **parsed**
+workflow, because every executable line of a workflow lives in a `run` string or an action input, so the
+parsed structure covers every place a failure can be hidden and nothing else.
+
+## Stage order equals the local gate
+
+The guard parses `scripts/verify.sh`'s `STAGES` block rather than restating it, requires a job for every one of
+the fifteen stages, requires each stage job to run exactly `sh scripts/<script>.sh`, requires that script to
+exist, and requires `COMMANDS.md` to declare that command with a sentinel. It then checks the `needs` graph:
+no stage may depend on a stage verify.sh runs after it, and the artifact-bound stages must form a chain.
+
+## Remote observation: BLOCKED_CREDENTIALS
+
+The declared observation credentials are the GitHub App values in `PREFLIGHT.md`. Measured:
+
+```
+$ sh scripts/probes/github_app.sh
+ERROR: GITHUB_APP_ID is unset; see PREFLIGHT.md and .env.example; provision it then re-run; unblocked by EP-013
+exit=1
+```
+
+`sh scripts/preflight.sh` printed `preflight: ok` with its NOTICE listing `DATABASE_URL`, `VALKEY_URL`,
+`S3_ENDPOINT`, `KEYCLOAK_ISSUER`, `LOCAL_MODEL_ENDPOINT` and `GITHUB_APP_ID` as unprovisioned and the capability
+state as `BLOCKED_CREDENTIALS`.
+
+**A credential that exists here and was deliberately NOT used, recorded rather than quietly substituted:** a
+`gh` CLI is installed and authenticated in this environment (`gh auth status`: logged in to github.com, scopes
+include `repo` and `workflow`), and the repository has a working `origin` remote, so a run could in principle be
+triggered by pushing the workflow. It was not, for three reasons: the declared observation credential is the
+GitHub **App** and the plan's own instruction is to record `BLOCKED_CREDENTIALS` when it is unprovisioned; a
+triggered run would be red by design today, because `live-fire` is a loud-fail placeholder owned by EP-010 and
+the artifact-bound `smoke`/`e2e` stages need the digest binding EP-009 M4 adds; and substituting an interactive
+human CLI session for a declared machine credential is the kind of undeclared substitution this pack forbids.
+The operator can enable it with one push once the App values are provisioned.
+
+## The step sequence executed locally, with `CI=true`
+
+Run in verify.sh's order, each stage's exit code recorded, the sequence NOT stopping at the first failure
+because the point is to report which stages are runnable today and which are not. **This is a local run of the
+same steps and is NOT described as a green pipeline.**
+
+```
+LOCAL PIPELINE SEQUENCE, CI=true, in verify.sh order; each stage's own exit code recorded
+```
+
+The per-stage results are appended above this line by the run itself; a stage that is still a loud-fail
+placeholder exits non-zero, which is the honest state of this tree and not a masked pass.

@@ -60,8 +60,9 @@ rebuild would silently invalidate.
 | Artifact identity populated and every digest resolvable | PASS (EP-009 M1) |
 | Artifact signature | EXTERNAL_REQUIRED (ADR-006 open) |
 | Container image | BLOCKED_ON_IMPLEMENTATION (no build definition exists) |
-| Configuration validated before startup | OWED (EP-009 M2) |
-| CI pipeline executed | OWED (EP-009 M3); CI has never run in this repository |
+| Configuration validated before startup | PASS for the declared surface and the guard's own controls (`config: ok`, EP-009 M2); no staging or production environment has been validated |
+| CI pipeline defined and structurally guarded | PASS for the definition (`ci pipeline: ok`, EP-009 M3) — **the pipeline has never run remotely**: the declared GitHub App credentials are unprovisioned, so remote observation is `BLOCKED_CREDENTIALS` |
+| CI pipeline executed | NOT RUN, and it would fail today by design: `live-fire` is a loud-fail placeholder owned by EP-010, and the artifact-bound `smoke`/`e2e` stages need the digest binding EP-009 M4 adds |
 | Staging deployment and artifact-bound verification | OWED, EXTERNAL_REQUIRED (EP-009 M4) |
 | Published install and upgrade commands executed | OWED (EP-009 M5) |
 | Rollback, upgrade, backup/restore drills | OWED (EP-009 M6) |

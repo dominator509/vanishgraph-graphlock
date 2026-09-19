@@ -1,0 +1,43 @@
+{
+  "purpose": "The constructs that can hide a failure in a CI workflow, checked by sh scripts/ci-guard.sh against the PARSED workflow (comments cannot mask a failure, so the scan reads the parsed structure).",
+  "why_the_patterns_are_data_and_not_in_the_script": [
+    "This repository's own masking scan (tests/security/masking-patterns.test.ts, and step 4 of scripts/security-check.sh) scans scripts/*.sh for these constructs, and a validator must CONTAIN the patterns it searches for. security-check.sh, secret-scan.sh and gate-security.sh are excluded from that scan by name for exactly this reason.",
+    "ci-guard.sh is NOT added to that exclusion list, because an exclusion list is where a genuine masking construct would hide. Instead the patterns are data: every line of the script stays scannable, and the literals live in a configuration file that no gate treats as a script.",
+    "This is a compromise and it is stated rather than hidden: a reader who finds the patterns here should know that the script interprets them, that the script fails loudly when this file is missing, and that the negative controls in the milestone evidence prove each pattern still fires (a mutated workflow carrying this construct is refused)."
+  ],
+  "patterns": [
+    {
+      "id": "MASK_CONTINUE_ON_ERROR",
+      "pattern": "continue-on-error",
+      "why": "The GitHub Actions key that lets a step fail without failing the job."
+    },
+    {
+      "id": "MASK_OR_TRUE",
+      "pattern": "\\|\\|\\s*true",
+      "why": "A shell suffix that turns a failing command into a successful one; the failure is discarded, not handled."
+    },
+    {
+      "id": "MASK_OR_EXIT_ZERO",
+      "pattern": "\\|\\|\\s*exit\\s+0",
+      "why": "The same discard written explicitly."
+    },
+    {
+      "id": "MASK_SET_PLUS_E",
+      "pattern": "\\bset\\s+\\+e\\b",
+      "why": "Errexit disabled. Legitimate only when the captured status is read and acted on, which is why the repository's scanner permits that idiom; a gate that disables errexit and never reads the status has stopped gating."
+    },
+    {
+      "id": "MASK_DISCARDED_STDERR",
+      "pattern": "2>\\s*/dev/null",
+      "why": "The failure output of a gate is thrown away, so a reader cannot see why it failed. A gate may silence a chatty non-gate step, never the gate itself."
+    },
+    {
+      "id": "MASK_FAIL_FAST_OFF",
+      "pattern": "fail-fast:\\s*false",
+      "why": "A matrix that lets other legs continue after one fails hides which leg failed first and invites treating a partial matrix as complete."
+    }
+  ],
+  "not_a_pattern": {
+    "step_level_if": "A step-level unconditional guard (always()) is reported by the guard directly, because it is a structural property of the parsed job rather than a text pattern."
+  }
+}
