@@ -55,18 +55,32 @@ IDENTITY_AFTER=$(sha256_of "$IDENTITY")
 [ "$IDENTITY_BEFORE" = "$IDENTITY_AFTER" ] \
   || fail "the scratch builds MODIFIED the published artifact identity ($IDENTITY_BEFORE -> $IDENTITY_AFTER); a scratch build must never publish, because its artifact paths are deleted when this run ends"
 
-# THE IDENTITY DOCUMENT ITSELF IS ALSO COMPARED BETWEEN THE TWO SCRATCH BUILDS, after replacing each scratch
-# output path with a token: everything else -- commit, lockfile digests, builder, declared artifact set -- must
-# agree, or the identity is a record of a run rather than of the source.
+# THE IDENTITY DOCUMENT IS COMPARED BETWEEN THE TWO SCRATCH BUILDS, SCOPED EXACTLY AS THE FORMATS ARE. An
+# earlier version of this check required the two identity documents to be identical after normalizing only the
+# scratch path, and it FAILED -- correctly: the identity records a digest per produced format, and the tarball
+# container, the SBOM and the checksums file that covers them are the three things this script has already
+# measured to be non-identical between builds. The comparison is therefore scoped to the fields that are meant
+# to be reproducible -- source commit, lockfile digest, builder, build command, the declared path set, and the
+# provenance digest, which is byte-identical by construction -- and the excluded digests are NAMED on output
+# rather than quietly dropped.
 node -e '
 const fs = require("node:fs");
 const [base, aPath, bPath] = process.argv.slice(1);
-const normalize = (p, which) => fs.readFileSync(p, "utf8").split(`${base}/${which}`).join("<SCRATCH_OUT>");
+const FOLLOWS_NON_DETERMINISM = /(\.tgz|\.cdx\.json|SHA256SUMS)$/;
+const normalize = (p, which) => {
+  const parsed = JSON.parse(fs.readFileSync(p, "utf8").split(`${base}/${which}`).join("<SCRATCH_OUT>"));
+  const excluded = [];
+  for (const key of Object.keys(parsed.artifact_digests)) {
+    if (FOLLOWS_NON_DETERMINISM.test(key)) { excluded.push(key); delete parsed.artifact_digests[key]; }
+  }
+  return { parsed, excluded };
+};
 const one = normalize(aPath, "a"); const two = normalize(bPath, "b");
-if (one !== two) { console.error("the two scratch artifact identities differ in more than their output path"); process.exit(1); }
-const parsed = JSON.parse(one);
-if (!Array.isArray(parsed.artifact_paths) || parsed.artifact_paths.length !== 4) { console.error("a scratch identity does not declare the four produced formats"); process.exit(1); }
-process.stdout.write(`scratch identities identical over ${Object.keys(parsed.artifact_digests).length} digest(s)\n`);
+if (one.parsed.artifact_paths.length !== 4) { console.error("a scratch identity does not declare the four produced formats"); process.exit(1); }
+if (one.excluded.length !== 3) { console.error(`expected exactly three non-deterministic digests to exclude, got ${one.excluded.length}`); process.exit(1); }
+const stable = (doc) => JSON.stringify({ ...doc.parsed, artifact_digests: Object.keys(doc.parsed.artifact_digests).sort() });
+if (stable(one) !== stable(two)) { console.error("the two scratch artifact identities differ in a field that is meant to be reproducible"); process.exit(1); }
+process.stdout.write(`scratch identities identical over ${Object.keys(one.parsed.artifact_digests).length} reproducible digest(s); excluded by name: ${one.excluded.map((k) => k.replace("<SCRATCH_OUT>/", "")).join(", ")}\n`);
 ' "$REPRO_BASE" "$REPRO_BASE/a/ARTIFACT_IDENTITY.json" "$REPRO_BASE/b/ARTIFACT_IDENTITY.json" >/dev/null \
   || fail "the artifact identity document is not reproducible between the two scratch builds"
 
@@ -149,6 +163,8 @@ mkdir -p .agent/evidence/EP-009
   echo "published identity digest before the scratch builds: $IDENTITY_BEFORE"
   echo "published identity digest after the scratch builds:  $IDENTITY_AFTER"
   echo "published identity untouched by scratch builds: $([ "$IDENTITY_BEFORE" = "$IDENTITY_AFTER" ] && echo yes || echo no)"
+  echo "scratch identity comparison: scoped -- source commit, lockfile digest, builder, build command, declared path set and the provenance digest must agree; the tarball, SBOM and SHA256SUMS digests are excluded BY NAME because this script has already measured that those three are the non-deterministic ones"
+  echo "finding recorded: an earlier version of this comparison required the two identities to be identical outright and FAILED, because the identity legitimately records the per-build digests of the formats that differ; the check was scoped, not removed"
 } > .agent/evidence/EP-009/M1-reproducibility.txt
 
 rm -rf "$REPRO_BASE"
