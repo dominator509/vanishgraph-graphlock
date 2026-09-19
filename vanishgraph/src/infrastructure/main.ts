@@ -309,4 +309,13 @@ async function main(): Promise<number> {
   return 0;
 }
 
-process.exit(await main());
+// THE PROCESS MUST NOT EXIT AFTER STARTUP. MEASURED DEFECT this corrects, and it was found by the
+// artifact-bound smoke test of EP-009 M4 rather than by any in-process suite: this line used to be
+// `process.exit(await main())`, which terminated the process the moment startup finished. The service printed
+// `serve: listening on http://…/v1` and then exited with code 0, so `npm run serve` started a server that could
+// never answer a request. No test noticed, because every API suite calls `app.inject` in-process and never waits
+// for a listener. Now a successful startup simply falls through: the listening sockets keep the event loop
+// alive, and a signal handler is the only thing that exits (`process.exit(0)` inside `shutdown`). A non-zero
+// return still exits, because a refusal to start must be visible to whatever launched the process.
+const exitCode = await main();
+if (exitCode !== 0) process.exit(exitCode);

@@ -1,6 +1,6 @@
 {
-  "source_commit_sha": "f97cbe637ab93e5d5c39ecb3e13bcc80b9374b5a",
-  "base_revision": "f97cbe637ab93e5d5c39ecb3e13bcc80b9374b5a",
+  "source_commit_sha": "20aeeba350bfd3ef7fae4c458c4b8b1da88a3c8b",
+  "base_revision": "20aeeba350bfd3ef7fae4c458c4b8b1da88a3c8b",
   "lockfile_digests": {
     "package-lock.json": "sha256:3be2892e7558559ae9e8fcde4c24228cdcddf356eece6735519bd8ac11f27ee4"
   },
@@ -17,10 +17,10 @@
     "dist/SHA256SUMS"
   ],
   "artifact_digests": {
-    "dist/vanishgraph-0.1.0.tgz": "sha256:2e437938f94bcc6f7e371b30b3255fbc7003e5884fbcf89e19f47edfd6d95fec",
-    "dist/vanishgraph-0.1.0.cdx.json": "sha256:3e0585a16e2872ac2ae6a6bdfc3e0e0fa21a5dd3ef04f9e8cb56c92485007b9c",
-    "dist/provenance.json": "sha256:309e365426edc96d055f0301e44d67be18ce4c14fbfcb774e18104eb34624fc0",
-    "dist/SHA256SUMS": "sha256:b02bb3d89c8b46117ebfd019c3315c4a43c3d22d5cbc4026080c6dd03e747186"
+    "dist/vanishgraph-0.1.0.tgz": "sha256:a924e5a4d49b843d6e548699e4de8caa71bc3590f73b028d42760deb430db104",
+    "dist/vanishgraph-0.1.0.cdx.json": "sha256:c8ae9e5cdba7ce071a80f9e4f7120cab5d7b6add8b309c35987a469cf5e39b98",
+    "dist/provenance.json": "sha256:b0af8de4b15a61fc518fdad39ca4c1c96dc5e6c67dfae7a1030586aac8a3e0ce",
+    "dist/SHA256SUMS": "sha256:99f9a847c8a082707ff3c63135b195170e5247aea99efba2c72ebed8baa810d8"
   },
   "sbom_reference": "dist/vanishgraph-0.1.0.cdx.json",
   "provenance_reference": "dist/provenance.json",
@@ -33,29 +33,5 @@
     "reason": "no container build definition exists in this repository"
   },
   "downstream_test_bindings": [],
-  "recorded_at_round": "EP-009 M1",
-  "reproducibility": {
-    "verdict": "CONTENT_IDENTICAL",
-    "content_manifest_entries": 389,
-    "tarball_container_digests": {
-      "first_build": "sha256:2e437938f94bcc6f7e371b30b3255fbc7003e5884fbcf89e19f47edfd6d95fec",
-      "second_build": "sha256:2e437938f94bcc6f7e371b30b3255fbc7003e5884fbcf89e19f47edfd6d95fec"
-    },
-    "tarball_containers_identical": true,
-    "reconciliation": "none needed: the two tarball containers are byte-identical",
-    "byte_identical_formats": [
-      "dist/provenance.json",
-      "dist/SHA256SUMS"
-    ],
-    "canonicalized_formats": [
-      {
-        "path": "dist/vanishgraph-<version>.cdx.json",
-        "removed_fields": [
-          "serialNumber",
-          "metadata.timestamp"
-        ]
-      }
-    ],
-    "checked_at": "EP-009 M1"
-  }
+  "recorded_at_round": "EP-009 M1"
 }

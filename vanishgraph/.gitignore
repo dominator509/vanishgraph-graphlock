@@ -47,3 +47,7 @@ ui/dist/
 # Build outputs are artifacts, not source: they are produced by scripts/build-artifact.sh and are never committed.
 dist/
 dist-*/
+
+# Artifact extraction scratch (EP-009 M4): the smoke test unpacks the artifact here and removes it again.
+.agent/verification/state/artifact-smoke/
+.agent/verification/state/smoke-debug/
