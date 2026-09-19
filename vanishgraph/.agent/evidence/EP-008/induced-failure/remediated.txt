@@ -1,7 +1,7 @@
-postgresql|PROVISIONED|PASS|-|9ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|PASS|-|20ms|valkey PING and write/read/delete round trip verified
-job-worker|PROVISIONED|PASS|-|23ms|1 worker heartbeat(s) inside the 15000 ms freshness window
-object-store|PROVISIONED|PASS|-|25ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
-keycloak-jwks|PROVISIONED|PASS|-|212ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
-provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|140ms
+postgresql|PROVISIONED|PASS|-|58ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|63ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|PASS|-|74ms|1 worker heartbeat(s) inside the 15000 ms freshness window
+object-store|PROVISIONED|PASS|-|31ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|PROVISIONED|PASS|-|221ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
+provider-transport|PROVISIONED|PASS|-|233ms|stripe reachable and usable, HTTP 200
+overall|READY|242ms

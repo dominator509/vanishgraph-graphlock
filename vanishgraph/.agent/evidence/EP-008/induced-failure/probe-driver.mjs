@@ -126,8 +126,56 @@ if (keycloakIssuer.trim().length > 0) {
   });
 }
 
-// provider-transport: no provider entitlement is provisioned in this environment, and the stage reports that rather than
-// faking a probe. A reachability check against a provider nobody is entitled to contact would prove nothing.
+// provider-transport: WIRED WHEN A DECLARED TRANSPORT HAS A CREDENTIAL, through the real probe — a READ-ONLY request with
+// no body and NO FORM WRITE, which is the declared action of §7.2 and does not violate §6.7. The transport is chosen by
+// which declared credential is present, so no new variable name is invented: Stripe (`STRIPE_SECRET_KEY`) first, then
+// the search transport (`SEARCH_API_KEY`, also accepted as `SERPAPI_API_KEY` because that is the name the operator's
+// file uses), then Click2Mail (`CLICK2MAIL_USERNAME` + `CLICK2MAIL_PASSWORD`, which is the credential SHAPE Click2Mail
+// documents — a Basic auth pair, not a single key).
+//
+// THE INDUCED PHASE FORCES AN AUTH REJECTION ON PURPOSE, which is exactly what §7.4 step 2 prescribes for this
+// dependency: `VG_PROVIDER_FORCE_BAD_CREDENTIAL=1` sends a deliberately wrong credential so the SAME read-only request is
+// refused, without touching the account and without stopping anything at the provider. NO CREDENTIAL VALUE IS EVER
+// PRINTED by this driver.
+const forceBadCredential = process.env.VG_PROVIDER_FORCE_BAD_CREDENTIAL === "1";
+const stripeKey = process.env.STRIPE_SECRET_KEY ?? "";
+const searchKey = process.env.SEARCH_API_KEY ?? process.env.SERPAPI_API_KEY ?? "";
+const click2mailUser = process.env.CLICK2MAIL_USERNAME ?? "";
+const click2mailPassword = process.env.CLICK2MAIL_PASSWORD ?? "";
+// A WRONG CREDENTIAL OF THE SAME SHAPE, so the provider rejects it as authentication rather than as a malformed request.
+const bad = (value) => (value.length === 0 ? "invalid-credential" : `${value.slice(0, 4)}-invalid-credential`);
+if (stripeKey.trim().length > 0) {
+  clients.providerTransport = probes.providerTransportProbe({
+    name: "stripe",
+    reachability: async () => {
+      const key = forceBadCredential ? bad(stripeKey) : stripeKey;
+      const response = await fetch("https://api.stripe.com/v1/balance", { headers: { authorization: `Bearer ${key}` }, redirect: "manual", signal: AbortSignal.timeout(8000) });
+      return { status: response.status };
+    },
+  });
+} else if (searchKey.trim().length > 0) {
+  clients.providerTransport = probes.providerTransportProbe({
+    name: "search_api_key",
+    reachability: async () => {
+      const key = forceBadCredential ? bad(searchKey) : searchKey;
+      const response = await fetch(`https://serpapi.com/account?api_key=${encodeURIComponent(key)}`, { redirect: "manual", signal: AbortSignal.timeout(8000) });
+      return { status: response.status };
+    },
+  });
+} else if (click2mailUser.trim().length > 0 && click2mailPassword.trim().length > 0) {
+  clients.providerTransport = probes.providerTransportProbe({
+    name: "click2mail",
+    reachability: async () => {
+      const user = forceBadCredential ? bad(click2mailUser) : click2mailUser;
+      const password = forceBadCredential ? bad(click2mailPassword) : click2mailPassword;
+      const basic = Buffer.from(`${user}:${password}`).toString("base64");
+      const response = await fetch("https://stage-rest.click2mail.com/molpro/credit", { headers: { accept: "application/xml", authorization: `Basic ${basic}` }, redirect: "manual", signal: AbortSignal.timeout(8000) });
+      return { status: response.status };
+    },
+  });
+}
+// WITH NO CREDENTIAL THE PROBE IS NOT WIRED, and the row says so rather than reporting a pass: a reachability check
+// against a server this repository started would prove the check runs, not that a PROVIDER is reachable.
 const runner = probes.createProbeRunner({ clients });
 const evaluation = await runner.evaluate();
 for (const check of evaluation.checks) {

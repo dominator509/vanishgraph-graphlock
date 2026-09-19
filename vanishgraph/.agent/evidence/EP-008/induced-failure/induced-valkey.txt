@@ -2,10 +2,10 @@
     at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
 [ioredis] Unhandled error event: Error: connect ECONNREFUSED 127.0.0.1:56379
     at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1645:16)
-postgresql|PROVISIONED|PASS|-|15ms|postgresql session role verified as vg_app
-valkey|PROVISIONED|FAIL|UNKNOWN|9ms|Connection is closed.
-job-worker|PROVISIONED|PASS|-|29ms|1 worker heartbeat(s) inside the 15000 ms freshness window
-object-store|PROVISIONED|PASS|-|20ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
-keycloak-jwks|PROVISIONED|PASS|-|75ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
-provider-transport|UNAVAILABLE|UNKNOWN|MISCONFIGURED|0ms|no probe is wired for provider-transport; the declared action is: read-only or no-op reachability per declared official transport, never a form write
-overall|NOT_READY|148ms
+postgresql|PROVISIONED|PASS|-|97ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|FAIL|UNKNOWN|46ms|Connection is closed.
+job-worker|PROVISIONED|PASS|-|99ms|1 worker heartbeat(s) inside the 15000 ms freshness window
+object-store|PROVISIONED|PASS|-|43ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|PROVISIONED|PASS|-|118ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
+provider-transport|PROVISIONED|PASS|-|228ms|stripe reachable and usable, HTTP 200
+overall|NOT_READY|237ms

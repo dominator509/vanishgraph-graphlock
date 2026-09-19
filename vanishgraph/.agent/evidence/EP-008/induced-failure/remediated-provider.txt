@@ -1,0 +1,7 @@
+postgresql|PROVISIONED|PASS|-|6ms|postgresql session role verified as vg_app
+valkey|PROVISIONED|PASS|-|13ms|valkey PING and write/read/delete round trip verified
+job-worker|PROVISIONED|PASS|-|16ms|1 worker heartbeat(s) inside the 15000 ms freshness window
+object-store|PROVISIONED|PASS|-|19ms|HeadBucket and signed GetObject verified for vanishgraph-probe/readiness/probe-object
+keycloak-jwks|PROVISIONED|PASS|-|66ms|issuer https://127.0.0.1:58443/realms/master advertises 2 signing key(s)
+provider-transport|PROVISIONED|PASS|-|218ms|stripe reachable and usable, HTTP 200
+overall|READY|338ms

@@ -49,7 +49,24 @@ export VG_OBJECT_STORE_SECRET_KEY=${VG_OBJECT_STORE_SECRET_KEY:-vgprobe-secret}
 # THE LOCAL KEYCLOAK'S ISSUER AND ITS CA, WITH THE SAME DEFAULTS THE REST OF THIS STAGE USES. The issuer is a disposable
 # instance started for this node with a self-signed certificate, so the environment supplies the CA; TLS VERIFICATION IS
 # NOT DISABLED, and a run without NODE_EXTRA_CA_CERTS fails, which is how the earlier check proved the handshake is real.
-export VG_KEYCLOAK_ISSUER=${VG_KEYCLOAK_ISSUER:-https://127.0.0.1:58443}
+# THE OPERATOR'S PROVIDER CREDENTIALS LIVE OUTSIDE THE REPOSITORY (VG-SEC-002) IN A SHELL FILE THAT IS SOURCED, NOT
+# PARSED: a credential passed through a command line was measured to be mangled earlier in this session, so the file is
+# read here and the names this stage uses are then EXPORTED EXPLICITLY — which also makes the file work when its lines
+# omit `export` themselves. NO VALUE IS EVER PRINTED BY THIS STAGE.
+PROVIDER_ENV_FILE=${VG_PROVIDER_ENV_FILE:-/c/tmp/vanishgraph-providers.env}
+if [ -f "$PROVIDER_ENV_FILE" ]; then
+  # ERRORS FROM SOURCING ARE DISCARDED AND DO NOT ABORT THE STAGE, AND THAT IS A MEASURED CORRECTION: an unquoted value
+  # containing a space made the shell try to RUN part of it as a command, and the shell's own error message printed that
+  # fragment to the console - a credential fragment on screen, which is the one thing this file must never do. With
+  # `set +eu` the bad line simply fails to set its variable, the remaining lines still load, and NOTHING from the file's
+  # error text reaches the output. A line that did not load is reported by NAME, never by value, through the row's own
+  # "not provisioned" verdict.
+  set +eu
+  # shellcheck disable=SC1090
+  . "$PROVIDER_ENV_FILE" 2>/dev/null || true
+  set -eu
+fi
+export STRIPE_SECRET_KEY STRIPE_PUBLISHABLE_KEY SEARCH_API_KEY SERPAPI_API_KEY CLICK2MAIL_API_KEY CLICK2MAIL_USERNAME CLICK2MAIL_PASSWORDexport VG_KEYCLOAK_ISSUER=${VG_KEYCLOAK_ISSUER:-https://127.0.0.1:58443}
 export NODE_EXTRA_CA_CERTS=${NODE_EXTRA_CA_CERTS:-C:/tmp/vg-keycloak-certs/cert.pem}
 KEYCLOAK_CONTAINER=${VG_KEYCLOAK_CONTAINER:-vanishgraph-ep008-keycloak}
 
@@ -184,8 +201,56 @@ if (keycloakIssuer.trim().length > 0) {
   });
 }
 
-// provider-transport: no provider entitlement is provisioned in this environment, and the stage reports that rather than
-// faking a probe. A reachability check against a provider nobody is entitled to contact would prove nothing.
+// provider-transport: WIRED WHEN A DECLARED TRANSPORT HAS A CREDENTIAL, through the real probe — a READ-ONLY request with
+// no body and NO FORM WRITE, which is the declared action of §7.2 and does not violate §6.7. The transport is chosen by
+// which declared credential is present, so no new variable name is invented: Stripe (`STRIPE_SECRET_KEY`) first, then
+// the search transport (`SEARCH_API_KEY`, also accepted as `SERPAPI_API_KEY` because that is the name the operator's
+// file uses), then Click2Mail (`CLICK2MAIL_USERNAME` + `CLICK2MAIL_PASSWORD`, which is the credential SHAPE Click2Mail
+// documents — a Basic auth pair, not a single key).
+//
+// THE INDUCED PHASE FORCES AN AUTH REJECTION ON PURPOSE, which is exactly what §7.4 step 2 prescribes for this
+// dependency: `VG_PROVIDER_FORCE_BAD_CREDENTIAL=1` sends a deliberately wrong credential so the SAME read-only request is
+// refused, without touching the account and without stopping anything at the provider. NO CREDENTIAL VALUE IS EVER
+// PRINTED by this driver.
+const forceBadCredential = process.env.VG_PROVIDER_FORCE_BAD_CREDENTIAL === "1";
+const stripeKey = process.env.STRIPE_SECRET_KEY ?? "";
+const searchKey = process.env.SEARCH_API_KEY ?? process.env.SERPAPI_API_KEY ?? "";
+const click2mailUser = process.env.CLICK2MAIL_USERNAME ?? "";
+const click2mailPassword = process.env.CLICK2MAIL_PASSWORD ?? "";
+// A WRONG CREDENTIAL OF THE SAME SHAPE, so the provider rejects it as authentication rather than as a malformed request.
+const bad = (value) => (value.length === 0 ? "invalid-credential" : `${value.slice(0, 4)}-invalid-credential`);
+if (stripeKey.trim().length > 0) {
+  clients.providerTransport = probes.providerTransportProbe({
+    name: "stripe",
+    reachability: async () => {
+      const key = forceBadCredential ? bad(stripeKey) : stripeKey;
+      const response = await fetch("https://api.stripe.com/v1/balance", { headers: { authorization: `Bearer ${key}` }, redirect: "manual", signal: AbortSignal.timeout(8000) });
+      return { status: response.status };
+    },
+  });
+} else if (searchKey.trim().length > 0) {
+  clients.providerTransport = probes.providerTransportProbe({
+    name: "search_api_key",
+    reachability: async () => {
+      const key = forceBadCredential ? bad(searchKey) : searchKey;
+      const response = await fetch(`https://serpapi.com/account?api_key=${encodeURIComponent(key)}`, { redirect: "manual", signal: AbortSignal.timeout(8000) });
+      return { status: response.status };
+    },
+  });
+} else if (click2mailUser.trim().length > 0 && click2mailPassword.trim().length > 0) {
+  clients.providerTransport = probes.providerTransportProbe({
+    name: "click2mail",
+    reachability: async () => {
+      const user = forceBadCredential ? bad(click2mailUser) : click2mailUser;
+      const password = forceBadCredential ? bad(click2mailPassword) : click2mailPassword;
+      const basic = Buffer.from(`${user}:${password}`).toString("base64");
+      const response = await fetch("https://stage-rest.click2mail.com/molpro/credit", { headers: { accept: "application/xml", authorization: `Basic ${basic}` }, redirect: "manual", signal: AbortSignal.timeout(8000) });
+      return { status: response.status };
+    },
+  });
+}
+// WITH NO CREDENTIAL THE PROBE IS NOT WIRED, and the row says so rather than reporting a pass: a reachability check
+// against a server this repository started would prove the check runs, not that a PROVIDER is reachable.
 const runner = probes.createProbeRunner({ clients });
 const evaluation = await runner.evaluate();
 for (const check of evaluation.checks) {
@@ -321,6 +386,20 @@ if grep -q '^keycloak-jwks|PROVISIONED|PASS' "$EVIDENCE/control.txt"; then
     grep -q '^keycloak-jwks|PROVISIONED|PASS' "$EVIDENCE/remediated-keycloak.txt" && break
   done
   awk -F'|' 'NR==FNR { if ($1=="keycloak-jwks") v=$0; next } { if ($1=="keycloak-jwks" && v!="") print v; else print }' "$EVIDENCE/remediated-keycloak.txt" "$EVIDENCE/remediated.txt" >"$EVIDENCE/remediated-merged.txt"
+  mv "$EVIDENCE/remediated-merged.txt" "$EVIDENCE/remediated.txt"
+fi
+# THE DECLARED INDUCTION FOR provider-transport: §7.4 step 2 says "force the provider transport to return an auth
+# rejection". The stage does exactly that with VG_PROVIDER_FORCE_BAD_CREDENTIAL=1, so the SAME read-only request is sent
+# with a deliberately wrong credential and is refused by the provider — nothing is stopped, no account is disturbed and
+# no form is written. The remediated run then sends the real credential again.
+if grep -q '^provider-transport|PROVISIONED|PASS' "$EVIDENCE/control.txt"; then
+  echo "== inducing: send the same read-only request with a deliberately wrong credential (an auth rejection, as §7.4 step 2 prescribes) ==" | tee -a "$EVIDENCE/induction.txt"
+  VG_PROVIDER_FORCE_BAD_CREDENTIAL=1 run_driver "$EVIDENCE/induced-provider.txt" || true
+  awk -F'|' 'NR==FNR { if ($1=="provider-transport") v=$0; next } { if ($1=="provider-transport" && v!="") print v; else print }' "$EVIDENCE/induced-provider.txt" "$EVIDENCE/induced.txt" >"$EVIDENCE/induced-merged.txt"
+  mv "$EVIDENCE/induced-merged.txt" "$EVIDENCE/induced.txt"
+  echo "== remediating: send the real credential again ==" | tee -a "$EVIDENCE/induction.txt"
+  run_driver "$EVIDENCE/remediated-provider.txt" || true
+  awk -F'|' 'NR==FNR { if ($1=="provider-transport") v=$0; next } { if ($1=="provider-transport" && v!="") print v; else print }' "$EVIDENCE/remediated-provider.txt" "$EVIDENCE/remediated.txt" >"$EVIDENCE/remediated-merged.txt"
   mv "$EVIDENCE/remediated-merged.txt" "$EVIDENCE/remediated.txt"
 fi
 # THE PROVISIONING ATTEMPT LOG DOD-033 ASKS FOR, PER DEPENDENCY THAT CANNOT BE INDUCED HERE.
