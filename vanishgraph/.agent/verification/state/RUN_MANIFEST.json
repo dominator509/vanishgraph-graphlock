@@ -120,13 +120,13 @@
     ]
   },
   "epoch": {
-    "epoch_id": "FORGE-SPEC-2",
-    "pinned_at_commit": "6f9dbbea4eb302da92e3e8736bf318bbacb1ff99",
-    "candidate_commit_sha": "6f9dbbea4eb302da92e3e8736bf318bbacb1ff99",
-    "base_revision": "cacb4158021ad73c859171a5633f857e5543b193",
+    "epoch_id": "FORGE-SPEC-7",
+    "pinned_at_commit": "3e83dfde2891db682a4bb4307c92e8042a6b99e5",
+    "candidate_commit_sha": "3e83dfde2891db682a4bb4307c92e8042a6b99e5",
+    "base_revision": "9d4e288f2821da6e7f0e78f57f2d5758d4cfa9a2",
     "test_overlay_revision": "d06841147f75be68e70337aa208ae3200f4a5386",
     "build_inputs_digest": "sha256:3be2892e7558559ae9e8fcde4c24228cdcddf356eece6735519bd8ac11f27ee4",
-    "artifact_digest": "sha256:c1cc7dfa562116a58534e0460b59ac12c32e6835be8872875eb65ed60488f23d",
+    "artifact_digest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
     "toolchain": {
       "node": "v24.14.1",
       "npm": "11.11.0"

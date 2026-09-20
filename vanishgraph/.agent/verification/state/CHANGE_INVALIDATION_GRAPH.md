@@ -96,3 +96,22 @@ Append-only. Written by sh scripts/epoch-pin.sh when the epoch rolls.
   - PASS rows revoked (the ones that matter most): 0
 - descendants to re-run: every stage owning a revoked id; sh scripts/harness-next.sh names the first one.
 
+# Change invalidation graph
+
+Append-only. Written by sh scripts/epoch-pin.sh when the epoch rolls.
+
+## 2026-09-20T06:21:35Z — FORGE-SPEC-2 -> FORGE-SPEC-7
+
+- reason: the ship gate first step revealed that scripts/epoch-pin.sh defaulted its epoch id to FORGE-SPEC-2, so the pin rolled the epoch backwards from FORGE-SPEC-6 and revoked the 484/484 accounting; the default is removed and the epoch rolls forward so the repaired run has one clean epoch
+- candidate: 3e83dfde2891db682a4bb4307c92e8042a6b99e5
+- artifact digest: sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47
+- changed surfaces (src, scripts, config, db, ui, package.json) between the previous candidate and HEAD:
+  - (none detected)
+- revoked: every status row recorded under FORGE-SPEC-2 is invalidated for this epoch; the rows are kept in
+  .agent/verification/state/TEST_LEDGER.jsonl as history and are no longer counted by
+  sh scripts/harness-accounting.sh, which counts the latest row per ID in the CURRENT epoch.
+  - revoked rows under FORGE-SPEC-2: 170 covering 109 distinct id(s)
+  - revoked by status: {"ERROR":8,"PARTIAL":121,"BLOCKED_PREREQUISITE":37,"BLOCKED_ENVIRONMENT":3,"DEFERRED_LONG_RUNNING":1}
+  - PASS rows revoked (the ones that matter most): 0
+- descendants to re-run: every stage owning a revoked id; sh scripts/harness-next.sh names the first one.
+
