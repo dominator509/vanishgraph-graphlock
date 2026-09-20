@@ -64,3 +64,75 @@ green/EP-006
 green/EP-007
 green/EP-008
 green/EP-009
+
+== epoch pin ==
+epoch id: FORGE-SPEC-2
+candidate commit: 7d6ca2e317d799ce6cdfffa733c0fcbb9fd9f922
+base revision: dabc6cd39580f5adf209ca1c7f4ae28cb02e154b
+test overlay revision: e6dd9b518f4a627eb1dcf3afdc0cff680d8950c8
+build inputs digest: sha256:3be2892e7558559ae9e8fcde4c24228cdcddf356eece6735519bd8ac11f27ee4
+artifact digest: sha256:faafc0d7f03da6f31d03e10c76aa56cce407ea8905733034a5a2b7f82cd5ad1c
+toolchain: node v24.14.1, npm 11.11.0
+image digests: not_applicable (BLOCKED_ON_IMPLEMENTATION: no container image exists)
+source surface clean: yes (git status --porcelain over the package.json files allowlist plus package.json is empty)
+run state: status IN_PROGRESS, active_node EP-010, closed_nodes EP-000 through EP-009 (was stale: IN_PROGRESS for EP-003 since 2026-09-14)
+
+== differences against the EP-010 plan's section 4.1 snapshot, recorded rather than assumed ==
+
+The plan says the values are to be confirmed against section 4.1, and that any difference is recorded and the
+plan's assumptions corrected before proceeding, never silently. Six differences were measured:
+
+| item | plan section 4.1 | measured at 120789b | disposition |
+|---|---|---|---|
+| RUN_STATE.json | PLANNED | IN_PROGRESS, active_node EP-003, closed_nodes EP-000..EP-002, candidate ffb808f6, epoch FORGE-SPEC-1, updated 2026-09-14T08:19:59Z | DIFFERS: the state file was seven nodes out of date. Corrected by this milestone to IN_PROGRESS with active_node EP-010, closed_nodes EP-000..EP-009, candidate 7d6ca2e3 and epoch FORGE-SPEC-2. The stale values are quoted above rather than overwritten in silence. |
+| CLAIM_TO_RELEASE_TRACEABILITY.csv | 1 line (header only) | 46 lines | DIFFERS: EP-007 M2 populated it with the twelve outcome rows and their evidence pointers. The plan's snapshot predates that node. |
+| TEST_LEDGER.jsonl | empty | 1708 lines | DIFFERS: every node from EP-001 onwards appended its test ledger rows. |
+| DOD_STATUS.jsonl | empty | 42 lines | DIFFERS: the 42 clauses already have rows. M6 EVALUATES those rows; it does not create them, and it may not assume they are correct. |
+| APPLICABILITY_MATRIX.csv | (implied header only) | 6 lines | DIFFERS: a partial matrix exists from earlier nodes. M2 must decide applicability for all 484 IDs and will report how the existing rows relate to that decision. |
+| git tag | prints nothing | 10 tags, green/EP-000 .. green/EP-009 | DIFFERS: the plan was written before any node closed. The tags ARE the node-closure records, so their existence is the expected consequence of nine closed nodes rather than a defect. |
+
+WHAT THIS MEANS FOR THE MILESTONE'S OWN EXPECT LINE: the plan expects the two accounting CSVs to have 1 and 1
+lines at this point, as evidence of an honest starting point. That is TRUE of COMPLETE_TEST_ACCOUNTING.csv (1
+line) and FALSE of CLAIM_TO_RELEASE_TRACEABILITY.csv (46 lines). The difference is NOT corrected by deleting
+rows: the plan itself says these numbers are evidence of the starting point and not a defect to fix by writing
+rows, and deleting real traceability rows to satisfy an expectation written before they existed would destroy
+evidence to make a snapshot true.
+
+RELEASE_GATE.json is INCONCLUSIVE / FORGE_ONLY and was NOT written by this milestone (only M8 may change it).
+STATUS_TRANSITION_AUDIT.jsonl is empty, as the plan expects. EPOCH_HISTORY.md did not exist; it is created by
+this milestone with the FORGE-SPEC-1 row RECONSTRUCTED from the stale RUN_STATE.json values and LABELLED as
+reconstructed, because that epoch was pinned before the file existed and inventing a timestamp for it would be a
+fabrication.
+
+== what the epoch pin proves, and what it does not ==
+
+PROVEN BY THIS RUN: eight identity fields are populated from measurements taken now (candidate commit, base
+revision, test overlay revision, build inputs digest, artifact digest, node and npm versions, and the image
+field, which carries the identity's own BLOCKED_ON_IMPLEMENTATION status rather than an invented digest); the
+artifact source surface is clean, so the candidate commit describes what would be built; RUN_STATE.json now names
+EP-010 with nine closed nodes; and EPOCH_HISTORY.md is append-only.
+
+NOT CLAIMED, AND CORRECTED IN THIS FILE RATHER THAN LEFT WRONG: the first version of this section said the
+pinned artifact digest differed from the candidate commit only by ledger, evidence and state additions. THAT WAS
+FALSE. EP-010 M1 committed COMMANDS.md and scripts/epoch-pin.sh, and both are inside the package files allowlist,
+so the identity EP-009 M7 produced at dabc6cd was STALE the moment the first pin was taken. Measured and then
+corrected: the artifact was rebuilt at candidate 7d6ca2e3, sh scripts/artifact-identity.sh printed
+`artifact identity: ok` with the recorded commit equal to HEAD and 5 digests resolved from the bytes on disk, and
+the epoch was pinned again (the second `== epoch pin ==` block below). EPOCH_HISTORY.md carries both
+FORGE-SPEC-2 rows with the reason, and the later row (digest
+sha256:6f9b76a63e102b503ca51953bccf3569a429cadce01f555a4abec8bd1771498b) is current. No verification stage had
+run and no per-ID status existed when this was corrected, which is the only window in which correcting an epoch
+is legitimate. The rule this establishes is recorded in the history file: an epoch is pinned after the surface it
+describes is committed, not before.
+
+== epoch pin ==
+epoch id: FORGE-SPEC-2
+candidate commit: 7d6ca2e317d799ce6cdfffa733c0fcbb9fd9f922
+base revision: 7d6ca2e317d799ce6cdfffa733c0fcbb9fd9f922
+test overlay revision: e6dd9b518f4a627eb1dcf3afdc0cff680d8950c8
+build inputs digest: sha256:3be2892e7558559ae9e8fcde4c24228cdcddf356eece6735519bd8ac11f27ee4
+artifact digest: sha256:6f9b76a63e102b503ca51953bccf3569a429cadce01f555a4abec8bd1771498b
+toolchain: node v24.14.1, npm 11.11.0
+image digests: not_applicable (BLOCKED_ON_IMPLEMENTATION: no container image exists)
+source surface clean: yes (git status --porcelain over the package.json files allowlist plus package.json is empty)
+run state: status IN_PROGRESS, active_node EP-010, closed_nodes EP-000 through EP-009 (was stale: IN_PROGRESS for EP-003 since 2026-09-14)

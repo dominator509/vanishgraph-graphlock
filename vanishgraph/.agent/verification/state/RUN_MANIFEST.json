@@ -118,5 +118,20 @@
         "what": "NOT AVAILABLE: staging is NOT_PROVISIONED, so no fingerprint exists; see .agent/evidence/EP-009/M4-staging-deploy.txt"
       }
     ]
+  },
+  "epoch": {
+    "epoch_id": "FORGE-SPEC-2",
+    "pinned_at_commit": "7d6ca2e317d799ce6cdfffa733c0fcbb9fd9f922",
+    "candidate_commit_sha": "7d6ca2e317d799ce6cdfffa733c0fcbb9fd9f922",
+    "base_revision": "7d6ca2e317d799ce6cdfffa733c0fcbb9fd9f922",
+    "test_overlay_revision": "e6dd9b518f4a627eb1dcf3afdc0cff680d8950c8",
+    "build_inputs_digest": "sha256:3be2892e7558559ae9e8fcde4c24228cdcddf356eece6735519bd8ac11f27ee4",
+    "artifact_digest": "sha256:6f9b76a63e102b503ca51953bccf3569a429cadce01f555a4abec8bd1771498b",
+    "toolchain": {
+      "node": "v24.14.1",
+      "npm": "11.11.0"
+    },
+    "image_digests": "not_applicable (BLOCKED_ON_IMPLEMENTATION: no container image exists)",
+    "note": "Pinned by sh scripts/epoch-pin.sh. THE PROTECTED ACCOUNTING FIELDS ARE NOT TOUCHED: registry_count, dod_count and candidate_epoch are the pack own numbers. The artifact digest is read from ARTIFACT_IDENTITY.json and every gate recomputes it from the bytes on disk."
   }
 }
