@@ -52,6 +52,10 @@ a milestone that needs a new one must add it here in the same change.
 | `sh scripts/config-validate.sh` | `config: ok` |
 | `sh scripts/ci-guard.sh` | `ci pipeline: ok` |
 | `sh scripts/epoch-pin.sh` | `epoch: pinned` |
+| `sh scripts/harness-init.sh` | `harness init: ok` |
+| `sh scripts/applicability-decide.sh` | `applicability: decided` |
+| `sh scripts/harness-validate.sh` | `harness validation: ok` |
+| `sh scripts/harness-accounting.sh` | `accounting: 484/484 accounted` — **not printed yet**: no per-ID status exists for epoch FORGE-SPEC-2, and the invariant is reported as `0/484 accounted` until the verification stages run |
 | `sh scripts/staging-deploy.sh` | `staging deploy: ok` |
 | `sh scripts/staging-verify.sh` | `staging verify: ok` |
 | `sh scripts/install.sh` | `install: ok` |

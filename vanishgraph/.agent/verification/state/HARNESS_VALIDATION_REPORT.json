@@ -1,0 +1,113 @@
+{
+  "epoch": "FORGE-SPEC-2",
+  "candidate_commit_sha": "7d6ca2e317d799ce6cdfffa733c0fcbb9fd9f922",
+  "artifact_digest": "sha256:6f9b76a63e102b503ca51953bccf3569a429cadce01f555a4abec8bd1771498b",
+  "registry_sha256": "d8a5389cfb2968855b88a0e7f78bdbb1f0c65851c8d400c8c04224e161cd1b95",
+  "applicability_matrix_sha256": "eb6f1a47c879ce13d8e1605d0b4602e6707b2f255f39c35901c5060cbb20f737",
+  "dependency_seed_sha256": "8b0bd95ee6fa01cfa62897a0efc1111b7bf3f806b6d23bc5953653eb2a216896",
+  "status_vocabulary_size": 16,
+  "status_vocabulary": [
+    "PASS",
+    "FAIL",
+    "ERROR",
+    "BLOCKED_PREREQUISITE",
+    "BLOCKED_ENVIRONMENT",
+    "BLOCKED_CAPABILITY",
+    "BLOCKED_CREDENTIALS",
+    "BLOCKED_SAFETY",
+    "EXTERNAL_REQUIRED",
+    "DEFERRED_LONG_RUNNING",
+    "INCONCLUSIVE",
+    "PARTIAL",
+    "SIMULATED",
+    "UNVERIFIED",
+    "NOT_APPLICABLE",
+    "WITHDRAWN"
+  ],
+  "common_status_fields": [
+    "id",
+    "status",
+    "reason",
+    "evidencePath",
+    "updatedAt",
+    "epochId",
+    "nextAction",
+    "blockingDependency"
+  ],
+  "counts": {
+    "registry_rows": 484,
+    "casebook_objects": 484,
+    "matrix_rows": 484,
+    "matrix_lines": 485,
+    "stages": 22,
+    "owned_ids": 484,
+    "dod_clauses": 42,
+    "ledger_rows": 1708,
+    "ledger_rows_for_registry_ids": 0,
+    "stale_epoch_rows": 1708,
+    "accounted_ids_this_epoch": 0
+  },
+  "accounting_note": "REPORTED, NOT ENFORCED HERE: no per-ID status exists for the current epoch yet, so 484/484 is unreachable and sh scripts/harness-accounting.sh is the script that enforces the invariant and reports the unaccounted count. The plan states this is the correct behaviour and that it must not be fixed by writing statuses that have not been executed.",
+  "self_tests": [
+    {
+      "name": "a fabricated 484-row blanket BLOCKED_CAPABILITY ledger",
+      "rejected": true,
+      "sample": [
+        "484 of 484 rows are BLOCKED_CAPABILITY with no per-ID evidence: a blanket block rather than an accounting",
+        "GEN-001: status row field reason is empty"
+      ]
+    },
+    {
+      "name": "PASS without evidence",
+      "rejected": true,
+      "sample": [
+        "GEN-001: PASS without evidenceDigest"
+      ]
+    },
+    {
+      "name": "NOT_APPLICABLE without repository evidence",
+      "rejected": true,
+      "sample": [
+        "the applicability matrix holds 1 ID row(s) and the pack fixes 484"
+      ]
+    },
+    {
+      "name": "zero-test collection",
+      "rejected": true,
+      "sample": [
+        "the ledger holds no status rows at all, so nothing is accounted"
+      ]
+    },
+    {
+      "name": "a missing ID",
+      "rejected": true,
+      "sample": [
+        "the registry holds 483 rows and the pack fixes 484",
+        "the registry holds 483 unique ids"
+      ]
+    },
+    {
+      "name": "a duplicated ID",
+      "rejected": true,
+      "sample": [
+        "the registry holds 485 rows and the pack fixes 484",
+        "the registry contains duplicated ids"
+      ]
+    },
+    {
+      "name": "stale-epoch evidence",
+      "rejected": true,
+      "sample": [
+        "GEN-001: evidence belongs to epoch FORGE-SPEC-1 and the current epoch is FORGE-SPEC-2"
+      ]
+    },
+    {
+      "name": "a prerequisite block without a dependency edge",
+      "rejected": true,
+      "sample": [
+        "GEN-001: BLOCKED_PREREQUISITE names NO-SUCH-EDGE, which is not an edge in the dependency graph"
+      ]
+    }
+  ],
+  "problems": []
+}

@@ -1,0 +1,69 @@
+{
+  "problems": [],
+  "facts": {
+    "registry_rows": 484,
+    "unique_ids": 484,
+    "prefix_counts": {
+      "GEN": 122,
+      "HIPAA": 125,
+      "BC": 202,
+      "E2E": 20,
+      "SUP": 15
+    },
+    "source_body_status": {
+      "embedded-original-source": 434,
+      "embedded-reconstructed-source": 15,
+      "embedded-suite": 20,
+      "embedded-supplemental": 15
+    },
+    "reconstructed_ids": [
+      "BC-008",
+      "BC-009",
+      "BC-010",
+      "BC-011",
+      "BC-012",
+      "BC-013",
+      "BC-014",
+      "BC-015",
+      "BC-016",
+      "BC-017",
+      "BC-018",
+      "BC-019",
+      "BC-020",
+      "BC-021",
+      "BC-022"
+    ],
+    "declared_family_supplied": 434,
+    "casebook_files": [
+      "blockchain-security.jsonl",
+      "e2e-suites.jsonl",
+      "general-security.jsonl",
+      "hipaa-security.jsonl",
+      "supplemental-gates.jsonl"
+    ],
+    "casebook_objects": 484,
+    "ownership": {
+      "V-004": 70,
+      "V-013": 298,
+      "V-021": 12,
+      "V-005": 27,
+      "V-019": 20,
+      "V-012": 14,
+      "V-016": 16,
+      "V-018": 4,
+      "V-006": 1,
+      "V-007": 1,
+      "V-008": 1,
+      "V-009": 1,
+      "V-014": 1,
+      "V-015": 3,
+      "V-020": 2,
+      "V-010": 5,
+      "V-011": 5,
+      "V-017": 1,
+      "V-002": 2
+    },
+    "ownership_total": 484,
+    "stages": 22
+  }
+}

@@ -1,0 +1,685 @@
+{
+  "epoch": "FORGE-SPEC-2",
+  "artifact_digest": "sha256:6f9b76a63e102b503ca51953bccf3569a429cadce01f555a4abec8bd1771498b",
+  "decided_at": "2026-09-20T01:00:58.989Z",
+  "decided_by": "scripts/applicability-decide.sh",
+  "probes": {
+    "ARTIFACT": {
+      "present": true,
+      "evidence": "docs/release/supported-formats.md artifact formats declared and produced; .agent/verification/state/ARTIFACT_IDENTITY.json published identity with resolved digests"
+    },
+    "INTERFACE": {
+      "present": true,
+      "evidence": "ui/src/routes 27 rendered route module(s); src/http/routes"
+    },
+    "API": {
+      "present": true,
+      "evidence": "src/http/routes 19 route module(s); src/http/openapi/registry.ts declared route registry"
+    },
+    "AUTH": {
+      "present": true,
+      "evidence": "src/http/plugins/scope-guard.ts scope and role gate; src/http/plugins/step-up.ts step-up gate; src/application/security/authorization-matrix.ts DENY-by-default matrix"
+    },
+    "TENANCY": {
+      "present": true,
+      "evidence": "db/tenant-scoped-tables.txt 50 tenant-scoped table(s); scripts/check-rls-coverage.sh live RLS coverage check"
+    },
+    "PERSISTENCE": {
+      "present": true,
+      "evidence": "db/migrations 34 migration(s); src/adapters/persistence"
+    },
+    "EGRESS": {
+      "present": true,
+      "evidence": "src/adapters/observability/egress-gate.ts DLP-scrubbed egress boundary; DATA_EGRESS_MATRIX.md declared egress classes"
+    },
+    "OBSERVABILITY": {
+      "present": true,
+      "evidence": "config/metrics/catalogue.json 42 metric families; config/alerts/catalogue.json 20 alert rows; config/slo/objectives.json 5 objective(s)"
+    },
+    "HUMAN": {
+      "present": true,
+      "evidence": "src/domain 74 references to HUMAN_REQUIRED; tests/ui/a11y.spec.ts human gate recorded as EXTERNAL_REQUIRED"
+    },
+    "LONG_RUNNING": {
+      "present": true,
+      "evidence": "config/slo/objectives.json 5 declared objective(s) with windows"
+    },
+    "A11Y": {
+      "present": true,
+      "evidence": "tests/ui 6 browser suite file(s); tests/ui/a11y.spec.ts axe-core over every declared route"
+    },
+    "CONFIGURABLE": {
+      "present": true,
+      "evidence": "config/environment/schema.json 43 classified key(s); config/environment/required.json required set per class and role"
+    },
+    "DEPLOYABLE": {
+      "present": true,
+      "evidence": "deploy/staging/README.md staging procedure; DEPLOYMENT.md deployment contract"
+    },
+    "STATEFUL_VERSIONED": {
+      "present": true,
+      "evidence": "db/UPGRADE_MATRIX.md upgrade matrix; db/migrations 34 migration(s)"
+    },
+    "BUILDABLE": {
+      "present": true,
+      "evidence": "scripts/build.sh build stage; scripts/build-artifact.sh declared artifact formats"
+    },
+    "SERVICE": {
+      "present": true,
+      "evidence": "src/infrastructure/main.ts packaged entry point"
+    },
+    "SECRETS": {
+      "present": true,
+      "evidence": "src/adapters/secrets/secret-resolver.ts resolution by reference; src/adapters/crypto/local-key-provider.ts local key material provider"
+    },
+    "RATE_LIMIT": {
+      "present": true,
+      "evidence": "src/adapters/coordination/rate-limit.ts per-tenant and per-identity ceilings"
+    },
+    "GLOBALIZATION": {
+      "present": true,
+      "evidence": "src/domain/identifiers.ts jurisdiction-bearing identifier; db/migrations 34 migration(s) carrying jurisdiction policy tables"
+    },
+    "SUPPORT_MATRIX": {
+      "present": true,
+      "evidence": "ENVIRONMENT.md configuration surface and lanes; docs/release/supported-formats.md supported artifact formats"
+    },
+    "DATA_PORTABILITY": {
+      "present": true,
+      "evidence": "db/seed/prior_release.sql seed fixture; src/adapters/persistence"
+    },
+    "TIME": {
+      "present": true,
+      "evidence": "src/domain/entities.ts deadline and window entities"
+    },
+    "BROWSER": {
+      "present": true,
+      "evidence": "tests/ui render suites through a real browser runtime"
+    },
+    "STATIC_ANALYSIS": {
+      "present": true,
+      "evidence": "scripts/lint.sh static lint stage; scripts/security-check.sh security contract suites and scans; scripts/reality-gate.sh placeholder and simulation scan"
+    },
+    "DYNAMIC_TESTING": {
+      "present": true,
+      "evidence": "scripts/induced-failure-readiness.sh induced failure across every declared dependency; scripts/gate-observability.sh observability gate that runs the induced-failure stage; tests/db integration suites against a provisioned database"
+    },
+    "SUPPLY_CHAIN": {
+      "present": true,
+      "evidence": "scripts/dependency-audit.sh advisory scan and CycloneDX SBOM; package-lock.json locked dependency set"
+    },
+    "SECRET_SCAN": {
+      "present": true,
+      "evidence": "scripts/secret-scan.sh planted-shape secret scan"
+    },
+    "ARCH_DOCS": {
+      "present": true,
+      "evidence": "ARCHITECTURE.md declared component structure; DECISIONS.md recorded decisions and open ADRs; ASSUMPTIONS.md declared assumptions"
+    },
+    "PRIVACY": {
+      "present": true,
+      "evidence": "DATA_EGRESS_MATRIX.md declared egress classes; config/observability/retention.json retention windows; SECURITY.md data handling rules"
+    },
+    "AUDIT": {
+      "present": true,
+      "evidence": "src/adapters/persistence 2 audit-path module(s); config/alerts/catalogue.json audit-related alert rows"
+    },
+    "RECOVERY": {
+      "present": true,
+      "evidence": "ROLLBACK.md rollback procedure; scripts/backup-drill.sh destructive restore drill; deploy/production/README.md rollback trigger and owner"
+    },
+    "INCIDENT": {
+      "present": true,
+      "evidence": "docs/runbooks/operations/incident-response.md incident procedure; config/alerts/catalogue.json 20 alert rows with runbooks"
+    },
+    "VENDOR": {
+      "present": true,
+      "evidence": "PREFLIGHT.md declared provider credentials and probes; .agent/verification/CAPABILITY_MATRIX.md vendor limitation records"
+    },
+    "EXPLORATORY": {
+      "present": true,
+      "evidence": "the exploratory family is executed by a human tester, and no automation can stand in for that (SPEC-008 section 9)"
+    },
+    "UAT": {
+      "present": true,
+      "evidence": "user acceptance is a mandatory external gate: a named authorised participant must perform it (SPEC-008 section 9)"
+    },
+    "LEGAL": {
+      "present": true,
+      "evidence": "legal and compliance review is a mandatory external gate performed by qualified counsel (SPEC-008 section 9)"
+    },
+    "BLOCKCHAIN": {
+      "present": false,
+      "evidence": "no blockchain, chain, wallet, contract or on-chain implementation exists: 0 of 250 implementation file(s) under src/, ui/ and db/ import a matching module (708 import specifier(s) read) and 0 of 11 runtime dependencies match"
+    },
+    "HSM": {
+      "present": false,
+      "evidence": "no HSM, PKCS#11, TPM or hardware security module implementation exists: 0 of 250 implementation file(s) under src/, ui/ and db/ import a matching module (708 import specifier(s) read) and 0 of 11 runtime dependencies match"
+    },
+    "MODEL": {
+      "present": false,
+      "evidence": "no model or agent transport implementation exists: 0 of 250 implementation file(s) under src/, ui/ and db/ import a matching module (708 import specifier(s) read) and 0 of 11 runtime dependencies match"
+    },
+    "CONTAINER": {
+      "present": false,
+      "evidence": "no container build definition exists anywhere in the tracked tree (measured: 0 files named Dockerfile, Containerfile or docker-compose*), and the published identity records oci_image.status = BLOCKED_ON_IMPLEMENTATION; docs/release/supported-formats.md records container-format support as NOT claimed"
+    },
+    "MOBILE": {
+      "present": false,
+      "evidence": "no mobile, iOS, Android or desktop application implementation exists: 0 of 250 implementation file(s) under src/, ui/ and db/ import a matching module (708 import specifier(s) read) and 0 of 11 runtime dependencies match"
+    },
+    "IOT": {
+      "present": false,
+      "evidence": "no IoT, embedded device, firmware or device path implementation exists: 0 of 250 implementation file(s) under src/, ui/ and db/ import a matching module (708 import specifier(s) read) and 0 of 11 runtime dependencies match"
+    },
+    "CRYPTO": {
+      "present": true,
+      "evidence": "src/adapters/crypto/local-key-provider.ts key material and signing primitives; src/application/security/webhook-gate.ts webhook signature verification; src/adapters/persistence/webhook-bindings.ts stored webhook bindings"
+    },
+    "KEYS": {
+      "present": true,
+      "evidence": "src/adapters/crypto/local-key-provider.ts local key provider; src/adapters/secrets/secret-resolver.ts secret resolution by reference; config/environment/schema.json declared key material and secret keys"
+    },
+    "FORMAL": {
+      "present": true,
+      "evidence": "scripts/mutation-gate.sh mutation gate over the suites; tests/domain/state-machine.test.ts every legal transition with its guard satisfied and refused when not; tests/domain/illegal-transitions.test.ts the documented forbidden pairs; tests/domain/invariants.test.ts the state-machine invariants SM-1 through SM-6"
+    },
+    "GRAPHQL_GRPC": {
+      "present": false,
+      "evidence": "no GraphQL or gRPC transport implementation exists: 0 of 250 implementation file(s) under src/, ui/ and db/ import a matching module (708 import specifier(s) read) and 0 of 11 runtime dependencies match"
+    },
+    "CLOUD_IAM": {
+      "present": false,
+      "evidence": "no cloud IAM, role or service-account integration implementation exists: 0 of 250 implementation file(s) under src/, ui/ and db/ import a matching module (708 import specifier(s) read) and 0 of 11 runtime dependencies match"
+    },
+    "SERVERLESS": {
+      "present": false,
+      "evidence": "no serverless framework or function runtime implementation exists: 0 of 250 implementation file(s) under src/, ui/ and db/ import a matching module (708 import specifier(s) read) and 0 of 11 runtime dependencies match"
+    },
+    "WEBSOCKET": {
+      "present": false,
+      "evidence": "no websocket route exists: the declared route registry src/http/openapi/registry.ts names no websocket, ws:// or socket.io path, and no runtime dependency provides a websocket server"
+    },
+    "PATCH_UPDATE": {
+      "present": true,
+      "evidence": "scripts/install.sh installs a pinned artifact by digest; db/UPGRADE_MATRIX.md upgrade matrix and its unproven rows; ROLLBACK.md rollback procedure by digest"
+    },
+    "IAC": {
+      "present": false,
+      "evidence": "no infrastructure-as-code exists: 0 tracked files are terraform (.tf/.tfvars), CloudFormation templates, Ansible playbooks, Pulumi or Chef definitions, and 0 of 11 runtime dependencies provide one; the deployment surfaces this repository has are prose procedures (deploy/staging/README.md, deploy/production/README.md)"
+    }
+  },
+  "facts": {
+    "epoch": "FORGE-SPEC-2",
+    "artifact_digest": "sha256:6f9b76a63e102b503ca51953bccf3569a429cadce01f555a4abec8bd1771498b",
+    "rendered_routes": 27,
+    "api_route_modules": 19,
+    "migrations": 34,
+    "tenant_scoped_tables": 50,
+    "slo_objectives": 5,
+    "metric_families": 42,
+    "alert_rows": 20,
+    "config_keys": 43,
+    "browser_suites": 6,
+    "human_gate_references": 74,
+    "blockchain_files": 3,
+    "blockchain_text_files": 24,
+    "model_transport_files": 0,
+    "hsm_kms_files": 1
+  },
+  "by_decision": {
+    "APPLICABLE_AUTOMATABLE": 346,
+    "APPLICABLE_MANUAL": 4,
+    "SKIPPED_NOT_APPLICABLE": 48,
+    "CONDITIONALLY_APPLICABLE_PENDING_EVIDENCE": 86
+  },
+  "by_rule": {
+    "bc:no-topic-match": 83,
+    "predicate:evaluate->security-and-architecture-surface": 35,
+    "topic:blockchain-specific->probe:BLOCKCHAIN(absent)": 27,
+    "topic:dynamic-analysis->probe:DYNAMIC_TESTING": 20,
+    "topic:auth->probe:AUTH": 14,
+    "predicate:evaluate->topic:dynamic-analysis": 13,
+    "topic:api->probe:API": 12,
+    "topic:crypto->probe:CRYPTO": 12,
+    "topic:container->probe:CONTAINER(absent)": 10,
+    "topic:supply-chain->probe:SUPPLY_CHAIN": 8,
+    "topic:distributable->probe:ARTIFACT": 8,
+    "topic:formal-methods->probe:FORMAL": 8,
+    "predicate:broadly-applicable": 8,
+    "topic:stateful->probe:PERSISTENCE": 7,
+    "topic:secrets->probe:SECRETS": 7,
+    "topic:persistence->probe:PERSISTENCE": 7,
+    "topic:code-analysis->probe:STATIC_ANALYSIS": 7,
+    "topic:runtime->probe:SERVICE": 6,
+    "topic:architecture-review->probe:ARCH_DOCS": 6,
+    "predicate:evaluate->topic:api": 5,
+    "topic:static-analysis->probe:STATIC_ANALYSIS": 5,
+    "topic:configurable->probe:CONFIGURABLE": 5,
+    "topic:keys->probe:KEYS": 5,
+    "topic:observability->probe:OBSERVABILITY": 5,
+    "topic:audit-integrity->probe:AUDIT": 5,
+    "topic:availability->probe:RECOVERY": 5,
+    "predicate:evaluate->topic:static-analysis": 4,
+    "predicate:evaluate->topic:supply-chain": 4,
+    "predicate:evaluate->topic:observability": 4,
+    "predicate:evaluate->topic:container": 4,
+    "predicate:evaluate->topic:configurable": 4,
+    "predicate:evaluate->topic:formal-methods": 4,
+    "topic:buildable->probe:BUILDABLE": 4,
+    "topic:deployable->probe:DEPLOYABLE": 4,
+    "topic:infrastructure-as-code->probe:IAC(absent)": 4,
+    "topic:secret-scan->probe:SECRET_SCAN": 4,
+    "topic:concurrency->probe:API": 4,
+    "topic:incident->probe:INCIDENT": 4,
+    "predicate:evaluate->topic:incident": 3,
+    "predicate:evaluate->topic:mobile": 3,
+    "predicate:evaluate->topic:auth": 3,
+    "predicate:evaluate->topic:deployable": 3,
+    "predicate:evaluate->topic:distributable": 3,
+    "predicate:evaluate->topic:architecture-review": 3,
+    "topic:gui->probe:A11Y": 3,
+    "topic:graphql-grpc->probe:GRAPHQL_GRPC(absent)": 3,
+    "topic:input-validation->probe:API": 3,
+    "topic:data-protection->probe:PRIVACY": 3,
+    "topic:privacy->probe:PRIVACY": 3,
+    "topic:file-inclusion->probe:API": 3,
+    "topic:runtime-monitoring->probe:OBSERVABILITY": 3,
+    "topic:versioned-stateful->probe:STATEFUL_VERSIONED": 3,
+    "predicate:evaluate->topic:secrets": 2,
+    "predicate:evaluate->topic:code-analysis": 2,
+    "predicate:evaluate->topic:service": 2,
+    "predicate:evaluate->topic:crypto": 2,
+    "predicate:evaluate->topic:buildable": 2,
+    "predicate:evaluate->topic:chaos": 2,
+    "topic:siem-correlation->probe:OBSERVABILITY": 2,
+    "topic:egress->probe:EGRESS": 2,
+    "topic:interface->probe:API": 2,
+    "topic:vendor->probe:VENDOR": 2,
+    "topic:time->probe:TIME": 2,
+    "topic:service->probe:SERVICE": 2,
+    "topic:performance->probe:LONG_RUNNING": 2,
+    "predicate:evaluate->topic:secret-scan": 1,
+    "predicate:evaluate->topic:audit-integrity": 1,
+    "predicate:evaluate->topic:runtime": 1,
+    "predicate:evaluate->topic:graphql-grpc": 1,
+    "predicate:evaluate->topic:serverless": 1,
+    "predicate:evaluate->topic:output-encoding": 1,
+    "predicate:evaluate->topic:input-validation": 1,
+    "predicate:evaluate->topic:stateful": 1,
+    "predicate:evaluate->topic:human-legal": 1,
+    "predicate:evaluate->topic:vendor": 1,
+    "predicate:evaluate->topic:privacy": 1,
+    "predicate:evaluate->topic:human": 1,
+    "predicate:evaluate->topic:egress": 1,
+    "predicate:evaluate->topic:runtime-monitoring": 1,
+    "predicate:evaluate->topic:exploratory-manual": 1,
+    "topic:output-encoding->probe:INTERFACE": 1,
+    "topic:host-platform->probe:CONTAINER(absent)": 1,
+    "topic:patch-update->probe:PATCH_UPDATE": 1,
+    "topic:cloud-iam->probe:CLOUD_IAM(absent)": 1,
+    "topic:serverless->probe:SERVERLESS(absent)": 1,
+    "topic:rate-limit->probe:RATE_LIMIT": 1,
+    "topic:websocket->probe:WEBSOCKET(absent)": 1,
+    "predicate:conditional->no-topic-match": 1,
+    "topic:hsm->probe:HSM(absent)": 1,
+    "topic:chaos->probe:SERVICE": 1,
+    "topic:versioned-distributed->probe:STATEFUL_VERSIONED": 1,
+    "topic:data-portability->probe:DATA_PORTABILITY": 1,
+    "topic:text-globalization->probe:GLOBALIZATION": 1,
+    "topic:long-running->probe:LONG_RUNNING": 1,
+    "topic:ai->probe:MODEL(absent)": 1,
+    "topic:human->probe:HUMAN": 1,
+    "topic:stateful-distributed->probe:PERSISTENCE": 1,
+    "topic:support-matrix->probe:SUPPORT_MATRIX": 1,
+    "topic:multitenant->probe:TENANCY": 1,
+    "topic:gui-human->probe:HUMAN": 1
+  },
+  "pending_evidence_requests": [
+    {
+      "test_id": "HIPAA-106",
+      "evidence_request": "provision a cloud deployment with IAM roles and re-decide against it"
+    },
+    {
+      "test_id": "HIPAA-124",
+      "evidence_request": "name the repository construct this ID targets"
+    },
+    {
+      "test_id": "BC-027",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-032",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-034",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-036",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-037",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-039",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-040",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-041",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-042",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-044",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-045",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-047",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-048",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-049",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-050",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-051",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-052",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-053",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-054",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-067",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-069",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-077",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-079",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-080",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-081",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-082",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-083",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-084",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-085",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-086",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-088",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-089",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-091",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-093",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-094",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-095",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-096",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-097",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-098",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-099",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-101",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-102",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-103",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-104",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-106",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-107",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-113",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-127",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-128",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-129",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-143",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-144",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-145",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-146",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-147",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-149",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-152",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-153",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-154",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-156",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-157",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-158",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-159",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-160",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-161",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-163",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-166",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-167",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-172",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-174",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-175",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-183",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-188",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-189",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-190",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-192",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-193",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-197",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-198",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-199",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-200",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-201",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "BC-202",
+      "evidence_request": "name the repository construct this BC ID targets"
+    },
+    {
+      "test_id": "E2E-019",
+      "evidence_request": "provision and implement a model or agent transport, then decide this ID against it (LOCAL_MODEL_ENDPOINT is declared and unprovisioned)"
+    }
+  ],
+  "problems": []
+}
