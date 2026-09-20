@@ -1,10 +1,10 @@
 live-fire run
 artifact: dist/vanishgraph-0.1.0.tgz
-artifact digest: sha256:6fe9573315f6fb4d559a7e47df0437b7caa49780f31567229a109e610a633cab (declared and re-hashed before running)
+artifact digest: sha256:c1cc7dfa562116a58534e0460b59ac12c32e6835be8872875eb65ed60488f23d (declared and re-hashed before running)
 outcomes: 12
 external_required: 2
 partial: 10
 failed: 0
 sentinel_printed: no
 reason: SPEC-008 section 7 requires each outcome end to end through its real entry point against real dependencies; 2 outcome(s) need a named external participant and 10 prove their rule at the domain/contract layer only
-recorded at commit: 3e6816f3e8024473548b0f7368354f068c131145
+recorded at commit: cacb4158021ad73c859171a5633f857e5543b193

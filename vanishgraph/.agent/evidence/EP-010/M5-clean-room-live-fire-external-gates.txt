@@ -1,0 +1,95 @@
+# EP-010 M5 — V-020/V-021, clean room, live-fire and the external gates: evidence
+
+## 1. The RUN list, in order
+
+```
+$ sh scripts/artifact-identity.sh
+artifact identity: ok
+
+$ sh scripts/live-fire.sh          (VG_ARTIFACT_DIGEST declared and re-hashed)
+live-fire: LIVE-FIRE-PROOF-01 PARTIAL  … 07 PARTIAL
+live-fire: LIVE-FIRE-PROOF-08 EXTERNAL_REQUIRED - Provider relationship owner
+live-fire: LIVE-FIRE-PROOF-09 … 11 PARTIAL
+live-fire: LIVE-FIRE-PROOF-12 EXTERNAL_REQUIRED - Authorised enterprise administrator plus qualified counsel
+live-fire: 0 of 12 outcomes proved their rule end to end; 2 EXTERNAL_REQUIRED, 10 PARTIAL
+exit 1, NO sentinel
+
+$ sh scripts/clean-room.sh
+clean room: the installed artifact booted and answered /v1/health 200, /v1/live 200, /v1/ready 503, and refused an unauthenticated scoped request 401
+clean room: ok
+
+$ sh scripts/harness-run-stage.sh V-020   →  2 owned IDs, 2 BLOCKED_PREREQUISITE   →  stage V-020: accounted
+$ sh scripts/harness-run-stage.sh V-021   → 12 owned IDs, 11 BLOCKED_PREREQUISITE, 1 PARTIAL → stage V-021: accounted
+
+$ sh scripts/harness-accounting.sh
+accounting: 484/484 accounted in epoch FORGE-SPEC-6; 0 unaccounted
+accounting: 484/484 accounted
+
+$ sh scripts/harness-next.sh
+ALL_STAGES_ACCOUNTED
+```
+
+**The invariant holds for the first time**: every one of the 484 registry IDs is accounted exactly once in the
+current epoch, with 2839 rows from earlier epochs reported and **not** counted.
+
+## 2. The virgin clean room, and the three defects it found
+
+The room transfers the tarball and `SHA256SUMS` and nothing else, verifies the digest against the published
+identity **and** against the checksums file that travelled with it, installs with the **shipped** installer using
+the command the README documents, boots the installed package, completes the unauthenticated golden path, and then
+lists everything it had to supply beyond the documentation with each item classified `DOCUMENTED` or
+`UNDOCUMENTED` — an undocumented prerequisite is a **defect**, not a note (DOD-034, VG-SHIP-028).
+
+It failed three times before it passed, and **each failure was a real defect that inspection had missed**:
+
+| run | defect | fix |
+|---|---|---|
+| 1 | the **shipped** installer required `.agent/verification/state/ARTIFACT_IDENTITY.json`, a file no consumer has | `install.sh` now accepts `--artifact` and `--digest`, and verifies them when the identity is absent |
+| 2 | the installed package died with `ERR_MODULE_NOT_FOUND: fastify`: the installer changes directory to its own package root, so when it runs **from the artifact** the repository's `node_modules` is not visible and the supply link was never created — **the install reported success and the package could not start** | an explicit `--dependency-supply <dir>` (or `VG_DEPENDENCY_SUPPLY`), and the install record now says `NONE: … THE INSTALLED PACKAGE CANNOT START` when no supply is available |
+| 3 | the inventory classified the local Valkey address as undocumented | adjudicated against `ENVIRONMENT.md` and `TEST_ENVIRONMENT_MANIFEST.md`, which do document the requirement, and the line now cites them |
+
+The room's final inventory records the operator-supplied items — the local database state file, the Keycloak
+values, the local CA certificate for the disposable Keycloak (`NODE_EXTRA_CA_CERTS`), and the dependency supply —
+each with the document that covers it and the number of undocumented items: **0**.
+
+**The authenticated half of the golden path is `EXTERNAL_REQUIRED`**, not claimed: the four
+`KEYCLOAK_*_AUDIENCE`/`_STEP_UP_ACR` keys are `REQUIRED_BEFORE_E2E` in `config/environment/schema.json` and no
+realm client registration exists here, so no token with a registered audience can be minted.
+
+## 3. Live-fire: why the sentinel is not printed
+
+The twelve outcome suites all ran (3–7 tests each, exit 0). Ten outcomes have their rule and required negative case
+asserted at the **domain and contract** layer, with the durable write, the independent read-back, the worker effect
+and the restart half recorded `NOT_PROVEN` in `FUNCTIONAL_PROOF_MATRIX.csv`; two are externally constrained
+(`LIVE-FIRE-PROOF-08` provider transport, `LIVE-FIRE-PROOF-12` enterprise authorization). Per-outcome status
+files carry `whatRan`, `whatIsProven`, `whatIsNotProven`, `artifactDigest`, `evidencePath` and `evidenceDigest`,
+and the two external ones carry `externalPartyRole`, `requestedArtifactDigest`, `requestEvidencePath`,
+`requestedAt`, `ownerContactRef` and the prepared request. **A green unit-level run is not live-fire**, so
+`live-fire: ok` is not printed — which is the outcome the milestone's EXPECT allows.
+
+## 4. The external gates (M5(d), DOD-039, VG-SHIP-030)
+
+Five `EXTERNAL_REQUIRED` rows are written to `.agent/evidence/EP-010/V-021/external-gates.jsonl`, each with
+`externalPartyRole`, `requestedArtifactDigest` (the pinned digest `sha256:c1cc7dfa…`), `requestEvidencePath`,
+`requestedAt`, `ownerContactRef`, the **prepared scenario list** the participant needs, the prepared artifact, the
+statement that **an agent can never satisfy it**, and its effect on the verdict: until they are signed the verdict
+cannot exceed `CONDITIONAL_EXTERNAL_GATES`. The five are human UAT of the golden path; manual assistive-technology
+validation at WCAG 2.2 AA; legal and compliance review; hardware/HSM or accredited assessment where applicable;
+and production deployment authorization.
+
+## 5. Structural correction made during this milestone
+
+`package.json` shipped the whole `scripts/` directory, so **every harness fix changed the artifact** and revoked
+product evidence — which happened twice in this milestone and forced a full re-run each time (the first took over
+an hour). The distribution now ships `scripts/install.sh` and the product surface only. That is the correct
+boundary: a consumer receives the product and its installer, not the repository's verification harness. Together
+with the **per-epoch gate cache** (a gate executes once per epoch+artifact and later stages cite that run, saying
+so with `cachedFrom`), a full 22-stage pass now takes minutes instead of an hour.
+
+## 6. What M5 does not claim
+
+- **No outcome passed live-fire**: 10 `PARTIAL`, 2 `EXTERNAL_REQUIRED`.
+- **No external gate is signed**, and an agent may not sign one.
+- **The authenticated golden path is not claimed**: it needs a registered realm client.
+- **No production deployment**: manual-only and unauthorized (VG-SCOPE-009).
+- Staging remains `BLOCKED_CREDENTIALS`; `RELEASE_GATE.json` remains `INCONCLUSIVE` / `FORGE_ONLY`.

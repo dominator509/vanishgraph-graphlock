@@ -1,8 +1,8 @@
 {
   "stage": "V-021",
-  "epoch": "FORGE-SPEC-5",
-  "candidate_sha": "de22167eaf724cb35f1a4baf2d6cf989c48a0b0b",
-  "artifact_digest": "sha256:870e934809b40cab7699d4018c7e071af7c8c47cf9ba48293c8437aeba86eef3",
+  "epoch": "FORGE-SPEC-6",
+  "candidate_sha": "5db579e577db4f4b111d1fddcc7452cf27fb5d88",
+  "artifact_digest": "sha256:c1cc7dfa562116a58534e0460b59ac12c32e6835be8872875eb65ed60488f23d",
   "owned_ids": 12,
   "statuses": {
     "BLOCKED_PREREQUISITE": 11,
@@ -15,21 +15,29 @@
       "exitCode": 0,
       "sentinel": "security check: ok",
       "sentinelFound": true,
-      "evidencePath": ".agent/evidence/EP-010/V-021/gate-security-contract.log",
-      "digest": "4c73880740e2cb3348cb73c0f7d2645a01d5e67505709948082bff577e59b760",
-      "note": "the gate exited 0 and printed its sentinel"
+      "evidencePath": ".agent/evidence/EP-010/V-004/gate-security-contract.log",
+      "digest": "1f7c9d9892651fa55284ba3aa424c6c7eb2876cfddfc3c5f3ac6cb055acedd79",
+      "epoch": "FORGE-SPEC-6",
+      "artifact_digest": "sha256:c1cc7dfa562116a58534e0460b59ac12c32e6835be8872875eb65ed60488f23d",
+      "executed_at": "2026-09-20T04:41:06Z",
+      "cached": true,
+      "cachedFrom": ".agent/evidence/EP-010/V-004/gate-security-contract.log"
     },
     {
       "gate": "build",
       "script": "build-artifact.sh",
-      "exitCode": 1,
+      "exitCode": 0,
       "sentinel": "artifact: built",
-      "sentinelFound": false,
-      "evidencePath": ".agent/evidence/EP-010/V-021/gate-build.log",
-      "digest": "e392949dd1a8c0d3ce1892c9d9fa2c60de051df4ac20bb34fc4c037f9dde6098",
-      "note": "the gate exited 1 and did NOT print its sentinel"
+      "sentinelFound": true,
+      "evidencePath": ".agent/evidence/EP-010/V-004/gate-build.log",
+      "digest": "2ade2ac281b3a98e8b4a84fe83a5e8be6bea99ed9d51bbb6b2bf2c41f846ff9e",
+      "epoch": "FORGE-SPEC-6",
+      "artifact_digest": "sha256:c1cc7dfa562116a58534e0460b59ac12c32e6835be8872875eb65ed60488f23d",
+      "executed_at": "2026-09-20T04:40:41Z",
+      "cached": true,
+      "cachedFrom": ".agent/evidence/EP-010/V-004/gate-build.log"
     }
   ],
-  "updated_at": "2026-09-20T04:32:36Z",
+  "updated_at": "2026-09-20T05:00:55Z",
   "next_action": "run sh scripts/harness-next.sh to select the next stage"
 }

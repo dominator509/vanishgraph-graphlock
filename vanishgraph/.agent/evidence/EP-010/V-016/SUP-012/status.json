@@ -14,9 +14,13 @@
     "exitCode": 0,
     "sentinel": "artifact: built",
     "sentinelFound": true,
-    "evidencePath": ".agent/evidence/EP-010/V-016/gate-build.log",
+    "evidencePath": ".agent/evidence/EP-010/V-004/gate-build.log",
     "digest": "2ade2ac281b3a98e8b4a84fe83a5e8be6bea99ed9d51bbb6b2bf2c41f846ff9e",
-    "note": "the gate exited 0 and printed its sentinel"
+    "epoch": "FORGE-SPEC-6",
+    "artifact_digest": "sha256:c1cc7dfa562116a58534e0460b59ac12c32e6835be8872875eb65ed60488f23d",
+    "executed_at": "2026-09-20T04:40:41Z",
+    "cached": true,
+    "cachedFrom": ".agent/evidence/EP-010/V-004/gate-build.log"
   },
   "prompt_requires_authorization": false,
   "prompt_requires_target": false,
@@ -27,5 +31,5 @@
   "scope_clause": null,
   "dependency_edge_ref": "capability:per-id-definition->V-016",
   "provisioning_action": null,
-  "recorded_at": "2026-09-20T04:18:52Z"
+  "recorded_at": "2026-09-20T05:00:50Z"
 }

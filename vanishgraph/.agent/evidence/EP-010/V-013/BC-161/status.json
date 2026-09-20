@@ -14,18 +14,22 @@
     "exitCode": 0,
     "sentinel": "test-integration: ok",
     "sentinelFound": true,
-    "evidencePath": ".agent/evidence/EP-010/V-013/gate-integration.log",
-    "digest": "78e55a38f827d5c864e1abd9de60d72f79a7bd7f85f1c736769076865567dff3",
-    "note": "the gate exited 0 and printed its sentinel"
+    "evidencePath": ".agent/evidence/EP-010/V-002/gate-integration.log",
+    "digest": "f4961c242167389929cd53a6f3c74a367d82f265f53af6146f7bc1ee093f8755",
+    "epoch": "FORGE-SPEC-6",
+    "artifact_digest": "sha256:c1cc7dfa562116a58534e0460b59ac12c32e6835be8872875eb65ed60488f23d",
+    "executed_at": "2026-09-20T04:40:07Z",
+    "cached": true,
+    "cachedFrom": ".agent/evidence/EP-010/V-002/gate-integration.log"
   },
   "prompt_requires_authorization": false,
   "prompt_requires_target": false,
   "prompt_requires_runner": false,
   "status": "PARTIAL",
-  "reason": "the repository gate covering this subject (scripts/test-integration.sh) ran as the positive path: the gate exited 0 and printed its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
+  "reason": "the repository gate covering this subject (scripts/test-integration.sh) ran as the positive path: undefined. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
   "deferred_provenance": null,
   "scope_clause": null,
   "dependency_edge_ref": null,
   "provisioning_action": null,
-  "recorded_at": "2026-09-20T04:08:52Z"
+  "recorded_at": "2026-09-20T05:00:42Z"
 }

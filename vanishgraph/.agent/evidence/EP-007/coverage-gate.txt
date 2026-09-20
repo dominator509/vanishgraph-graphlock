@@ -1,4 +1,4 @@
-coverage gate - 2026-09-20T03:53:52Z
+coverage gate - 2026-09-20T04:45:42Z
 configuration: config/testing/coverage-thresholds.json
 node: v24.14.1
 
@@ -14,7 +14,7 @@ suites: tests/domain/**/*.test.ts tests/harness/**/*.test.ts tests/architecture/
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 272322.0742
+ℹ duration_ms 286941.358
 ℹ start of coverage report
 ℹ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ℹ file                       | line % | branch % | funcs % | uncovered lines
@@ -51,7 +51,7 @@ suites: tests/contract/**/*.test.ts tests/security/**/*.test.ts tests/domain/**/
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 26320.9056
+ℹ duration_ms 25812.3387
 ℹ start of coverage report
 ℹ ----------------------------------------------------------------------------------
 ℹ file                              | line % | branch % | funcs % | uncovered lines
@@ -107,7 +107,7 @@ suites: tests/contract/**/*.test.ts tests/db/**/*.test.ts tests/integration/**/*
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 224882.534
+ℹ duration_ms 197675.8085
 ℹ start of coverage report
 ℹ -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ℹ file                           | line % | branch % | funcs % | uncovered lines
@@ -179,7 +179,7 @@ suites: tests/contract/**/*.test.ts tests/security/**/*.test.ts tests/blackbox/*
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 32246.1229
+ℹ duration_ms 27217.3201
 ℹ start of coverage report
 ℹ -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ℹ file                       | line % | branch % | funcs % | uncovered lines
@@ -207,7 +207,7 @@ suites: tests/contract/**/*.test.ts tests/security/**/*.test.ts tests/blackbox/*
 ℹ    tenancy.ts              | 100.00 |   100.00 |  100.00 | 
 ℹ   query                    |        |          |         | 
 ℹ    filters.ts              | 100.00 |   100.00 |  100.00 | 
-ℹ    strict.ts               |  96.67 |    90.44 |   88.89 | 257-261 309-314 317-318 414
+ℹ    strict.ts               |  96.67 |    91.79 |   88.89 | 257-261 309-314 317-318 414
 ℹ   routes                   |        |          |         | 
 ℹ    actions.ts              |  40.60 |    36.17 |   46.15 | 54-55 67-125 132-145 152-204 222-223 231-246 249-250 253-255 258-259 283-285 287 289-291 293 295 297 299-303 305 307 309 311 313 316-317 338 340-383 398 400-418 430-434 436-468
 ℹ    appeals.ts              |  73.53 |    75.00 |   76.92 | 61-62 64-65 73-74 87-89 113-118 180-233 248-249 263
@@ -232,10 +232,10 @@ suites: tests/contract/**/*.test.ts tests/security/**/*.test.ts tests/blackbox/*
 ℹ   webhooks                 |        |          |         | 
 ℹ    verify.ts               | 100.00 |    95.12 |  100.00 | 
 ℹ -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ℹ all files                  |  78.36 |    73.37 |   75.20 | 
+ℹ all files                  |  78.36 |    73.49 |   75.20 | 
 ℹ -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ℹ end of coverage report
-result: PASS lines=78.36 branches=73.37 functions=75.20 targets=70/65/75
+result: PASS lines=78.36 branches=73.49 functions=75.20 targets=70/65/75
 
 === layer mcp
 tests: 760
@@ -249,7 +249,7 @@ suites: tests/contract/**/*.test.ts tests/security/**/*.test.ts
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 26631.4403
+ℹ duration_ms 24369.8356
 ℹ start of coverage report
 ℹ ----------------------------------------------------------------------------
 ℹ file                | line % | branch % | funcs % | uncovered lines
@@ -264,29 +264,3 @@ suites: tests/contract/**/*.test.ts tests/security/**/*.test.ts
 ℹ end of coverage report
 result: PASS lines=95.26 branches=85.71 functions=90.91 targets=70/65/75
 
-=== layer infrastructure
-tests: 528
-sources: src/infrastructure/**/*.ts
-excludes: （none）
-suites: tests/db/**/*.test.ts tests/integration/**/*.test.ts tests/harness/**/*.test.ts
-ℹ tests 528
-ℹ suites 119
-ℹ pass 528
-ℹ fail 0
-ℹ cancelled 0
-ℹ skipped 0
-ℹ todo 0
-ℹ duration_ms 503661.0501
-ℹ start of coverage report
-ℹ ----------------------------------------------------------------------------------------------------------------------------------------
-ℹ file              | line % | branch % | funcs % | uncovered lines
-ℹ ----------------------------------------------------------------------------------------------------------------------------------------
-ℹ src               |        |          |         | 
-ℹ  infrastructure   |        |          |         | 
-ℹ   database        |        |          |         | 
-ℹ    migrate.ts     |  53.15 |    48.15 |   69.23 | 62-65 75-79 93-95 102-109 113-118 124-126 138-150 152-177 179-213 229 238-242 245-254
-ℹ    psql.ts        |  95.15 |    77.78 |  100.00 | 152-155 157-160
-ℹ ----------------------------------------------------------------------------------------------------------------------------------------
-ℹ all files         |  69.69 |    62.96 |   80.95 | 
-ℹ ----------------------------------------------------------------------------------------------------------------------------------------
-ℹ end of coverage report

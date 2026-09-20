@@ -15,7 +15,7 @@
     "sentinel": "secret scan: ok",
     "sentinelFound": true,
     "evidencePath": ".agent/evidence/EP-010/V-004/gate-secrets.log",
-    "digest": "d57f064074c8520a98d357752a972c7c4f9b93708edda76568a422b9fbf3d236",
+    "digest": "baf0b54377d5bc983298fbabed354a16ef3ec670487b3dba5b83aa31261550b8",
     "note": "the gate exited 0 and printed its sentinel"
   },
   "prompt_requires_authorization": false,
@@ -27,5 +27,5 @@
   "scope_clause": null,
   "dependency_edge_ref": null,
   "provisioning_action": null,
-  "recorded_at": "2026-09-20T03:16:14Z"
+  "recorded_at": "2026-09-20T04:41:07Z"
 }

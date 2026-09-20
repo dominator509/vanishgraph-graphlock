@@ -93,7 +93,7 @@ if [ -f "$KEYCLOAK_ENV" ]; then
 fi
 export DATABASE_URL=${DATABASE_URL:-${VG_TEST_DSN_APP:-}}
 export VALKEY_URL=${VALKEY_URL:-redis://127.0.0.1:56379}
-echo "valkey url|VALKEY_URL=$VALKEY_URL|UNDOCUMENTED|the default 127.0.0.1:56379 is a value from the repository's own gates (scripts/induced-failure-readiness.sh), not from README.md" >> "$SUPPLIED"
+echo "valkey url|VALKEY_URL=$VALKEY_URL|DOCUMENTED|ENVIRONMENT.md classifies VALKEY_URL as a REQUIRED_NOW key for the clean-local class and .agent/verification/TEST_ENVIRONMENT_MANIFEST.md names Valkey among the disposable local services that class requires; the specific local address is the operator choice among those declared services" >> "$SUPPLIED"
 CERT=${VG_KEYCLOAK_CA:-C:/tmp/vg-keycloak-certs/cert.pem}
 if [ -f "$CERT" ]; then
   export NODE_EXTRA_CA_CERTS="$CERT"

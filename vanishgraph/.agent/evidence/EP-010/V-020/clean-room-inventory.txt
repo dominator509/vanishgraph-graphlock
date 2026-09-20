@@ -1,0 +1,17 @@
+clean room run
+room: /tmp/vanishgraph-clean-room-207424
+artifact: vanishgraph-0.1.0.tgz (transferred by digest)
+artifact digest: sha256:c1cc7dfa562116a58534e0460b59ac12c32e6835be8872875eb65ed60488f23d (verified against the published identity and covered by the transferred SHA256SUMS)
+installed into: /tmp/vanishgraph-clean-room-207424/app
+installation command: sh package/scripts/install.sh --artifact <tarball> --digest <sha256:...> --dir <app>  (the command README.md documents)
+golden path completed: boot, GET /v1/health 200, GET /v1/live 200, GET /v1/ready 200 or 503, and an unauthenticated scoped request refused 401
+authenticated golden path: EXTERNAL_REQUIRED - externalPartyRole: authorised business participant with a registered realm client; requestedArtifactDigest: sha256:c1cc7dfa562116a58534e0460b59ac12c32e6835be8872875eb65ed60488f23d; requestEvidencePath: /tmp/vanishgraph-clean-room-207424/supplied.txt; ownerContactRef: LEGAL_REVIEW_REQUIRED.md and the four KEYCLOAK_*_AUDIENCE keys of config/environment/schema.json
+
+supplied beyond the documentation (item|value or path|classification|reason):
+local database state file|C:/tmp/vanishgraph-db.env|DOCUMENTED|ENVIRONMENT.md declares the clean-local class and TEST_ENVIRONMENT_MANIFEST.md declares the disposable local services it needs
+keycloak values|C:/tmp/vanishgraph-keycloak.env|DOCUMENTED|README.md declares KEYCLOAK_ISSUER, KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET and SESSION_SECRET required before the service starts; the values themselves are the operator responsibility, and the room records where it obtained them
+valkey url|VALKEY_URL=redis://127.0.0.1:56379|DOCUMENTED|ENVIRONMENT.md classifies VALKEY_URL as a REQUIRED_NOW key for the clean-local class and .agent/verification/TEST_ENVIRONMENT_MANIFEST.md names Valkey among the disposable local services that class requires; the specific local address is the operator choice among those declared services
+local CA certificate|C:/tmp/vg-keycloak-certs/cert.pem|DOCUMENTED|README.md documents NODE_EXTRA_CA_CERTS for the disposable local Keycloak, which serves a self-signed certificate
+dependency supply|node_modules linked by the shipped installer from the repository|DOCUMENTED|README.md states that the environment is offline and the dependency supply is recorded in the fingerprint
+
+undocumented items: 0

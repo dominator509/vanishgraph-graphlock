@@ -1,8 +1,8 @@
 LIVE-FIRE-PROOF-08 EXTERNAL_REQUIRED
 externalPartyRole: Provider relationship owner (the account holder for the official provider transport)
-requestedArtifactDigest: sha256:6fe9573315f6fb4d559a7e47df0437b7caa49780f31567229a109e610a633cab
+requestedArtifactDigest: sha256:c1cc7dfa562116a58534e0460b59ac12c32e6835be8872875eb65ed60488f23d
 requestEvidencePath: .agent/evidence/EP-010/V-020/live-fire/live-fire-proof-08.log
-requestedAt: 2026-09-20T04:29:02Z
+requestedAt: 2026-09-20T05:01:24Z
 ownerContactRef: PREFLIGHT.md provider rows and LEGAL_REVIEW_REQUIRED.md
 suite: tests/regression/live-fire-proof-08.test.ts (5 test(s), 0 skipped)
 preparedRequest: execute the outcome end to end against the real provider transport (08) or the enterprise authorization path (12) under the named participant, and sign the result
