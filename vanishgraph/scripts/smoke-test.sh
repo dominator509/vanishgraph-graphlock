@@ -150,31 +150,56 @@ if (!up) {
 }
 
 const health = await get("/health");
+// SPEC-003 section 5.17.1, VERBATIM: the state field is `dependencyState`, NOT `status`, because it is a
+// dependency-health classification and must never be confused with a truth state.
 if (health.status !== 200) problems.push(`/v1/health answered ${health.status}`);
-else if (health.body === null) problems.push("/v1/health answered 200 with no JSON body");
+else {
+  if ("status" in (health.body ?? {})) problems.push("/v1/health carries a `status` field, and SPEC-003 section 5.17.1 requires `dependencyState` and forbids `status`");
+  if (!["HEALTHY", "DEGRADED", "UNHEALTHY"].includes(health.body?.dependencyState)) problems.push(`/v1/health dependencyState is ${JSON.stringify(health.body?.dependencyState)}, not one of HEALTHY, DEGRADED, UNHEALTHY`);
+  if (health.body?.service !== "vanishgraph-api") problems.push(`/v1/health service is ${JSON.stringify(health.body?.service)}, and SPEC-007 fixes it as vanishgraph-api`);
+  const deps = (health.body?.dependencies ?? []).map((entry) => entry.name);
+  for (const dependency of ["postgresql", "valkey", "job-worker", "object-store", "keycloak-jwks"]) {
+    if (!deps.includes(dependency)) problems.push(`/v1/health reports no dependency named ${dependency}`);
+  }
+}
 
 const live = await get("/live");
 if (live.status !== 200) problems.push(`/v1/live answered ${live.status}`);
+else {
+  if (live.body?.dependencyState !== "ALIVE") problems.push(`/v1/live dependencyState is ${JSON.stringify(live.body?.dependencyState)}, not ALIVE`);
+  if (typeof live.body?.uptimeSeconds !== "number") problems.push("/v1/live does not report uptimeSeconds");
+}
 
 const startup = await get("/startup");
-if (startup.status !== 200) problems.push(`/v1/startup answered ${startup.status}`);
+const startupState = startup.body?.dependencyState;
+if (startup.status !== 200 && startup.status !== 503) problems.push(`/v1/startup answered ${startup.status}, and SPEC-003 section 5.17.4 declares 200 or 503`);
+else if (!["STARTED", "NOT_STARTED"].includes(startupState)) problems.push(`/v1/startup dependencyState is ${JSON.stringify(startupState)}, not STARTED or NOT_STARTED`);
+else if (startupState === "STARTED") {
+  for (const flag of ["configurationResolved", "migrationApplied", "resourceAttributesResolved"]) {
+    if (startup.body?.[flag] !== true) problems.push(`/v1/startup reports STARTED with ${flag} not true, and SPEC-003 section 5.17.4 requires all three`);
+  }
+} else if (!Array.isArray(startup.body?.failedChecks)) problems.push("/v1/startup reports NOT_STARTED with no failedChecks array");
 
 // READINESS IS ALLOWED TO BE 503 AND IS NOT ALLOWED TO BE VAGUE: SPEC-007 section 7.1 requires one check per
-// declared dependency, so a body that omits a dependency fails here, and the status must agree with the checks
-// it carries.
+// declared dependency and the `dependencyState`/`failedChecks` vocabulary, so a body that omits a dependency or
+// renames the verdict fails here.
 const ready = await get("/ready");
 const DECLARED = ["postgresql", "valkey", "job-worker", "object-store", "keycloak-jwks", "provider-transport"];
 if (ready.status !== 200 && ready.status !== 503) problems.push(`/v1/ready answered ${ready.status}, and only 200 or 503 are declared`);
 else {
+  const state = ready.body?.dependencyState;
+  if (!["READY", "NOT_READY"].includes(state)) problems.push(`/v1/ready dependencyState is ${JSON.stringify(state)}, not READY or NOT_READY`);
+  if ((state === "READY") !== (ready.status === 200)) problems.push(`/v1/ready answered ${ready.status} with dependencyState ${JSON.stringify(state)}, and the two must agree`);
+  if (!Array.isArray(ready.body?.failedChecks)) problems.push("/v1/ready carries no failedChecks array");
   const checks = Array.isArray(ready.body?.checks) ? ready.body.checks : [];
   const named = checks.map((check) => check.name);
   for (const dependency of DECLARED) {
     if (!named.includes(dependency)) problems.push(`the readiness body names no check for the declared dependency ${dependency}`);
   }
-  const blocking = checks.filter((check) => check.required === true && check.status !== "PASS");
-  if (blocking.length > 0 && ready.status !== 503) problems.push("a required dependency is not PASS and readiness did not answer 503");
-  if (blocking.length === 0 && ready.status !== 200) problems.push("every required dependency is PASS and readiness did not answer 200");
-  console.log(`smoke test: readiness ${ready.status} with ${checks.length} declared check(s): ${checks.map((check) => `${check.name}=${check.status}`).join(" ")}`);
+  for (const check of checks) {
+    if (typeof check.reachable !== "boolean") problems.push(`the readiness check ${check.name} does not report reachable as a boolean`);
+  }
+  console.log(`smoke test: readiness ${ready.status} dependencyState=${state} with ${checks.length} declared check(s): ${checks.map((check) => `${check.name}=${check.reachable}`).join(" ")}`);
 }
 
 // One denial, asserted through the same running artifact, so this is not only a liveness check.

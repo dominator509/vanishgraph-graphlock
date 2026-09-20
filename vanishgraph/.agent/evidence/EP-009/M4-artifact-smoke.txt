@@ -1,0 +1,122 @@
+# EP-009 M4 — staging deployment and artifact-bound verification: evidence
+
+Everything below was produced in this session. **No staging deployment exists, and none is claimed.**
+
+## 1. What M4 delivered
+
+| deliverable | state | evidence |
+|---|---|---|
+| `scripts/staging-deploy.sh` | implemented; exits non-zero with `BLOCKED_CREDENTIALS` and a complete status record | `.agent/evidence/EP-009/M4-staging-deploy.txt` |
+| `scripts/staging-verify.sh` | implemented; refuses to verify a local process as if it were staging, and carries the open finding | `.agent/evidence/EP-009/M4-staging-verify.txt` |
+| `scripts/smoke-test.sh` | implemented and artifact-bound; **RUNS AND FAILS against the current artifact for the reason in §3** | this file, §3; boot log `.agent/evidence/EP-009/M4-artifact-smoke-boot.log` |
+| `scripts/test-e2e.sh` | artifact-bound (refuses without a declared digest that matches the identity); the browser suites pass | `.agent/evidence/EP-005/e2e-run.txt` |
+| `deploy/staging/README.md` | written: the procedure, the digest-pinning rule, the prerequisites, the fallback labelling rule and the teardown step | the file |
+| `COMMANDS.md` | rows added for both staging commands | the file |
+
+## 2. Staging: BLOCKED_CREDENTIALS, with every field the gate requires
+
+```
+$ sh scripts/staging-deploy.sh
+staging deploy: BLOCKED_CREDENTIALS - staging is NOT_PROVISIONED in
+.agent/verification/TEST_ENVIRONMENT_MANIFEST.md (managed US cloud, separate account; Kubernetes, KMS, object
+store, managed Postgres, browser pool). Probe: sh scripts/probes/cloud_identity.sh exit=1. PREFLIGHT.md declares
+no platform credential because no platform was provisioned; the pinned digest is
+sha256:a924e5a4d49b843d6e548699e4de8caa71bc3590f73b028d42760deb430db104 and the artifact is
+dist/vanishgraph-0.1.0.tgz. Evidence: .agent/evidence/EP-009/M4-staging-deploy.txt. NO LOCAL DEPLOYMENT WAS
+PERFORMED.
+exit=1
+
+$ sh scripts/staging-verify.sh
+staging verify: BLOCKED_CREDENTIALS - staging is NOT_PROVISIONED in
+.agent/verification/TEST_ENVIRONMENT_MANIFEST.md and VG_STAGING_ENDPOINT is undeclared, so no deployed digest
+exists to verify. Evidence: .agent/evidence/EP-009/M4-staging-verify.txt. THIS SCRIPT DID NOT VERIFY A LOCAL
+PROCESS AND DID NOT PRINT ITS SENTINEL.
+exit=1
+```
+
+Recorded with the pinned digest, the manifest row, the probe command and its exit code, the blocking dependency
+edge (`ARTIFACT_IDENTITY.json → staging platform credentials → staging deploy → staging verify → gate-release`),
+the `PREFLIGHT.md` rows that would have to exist, and a named next action. `PREFLIGHT.md` declares **no** staging
+platform credential, because no platform was ever provisioned — that is stated rather than papered over with a
+plausible variable name.
+
+## 3. THE FINDING: the artifact's health surface does not implement the contract it is bound to
+
+The artifact-bound smoke test boots the produced artifact and asserts the health surface **SPEC-003 §5.17**
+declares. It fails, with 20 findings. The measured responses from the running artifact are:
+
+```json
+GET /v1/health  -> 200 {"status":"ok","version":"0.1.0","commit":"unknown","startedAt":"…","uptimeSeconds":11}
+GET /v1/live    -> 200 {"status":"alive","uptimeSeconds":11}
+GET /v1/startup -> 503 {"status":"starting","startedAt":"…","uptimeSeconds":11,"checks":[
+                       {"name":"postgres","ok":true,"latencyMs":30},
+                       {"name":"valkey","ok":false,"reason":"VALKEY_URL is configured; reachability is measured once the driver wiring lands (EP-004 M6)"},
+                       {"name":"keycloak","ok":false,"reason":"KEYCLOAK_ISSUER is configured; reachability is measured once the driver wiring lands (EP-004 M6)"}]}
+GET /v1/ready   -> 503 {"status":"not_ready","checks":[ … the same three … ]}
+```
+
+The contract, quoted from the specifications:
+
+- **SPEC-003 §5.17.1**: `/v1/health` body is
+  `{"dependencyState":"HEALTHY|DEGRADED|UNHEALTHY","checkedAt","service":"vanishgraph-api","apiVersion":"v1","dependencies":[{"name":"postgresql",…},{"name":"valkey",…},{"name":"job-worker",…},{"name":"object-store",…},{"name":"keycloak-jwks",…}],"degraded":[]}`,
+  and *"the state field is named `dependencyState`, not `status`"*.
+- **SPEC-003 §5.17.2**: `/v1/ready` is `{"dependencyState":"READY","checkedAt","failedChecks":[]}` with
+  `503 {"dependencyState":"NOT_READY","failedChecks":[{"name","reason","state"}]}`.
+- **SPEC-003 §5.17.3**: `/v1/live` is `{"dependencyState":"ALIVE","startedAt","uptimeSeconds"}`.
+- **SPEC-003 §5.17.4**: `/v1/startup` is
+  `{"dependencyState":"STARTED","checkedAt","configurationResolved":true,"migrationApplied":true,"resourceAttributesResolved":true}`,
+  or `503 {"dependencyState":"NOT_STARTED","failedChecks":[{"name":"configuration","state":"FAIL"}]}`.
+- **SPEC-007 §7.1/§7.2**: the dependency vocabulary is `postgresql`, `valkey`, `job-worker`, `object-store`,
+  `keycloak-jwks`, `provider-transport`, each reported with `required`, `status` and `reasonCode`.
+
+So the artifact uses `status` where the contract mandates `dependencyState` — the one substitution the
+specification explicitly forbids — reports three checks under names the contract does not use (`postgres`,
+`valkey`, `keycloak`), omits three declared dependencies entirely (`job-worker`, `object-store`,
+`provider-transport`), and omits `service`, `failedChecks`, `apiVersion`, `dependencies` and the startup flags.
+Two of the three probes it does run are configuration checks that say so in their own reason string
+("reachability is measured once the driver wiring lands (EP-004 M6)"), which SPEC-007 §7.1 forbids for
+readiness: *"must not return 200 from a static handler, a cached value, or a startup-time snapshot"*.
+
+**This is not a defect in EP-009's scope to fix.** The files are `src/http/routes/health.ts` (the live renderer)
+and `src/infrastructure/main.ts` (the probe wiring); EP-008 already built the conforming pieces —
+`src/http/health-routes.ts` declares the `dependencyState`/`failedChecks`/`reasonCode` decision shape, and
+`src/adapters/observability/dependency-probes.ts` implements all six probes with that vocabulary — but the
+serving path never uses them. The fix is therefore two-part and named: render the declared bodies in
+`src/http/routes/health.ts`, and wire `composeReadiness` over the six real probes in the composition root. It is
+recorded here as the blocking condition for a green artifact-bound smoke, and therefore for staging
+verification, because deploying this artifact and verifying it against §5.17 would verify a contract it does not
+implement.
+
+The smoke test's own failure is the evidence. It prints `smoke test: FAIL` and **no sentinel**, which is what
+SPEC-008 §10 (`VG-SHIP-033`) requires of a check that ran and found the artifact wanting.
+
+## 4. A real defect this milestone found and fixed
+
+`src/infrastructure/main.ts` ended with `process.exit(await main())`, so the service printed
+`serve: listening on http://…/v1` and **exited with code 0 immediately after startup**. The packaged entry point
+could never answer a request. Every API suite calls `app.inject` in-process and never waits for a listener,
+which is why nothing noticed; the artifact-bound smoke test noticed it on its first run. A successful startup now
+falls through and the listening sockets keep the event loop alive; a non-zero return still exits.
+
+## 5. The fallback path, labelled with its fingerprint
+
+`sh scripts/smoke-test.sh` and `sh scripts/test-e2e.sh` run against the exact pinned digest in a `clean-local`
+environment, and both write an environment fingerprint. `scripts/smoke-test.sh` writes
+`.agent/verification/state/artifact-smoke-fingerprint.txt` (artifact digest, extracted file count, entry point,
+commit, node version, environment token, keycloak issuer host, dependency supply) plus its SHA-256.
+
+Two harness arrangements are recorded there rather than hidden: the artifact is extracted inside the repository
+so Node resolves its dependencies from the lockfile-installed `node_modules` (the environment is offline, so a
+clean-room `npm install <tarball>` is not possible; that remains `VG-SHIP-028` work and is not claimed), and the
+configuration comes from the state files this environment declares plus the repository's own declared local
+default — never from an invented value.
+
+## 6. What this milestone does NOT claim
+
+- No staging deployment, no staging verification, no staging endpoint.
+- No green artifact-bound smoke: it fails, and the reason is a genuine contract divergence recorded in §3.
+- No clean-room install (`VG-SHIP-028`): the dependency supply is the repository's locked tree, as recorded.
+- No independent read-back through a second client (DOD-012) for a deployed system: there is no deployed system.
+  The smoke does assert one denial through the running artifact (an unauthenticated `/v1/subjects` must be
+  `401`), which is a real request against a real listener, but it is not a second-connection read-back of
+  durable state.

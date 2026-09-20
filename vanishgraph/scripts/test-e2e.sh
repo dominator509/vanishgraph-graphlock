@@ -22,6 +22,24 @@ fail() { echo "end-to-end tests: FAIL - $1" >&2; exit 1; }
 blocked() { echo "end-to-end tests: BLOCKED_ENVIRONMENT - $1" >&2; exit 1; }
 
 command -v node >/dev/null 2>&1 || blocked "node is not on PATH"
+
+# ARTIFACT BINDING (EP-009 M4(c); SPEC-008 section 7 VG-SHIP-021/022, DOD-004). A SOURCE-LEVEL run cannot satisfy
+# release acceptance, so this stage declares which artifact digest it is testing and refuses without one that
+# matches the published identity. The browser suites still exercise the built UI bundle; what changes is that the
+# run is bound to a digest rather than to "whatever happens to be in the tree".
+IDENTITY=.agent/verification/state/ARTIFACT_IDENTITY.json
+[ -f "$IDENTITY" ] || fail "$IDENTITY is missing; run sh scripts/build-artifact.sh first"
+PINNED_DIGEST=$(node -e '
+const fs = require("node:fs");
+const identity = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+const path = identity.artifact_paths.find((p) => p.endsWith(".tgz"));
+if (path === undefined) { process.exit(1); }
+process.stdout.write(identity.artifact_digests[path]);
+' "$IDENTITY") || fail "the identity declares no tarball digest"
+DECLARED_DIGEST=${VG_ARTIFACT_DIGEST:-}
+[ -n "$DECLARED_DIGEST" ] || fail "VG_ARTIFACT_DIGEST is not declared: this stage tests a DIGEST, and a run that does not say which digest it is testing is not artifact-bound (DOD-004, SPEC-008 VG-SHIP-021)"
+[ "$DECLARED_DIGEST" = "$PINNED_DIGEST" ] || fail "the declared digest $DECLARED_DIGEST is not the published digest $PINNED_DIGEST; a mismatched digest is a stop condition"
+
 [ -f ui/dist/index.html ] || fail "the built application is missing at ui/dist/index.html; run 'npm run build:web' first (this stage never runs against a dev server)"
 
 [ -d tests/ui ] || fail "tests/ui/ does not exist: no browser suite has been written yet, and a stage that runs nothing must not print its sentinel"
