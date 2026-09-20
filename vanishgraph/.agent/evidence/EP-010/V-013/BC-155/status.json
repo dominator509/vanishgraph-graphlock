@@ -15,7 +15,7 @@
     "sentinel": "coverage: ok",
     "sentinelFound": false,
     "evidencePath": ".agent/evidence/EP-010/V-013/gate-coverage.log",
-    "digest": "bed320242f9d53fc6a0271e267407bbfe24d006d2b87d5c8e4ebeb5b806a3df1",
+    "digest": "47a2f4963abe9ccd21bbc7895832b7cf5bcf7313405a0ad7d147ecb2e8c6be02",
     "note": "the gate exited 1 and did NOT print its sentinel"
   },
   "prompt_requires_authorization": false,
@@ -27,5 +27,5 @@
   "scope_clause": null,
   "dependency_edge_ref": null,
   "provisioning_action": null,
-  "recorded_at": "2026-09-20T02:48:45Z"
+  "recorded_at": "2026-09-20T04:08:51Z"
 }

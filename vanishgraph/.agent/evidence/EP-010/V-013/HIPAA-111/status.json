@@ -27,5 +27,5 @@
   "scope_clause": null,
   "dependency_edge_ref": null,
   "provisioning_action": "provision STRIPE_SECRET_KEY: run scripts/probes/stripe.sh until it exits 0, then re-run this stage",
-  "recorded_at": "2026-09-20T02:48:57Z"
+  "recorded_at": "2026-09-20T04:09:03Z"
 }

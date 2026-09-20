@@ -3077,7 +3077,109 @@
       "sha256": "2ade2ac281b3a98e8b4a84fe83a5e8be6bea99ed9d51bbb6b2bf2c41f846ff9e",
       "stage": "V-019",
       "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-020/E2E-011/status.json",
+      "sha256": "d2833559145c5f7adaa725cd7fc69a73aaf201feb44125c70f0abd15b39d0379",
+      "stage": "V-020",
+      "epoch": "FORGE-SPEC-4"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-020/SUP-013/status.json",
+      "sha256": "0241be61bf477efdcdfb4bea4e3b526c57340349c0cebd786e0733385adf9461",
+      "stage": "V-020",
+      "epoch": "FORGE-SPEC-4"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-020/gate-build.log",
+      "sha256": "2ade2ac281b3a98e8b4a84fe83a5e8be6bea99ed9d51bbb6b2bf2c41f846ff9e",
+      "stage": "V-020",
+      "epoch": "FORGE-SPEC-4"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-021/BC-031/status.json",
+      "sha256": "a4987ef3b3a7c478402f4dd5dc1f6027f2b0c8484c28bb6150912676da98306e",
+      "stage": "V-021",
+      "epoch": "FORGE-SPEC-4"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-021/BC-032/status.json",
+      "sha256": "f02adbc9f65b5fe5e276a48b7c1cdcd91cbed03df7f92a31eac403d36bab33fc",
+      "stage": "V-021",
+      "epoch": "FORGE-SPEC-4"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-021/BC-036/status.json",
+      "sha256": "d687882160ce34907b0c35535a64f0d108e161ddc6c19169e513a1fa2e80a131",
+      "stage": "V-021",
+      "epoch": "FORGE-SPEC-4"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-021/BC-111/status.json",
+      "sha256": "c2ffe578b67786f35f7f6eae17cc7deae456a0be787ceaa8e3ea6c5fb027899c",
+      "stage": "V-021",
+      "epoch": "FORGE-SPEC-4"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-021/BC-152/status.json",
+      "sha256": "2204be67b578723acbf22113f9a3256332c9738d82f369c70a05e55899ed5ccd",
+      "stage": "V-021",
+      "epoch": "FORGE-SPEC-4"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-021/BC-153/status.json",
+      "sha256": "d74b0f16e4a37f28688ef1bd439b8846bdf7ba521f4afc8cdbc258be4e5b678b",
+      "stage": "V-021",
+      "epoch": "FORGE-SPEC-4"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-021/E2E-020/status.json",
+      "sha256": "51ef91996f5578f1ee9a19f072db31d27bfde4b077a9aefe22844b57d5a49d3c",
+      "stage": "V-021",
+      "epoch": "FORGE-SPEC-4"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-021/GEN-018/status.json",
+      "sha256": "b46a6be0cc48ea4c718cdbc042e0deddd51c03d56e33566567506945170373de",
+      "stage": "V-021",
+      "epoch": "FORGE-SPEC-4"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-021/GEN-020/status.json",
+      "sha256": "652fac51b828e1838cce427f56f09334b4b424e7aaebec0668bff7afdb8bb707",
+      "stage": "V-021",
+      "epoch": "FORGE-SPEC-4"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-021/GEN-021/status.json",
+      "sha256": "04fbce3b9abfffb729595e2224423b1c2b1879fac54eeae33d2a4db6baa756de",
+      "stage": "V-021",
+      "epoch": "FORGE-SPEC-4"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-021/GEN-103/status.json",
+      "sha256": "f790e6de54debd9c32c4e7e611ae7ac3eaf91e53f4db47b31d47f5c831da4d11",
+      "stage": "V-021",
+      "epoch": "FORGE-SPEC-4"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-021/SUP-015/status.json",
+      "sha256": "712684fcdd61345c6d0a70b3e8428f7e5f14580340d0fc043a9e5cbb71ef8ed6",
+      "stage": "V-021",
+      "epoch": "FORGE-SPEC-4"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-021/gate-security-contract.log",
+      "sha256": "4f7a28c823cbf6b96719122f8dcb4eda3c804e007d853ca8a5daecc333ba9eac",
+      "stage": "V-021",
+      "epoch": "FORGE-SPEC-4"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-021/gate-build.log",
+      "sha256": "2ade2ac281b3a98e8b4a84fe83a5e8be6bea99ed9d51bbb6b2bf2c41f846ff9e",
+      "stage": "V-021",
+      "epoch": "FORGE-SPEC-4"
     }
   ],
-  "updatedAt": "2026-09-20T03:03:36Z"
+  "updatedAt": "2026-09-20T04:28:31Z"
 }

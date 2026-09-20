@@ -47,7 +47,9 @@ while [ "$#" -gt 0 ]; do
     --artifact=*) EXPLICIT_ARTIFACT=${1#--artifact=}; shift ;;
     --digest) EXPLICIT_DIGEST=${2:-}; shift 2 ;;
     --digest=*) EXPLICIT_DIGEST=${1#--digest=}; shift ;;
-    *) fail "unknown argument: $1 (accepted: --dir <path>, --artifact <tarball>, --digest <sha256:...>, or VG_INSTALL_DIR)" ;;
+    --dependency-supply) SUPPLY=${2:-}; shift 2 ;;
+    --dependency-supply=*) SUPPLY=${1#--dependency-supply=}; shift ;;
+    *) fail "unknown argument: $1 (accepted: --dir <path>, --artifact <tarball>, --digest <sha256:...>, --dependency-supply <dir>, or VG_INSTALL_DIR)" ;;
   esac
 done
 DEST=${DEST:-${TMPDIR:-/tmp}/vanishgraph-install}
@@ -101,15 +103,20 @@ ENTRY="$DEST/package/src/infrastructure/main.ts"
 [ -f "$ENTRY" ] || fail "the installed package has no $ENTRY; the artifact is not runnable"
 
 # 5. The dependency supply, stated rather than hidden (see HONEST LIMITS above).
-if [ -d node_modules ]; then
-  mkdir -p "$DEST/dependency-supply"
-  # A junction/symlink keeps the lockfile-installed tree as the supply without copying it; the installed source
-  # resolves `fastify`, `pg` and the rest exactly as the verified artifact did.
+#
+# MEASURED DEFECT this corrects, found by the clean room rather than by inspection: this script changes directory to
+# its own package root, so when it runs FROM THE ARTIFACT (the documented clean-room command) the repository's
+# node_modules is not visible here at all -- the link was never created, the install reported success, and the
+# installed package then died with ERR_MODULE_NOT_FOUND on `fastify`. A supply the caller must provide is now a
+# named argument, and when none is available the record SAYS the package cannot start instead of implying it can.
+SUPPLY=${SUPPLY:-${VG_DEPENDENCY_SUPPLY:-}}
+if [ -z "$SUPPLY" ] && [ -d node_modules ]; then SUPPLY=$(pwd)/node_modules; fi
+if [ -n "$SUPPLY" ] && [ -d "$SUPPLY" ]; then
   if [ -e "$DEST/node_modules" ]; then rm -rf "$DEST/node_modules"; fi
-  ln -s "$(pwd)/node_modules" "$DEST/node_modules" 2>/dev/null || cp -r node_modules "$DEST/node_modules"
-  DEPENDENCY_SUPPLY="the lockfile-installed node_modules of this repository, linked into the install (offline environment)"
+  ln -s "$SUPPLY" "$DEST/node_modules" 2>/dev/null || cp -r "$SUPPLY" "$DEST/node_modules"
+  DEPENDENCY_SUPPLY="the lockfile-installed node_modules supplied as $SUPPLY and linked into the install (offline environment)"
 else
-  DEPENDENCY_SUPPLY="none: node_modules is absent, so the installed package cannot start until dependencies are installed"
+  DEPENDENCY_SUPPLY="NONE: no dependency supply was supplied and none is visible from the install directory, so THE INSTALLED PACKAGE CANNOT START until dependencies are installed or --dependency-supply names a tree"
 fi
 
 mkdir -p .agent/evidence/EP-009

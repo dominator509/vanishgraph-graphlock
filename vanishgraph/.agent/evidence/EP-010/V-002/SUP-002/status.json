@@ -15,7 +15,7 @@
     "sentinel": "test-integration: ok",
     "sentinelFound": true,
     "evidencePath": ".agent/evidence/EP-010/V-002/gate-integration.log",
-    "digest": "f7a53755d2fbfe69e489ceb07bcb3abe8a8d78e0593878c5c7388594d321fdc4",
+    "digest": "b5765c6ecd2cc087da0c6d0bb11b55081538d66103066f020f51c469e361f647",
     "note": "the gate exited 0 and printed its sentinel"
   },
   "prompt_requires_authorization": false,
@@ -27,5 +27,5 @@
   "scope_clause": null,
   "dependency_edge_ref": "capability:per-id-definition->V-002",
   "provisioning_action": null,
-  "recorded_at": "2026-09-20T01:56:07Z"
+  "recorded_at": "2026-09-20T03:15:12Z"
 }

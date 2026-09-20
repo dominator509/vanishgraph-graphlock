@@ -161,8 +161,22 @@ if (rows.length === 0) {
 
 fs.mkdirSync(outDir, { recursive: true });
 const gateResults = new Map();
+// A GATE IS EXECUTED ONCE PER EPOCH, AND LATER STAGES CITE THAT RUN. MEASURED REASON: this executor runs the same
+// gate for every stage that needs it, so a full V-000..V-021 pass executed the unit and integration gates a dozen
+// times and took over an hour -- and every epoch roll paid that cost again. The cache is keyed by epoch AND
+// artifact digest, so a cached result can only come from THIS epoch against THIS artifact; a stage that cites it
+// says so explicitly (`cachedFrom`), and the run it cites is a real execution whose log and digest are recorded.
+const GATE_CACHE=.agent/verification/state/gate-cache.json;
+const gateCache = fs.existsSync(GATE_CACHE) ? JSON.parse(fs.readFileSync(GATE_CACHE, "utf8")) : { entries: {} };
+const cacheKey = (gate) => `${epoch}|${artifactDigest}|${gate.script}`;
 const runGate = (gate) => {
   if (gateResults.has(gate.id)) return gateResults.get(gate.id);
+  const cached = gateCache.entries[cacheKey(gate)];
+  if (cached !== undefined && fs.existsSync(cached.evidencePath)) {
+    const result = { ...cached, cached: true, cachedFrom: cached.evidencePath };
+    gateResults.set(gate.id, result);
+    return result;
+  }
   const scriptPath = path.join("scripts", gate.script);
   if (!fs.existsSync(scriptPath)) {
     const result = { gate: gate.id, script: gate.script, status: "MISSING", exitCode: null, sentinelFound: false, evidencePath: null, digest: null, note: "the script does not exist" };
@@ -192,6 +206,8 @@ const runGate = (gate) => {
       ? "the gate exited 0 and printed its sentinel"
       : `the gate exited ${exitCode}${sentinelFound ? "" : " and did NOT print its sentinel"}`,
   };
+  gateCache.entries[cacheKey(gate)] = { gate: gate.id, script: gate.script, exitCode, sentinel: gate.sentinel, sentinelFound, evidencePath: result.evidencePath, digest: result.digest, epoch, artifact_digest: artifactDigest, executed_at: now() };
+  fs.writeFileSync(GATE_CACHE, `${JSON.stringify(gateCache, null, 2)}\n`);
   gateResults.set(gate.id, result);
   return result;
 };
@@ -452,7 +468,7 @@ seed.stage_runs = [...(seed.stage_runs ?? []), {
   artifact_digest: artifactDigest,
   owned_ids: rows.length,
   statuses: statuses.reduce((accumulator, entry) => { accumulator[entry.status] = (accumulator[entry.status] ?? 0) + 1; return accumulator; }, {}),
-  gates_run: [...gateResults.values()].map((entry) => ({ gate: entry.gate, script: entry.script, exitCode: entry.exitCode, sentinelFound: entry.sentinelFound, evidencePath: entry.evidencePath, digest: entry.digest })),
+  gates_run: [...gateResults.values()].map((entry) => ({ gate: entry.gate, script: entry.script, exitCode: entry.exitCode, sentinelFound: entry.sentinelFound, cached: entry.cached === true, cachedFrom: entry.cachedFrom ?? null, evidencePath: entry.evidencePath, digest: entry.digest })),
   recorded_at: now(),
 }];
 fs.writeFileSync(seedPath, `${JSON.stringify(seed, null, 2)}\n`);

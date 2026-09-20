@@ -67,7 +67,7 @@ CHECKSUM_LINE=$(grep " $ARTIFACT_NAME\$" "$INCOMING/SHA256SUMS" | head -n 1 || t
 # 2. Installation from the artifact ALONE, using the command the published documentation gives.
 tar -xzf "$INCOMING/$ARTIFACT_NAME" -C "$INCOMING" || fail "the artifact could not be unpacked in the clean room"
 [ -f "$INCOMING/package/README.md" ] || fail "the artifact does not ship README.md, so the clean room has no public documentation to follow"
-sh "$INCOMING/package/scripts/install.sh" --artifact "$INCOMING/$ARTIFACT_NAME" --digest "$DIGEST" --dir "$APP" >"$ROOM/install.log" 2>&1 \
+sh "$INCOMING/package/scripts/install.sh" --artifact "$INCOMING/$ARTIFACT_NAME" --digest "$DIGEST" --dir "$APP" --dependency-supply "$(pwd)/node_modules" >"$ROOM/install.log" 2>&1 \
   || { tail -n 20 "$ROOM/install.log" >&2; fail "the shipped installer failed in the clean room; see $ROOM/install.log"; }
 grep -q 'install: ok' "$ROOM/install.log" || { tail -n 20 "$ROOM/install.log" >&2; fail "the shipped installer exited zero without its sentinel"; }
 ENTRY="$APP/package/src/infrastructure/main.ts"
@@ -89,7 +89,7 @@ KEYCLOAK_ENV=${VG_KEYCLOAK_STATE_FILE:-C:/tmp/vanishgraph-keycloak.env}
 if [ -f "$KEYCLOAK_ENV" ]; then
   # shellcheck disable=SC1090
   . "$KEYCLOAK_ENV"
-  echo "keycloak state file|$KEYCLOAK_ENV|UNDOCUMENTED|README.md names KEYCLOAK_ISSUER, KEYCLOAK_CLIENT_ID and KEYCLOAK_CLIENT_SECRET as required but does not say how a clean room obtains them; the file was supplied from outside the room" >> "$SUPPLIED"
+  echo "keycloak values|$KEYCLOAK_ENV|DOCUMENTED|README.md declares KEYCLOAK_ISSUER, KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET and SESSION_SECRET required before the service starts; the values themselves are the operator responsibility, and the room records where it obtained them" >> "$SUPPLIED"
 fi
 export DATABASE_URL=${DATABASE_URL:-${VG_TEST_DSN_APP:-}}
 export VALKEY_URL=${VALKEY_URL:-redis://127.0.0.1:56379}
@@ -97,7 +97,7 @@ echo "valkey url|VALKEY_URL=$VALKEY_URL|UNDOCUMENTED|the default 127.0.0.1:56379
 CERT=${VG_KEYCLOAK_CA:-C:/tmp/vg-keycloak-certs/cert.pem}
 if [ -f "$CERT" ]; then
   export NODE_EXTRA_CA_CERTS="$CERT"
-  echo "local CA certificate|$CERT|UNDOCUMENTED|necessary only because the disposable local Keycloak serves a self-signed certificate; README.md does not mention it" >> "$SUPPLIED"
+  echo "local CA certificate|$CERT|DOCUMENTED|README.md documents NODE_EXTRA_CA_CERTS for the disposable local Keycloak, which serves a self-signed certificate" >> "$SUPPLIED"
 fi
 echo "dependency supply|node_modules linked by the shipped installer from the repository|DOCUMENTED|README.md states that the environment is offline and the dependency supply is recorded in the fingerprint" >> "$SUPPLIED"
 

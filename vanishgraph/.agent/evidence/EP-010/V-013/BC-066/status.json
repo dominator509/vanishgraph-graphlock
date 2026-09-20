@@ -15,7 +15,7 @@
     "sentinel": "test-unit: ok",
     "sentinelFound": false,
     "evidencePath": ".agent/evidence/EP-010/V-013/gate-unit.log",
-    "digest": "ff8236f31fc9d469ea0b7426c4b729428a71843dbd3354939b3ca887f93808be",
+    "digest": "c4abcdfc6312237b30c64b0707bf1f771b27651ff15ded43c2ee5af2b589a43a",
     "note": "the gate exited 1 and did NOT print its sentinel"
   },
   "prompt_requires_authorization": false,
@@ -27,5 +27,5 @@
   "scope_clause": null,
   "dependency_edge_ref": null,
   "provisioning_action": null,
-  "recorded_at": "2026-09-20T02:25:55Z"
+  "recorded_at": "2026-09-20T03:47:20Z"
 }

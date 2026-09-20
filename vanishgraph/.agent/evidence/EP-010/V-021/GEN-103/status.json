@@ -1,0 +1,22 @@
+{
+  "test_id": "GEN-103",
+  "owner_stage": "V-021",
+  "title": "Common Criteria Security Evaluation",
+  "kind": "atomic-security",
+  "source_library": ".agent/verification/source-library/security/general-dev-security-testing-prompts.md",
+  "definition_path": ".agent/evidence/EP-010/V-021/GEN-103/definition.md",
+  "definition_digest": "387dfa4cd9dd2218d85a5a0cf0ea5a24686445cb7522d25641e49072ae013f8d",
+  "definition_located": true,
+  "definition_kind": "prompt-block",
+  "gate": null,
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "BLOCKED_PREREQUISITE",
+  "reason": "no repository gate covers this prompt's subject and no environment path exists to execute it here; the definition was extracted from .agent/verification/source-library/security/general-dev-security-testing-prompts.md and NOT executed",
+  "deferred_provenance": null,
+  "scope_clause": null,
+  "dependency_edge_ref": "capability:execution-mapping->V-021",
+  "provisioning_action": null,
+  "recorded_at": "2026-09-20T04:28:16Z"
+}

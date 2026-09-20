@@ -27,5 +27,5 @@
   "scope_clause": null,
   "dependency_edge_ref": null,
   "provisioning_action": "provision CLICK2MAIL_API_KEY: run scripts/probes/postal_api.sh until it exits 0, then re-run this stage",
-  "recorded_at": "2026-09-20T03:03:23Z"
+  "recorded_at": "2026-09-20T04:27:24Z"
 }

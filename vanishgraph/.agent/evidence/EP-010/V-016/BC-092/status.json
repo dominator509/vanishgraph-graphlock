@@ -15,7 +15,7 @@
     "sentinel": "security check: ok",
     "sentinelFound": true,
     "evidencePath": ".agent/evidence/EP-010/V-016/gate-security-contract.log",
-    "digest": "9e82ddebf7d0685852d5d9cb381221e470f067783078cb53fa3029644a5f5112",
+    "digest": "4ee88691e64a80a0c78a0fff6e28b1739aabf0c340e5d779f0755fdce50dd1ff",
     "note": "the gate exited 0 and printed its sentinel"
   },
   "prompt_requires_authorization": false,
@@ -27,5 +27,5 @@
   "scope_clause": null,
   "dependency_edge_ref": null,
   "provisioning_action": null,
-  "recorded_at": "2026-09-20T02:56:31Z"
+  "recorded_at": "2026-09-20T04:18:39Z"
 }

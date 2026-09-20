@@ -1,0 +1,22 @@
+{
+  "test_id": "BC-153",
+  "owner_stage": "V-021",
+  "title": "ISO 27001 Compliance Testing",
+  "kind": "atomic-security",
+  "source_library": ".agent/verification/source-library/security/blockchain-security-testing-prompts.md",
+  "definition_path": ".agent/evidence/EP-010/V-021/BC-153/definition.md",
+  "definition_digest": "b8bc55b4d93b4b9fc2d87a369d0305cca574ccac2742124cea4a78098ace8041",
+  "definition_located": true,
+  "definition_kind": "prompt-block",
+  "gate": null,
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "BLOCKED_PREREQUISITE",
+  "reason": "no repository gate covers this prompt's subject and no environment path exists to execute it here; the definition was extracted from .agent/verification/source-library/security/blockchain-security-testing-prompts.md and NOT executed",
+  "deferred_provenance": null,
+  "scope_clause": null,
+  "dependency_edge_ref": "capability:execution-mapping->V-021",
+  "provisioning_action": null,
+  "recorded_at": "2026-09-20T04:27:53Z"
+}
