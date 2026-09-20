@@ -23,5 +23,9 @@
   "prompt_requires_runner": false,
   "status": "BLOCKED_PREREQUISITE",
   "reason": "the declared source .agent/verification/SUPPLEMENTAL_PRODUCTION_GATES.md is a summary that names this gate's subject but contains no method, command or completion gate; there is nothing to execute for this ID",
-  "recorded_at": "2026-09-20T01:25:32Z"
+  "deferred_provenance": null,
+  "scope_clause": null,
+  "dependency_edge_ref": "capability:per-id-definition->V-002",
+  "provisioning_action": null,
+  "recorded_at": "2026-09-20T01:48:04Z"
 }

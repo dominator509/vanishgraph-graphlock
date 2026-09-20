@@ -1,10 +1,10 @@
 {
-  "epoch": "FORGE-SPEC-2",
-  "candidate_commit_sha": "df6556b548e5e5f535d7b7ecf815b5e27f426315",
-  "artifact_digest": "sha256:5d775517fc1acb381a6067692237ae289a62202e43869e5bcb058b95a0c1f757",
+  "epoch": "FORGE-SPEC-3",
+  "candidate_commit_sha": "e1e8fdcc0a9e9e93bcb3ee96047d6b6f6f2eaafc",
+  "artifact_digest": "sha256:6c789950212646a91a28bd640f1ff772b1ca844190a56b8285a398dd892859f7",
   "registry_sha256": "d8a5389cfb2968855b88a0e7f78bdbb1f0c65851c8d400c8c04224e161cd1b95",
   "applicability_matrix_sha256": "103982359dc5a190883eb3ecb18d53a3b5243ccc8bbf985a43713c5049a3fc37",
-  "dependency_seed_sha256": "d9387e532982794f3781a653561df93b2bb7e4d1acbc206fbd9479a03fbc3ba0",
+  "dependency_seed_sha256": "5dd79a2c9a85bdf5c84e23b01901c1506ea90ba67c6c7188b0a9a31bcf4acd86",
   "status_vocabulary_size": 16,
   "status_vocabulary": [
     "PASS",
@@ -42,11 +42,11 @@
     "stages": 22,
     "owned_ids": 484,
     "dod_clauses": 42,
-    "ledger_rows": 1872,
-    "ledger_rows_for_registry_ids": 164,
-    "stale_epoch_rows": 1708,
-    "accounted_ids_this_epoch": 103,
-    "rows_validated_this_epoch": 103
+    "ledger_rows": 2343,
+    "ledger_rows_for_registry_ids": 635,
+    "stale_epoch_rows": 1873,
+    "accounted_ids_this_epoch": 470,
+    "rows_validated_this_epoch": 470
   },
   "accounting_note": "REPORTED, NOT ENFORCED HERE: no per-ID status exists for the current epoch yet, so 484/484 is unreachable and sh scripts/harness-accounting.sh is the script that enforces the invariant and reports the unaccounted count. The plan states this is the correct behaviour and that it must not be fixed by writing statuses that have not been executed.",
   "self_tests": [
@@ -99,7 +99,7 @@
       "name": "stale-epoch evidence",
       "rejected": true,
       "sample": [
-        "GEN-001: evidence belongs to epoch FORGE-SPEC-1 and the current epoch is FORGE-SPEC-2"
+        "GEN-001: evidence belongs to epoch FORGE-SPEC-1 and the current epoch is FORGE-SPEC-3"
       ]
     },
     {

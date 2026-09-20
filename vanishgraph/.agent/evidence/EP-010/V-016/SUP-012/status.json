@@ -1,0 +1,31 @@
+{
+  "test_id": "SUP-012",
+  "owner_stage": "V-016",
+  "title": "SLO, SLA & Error-Budget Release Verification",
+  "kind": "production-gate",
+  "source_library": ".agent/verification/SUPPLEMENTAL_PRODUCTION_GATES.md",
+  "definition_path": ".agent/evidence/EP-010/V-016/SUP-012/definition.md",
+  "definition_digest": "28eec0c9908f00034b411a1e9c0e1b16504cf00cae83a50d21e46a8f395665f3",
+  "definition_located": true,
+  "definition_kind": "summary-source",
+  "gate": {
+    "gate": "build",
+    "script": "build-artifact.sh",
+    "exitCode": 0,
+    "sentinel": "artifact: built",
+    "sentinelFound": true,
+    "evidencePath": ".agent/evidence/EP-010/V-016/gate-build.log",
+    "digest": "2ade2ac281b3a98e8b4a84fe83a5e8be6bea99ed9d51bbb6b2bf2c41f846ff9e",
+    "note": "the gate exited 0 and printed its sentinel"
+  },
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "BLOCKED_PREREQUISITE",
+  "reason": "the declared source .agent/verification/SUPPLEMENTAL_PRODUCTION_GATES.md is a summary that names this gate's subject but contains no method, command or completion gate; there is nothing to execute for this ID",
+  "deferred_provenance": null,
+  "scope_clause": null,
+  "dependency_edge_ref": "capability:per-id-definition->V-016",
+  "provisioning_action": null,
+  "recorded_at": "2026-09-20T02:56:41Z"
+}

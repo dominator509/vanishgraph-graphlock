@@ -7,6 +7,7 @@
   "definition_path": ".agent/evidence/EP-010/V-004/HIPAA-001/definition.md",
   "definition_digest": "55ac486f1ed240b6b0c8a730e4a87926c0cb084e9091ad112af25442dbf4ba3e",
   "definition_located": true,
+  "definition_kind": "prompt-block",
   "gate": {
     "gate": "static-analysis",
     "script": "lint.sh",
@@ -22,5 +23,9 @@
   "prompt_requires_runner": false,
   "status": "PARTIAL",
   "reason": "the repository gate covering this subject (scripts/lint.sh) ran as the positive path: the gate exited 0 and printed its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
-  "recorded_at": "2026-09-20T01:14:03Z"
+  "deferred_provenance": null,
+  "scope_clause": null,
+  "dependency_edge_ref": null,
+  "provisioning_action": null,
+  "recorded_at": "2026-09-20T01:56:58Z"
 }

@@ -7,11 +7,16 @@
   "definition_path": ".agent/evidence/EP-010/V-004/GEN-090/definition.md",
   "definition_digest": "5cc56fea5338d3049935517b21f5793764296ccaa756db3d18dcb9c809026673",
   "definition_located": true,
+  "definition_kind": "prompt-block",
   "gate": null,
   "prompt_requires_authorization": false,
   "prompt_requires_target": false,
   "prompt_requires_runner": false,
   "status": "BLOCKED_PREREQUISITE",
   "reason": "no repository gate covers this prompt's subject and no environment path exists to execute it here; the definition was extracted from .agent/verification/source-library/security/general-dev-security-testing-prompts.md and NOT executed",
-  "recorded_at": "2026-09-20T01:14:03Z"
+  "deferred_provenance": null,
+  "scope_clause": null,
+  "dependency_edge_ref": "capability:execution-mapping->V-004",
+  "provisioning_action": null,
+  "recorded_at": "2026-09-20T01:56:58Z"
 }

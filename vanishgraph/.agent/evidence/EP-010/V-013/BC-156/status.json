@@ -1,0 +1,31 @@
+{
+  "test_id": "BC-156",
+  "owner_stage": "V-013",
+  "title": "Branch Coverage Testing",
+  "kind": "atomic-security",
+  "source_library": ".agent/verification/source-library/security/blockchain-security-testing-prompts.md",
+  "definition_path": ".agent/evidence/EP-010/V-013/BC-156/definition.md",
+  "definition_digest": "0c32b1e224b7c257851e1695c544f581dbcf0a96e887e3eed7e9f9e7c65937fa",
+  "definition_located": true,
+  "definition_kind": "prompt-block",
+  "gate": {
+    "gate": "coverage",
+    "script": "coverage-gate.sh",
+    "exitCode": 1,
+    "sentinel": "coverage: ok",
+    "sentinelFound": false,
+    "evidencePath": ".agent/evidence/EP-010/V-013/gate-coverage.log",
+    "digest": "bed320242f9d53fc6a0271e267407bbfe24d006d2b87d5c8e4ebeb5b806a3df1",
+    "note": "the gate exited 1 and did NOT print its sentinel"
+  },
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "PARTIAL",
+  "reason": "the repository gate covering this subject (scripts/coverage-gate.sh) ran as the positive path: the gate exited 1 and did NOT print its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
+  "deferred_provenance": null,
+  "scope_clause": null,
+  "dependency_edge_ref": null,
+  "provisioning_action": null,
+  "recorded_at": "2026-09-20T02:48:45Z"
+}

@@ -1,0 +1,22 @@
+{
+  "test_id": "E2E-009",
+  "owner_stage": "V-018",
+  "title": "Systemic Stress & Exhaustion Testing",
+  "kind": "orchestrator",
+  "source_library": ".agent/verification/E2E_SUITE_LIBRARY.md",
+  "definition_path": ".agent/evidence/EP-010/V-018/E2E-009/definition.md",
+  "definition_digest": "76ec1dc02a378c6584ec4d3adc9eb124c89346cf5679f0b7a83089d388cebb44",
+  "definition_located": true,
+  "definition_kind": "prompt-block",
+  "gate": null,
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "BLOCKED_PREREQUISITE",
+  "reason": "no repository gate covers this prompt's subject and no environment path exists to execute it here; the definition was extracted from .agent/verification/E2E_SUITE_LIBRARY.md and NOT executed",
+  "deferred_provenance": null,
+  "scope_clause": null,
+  "dependency_edge_ref": "capability:execution-mapping->V-018",
+  "provisioning_action": null,
+  "recorded_at": "2026-09-20T02:56:42Z"
+}

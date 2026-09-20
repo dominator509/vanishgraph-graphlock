@@ -719,7 +719,2365 @@
       "sha256": "9340798c1188190364744ebed2f746a20b96514ad24e137927f7143fa3fb980b",
       "stage": "V-017",
       "epoch": "FORGE-SPEC-2"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-010/E2E-012/status.json",
+      "sha256": "7cd17666f9cd07b6b3f2513151491b0345cd5abb718fdefe5609fc8d0c4feb63",
+      "stage": "V-010",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-010/E2E-015/status.json",
+      "sha256": "6b15c29e3f23a6b23fa1dd6251e4bf4326e95c3a5d444d1d5e23c273a2a1b94e",
+      "stage": "V-010",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-010/E2E-016/status.json",
+      "sha256": "aca1b6a31cc2123e3dfec2165371ba920dd16f2561e5f0d89b9e1491f1ca254f",
+      "stage": "V-010",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-010/E2E-017/status.json",
+      "sha256": "4aed6bfe4b825291cc84aa1ebcfd369c51bf08f3c5d544bca17903c4260375a5",
+      "stage": "V-010",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-010/SUP-006/status.json",
+      "sha256": "01263bae6f644429cf7c0974ec2e5697fa7df230e572a86084e546c19e981dfc",
+      "stage": "V-010",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-010/gate-integration.log",
+      "sha256": "13c0170905415b93232be2c4a270ff0f349eb4f69885764e3647647bcd8bfa62",
+      "stage": "V-010",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-010/gate-build.log",
+      "sha256": "2ade2ac281b3a98e8b4a84fe83a5e8be6bea99ed9d51bbb6b2bf2c41f846ff9e",
+      "stage": "V-010",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-011/E2E-013/status.json",
+      "sha256": "baeb4afdae52cf4095ff5c133c7cf866f38004d79300651b999be56d298aad8a",
+      "stage": "V-011",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-011/E2E-014/status.json",
+      "sha256": "4bcb55972600ff0b6d2894853d194cfa0ea25b625b0e7fa648922316b504be9d",
+      "stage": "V-011",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-011/SUP-005/status.json",
+      "sha256": "ee62f88417bfa211806d0ecbb94c1140f05bb0e40664aa7f56630b19261e0d85",
+      "stage": "V-011",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-011/SUP-007/status.json",
+      "sha256": "6f017f26e14b31b078a7d2e2cc2546def6007f3192284ad99d8d2b890e6c4efd",
+      "stage": "V-011",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-011/SUP-008/status.json",
+      "sha256": "3f9af50feed0ee32cf8ef4a2a541f3f1e82d58d24de2a36b83008ed9b21b0780",
+      "stage": "V-011",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-011/gate-build.log",
+      "sha256": "2ade2ac281b3a98e8b4a84fe83a5e8be6bea99ed9d51bbb6b2bf2c41f846ff9e",
+      "stage": "V-011",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-011/gate-config.log",
+      "sha256": "170f8db78e499e16f11ab6c1b5991e1fa0e3436935d010847cfec3b15e94659b",
+      "stage": "V-011",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-012/BC-016/status.json",
+      "sha256": "b2d54e426ad5740358b38b2a6d0a2d458db687fd62b47635fd7921d656438c46",
+      "stage": "V-012",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-012/BC-017/status.json",
+      "sha256": "63d618f59074aeec95ed0d52184dc88f66c65153c6c3fd4809574b2eda5eb1a0",
+      "stage": "V-012",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-012/BC-023/status.json",
+      "sha256": "991d55f4cf3a2a6faa972e95c3a756b4309ef8fd553bebe6ab1096ee42611bb0",
+      "stage": "V-012",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-012/BC-024/status.json",
+      "sha256": "36847051ef1471d4b76f34c59509817022c78a9455c6592eb2eba932112f4cb6",
+      "stage": "V-012",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-012/BC-025/status.json",
+      "sha256": "856c75aafd03c13f1c106cdeb5d152444d384af8b7605fdc0040aca76c529941",
+      "stage": "V-012",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-012/BC-026/status.json",
+      "sha256": "9ad05ef1b1f334c6f8876ce0315ea1265cd6f10ccfd93ad9dc168547a29e39df",
+      "stage": "V-012",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-012/BC-027/status.json",
+      "sha256": "b802a77f3071964607a24df70fd2b8185e6ce1e854ff0f036fedc2a13f250330",
+      "stage": "V-012",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-012/BC-028/status.json",
+      "sha256": "ee6b687b690bce3942adf0c2d158a66dcd8419aec5bb847484256a422178c8a0",
+      "stage": "V-012",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-012/BC-029/status.json",
+      "sha256": "5d7ba34cd719ff9f2b49f105eca3c0fdef626abd131e95c91ff9a61600cde352",
+      "stage": "V-012",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-012/E2E-005/status.json",
+      "sha256": "1273294058c1e0ec13d945027671f9ec1ad41c96a90e6319767b13cb967c8471",
+      "stage": "V-012",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-012/GEN-104/status.json",
+      "sha256": "f44aaeb7261c3d919cf54049aceb6e4565a59041b887c5c62b640b2a29714460",
+      "stage": "V-012",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-012/GEN-106/status.json",
+      "sha256": "25b58ca54bf6b70345c8d70cc45e501ede03ff5aa02db50e14b958b63390d0e5",
+      "stage": "V-012",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-012/GEN-107/status.json",
+      "sha256": "ef7c93fb7e7629693e282c196ba3e5b51e627cd8142f8c8ca42cdbd04f357f35",
+      "stage": "V-012",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-012/GEN-109/status.json",
+      "sha256": "fe29783cf842d270c8e4f010cbb71c1db0c5d587d7a6da0c1769324d0b0880ae",
+      "stage": "V-012",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-012/gate-integration.log",
+      "sha256": "47e93fb5daa722c0cfc344ed61d9349c4cb3d62d5e69666e2a1802d39fce873e",
+      "stage": "V-012",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-012/gate-mutation.log",
+      "sha256": "ef731d93a317a3acd1952674e53976322399b1df95e9b5084677ff7b925c7f0a",
+      "stage": "V-012",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-012/gate-security-contract.log",
+      "sha256": "e2c5b1b0dc659ca89c14c6b4a42d3c76c655c7975d5fe9609a3238c4c8259105",
+      "stage": "V-012",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-003/status.json",
+      "sha256": "c1998af04c437d0e1d70e2096f3b6100f3db08c1b9508c4d80458419e21f22c9",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-004/status.json",
+      "sha256": "a2855bc5ab2733d25fd67d66cd63f31da3ba1037b3b475af226d83bc4220ea75",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-005/status.json",
+      "sha256": "d6c0a4519dddbe9a728962e42cd540c0c0e20f9776b80c9dbfb07c2bd25aa84d",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-006/status.json",
+      "sha256": "6b61a786d6a252b51f4c00c4619ad0c31a423821ccfac84fb9378a1c4b08a508",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-007/status.json",
+      "sha256": "7536fe5a85ae02f545383a90cf7fb694430f519db06129d0e998d4afd36df5ef",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-008/status.json",
+      "sha256": "99516b6fd58825604380423eac8d347b0ce2dc2729733f2e5de07ed8c4e8342f",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-009/status.json",
+      "sha256": "7b4ccab46a8faf0cd2922afd67a7a28a8dc20362afab04a28888c91dec2b68ca",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-013/status.json",
+      "sha256": "c1679b5a3ce0c661e7294e72024e27381bf2f12272c3d39b0470d3ed2e876719",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-015/status.json",
+      "sha256": "e11447b7051480fa4e096b6dd1e5a8f72a7a4578ff404d6c41f45dcec8df9144",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-018/status.json",
+      "sha256": "ec6f49453b6da732eee208373bb44f8de48c99faafd67adce8497b9d168f8474",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-019/status.json",
+      "sha256": "1fee6e3c3dd31d986347a4c644e9970a2aa36419cad472b49d9b761284827cd2",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-020/status.json",
+      "sha256": "99a4380d7e9ac23b8d597604fac8a20313ba6619506740952f788edd20edebe3",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-021/status.json",
+      "sha256": "b918853a10e35bebaa2387b241d5a019e7b35b8d0837751c8e59d635685a01b1",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-022/status.json",
+      "sha256": "6ae6a1714a1482830882ce9f5e937f15d4fc03efb1109dcff2f57dd7efc9be90",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-035/status.json",
+      "sha256": "81f2a72c6813b876acdbb82501263892b07c515f04493107379b35a18ecd7c15",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-037/status.json",
+      "sha256": "1237f2d8726e959a14af4d692a80180fa26fb99dac22e2717f697f37bd694527",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-038/status.json",
+      "sha256": "5ad469fb31d9e1903797f6ccbf787e3b186141c3ba1348ff809377d26b89cbbd",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-039/status.json",
+      "sha256": "57ed9c4664e29585a99fc47dd6b6707e80e7fc381c2f8a474cd346e457132fe5",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-040/status.json",
+      "sha256": "c91eb3a2c65d33df812c950a768a0739b665597a8cd57575fae9dbaf6d94575a",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-041/status.json",
+      "sha256": "1a717e86419bb69494f540666dd57b54155c25edfdf4a0b9787332e3234c63ed",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-042/status.json",
+      "sha256": "775569e5411419136e6c70dfbc383d6760be3201c982a4984846e141b0660915",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-047/status.json",
+      "sha256": "cb7ba7e3347b3d0c6f1d9140df1c9fe659778669c0431f6530a9fa310eddb31a",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-048/status.json",
+      "sha256": "5792acc8ff7b40cdfeebcaa8b35b449441f8737c1f9123f8af10a80422c8f00c",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-049/status.json",
+      "sha256": "7ef00c805948b51f5bf77f9135a90bfd879034b1215d442f2b87a084cdc480aa",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-050/status.json",
+      "sha256": "2b8f9da9fa4903cc06f2a6f4313946c0697fd66bd46ea0326656e4e093d2562d",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-051/status.json",
+      "sha256": "1fab3e01a1a674f1e7eb6e856bb76d7f7b75d3ed9d825f02364df6a4c7e6a32b",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-052/status.json",
+      "sha256": "593492d1ccba2b4bd8b41883f2b5d04dee745b7a3b1ba091055416f9c59c78c7",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-053/status.json",
+      "sha256": "00e64994fcd6c05ef4872612cf3113d80bb2d3c647a61a7d8d23297fd2ef44d8",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-054/status.json",
+      "sha256": "9e10bf348d5f674f1743621549c5b5e610bfec9154b1d73e6b75698ec3a9c415",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-058/status.json",
+      "sha256": "a8328cd96ee49d01ae7879c76e1e8c635c52bd0d97392e9157cdc92098de3343",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-059/status.json",
+      "sha256": "be30e41188461589015f1d03b2458385ba7a2c3a54c00aafa04323e0e2e0789f",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-060/status.json",
+      "sha256": "78723a95526cca022e33912c9f96d416a75b3417725e60e0c67dfa570282fb6e",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-062/status.json",
+      "sha256": "40678caac20d6cad039b14cbc2c53681a646055d3a4514b13bdce10f95f3391f",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-063/status.json",
+      "sha256": "e94e7e8f8bdd70047279b2648bf04f51901a19c98b5be6f6e4eb816db58ed9ef",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-064/status.json",
+      "sha256": "3a3b9fc1dc9db465270e8dbffd07730bf023febddf04aa8bfa857b722a4f5d3c",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-065/status.json",
+      "sha256": "aba199ac6ff25f862baeae033f27c5dbf80af047896f4ea03ce41afd3be6ed89",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-066/status.json",
+      "sha256": "c34ccdeedfdb59cae5317b5733a06fbdf41d02a2564ae370d56fcd01ab59e3c3",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-067/status.json",
+      "sha256": "582244899d329a30b30b84b2e21289b41ff92f5f90b0b4d897720ccc56c74d57",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-068/status.json",
+      "sha256": "df19dbe1a52f334cf1ac0e7c0c2b09a1f68ea822fc52e488b373bdc483eb1bc3",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-069/status.json",
+      "sha256": "7a95270ccbcf80461d6461d80c772e8beff10789d20ae192492bff15ac15bbfb",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-070/status.json",
+      "sha256": "3de8144645270f95ead702d42f682a3fc9432af6736b7b1f4c6e1e2ad298be1b",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-071/status.json",
+      "sha256": "ec8b4b393420efa17dea9ab0c909d4dfb15ce5c8e2f7164a081d9cd37c0891a7",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-072/status.json",
+      "sha256": "bdf0698b386deb0c319be33d7722372c4fef153534682852c3cd5ee337a00416",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-073/status.json",
+      "sha256": "851503b92cd43fbe991267e3d787c142b679a5d55b914dbd79cf6d97cfe9ff2e",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-074/status.json",
+      "sha256": "4364cdd1f8f534f53d129909d8190fbc3372749afb1405e6f1a52f205c593f87",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-075/status.json",
+      "sha256": "e0b2b137e58e98c1cfc34e3db978f25bb5b246051ed5bdebe28e82f8170de201",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-076/status.json",
+      "sha256": "e1c5539fa1eb56ca5a1443e424f6a0cdd798005023c8366a123b0fd86fb6c7bb",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-077/status.json",
+      "sha256": "7ce234034de353f5a08ec0c14def2bde423d3469268b2f4a9a0aa9eb71a5cc3b",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-078/status.json",
+      "sha256": "3d5619b07e0d5b26c5a39b8af6893421485810557cee802ba659b155608191e6",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-079/status.json",
+      "sha256": "cca9602b044c9ce3d892498a706052226892116562106d5f1cf0fac34c945b17",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-080/status.json",
+      "sha256": "13ff0c42229de1a791ab1873c14167ded95013c5c45742c5ec9853c3e8202457",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-081/status.json",
+      "sha256": "d423ae1323e151f56555f0970f4f6e03b77aab165e3d7b9f0b4d13d0248e2aff",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-082/status.json",
+      "sha256": "fedfcd385bc18e30dcb7e1e846f71f793f5e65eff078781037264088fbe0447f",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-083/status.json",
+      "sha256": "c8c5dbd0e5ffd057f636bc07b26d88dd7c73c150a1c843cda6d99328fdd5f2e3",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-084/status.json",
+      "sha256": "237a477e1307c60fb40846e830901e1703d6183a9867fc5be600b1ee259a3ced",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-085/status.json",
+      "sha256": "841cd5de92249d0868bdf3524189868620a2d18d347211f11e233fa3f2d66294",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-086/status.json",
+      "sha256": "8b9892453f7769f90439511466994625af07444492815174a74f92223ee628be",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-087/status.json",
+      "sha256": "6c720bba99c57cceb53cc0dcb1dc65e589c74e177e6d543451dfee28aa10a002",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-088/status.json",
+      "sha256": "947984356dc4e261e85f0eb404bdd6943d3740e7a5fdae8173a1f99cea28f27f",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-089/status.json",
+      "sha256": "88872bc7710afe3f6a9f94784fe463f72b1a4fc773f0bd6bc4f5c22f5750eb1a",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-093/status.json",
+      "sha256": "57918d76f2f4cba85b9f461893a8202ccd10fa85f0fa7b9d3532de01b7a712ac",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-097/status.json",
+      "sha256": "eb8d26295b9e4ae6faeecc421aecf303af1bf77d706e0445e0efadeca799d6d3",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-098/status.json",
+      "sha256": "eeb4d2c4681483a03b8cc08d3b3a74eb6afb4fef00b0ba47a20f9de9d8f965e8",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-099/status.json",
+      "sha256": "e286650ebb2b6180f9c782c3fb84a7b4f5a42cabc6d92b4e5493f7ee53006729",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-101/status.json",
+      "sha256": "54ea973c6d41037faf427fbc9d2d48b0cea73c59f6b3b898a52c6356724c6772",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-102/status.json",
+      "sha256": "0849a33938bc48e379c6b0f9029cfb7527964622293d29044ced152ed9df5482",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-103/status.json",
+      "sha256": "63b82a7cde145e659f7ff53bfab2ce09727e366c21ecc81c1ca31fc34782a412",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-104/status.json",
+      "sha256": "56936652e578c7a247452f9293773daa4ef80ce16329d2c08856e6f5f5ee88f0",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-105/status.json",
+      "sha256": "28bc184618a9c97ebbec522a80664cb59752c57285d24889f818403b08b4881f",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-106/status.json",
+      "sha256": "eb6e703d63be95f32486ef5faca0e60e8ef6fd61eb852fbbf523c6b817fe68f8",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-107/status.json",
+      "sha256": "4209335d6d3d6ebb1d89a87db402bb2da942987b4903ac37fa670e3655a97727",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-108/status.json",
+      "sha256": "c2cb8893779f4832352f9fef23f99aadc6002ed4d2ef3286390340fd90565587",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-109/status.json",
+      "sha256": "ceb436bcd5371e2cf5480ed1a9da34531f7d7a0d760ad7d7cc7e154c09173842",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-110/status.json",
+      "sha256": "5ea4d12a565844087dc78e0ef6842aabeda9ff50609198527182f27a2d50d275",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-112/status.json",
+      "sha256": "555a10c7f2c23d4e338e80a5c051ebd7a87ff218edb066a45be5ddd8829febff",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-113/status.json",
+      "sha256": "3615d29a82b38d1005f4a56d74e0dbcc1893217450d730b04dbc113ba7b953d0",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-114/status.json",
+      "sha256": "b12e3d4c5fba874d42e46c8dcd9a24686e053f526555010bc778a03af741015b",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-115/status.json",
+      "sha256": "8305be16c37fa21aae63e547a362abae204288a4c8537a7a5b57a2445c14c325",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-116/status.json",
+      "sha256": "d1176a359b8f7c3e719c498606fc059d3a9fa83c5ce24444ee88d222c4020e58",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-117/status.json",
+      "sha256": "f3ab3d7d0beeb0fa00cad177cb4e5d803d9df7276bf52c7de490881edf6fa25f",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-118/status.json",
+      "sha256": "f7fae9edc4cd0cdba51ff044dc463c5e5f5e107adb6fadc514bddf608c249d16",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-119/status.json",
+      "sha256": "0d66eea826bf2407575d4b92d1909063d0977523dac9f101794867f276c3bb7d",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-120/status.json",
+      "sha256": "80fda183a248eefd4414bbe4c06570801babd1eec968e317d74039421800c91e",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-123/status.json",
+      "sha256": "a1c7e2c3048056bdd25b2dfc76527052fcbb349b7fabc87bef8c20018b9b3cfd",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-124/status.json",
+      "sha256": "f2144feacfbfa6210cbf3a8baee5e53a57bfeb6ff9e2025b5e331871c0887559",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-128/status.json",
+      "sha256": "bac7503a3a9fef61aed4ce14dfadb9838faf0bab61c7c55994c538cf144ec61b",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-133/status.json",
+      "sha256": "8918e6322bdd20695d6512e2529f5c382270213dddd68bd03c16f102cae3defc",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-140/status.json",
+      "sha256": "ff331c56ab31cae2883febdf60e8348169995a92d45ca5ac9b8b8b0c3f1c726f",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-143/status.json",
+      "sha256": "cd93d180549b4c170e62117bd33f7ab14b79bf9315dba1665a6383ef7ac7d1fa",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-144/status.json",
+      "sha256": "685ab219ba3d586e6c284aaa969dfb6c6c31a667efc5f3966e2f0b3f70ab21c6",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-145/status.json",
+      "sha256": "deef9822b84e99113a3ece3ebc4485e5c55456228c334bb1e3ba2a4a212e0b12",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-146/status.json",
+      "sha256": "4c97fe491c9827c6606db4b203a9fc9ae117d18a59495ea8e4566a568a5e5496",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-147/status.json",
+      "sha256": "3c4d66348e88189e8709caab0e8661ce8bd8a95b8e63f4b44ff19095f4e5e10c",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-148/status.json",
+      "sha256": "74ef1d4cd96e7ecaf3ecb078d2a43d15b872292f57d737a89a7626fa865667c8",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-149/status.json",
+      "sha256": "e29606599bae9304f243649d467c9146a81fbcf480ea00fc441088427ac78885",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-150/status.json",
+      "sha256": "6c403d44cd6f7e2a89bd3206682fd1d3ffc41e71eab8460294ff646ab33a4dc8",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-151/status.json",
+      "sha256": "97b04860a4bbb79e1cfba87fb1d3a0edd26ebf08ac17b7622dae21d732c56682",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-154/status.json",
+      "sha256": "d62ead9887668125d943047f3cc398659fec030ccef812d2f0774682fc9d44cf",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-155/status.json",
+      "sha256": "6fdef46b37ee0945f87e7a4edaad7aafd67ac1ca2cd47af3ef714de75f14238b",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-156/status.json",
+      "sha256": "cdaef020b8b614f5829b76306ff000b21bfc3f21788d5a3da6adce947b772623",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-157/status.json",
+      "sha256": "9da22e750d5ce94f054864adabca81ee93426621eca60e94022f3fee9fb1b506",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-158/status.json",
+      "sha256": "9f24f2a1c10129b78a4d67adcca189f9a4ee6c7af9bfeae0635035687c6e1aad",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-159/status.json",
+      "sha256": "cae9f80327f692c48d8b3f038d475eb820973b75ddc4aeb6c4f39380d36e6350",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-160/status.json",
+      "sha256": "e3e32b99f22a701e1630f26001e98b0cb4dc6ed3992a0be06538c9fe5832ecdb",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-161/status.json",
+      "sha256": "d9c96e0145e776257cf407f6df617cd21070fee35557cb66d0d25c3087081573",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-162/status.json",
+      "sha256": "8ab620dd9f2f764c76d7cdd4defadb18dc55c3a4d36ca0bf2b68ebfe57667fe7",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-163/status.json",
+      "sha256": "8e4b0bedecd24fba3683e591ffb28f3c5b5a17bb392528a33cd6fe944238a3fd",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-164/status.json",
+      "sha256": "e22c1b618e99f1a14035e6d650edfff11e7139b830d1152c12b03f3bc97769ee",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-170/status.json",
+      "sha256": "15b1c25b460c55bf7cb738a5ef413f9eb0ac87ff5511d5a43306ec540bb94027",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-171/status.json",
+      "sha256": "bf09d71e28d5529ca410a5557d259d46e5f25f0b3952cd4d51fa2bd8ff37db61",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-172/status.json",
+      "sha256": "1f418a72c762914d97f221eac06fa8dd9a9933e8acf01c52bd81f6a451ee625d",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-173/status.json",
+      "sha256": "604d1c3cad037c828ded18d8bf3f41d3a3f6beb5abba29641b66d43c398792a1",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-174/status.json",
+      "sha256": "586cae4ea33824d0fc7a550a0ada6390fc8ec8838780b56ea09ad77e3362fbf5",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-175/status.json",
+      "sha256": "f2e8bb24c1a352be2ed9533adc7764281c8b404ec1c5bf9e993dbfd1d9a20f12",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-176/status.json",
+      "sha256": "17098b69681eeb6769e0ef4d7355de628a28883046f2d22e210d01208676af47",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-177/status.json",
+      "sha256": "f510ce959d9c8c49845011adc44afa52e999ec151dd4e5e3bdc9990ad4b30b52",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-178/status.json",
+      "sha256": "3b0b6893bc9970b333d6f472698cc74acc4bbd5a0bf9f44506b57ae718f1692c",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-179/status.json",
+      "sha256": "1a1199b501e1e3e7680cc7d336bf1cf934694d9d87b0dc3c40d63c23b62e4747",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-180/status.json",
+      "sha256": "dcc1dec4c685d00184da63661bdbfbcf523fb75c8c8b34616a27e4ea57d441d9",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-183/status.json",
+      "sha256": "9374d214b877c143695f10b90a861ce7212c1b09c10da690f95c91135f2e5b4f",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-184/status.json",
+      "sha256": "a83d65496038ba8086525f5d7afba034ab33050c0625cc588e00b2f1ee7fbeed",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-185/status.json",
+      "sha256": "dbc453a1083adca629d340074697d09a877bf09356babe4488b7a87b655edc85",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-187/status.json",
+      "sha256": "2e0c74e040088ab033b8d113e858d8ac185f7d3d3248af49cc1f3e82040b1d40",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-188/status.json",
+      "sha256": "ea1619820681953144d6ce2652c35e7b6d840a1394542734f384a4002f901278",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-189/status.json",
+      "sha256": "fbcced3a7d4a6f8ccab0d89cec71ce402b99eb094ee6b5984aa8022f202523de",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-191/status.json",
+      "sha256": "909c228b2cdf2b4852863147997eb114a5310914fe66c6fca936821c1a650f04",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-192/status.json",
+      "sha256": "329b06696c607061cb9c15dc658142c239cd9001d88d7e6efe4a78e4b7e420b1",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-193/status.json",
+      "sha256": "310c69701028d7831d757e697908e28e793f3f2ecd67935ea95df54e1a54bc99",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-194/status.json",
+      "sha256": "6ff4c9a63a97865a534e5efb852e576746da8def4e84da11c39e7a8ba7f41a00",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-195/status.json",
+      "sha256": "a6ecee34a63184cda18dea6b26d4742274a578aaf239721566118d1148794c74",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-196/status.json",
+      "sha256": "55487bf18656befa5cbbf02d28741f0556a2c1549a5b5e5ea38a4fe772d38cbe",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-197/status.json",
+      "sha256": "caef5e37584210c46976dbc8ffc68896371c5313460de26bc51055a788e4f595",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-198/status.json",
+      "sha256": "095a0f715b349f2e72122921d1e24079930ea89a0bf439a587e6a3044184807c",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-199/status.json",
+      "sha256": "5f317e00f1bb675195c3c31eab8e6414aaed4abea061c964c7730c5d419671ed",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-200/status.json",
+      "sha256": "ef19997f716f191e062e2590b93fc910f11654e122aea4d24a2996d642725798",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-201/status.json",
+      "sha256": "43091176e2183ef92189a6421028e676953a42c72f65737252fc381008af7404",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/BC-202/status.json",
+      "sha256": "626ad6e0ce2b8409a41e4f714d594e49cc52fbf149f50b2b83b8fc89d8e57d92",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/E2E-019/status.json",
+      "sha256": "d6f48e59375136ee71c3f01e339c4cb6ff12c615bd0378b70b291b828456c342",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-005/status.json",
+      "sha256": "1054b06f7aaafa88b0e8fc830f0dc2af31b4a1ce906d5d593697023f434f58db",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-009/status.json",
+      "sha256": "45a7d61485cff5b0d302435db85aeb78f2afba8dea883216da0ec6a996bbdf59",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-015/status.json",
+      "sha256": "d354a5a9a88d53dd23772e520bf08dbdab37059159fcc3d907e980ddd36cf989",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-016/status.json",
+      "sha256": "139d370a81fa22379b5434afc9b0115725930ced43b33dced6d733fd5289515c",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-017/status.json",
+      "sha256": "e3b4157d3866b3d48977a263633906d73d2775dd550dc8ac16118c96331189c2",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-019/status.json",
+      "sha256": "6bb4c203a72e2ab74bdbb3f3daacfdff55fd057cbde90ca03d5c26c88092278d",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-022/status.json",
+      "sha256": "ce74014ed7c4e5727474a90a298489b10e2c45711f5b15746f8ad0265d49cf58",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-023/status.json",
+      "sha256": "c0f5523910f40756508ed95c2959d456f9e35d417cc5e91b7106695a6fe5dac3",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-024/status.json",
+      "sha256": "6bc8c971454ff36787a4b538a8be1c3b27ee18b712f497abfa1dd1810dc764e6",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-025/status.json",
+      "sha256": "3499fb2d96796e479088e7452bbb9d73abb94af8d54805e8d7742ad09c677ac3",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-026/status.json",
+      "sha256": "3c34946dc3c7bb45f8a1c7fd80af3fb5692a78c90a9e1bc8470f0a9247110f7d",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-027/status.json",
+      "sha256": "48b302e89efbcbdd7be7936a25730d777531a3b546ddc3025f24ce61f9e1d6ee",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-028/status.json",
+      "sha256": "a5086bfb4de0d0dcbdf625b91d9d1201f7320b2c57fc638baa01dbee65456a01",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-029/status.json",
+      "sha256": "7c0a0432b4f7a4b46ea991e50b3e7ad9f9e32b752daa36730d3461a13d80f3ae",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-030/status.json",
+      "sha256": "f356152ef382a895521ec46f651150b902941db626d19a8c24c3cbcd2e041a08",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-031/status.json",
+      "sha256": "e7d0ee255d3053c1dc1d2357417bfc08ba99e4687aba8e098151e8c7cbed93d7",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-032/status.json",
+      "sha256": "0c5945d6367492ed1c6e9463d0c6e668ceb82c1215aabff0a7de92d0409262ee",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-033/status.json",
+      "sha256": "adf29f60c30d1c7885337954d0a3b3e5133d4670187f945aee859d25c5722e4f",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-034/status.json",
+      "sha256": "050939bac6217e816458987651d1407f8cec1265849a2b1f7518fb8f2decd643",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-035/status.json",
+      "sha256": "7fa23e18a0033cd45e80905973aab08da766767f7b45684774cd50080111baec",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-036/status.json",
+      "sha256": "e2900e7780e0b83c55cb55a4b416b6e5e5d1f0f65df38e6a50e2d14ac697e042",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-037/status.json",
+      "sha256": "62e9dbb4754a4ab19be5f6cc5289506c25eadc62612b625bbab87f889c9e5390",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-038/status.json",
+      "sha256": "be57667aaeab212eb31b4e9c3262a4aaf40a779c6f1821fce94bc898913d2a30",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-039/status.json",
+      "sha256": "d75837bdbc59851878e57c17421e3bfe4c833832ab0be0185a8513ac77d4fd63",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-041/status.json",
+      "sha256": "cb6c39d504b180e65b77e51266055fb018f9806d82d11e8288c52106b1f35ae3",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-042/status.json",
+      "sha256": "529a84aec1d64d1a04cd045da25a475569209acd0380308d0a6cef03d501954e",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-043/status.json",
+      "sha256": "296c92bb1a069879cde58c0baa117949fefe1e9963a8615c80378088ca9839ff",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-044/status.json",
+      "sha256": "52b44b3c9ba08d7c41162271d552d777a063527a2fd42030bac592f5af4421b8",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-045/status.json",
+      "sha256": "2d67ddca5acd6ed0166b7347d07cbe0f1acdb1c689ecbda8fc6d768dc03b09ac",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-046/status.json",
+      "sha256": "64fb4a9d2b999dbf0f755b67d4e479edbf203afb33e522d07460389a84b67720",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-047/status.json",
+      "sha256": "89499670d27bc52e009b4b8d42c287087f5f80a976b4666da823ecc415a71147",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-048/status.json",
+      "sha256": "53e9ef69300d2b691740df5e5230a9afe61524d76516a273e88cd4b8c0a9ab71",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-049/status.json",
+      "sha256": "f1a3df87e5b44e88a4bf1a5cfece7a0791c19788c129e6a827a5e3353570b012",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-050/status.json",
+      "sha256": "03109e5e6135d5d7c328414439272cae09f142092b42f0c918850b9854c15c1d",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-051/status.json",
+      "sha256": "3039cdd24f46d0f7e4424a7c554d372e7c7d43c5e1fb6d1f7a2f4b0752d538b9",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-052/status.json",
+      "sha256": "ea2a6b58a83e0020bbf50a55c5171385832268a99d87957fe5b4beaae388120b",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-053/status.json",
+      "sha256": "af4945a79a1abc3333fb8b7004ecc82e6e28e3de3b322aac98266aee8a1dced7",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-054/status.json",
+      "sha256": "7d4e87afb75025735091d495c0aac2eff833dc672135cd614b93a8d4377530b5",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-055/status.json",
+      "sha256": "6ab41eca0ac08cd6ebcf709ae072575f5bcbee812c82c09b5a05dde5534b0f53",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-056/status.json",
+      "sha256": "038ef47bd47cbeadd9faeb28eff653aa2814a9798908b271c334d52bfee5fd5d",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-057/status.json",
+      "sha256": "d0ae43499c9cf27116904acfa1c5980b492f3dccdc1b1d44c55a116464eddcb7",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-058/status.json",
+      "sha256": "b9b0e2b1966dd1439e55545f6929f662d20fb707105da70294bc5a0ed18096ec",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-059/status.json",
+      "sha256": "52d913b266005bb164d8e9bb80fe911ece32b40a9bdcb0dbceaeca4b9c5839a3",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-060/status.json",
+      "sha256": "e6fed8572bbcb2d73df9caaaf7976b31ed3b15231cbc3c7a294df84c09c41214",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-061/status.json",
+      "sha256": "ad2004be5c01aa1f6a77fd5684562787155432de8206a1ad8e0f67e35569dca6",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-062/status.json",
+      "sha256": "fc675492f197243e7196c187a30603a6700ec0e907845fb04d911d06d31ffb81",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-068/status.json",
+      "sha256": "044d065af7545230d1b4e6979f93449510bbdda13364147bbde8244f8d353fae",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-069/status.json",
+      "sha256": "d953494d08a48c24fbfe6a39764cac2d03e58f94fca9465d046dd85b85f080e4",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-070/status.json",
+      "sha256": "f0fec86eb1dc299f493b724cc0c09559c0f3e9c4774feb59f3913908b7f575c4",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-071/status.json",
+      "sha256": "f0d126231acb45e7516dacbbe195fcfc8d209a3ff911945499d723d38bd3e227",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-077/status.json",
+      "sha256": "0dd9682c094c2b6880d9e81b7fbe9a52cb16a26544f5e7411cf804537a1ad001",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-078/status.json",
+      "sha256": "aefc1f874c7dd0ae3dd1706722e7e4dadcfcb0731bfd2d54331560fa4d0cc84c",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-079/status.json",
+      "sha256": "0ff2539c1435d2baea8758b6d4143826e645cfa7ec47080c187be31c9ba11a36",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-080/status.json",
+      "sha256": "1a91be863c38f136f0aed2d352bcbed635e71b1c76ee99ec71befa348d0bf4f9",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-086/status.json",
+      "sha256": "244ae2c7a86cdb612c62208e14add9a6dc3164277eb0095979d4ad6db6af777e",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-087/status.json",
+      "sha256": "f2b13ce1df87b847710398d50a0678d01ab0af2f661647906cd66e437947bac2",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-088/status.json",
+      "sha256": "d00acb934a2ad1848cbbcc7e370dbb702eb0c99f0471ba5b1015bead2d962dd4",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-089/status.json",
+      "sha256": "f7836606bf4922250c5c8fee4cb5a535963366bc6fc74c4558d4872f3a5a4f6f",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-093/status.json",
+      "sha256": "99c86e00673c2d4b03ed5011c9626dfb393e217a87abd63af0a1b588d1d68149",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-094/status.json",
+      "sha256": "e5df7bd535da65fa9c7e85d945d2712d1596f5089378714fdf392f505cd77147",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-097/status.json",
+      "sha256": "6903eff1e4727abd89b65c12d3b7484c11b6621f66c3ea8ead944ce51dc6f6ef",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-098/status.json",
+      "sha256": "b6d43bb5619933d5c868ba9259c102f59e887c78365856b355ff33ec11a7e584",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-099/status.json",
+      "sha256": "5d94a616ead7aa3a6995afcf3bb71a123366fca2ff1285a7a261e1555242597f",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-102/status.json",
+      "sha256": "03dd2e3f87375d5005569ad2e6d34b0529defb5b4238680a6aa2c1416b830197",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-105/status.json",
+      "sha256": "fef8b65b2f14b89bf501a8977b80c164cc1b1ed19f2eecbe5740c01e6b85cb97",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-108/status.json",
+      "sha256": "72cf72fc3c59959c34da3cdcc3352f589f3c0e556d1f366c68c5d55b5bd6b783",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-110/status.json",
+      "sha256": "cbb0dc8691c01d58c7b3b48bbaa9de061d99c833c1ccd3e61ea4603fb29470dc",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-112/status.json",
+      "sha256": "3c9567a23b7a4876df672fc2db68840e62abd4ec909b91a580f2fb983f2c34c8",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-113/status.json",
+      "sha256": "73a138c1e9d27edb0ddc06dc6adc3d5d29133161d77a58cdc287a2981a536361",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-120/status.json",
+      "sha256": "bac606ba291b4e49a610512f8c11e2314b2b424031cfcc22f05812d5e95d950a",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-121/status.json",
+      "sha256": "130b4d20f0b3a3e4cb8003c35de060f308d352e2a179f472271414d9650cd350",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/GEN-122/status.json",
+      "sha256": "cc8e2e08838143566b93ccafdc13d84b38b705abcad3e3f79b303d3630fa9565",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-006/status.json",
+      "sha256": "855e65448b18825cf8b56501adb02130f8b2a62abcaf93c5d02f0c9762619180",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-007/status.json",
+      "sha256": "2dda787814866b288f084593ade9bd4265e14f9e14d69a45c93595c8ceadf3c1",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-008/status.json",
+      "sha256": "bad622b09579d319a6c197be0c13c4a1a4cedbe5d1522447d8f968d246e5ac85",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-009/status.json",
+      "sha256": "4a31b2a2e2268aae34af773892b1ae71410363ad433e3a3590999cfafe368d61",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-010/status.json",
+      "sha256": "7a81395ec25d72f2cbd0501ffad814e83f2b5fffc29d3227ba62fbf48b595252",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-011/status.json",
+      "sha256": "599e1902c09d7576414c6d5e278488c44e421cf20af4c186eb0f7d87173573e0",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-012/status.json",
+      "sha256": "64d39e54c3dc33316d19edc32d372dac5305792387eae01fec6188c349a7c361",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-013/status.json",
+      "sha256": "55262e16d218b5851ee4470beace6f3937f916d0132439c9930e053c79126d9f",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-014/status.json",
+      "sha256": "3b193e540bca9f1ff6075ebcb2036fdeba56de0dfae3eb9a1560ff933f206503",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-015/status.json",
+      "sha256": "2f8881a26b28d9508243e5ee76b81329b24e65fce449afb2ec38621228eb76c8",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-016/status.json",
+      "sha256": "77b96d3455a36cd11ed9d574ecf4e08215f6fc8c6dec20fdb97fe61425d9dd53",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-017/status.json",
+      "sha256": "4fd9ada834719d8440713803fb7de4293c9498a3455de298542de9f828753aa5",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-020/status.json",
+      "sha256": "ebfcf52b95bfd7fb01297aa590d7e085b32622931cd6029dc04c2d5ce3054a3c",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-024/status.json",
+      "sha256": "b6809ed5e4bc6db7e79be7e3eb404366d0f0edba307616859b9e426bea14f7ef",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-028/status.json",
+      "sha256": "c1b8ce8949b493758d2f4794f966ceec64803ebb98d427b28635c6622506facb",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-030/status.json",
+      "sha256": "6a6d764a3011ef887b3c0c16750e5325d26945335ffe2b861a82c9121135c31b",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-036/status.json",
+      "sha256": "19d407de4d789e7b0f226848e700cff6171f87fe4b96363d4af6f3002d5dc902",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-037/status.json",
+      "sha256": "0166f085f3e5dff1e730d0eeb95dd5069a783bd895fb565a429d4e2865f26c8d",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-038/status.json",
+      "sha256": "0aa023a3f53e11ea419c4f2db800ccaa42483d7b1285eaa09b6fb031d3da468b",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-039/status.json",
+      "sha256": "0450f949cc62136a253998915e9eaae165d3e81ba4432543509da6b32b422240",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-040/status.json",
+      "sha256": "40f6623c7ce1c929a4f5473bb0f625cb1c133bec2a4bff496dfa6696d2d1b296",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-041/status.json",
+      "sha256": "0db17abd1ef908e35eb768c9f2990ed7d392a7a8dbc71510d914ba6f9fdcafce",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-042/status.json",
+      "sha256": "59a24258fd6fafaa50d3a03f27e44e91d7a04779ad64e02d670a93c26308e9c0",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-043/status.json",
+      "sha256": "e4fdcfd9287eca649f93f7b0bf26a86a358e389dec657ae92d32293d4eb6f6c1",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-044/status.json",
+      "sha256": "20bd4709d138d40843309d31b9e96f8e1192914b80e4db1962de96a6f80ab0a2",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-045/status.json",
+      "sha256": "f63b3b618fa4ace50b80cb56657041ad57872d90a88a1199478087fdcbf45b9a",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-046/status.json",
+      "sha256": "2e0704d02bffada05368a0818b59e61c5b91d66e169892418aa186557e021346",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-047/status.json",
+      "sha256": "13459ba86470b09811be97f1d4ea8b2c471a07b615fbc07662442cba1f30b9b6",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-048/status.json",
+      "sha256": "c1a2f6c65bbb010565f8fe4bfe45db09d63f7f6710b098efe8530efc63229661",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-049/status.json",
+      "sha256": "d94b5a9f3a729dee5f81768793e487b644b2000e6cfbe6c0c841dc457111a50f",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-050/status.json",
+      "sha256": "9dc668a0546958608e70993fab68d2aeaefebd994b772f856d7a6b1a666a8081",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-051/status.json",
+      "sha256": "c70e1162a36fe195a36d8f3efc763118e65e6ad6b263fb1345dbc9d45b1e6ce3",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-052/status.json",
+      "sha256": "549aa7d4660a882ade60f81dacd5ecdfdceb1102e678c7e9d949d879a84d65bf",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-053/status.json",
+      "sha256": "f7344251fb21bd4fec44062edbd933a2d995519d4e5efdd4880f47063dfa0176",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-054/status.json",
+      "sha256": "114d48d96bbcdce89fde78ea839fd27267a49dcf380e26d65abff61200961d00",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-055/status.json",
+      "sha256": "28dbfc0277bf3a538e13394d754040e8094e0b6b649b2718b2f4972a1345f477",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-056/status.json",
+      "sha256": "559cf7cab4002337119a97300057fb17bce78349b834ae0d5a28e4b11d982f8b",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-057/status.json",
+      "sha256": "677a79bd57457a9a63f2fee212948e227323a6bbe8961b206d078198a5dd92cc",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-058/status.json",
+      "sha256": "e8d28a20769680b2c24af583ab6db045b0f7073195edbbd5038923a5f1b7e9b0",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-062/status.json",
+      "sha256": "14eb895e9d610185440eb78521377a67c626d7d2a3784dd6464322f386ac8ab7",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-063/status.json",
+      "sha256": "9ba8b57968eafbe292ae4372200add79aaf975444e546a953146a84c63941070",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-064/status.json",
+      "sha256": "15b426b5edce48da3b7ef13658c498dc7182776b6d673148137daf3d2114725b",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-065/status.json",
+      "sha256": "95985d117b33ba971c88ca76a1328d351e766db9da35bf313ec54123017f9e15",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-066/status.json",
+      "sha256": "9c1d3fd29636fbd54f01270e308dfc7297a072dad4c2f96d2e5265007b311475",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-067/status.json",
+      "sha256": "1bd7bd970dca090945c3878c8099ca87060760912d49c8ca278cc740f8f13191",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-068/status.json",
+      "sha256": "76005cd45b5917d8d7216be05bbe1da791696d0478a31ce08c322df2d00f0adc",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-069/status.json",
+      "sha256": "31dbe22e8188389057261a710717cc2bf08b08dc15e41cabb38b0f8fdd9e122e",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-070/status.json",
+      "sha256": "302bdb4f98742d4e4befddfeb39a70805638b3889a102a628f16faf85addb333",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-071/status.json",
+      "sha256": "267cf1bf64cb436d2cebda6b69f45bc288cc9e5ddccc79c82eedd69597bbb853",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-072/status.json",
+      "sha256": "e7a6b86fb74bd3dceac79753f37f4cae55331187ecaa0a0d7cda7695715473f3",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-077/status.json",
+      "sha256": "dad8b6934c800514e526c244b81036a28941810591f1b109a3ba2a8daee332ed",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-079/status.json",
+      "sha256": "1997aa1ef4dd0393ac26a48c19d112b4a0067732f96f34cd82599a59cf915dfd",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-081/status.json",
+      "sha256": "23b134459393f6d0815c20a514c666198456a36adf127d0f78181fe916956f6c",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-082/status.json",
+      "sha256": "4bab9d45ab5d68bc8e614abaeee8fc246126d2f6165232abad6ac3d0e22afdb8",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-083/status.json",
+      "sha256": "5126d1f52427100d9c30b8e50c08b45aef37db7a259d434ad9ac34fe00a966f6",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-084/status.json",
+      "sha256": "a55d36e51483b055c920399b3c78ea3cab648544ddaa4dcc1d94eb248cfba6a5",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-085/status.json",
+      "sha256": "6380ae73978c7e95df2f314790ea1be987665c5b2e2daa537b6d580b69e6b801",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-087/status.json",
+      "sha256": "f919a7bba78f3d6977fc60c61a32b7243c2deda60a2ccdabdb964d64ec8fe962",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-088/status.json",
+      "sha256": "46e986d554eb784bbc9f0f89a077ad82b1e9f1508cb8143000fa9b6012c52d6b",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-091/status.json",
+      "sha256": "5cd5118debf9d166e009f98f8f5c5e7235a9cb5580100cbd1ab7ff172e068e45",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-092/status.json",
+      "sha256": "3405dff06c1d359bb3f52198198281a4dae5cf9a8cad2ebfa40760c48a5ba626",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-093/status.json",
+      "sha256": "0000248f2c5f4ec778f13631824917aa555d800feb6e44cd65a6383e60d6e0a4",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-094/status.json",
+      "sha256": "cd34b5529524cdc4a420b6ff4cea440959d332b64a473f85d982219fd03d1969",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-095/status.json",
+      "sha256": "8956fd158473aa6eda8cbf0c159e5cce89796fe4eb13c41f7c661a8a8fcce69d",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-096/status.json",
+      "sha256": "d25062d9ece8cc57b35cb33e58494f596f92668db4c7b3e0631f63eaf41f53a4",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-097/status.json",
+      "sha256": "30368cc032a4a680e4e33d4f15998b0da4003a6aab2a6a4b370083312979edcc",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-098/status.json",
+      "sha256": "645a58e52f7d069c1c41725a1f927ea2df321385b59c567d70bb08853cdf1149",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-099/status.json",
+      "sha256": "570343e2de4f0ef2116d3773509e3b0b15ddb6e833d4130441a85913875e7e17",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-100/status.json",
+      "sha256": "6a6068256b3713b47be0708585f59104a61bdf07e41e704a13a5de230abecec4",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-104/status.json",
+      "sha256": "8e3d1863d99d6a59be2b7296431a3aa1b87af4a6420ccc4712f70c761fa48cf2",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-106/status.json",
+      "sha256": "c91d0ad8a117785e4c7c1b324faba14baee63f696975a8bbde327f80b5ff42e4",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-107/status.json",
+      "sha256": "0b858af5d3bdee3d45f37c2d4ab7c037c9cbae6789aa6ea6ac1d593bdefcbe3a",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-108/status.json",
+      "sha256": "9cea8d0950022d44767dea57bf77bff35edd1c354222ca87b914d863529f7f58",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-111/status.json",
+      "sha256": "a8304b85cf090a276f44b8ae5b354d1aff43de537ec0e3448865e4d412414946",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-112/status.json",
+      "sha256": "8d5a6a5031a97b7975990b23959a9b22e3b9d7eb05a94254ba7cfbd9b2aadbbd",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-113/status.json",
+      "sha256": "37a8e7e5b8ed53d61178fa5e08b8565cb498ab8dbd6a12721c4c567c48ce799b",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-114/status.json",
+      "sha256": "6cc6e88abe578e06bb4e6336fbd1d7ce9e21bd6144ed610531f07495577626a4",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-115/status.json",
+      "sha256": "1209dd0720c89203195f800f2c1ac48d4b77f47c9939cc2693bf50b89132900e",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-116/status.json",
+      "sha256": "ac6a5aea3bbcb0992d61b8f227de98d01dd20495c8ccd515ac3c2f5c1127f958",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-117/status.json",
+      "sha256": "1dcf731264d63ce880c92415985d819e332a3289aea6dd88eef349caed9414c6",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-118/status.json",
+      "sha256": "26b772c27f81791eea80bee6802eb8cd62e45636bd3ec5860f2bf6f377391acb",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-120/status.json",
+      "sha256": "271fb62c843f00454cbf715e7da3222071427810fa888e367a94b2caf00a4818",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-121/status.json",
+      "sha256": "a1d837f56f44896b14862cabdf08fe95f7c3d4b739deb7e9e0fee7f0e6918fd7",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-122/status.json",
+      "sha256": "c619ef9dc583169de34eb2d2635912b47f43bdf7d7765b9574ec8448dcf8d1c2",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-123/status.json",
+      "sha256": "70a96aa111d052a7bdca6bc5bfa2ef959a40cad5a2b13e10e19580a11dcc0dd1",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-124/status.json",
+      "sha256": "a3ea5ee49a8bf7edd7a9275dd00a92f1bbc271314e62b11283e346f490d5f7cf",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/HIPAA-125/status.json",
+      "sha256": "be4bd8488244221f4aad09f0a2c96b6d02786ae8e1170a2fb627d0816b549f2b",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/SUP-014/status.json",
+      "sha256": "5b8470023a787a50fec5817f65f15a05d578520b3de5dff1deaad95e914f473a",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/gate-static-analysis.log",
+      "sha256": "1cb5585a8213ae09f387ab5ab60c159793d6e2ce6e20e6e1306ad490a543effc",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/gate-security-contract.log",
+      "sha256": "a526aa3836363df9bd6180ba5c413a8a855316bb63904dbc7036a4dab1fd8d9d",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/gate-pipeline.log",
+      "sha256": "0172bb16f0e772f1b04eaefdd955e38924699821c04211ab78c00b056bfe9ca9",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/gate-unit.log",
+      "sha256": "ff8236f31fc9d469ea0b7426c4b729428a71843dbd3354939b3ca887f93808be",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/gate-secrets.log",
+      "sha256": "6ac26c98ed065de589588fef311b49159d4477b13487cf57864bcf37e43642b0",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/gate-integration.log",
+      "sha256": "90f8e1b32456187e8b9affa998141661ae0c133cf6cf750817b83c939c38fd4c",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/gate-supply-chain.log",
+      "sha256": "af3fc1fb8f8314c7aa10756ffdcc5a1768a1052eb03b434fcd02a4e18c69f4d3",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/gate-coverage.log",
+      "sha256": "bed320242f9d53fc6a0271e267407bbfe24d006d2b87d5c8e4ebeb5b806a3df1",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/gate-mutation.log",
+      "sha256": "ef731d93a317a3acd1952674e53976322399b1df95e9b5084677ff7b925c7f0a",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-013/gate-config.log",
+      "sha256": "170f8db78e499e16f11ab6c1b5991e1fa0e3436935d010847cfec3b15e94659b",
+      "stage": "V-013",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-014/E2E-006/status.json",
+      "sha256": "50880281802b32c6dad4c84479e20f60ca14b08c863030551461ee7e5ca619eb",
+      "stage": "V-014",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-015/E2E-007/status.json",
+      "sha256": "d208c3dbe3556474fff95ba735e218ec6216887da7731085abb266dc076dd574",
+      "stage": "V-015",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-015/SUP-009/status.json",
+      "sha256": "dbf395c4f3d2a4667eeaff9da962d3fec0864c018f1a89f17b0e62b9afe03612",
+      "stage": "V-015",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-015/SUP-010/status.json",
+      "sha256": "48c0173367a3dda5e72f6b7d99d95a5a214f43bf843b9f6bc986693a2ac2d669",
+      "stage": "V-015",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-015/gate-browser.log",
+      "sha256": "59149de0574bda2bcf44cc5e1c0fa77d02b61d0d72b7f67de64b16322415eb5d",
+      "stage": "V-015",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-015/gate-build.log",
+      "sha256": "2ade2ac281b3a98e8b4a84fe83a5e8be6bea99ed9d51bbb6b2bf2c41f846ff9e",
+      "stage": "V-015",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-016/BC-056/status.json",
+      "sha256": "b9ff971acbcf2113aa41b238ce88def75c2009737b1f447d92213d9b971cec3c",
+      "stage": "V-016",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-016/BC-057/status.json",
+      "sha256": "1b92203d8118d8b09e2970ad45e3d3bff729b0f1e96e69312a773106b87a4d5e",
+      "stage": "V-016",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-016/BC-061/status.json",
+      "sha256": "49cfad9caf6e3b2d019a0e24499831c0e1fcd3b2ecef6406c8a4142d684926fb",
+      "stage": "V-016",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-016/BC-090/status.json",
+      "sha256": "1ad2ac6a4c8f430fb84af55da1fa8b85e29df27778163bd1f0bf926e18b7f2b4",
+      "stage": "V-016",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-016/BC-091/status.json",
+      "sha256": "b0de45cc373de981cd85ae3f3ed653a19c7f48ebfabf4f60fe6b40112c342f6f",
+      "stage": "V-016",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-016/BC-092/status.json",
+      "sha256": "7f85c041e9908c72af674f7f812cb2718b25b0936e54d8827947a52e88b2ec7d",
+      "stage": "V-016",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-016/BC-094/status.json",
+      "sha256": "20a861d82946e51e64bc3df2f708d3796a51623a82f2ddc7fe8f27b3481849e3",
+      "stage": "V-016",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-016/BC-095/status.json",
+      "sha256": "8b6db6393b6ba38387980627abb050967b97cf74cd71b8a7f7645899dbe4f6aa",
+      "stage": "V-016",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-016/BC-096/status.json",
+      "sha256": "1ad1f37b357743c0e8d93125a544d7eb5888fc070c1179d26e4eb90a2a868b8f",
+      "stage": "V-016",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-016/BC-100/status.json",
+      "sha256": "5fa3fb092483a1897d86b38fa20442b7617fe01c582659b7e443e974c17c3e4c",
+      "stage": "V-016",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-016/BC-165/status.json",
+      "sha256": "2a9257922a915f52e29903175f4af7d17a30326db0179aa025954b0accf94ed4",
+      "stage": "V-016",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-016/BC-168/status.json",
+      "sha256": "b484baf489dad2350ff1d065140171c7d7e8a8062a0b03509f93a4182050bf0b",
+      "stage": "V-016",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-016/BC-169/status.json",
+      "sha256": "b06c09691dd11a15c0475aaf5e6051d82d9654f551ff72c595e366eeb6b83917",
+      "stage": "V-016",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-016/E2E-008/status.json",
+      "sha256": "96c4cd070865546d4e9aee35a221110c130eaccb0c573687f082482dd17e3a9e",
+      "stage": "V-016",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-016/GEN-115/status.json",
+      "sha256": "7d64dc74ea4cda040aa6f79ebe195c45b020f5d772ec609b76ba62e6ef452637",
+      "stage": "V-016",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-016/SUP-012/status.json",
+      "sha256": "cd8e8c535c6e54a04681d50d0fa9c1a623acbd83789536a559e79ac98ee9da05",
+      "stage": "V-016",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-016/gate-integration.log",
+      "sha256": "bd4251e365a06d3ce8d6ece1606123d34da5fb055936f255db21b6d28223c158",
+      "stage": "V-016",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-016/gate-security-contract.log",
+      "sha256": "9e82ddebf7d0685852d5d9cb381221e470f067783078cb53fa3029644a5f5112",
+      "stage": "V-016",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-016/gate-build.log",
+      "sha256": "2ade2ac281b3a98e8b4a84fe83a5e8be6bea99ed9d51bbb6b2bf2c41f846ff9e",
+      "stage": "V-016",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-018/BC-166/status.json",
+      "sha256": "4ae8949a97f9851935660a43df3c86531ed94da6fe68f7bea033c5a003833f36",
+      "stage": "V-018",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-018/BC-167/status.json",
+      "sha256": "3c46d89513bdb7865a555852f0ce7069043b231ba6b5602084b2553ff1fb7f26",
+      "stage": "V-018",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-018/BC-190/status.json",
+      "sha256": "977cdedc211c8736561e14871ca444a7e172f1dce112c87732598cd2de87b822",
+      "stage": "V-018",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-018/E2E-009/status.json",
+      "sha256": "de473cc7d7bcdf5253edc618abad3bd6ec41985a9f297203cdcecbf1e82649ee",
+      "stage": "V-018",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-019/BC-010/status.json",
+      "sha256": "dff880f4b82fc928036ffa6507fba116f373a385cd810b14da724cb15f211bae",
+      "stage": "V-019",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-019/BC-011/status.json",
+      "sha256": "b8cc8d9447a3ddeb5c597efae267c9a1e45d623c5945ea65fc5e9816d1fc5c48",
+      "stage": "V-019",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-019/BC-012/status.json",
+      "sha256": "70d3652da5264c392f73800f71c42a1bd4a510a77c7d12ecfccb213100678980",
+      "stage": "V-019",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-019/BC-014/status.json",
+      "sha256": "29e0035dc89a54a8d26d0bced998e7649847562ad6f9518cd22b6c348cfb46d2",
+      "stage": "V-019",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-019/BC-181/status.json",
+      "sha256": "83c66035f12eedb32ffda18691ab32bdb9b41f3eb2d0e5d1b479f15279ec10c5",
+      "stage": "V-019",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-019/BC-182/status.json",
+      "sha256": "22705f7c0d21af43dfa5f3fc82a121e4e16047691b26a34314a64222c4545271",
+      "stage": "V-019",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-019/BC-186/status.json",
+      "sha256": "adacc7e7b548d4499e841c1539463b982379798f8cef3cb51603c6f179943e17",
+      "stage": "V-019",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-019/E2E-010/status.json",
+      "sha256": "bd0b184e58ac27d9c0d7723bdd8c54c98dace5d5a809092b46581b46d41bcf96",
+      "stage": "V-019",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-019/GEN-063/status.json",
+      "sha256": "416646cc999055b43016f171ef5ddb5e1f3cbf838aa124864099864fddf8472f",
+      "stage": "V-019",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-019/GEN-111/status.json",
+      "sha256": "15992c0f7a69fa51622728e0c16c4930968f113c9518c29aac72ba3228bfbf2e",
+      "stage": "V-019",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-019/GEN-114/status.json",
+      "sha256": "1750082327d4fb6bef5695d6457da0b21503c9dd86b6d9f19dd23b87f128cd85",
+      "stage": "V-019",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-019/GEN-118/status.json",
+      "sha256": "94cf0cbcbd913caa3a28cebbe04f2fc7b0d63288f3963622a3ff70ce635deb0d",
+      "stage": "V-019",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-019/GEN-119/status.json",
+      "sha256": "670e9b56951db0096aba10a9e445c70c7f045e2e43c87e443de2dff392b3d003",
+      "stage": "V-019",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-019/HIPAA-076/status.json",
+      "sha256": "ccda4ff59bfec932cb52771c159def08117b0b0c5fb1ad3537692f7e81f08a78",
+      "stage": "V-019",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-019/HIPAA-078/status.json",
+      "sha256": "9d819f0d05467a0182096aeb64b07c100f28a48bec5c08ef5ffe8ad126fac95e",
+      "stage": "V-019",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-019/HIPAA-080/status.json",
+      "sha256": "107bea8bbb82db5f6341c08b3cc6827a32a5139e97d5c5f11123542c6b44474a",
+      "stage": "V-019",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-019/HIPAA-089/status.json",
+      "sha256": "05d7022cc4b584e0a20922dd3e60b3b18c3fe83e6927a5bde3145528c34fe8f3",
+      "stage": "V-019",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-019/HIPAA-090/status.json",
+      "sha256": "9fa717c6145bef05253b5d5856d636e4d14ae709ffad380b944e367a5307d6a4",
+      "stage": "V-019",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-019/HIPAA-119/status.json",
+      "sha256": "c2dbec63eb19156848178bdc32c026806572ae2ad86f61c7d9ff433fa4cb931a",
+      "stage": "V-019",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-019/SUP-011/status.json",
+      "sha256": "7700a8a0eb61b6553a8ffb3b04129513c0c06f3302d5681d66975f6a84a8dcb3",
+      "stage": "V-019",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-019/gate-secrets.log",
+      "sha256": "6ac26c98ed065de589588fef311b49159d4477b13487cf57864bcf37e43642b0",
+      "stage": "V-019",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-019/gate-integration.log",
+      "sha256": "96b524699d7f565b8dd84de20c11825ff4836973ac35dfd4f27b2b736ea22ef9",
+      "stage": "V-019",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-019/gate-static-analysis.log",
+      "sha256": "1cb5585a8213ae09f387ab5ab60c159793d6e2ce6e20e6e1306ad490a543effc",
+      "stage": "V-019",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-019/gate-security-contract.log",
+      "sha256": "74bf07ce4eff109d7e4e48ac57d46906d7cc88c450b84136cb9e8c21cb1933d7",
+      "stage": "V-019",
+      "epoch": "FORGE-SPEC-3"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-019/gate-build.log",
+      "sha256": "2ade2ac281b3a98e8b4a84fe83a5e8be6bea99ed9d51bbb6b2bf2c41f846ff9e",
+      "stage": "V-019",
+      "epoch": "FORGE-SPEC-3"
     }
   ],
-  "updatedAt": "2026-09-20T01:47:03Z"
+  "updatedAt": "2026-09-20T03:03:36Z"
 }

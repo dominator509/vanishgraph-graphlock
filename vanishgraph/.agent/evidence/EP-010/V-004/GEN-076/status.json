@@ -7,20 +7,25 @@
   "definition_path": ".agent/evidence/EP-010/V-004/GEN-076/definition.md",
   "definition_digest": "0c56e9de8b05571c914f62fc4d00132cc6f7fdad0489f4e75b04c5868b70d8cd",
   "definition_located": true,
+  "definition_kind": "prompt-block",
   "gate": {
     "gate": "build",
     "script": "build-artifact.sh",
-    "exitCode": 1,
+    "exitCode": 0,
     "sentinel": "artifact: built",
-    "sentinelFound": false,
+    "sentinelFound": true,
     "evidencePath": ".agent/evidence/EP-010/V-004/gate-build.log",
-    "digest": "9fa326afbd7deaedebfe0148d9042e458cde71a84ba1151da0c493c442272c1b",
-    "note": "the gate exited 1 and did NOT print its sentinel"
+    "digest": "2ade2ac281b3a98e8b4a84fe83a5e8be6bea99ed9d51bbb6b2bf2c41f846ff9e",
+    "note": "the gate exited 0 and printed its sentinel"
   },
   "prompt_requires_authorization": false,
   "prompt_requires_target": false,
   "prompt_requires_runner": false,
   "status": "PARTIAL",
-  "reason": "the repository gate covering this subject (scripts/build-artifact.sh) ran as the positive path: the gate exited 1 and did NOT print its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
-  "recorded_at": "2026-09-20T01:14:03Z"
+  "reason": "the repository gate covering this subject (scripts/build-artifact.sh) ran as the positive path: the gate exited 0 and printed its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
+  "deferred_provenance": null,
+  "scope_clause": null,
+  "dependency_edge_ref": null,
+  "provisioning_action": null,
+  "recorded_at": "2026-09-20T01:56:58Z"
 }

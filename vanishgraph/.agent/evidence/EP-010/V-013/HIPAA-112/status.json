@@ -1,0 +1,31 @@
+{
+  "test_id": "HIPAA-112",
+  "owner_stage": "V-013",
+  "title": "API Rate Limiting & Abuse Protection Testing",
+  "kind": "atomic-security",
+  "source_library": ".agent/verification/source-library/security/hipaa-software-dev-security-testing-prompts.md",
+  "definition_path": ".agent/evidence/EP-010/V-013/HIPAA-112/definition.md",
+  "definition_digest": "d08636465eca33a7701874490ebbfdbdf8eca8fc0955f248abec730c709be5cd",
+  "definition_located": true,
+  "definition_kind": "prompt-block",
+  "gate": {
+    "gate": "static-analysis",
+    "script": "lint.sh",
+    "exitCode": 0,
+    "sentinel": "lint: ok",
+    "sentinelFound": true,
+    "evidencePath": ".agent/evidence/EP-010/V-013/gate-static-analysis.log",
+    "digest": "1cb5585a8213ae09f387ab5ab60c159793d6e2ce6e20e6e1306ad490a543effc",
+    "note": "the gate exited 0 and printed its sentinel"
+  },
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "PARTIAL",
+  "reason": "the repository gate covering this subject (scripts/lint.sh) ran as the positive path: the gate exited 0 and printed its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
+  "deferred_provenance": null,
+  "scope_clause": null,
+  "dependency_edge_ref": null,
+  "provisioning_action": null,
+  "recorded_at": "2026-09-20T02:48:57Z"
+}

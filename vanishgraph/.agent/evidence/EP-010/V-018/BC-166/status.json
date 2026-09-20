@@ -1,0 +1,22 @@
+{
+  "test_id": "BC-166",
+  "owner_stage": "V-018",
+  "title": "Load Testing",
+  "kind": "atomic-security",
+  "source_library": ".agent/verification/source-library/security/blockchain-security-testing-prompts.md",
+  "definition_path": ".agent/evidence/EP-010/V-018/BC-166/definition.md",
+  "definition_digest": "903ad1f54f4ed6e1e4eea116d3b6d94b937e1b185711ac56689996dee1932ade",
+  "definition_located": true,
+  "definition_kind": "prompt-block",
+  "gate": null,
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "BLOCKED_PREREQUISITE",
+  "reason": "no repository gate covers this prompt's subject and no environment path exists to execute it here; the definition was extracted from .agent/verification/source-library/security/blockchain-security-testing-prompts.md and NOT executed",
+  "deferred_provenance": null,
+  "scope_clause": null,
+  "dependency_edge_ref": "capability:execution-mapping->V-018",
+  "provisioning_action": null,
+  "recorded_at": "2026-09-20T02:56:42Z"
+}

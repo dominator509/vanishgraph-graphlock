@@ -1,0 +1,22 @@
+{
+  "test_id": "BC-023",
+  "owner_stage": "V-012",
+  "title": "Formal Verification",
+  "kind": "atomic-security",
+  "source_library": ".agent/verification/source-library/security/blockchain-security-testing-prompts.md",
+  "definition_path": ".agent/evidence/EP-010/V-012/BC-023/definition.md",
+  "definition_digest": "54d058e1b311d4f12f08518f0d9e23d035b5b327ed607e97d01bbc7a7262927b",
+  "definition_located": true,
+  "definition_kind": "prompt-block",
+  "gate": null,
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "BLOCKED_PREREQUISITE",
+  "reason": "no repository gate covers this prompt's subject and no environment path exists to execute it here; the definition was extracted from .agent/verification/source-library/security/blockchain-security-testing-prompts.md and NOT executed",
+  "deferred_provenance": null,
+  "scope_clause": null,
+  "dependency_edge_ref": "capability:execution-mapping->V-012",
+  "provisioning_action": null,
+  "recorded_at": "2026-09-20T02:21:04Z"
+}

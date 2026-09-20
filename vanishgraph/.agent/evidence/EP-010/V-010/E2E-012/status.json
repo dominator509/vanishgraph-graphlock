@@ -1,0 +1,31 @@
+{
+  "test_id": "E2E-012",
+  "owner_stage": "V-010",
+  "title": "Schema Evolution & Data Migration Verification",
+  "kind": "orchestrator",
+  "source_library": ".agent/verification/E2E_SUITE_LIBRARY.md",
+  "definition_path": ".agent/evidence/EP-010/V-010/E2E-012/definition.md",
+  "definition_digest": "5b1daa0ab5fdbf4cfc7817941b9cf979a85d21cc5ce7df3573af33b7322357dc",
+  "definition_located": true,
+  "definition_kind": "prompt-block",
+  "gate": {
+    "gate": "integration",
+    "script": "test-integration.sh",
+    "exitCode": 0,
+    "sentinel": "test-integration: ok",
+    "sentinelFound": true,
+    "evidencePath": ".agent/evidence/EP-010/V-010/gate-integration.log",
+    "digest": "13c0170905415b93232be2c4a270ff0f349eb4f69885764e3647647bcd8bfa62",
+    "note": "the gate exited 0 and printed its sentinel"
+  },
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "PARTIAL",
+  "reason": "the repository gate covering this subject (scripts/test-integration.sh) ran as the positive path: the gate exited 0 and printed its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
+  "deferred_provenance": null,
+  "scope_clause": null,
+  "dependency_edge_ref": null,
+  "provisioning_action": null,
+  "recorded_at": "2026-09-20T02:14:11Z"
+}

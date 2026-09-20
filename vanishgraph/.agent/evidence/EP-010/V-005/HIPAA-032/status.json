@@ -23,5 +23,9 @@
   "prompt_requires_runner": false,
   "status": "PARTIAL",
   "reason": "the repository gate covering this subject (scripts/lint.sh) ran as the positive path: the gate exited 0 and printed its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
-  "recorded_at": "2026-09-20T01:44:24Z"
+  "deferred_provenance": null,
+  "scope_clause": null,
+  "dependency_edge_ref": null,
+  "provisioning_action": null,
+  "recorded_at": "2026-09-20T01:57:34Z"
 }

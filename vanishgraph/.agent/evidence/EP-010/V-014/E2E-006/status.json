@@ -1,0 +1,22 @@
+{
+  "test_id": "E2E-006",
+  "owner_stage": "V-014",
+  "title": "Ad Hoc & Exploratory Testing",
+  "kind": "orchestrator",
+  "source_library": ".agent/verification/E2E_SUITE_LIBRARY.md",
+  "definition_path": ".agent/evidence/EP-010/V-014/E2E-006/definition.md",
+  "definition_digest": "e8b189762454f988850fcd41908ba9e4e93b72efa4f14dbdc3115ee3792c96c5",
+  "definition_located": true,
+  "definition_kind": "prompt-block",
+  "gate": null,
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "BLOCKED_PREREQUISITE",
+  "reason": "no repository gate covers this prompt's subject and no environment path exists to execute it here; the definition was extracted from .agent/verification/E2E_SUITE_LIBRARY.md and NOT executed",
+  "deferred_provenance": null,
+  "scope_clause": null,
+  "dependency_edge_ref": "capability:execution-mapping->V-014",
+  "provisioning_action": null,
+  "recorded_at": "2026-09-20T02:48:58Z"
+}

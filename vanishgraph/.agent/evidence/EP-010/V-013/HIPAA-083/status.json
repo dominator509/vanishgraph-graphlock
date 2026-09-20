@@ -1,0 +1,31 @@
+{
+  "test_id": "HIPAA-083",
+  "owner_stage": "V-013",
+  "title": "Data Loss Prevention (DLP) Testing",
+  "kind": "atomic-security",
+  "source_library": ".agent/verification/source-library/security/hipaa-software-dev-security-testing-prompts.md",
+  "definition_path": ".agent/evidence/EP-010/V-013/HIPAA-083/definition.md",
+  "definition_digest": "6572e2853cd03e08d06e522a813bee507c30299e6cc4f1f2542fc12d325ac0e1",
+  "definition_located": true,
+  "definition_kind": "prompt-block",
+  "gate": {
+    "gate": "static-analysis",
+    "script": "lint.sh",
+    "exitCode": 0,
+    "sentinel": "lint: ok",
+    "sentinelFound": true,
+    "evidencePath": ".agent/evidence/EP-010/V-013/gate-static-analysis.log",
+    "digest": "1cb5585a8213ae09f387ab5ab60c159793d6e2ce6e20e6e1306ad490a543effc",
+    "note": "the gate exited 0 and printed its sentinel"
+  },
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "BLOCKED_CREDENTIALS",
+  "reason": "the prompt needs a provider entitlement that PREFLIGHT.md declares and this environment has not provisioned: CLICK2MAIL_API_KEY; probe scripts/probes/postal_api.sh exited 1",
+  "deferred_provenance": null,
+  "scope_clause": null,
+  "dependency_edge_ref": null,
+  "provisioning_action": "provision CLICK2MAIL_API_KEY: run scripts/probes/postal_api.sh until it exits 0, then re-run this stage",
+  "recorded_at": "2026-09-20T02:48:57Z"
+}

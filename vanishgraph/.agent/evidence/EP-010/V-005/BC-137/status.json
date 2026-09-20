@@ -15,7 +15,7 @@
     "sentinel": "security check: ok",
     "sentinelFound": true,
     "evidencePath": ".agent/evidence/EP-010/V-005/gate-security-contract.log",
-    "digest": "2d61ddeade388ac1f8f077d486d592cabca69bf29880662be617261f800d5a86",
+    "digest": "becbd9ce949dfd495d426fa30c84344ca083e4dfe37712b668e8d5f880cef421",
     "note": "the gate exited 0 and printed its sentinel"
   },
   "prompt_requires_authorization": false,
@@ -23,5 +23,9 @@
   "prompt_requires_runner": false,
   "status": "PARTIAL",
   "reason": "the repository gate covering this subject (scripts/security-check.sh) ran as the positive path: the gate exited 0 and printed its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
-  "recorded_at": "2026-09-20T01:44:01Z"
+  "deferred_provenance": null,
+  "scope_clause": null,
+  "dependency_edge_ref": null,
+  "provisioning_action": null,
+  "recorded_at": "2026-09-20T01:57:19Z"
 }

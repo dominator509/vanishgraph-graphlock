@@ -1,0 +1,31 @@
+{
+  "test_id": "BC-017",
+  "owner_stage": "V-012",
+  "title": "Invariant Testing",
+  "kind": "atomic-security",
+  "source_library": ".agent/verification/BLOCKCHAIN_008_022_RECONSTRUCTED.md",
+  "definition_path": ".agent/evidence/EP-010/V-012/BC-017/definition.md",
+  "definition_digest": "22a83e71fc7979cbce5f3e4c4f35e12f4760f2544c3e60f754e5dcb1b015df54",
+  "definition_located": true,
+  "definition_kind": "prompt-block",
+  "gate": {
+    "gate": "mutation",
+    "script": "mutation-gate.sh",
+    "exitCode": 0,
+    "sentinel": "mutation gate: ok",
+    "sentinelFound": true,
+    "evidencePath": ".agent/evidence/EP-010/V-012/gate-mutation.log",
+    "digest": "ef731d93a317a3acd1952674e53976322399b1df95e9b5084677ff7b925c7f0a",
+    "note": "the gate exited 0 and printed its sentinel"
+  },
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "PARTIAL",
+  "reason": "the repository gate covering this subject (scripts/mutation-gate.sh) ran as the positive path: the gate exited 0 and printed its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
+  "deferred_provenance": null,
+  "scope_clause": null,
+  "dependency_edge_ref": null,
+  "provisioning_action": null,
+  "recorded_at": "2026-09-20T02:21:04Z"
+}

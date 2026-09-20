@@ -7,6 +7,7 @@
   "definition_path": ".agent/evidence/EP-010/V-004/GEN-084/definition.md",
   "definition_digest": "f0b2f6f1f444d5ccd51f1b3f77d3d933b6e7905d43fadc7702fb396d74be18bd",
   "definition_located": true,
+  "definition_kind": "prompt-block",
   "gate": {
     "gate": "security-contract",
     "script": "security-check.sh",
@@ -14,7 +15,7 @@
     "sentinel": "security check: ok",
     "sentinelFound": true,
     "evidencePath": ".agent/evidence/EP-010/V-004/gate-security-contract.log",
-    "digest": "dd64b7f95dd2c5a9b6bf51ad72b42ba9fd255bb4caa45daf0321981edb3a0fc4",
+    "digest": "07bccd853dbbd826d1b8dc3ba31386f174123b1a8f0bfaf89a8443bf243689bc",
     "note": "the gate exited 0 and printed its sentinel"
   },
   "prompt_requires_authorization": false,
@@ -22,5 +23,9 @@
   "prompt_requires_runner": false,
   "status": "PARTIAL",
   "reason": "the repository gate covering this subject (scripts/security-check.sh) ran as the positive path: the gate exited 0 and printed its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
-  "recorded_at": "2026-09-20T01:14:03Z"
+  "deferred_provenance": null,
+  "scope_clause": null,
+  "dependency_edge_ref": null,
+  "provisioning_action": null,
+  "recorded_at": "2026-09-20T01:56:58Z"
 }

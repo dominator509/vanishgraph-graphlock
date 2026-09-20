@@ -15,7 +15,7 @@
     "sentinel": "test-integration: ok",
     "sentinelFound": true,
     "evidencePath": ".agent/evidence/EP-010/V-009/gate-integration.log",
-    "digest": "4fc4b1c45d391a9803dedf3e44edf422f7119d17c9277c4893141283289fa89b",
+    "digest": "587ac6ec804801a13358f09759b48b75813f2ac8f54f28d82dcbf0273e9222b4",
     "note": "the gate exited 0 and printed its sentinel"
   },
   "prompt_requires_authorization": false,
@@ -23,5 +23,9 @@
   "prompt_requires_runner": false,
   "status": "PARTIAL",
   "reason": "the repository gate covering this subject (scripts/test-integration.sh) ran as the positive path: the gate exited 0 and printed its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
-  "recorded_at": "2026-09-20T01:43:06Z"
+  "deferred_provenance": null,
+  "scope_clause": null,
+  "dependency_edge_ref": null,
+  "provisioning_action": null,
+  "recorded_at": "2026-09-20T02:08:00Z"
 }

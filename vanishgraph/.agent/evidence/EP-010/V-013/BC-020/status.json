@@ -1,0 +1,31 @@
+{
+  "test_id": "BC-020",
+  "owner_stage": "V-013",
+  "title": "Differential Fuzzing",
+  "kind": "atomic-security",
+  "source_library": ".agent/verification/BLOCKCHAIN_008_022_RECONSTRUCTED.md",
+  "definition_path": ".agent/evidence/EP-010/V-013/BC-020/definition.md",
+  "definition_digest": "318bff5ad7fefea05f1cabeabbbabd7e43ea031e820e4d9cf8e914a82be915db",
+  "definition_located": true,
+  "definition_kind": "prompt-block",
+  "gate": {
+    "gate": "security-contract",
+    "script": "security-check.sh",
+    "exitCode": 0,
+    "sentinel": "security check: ok",
+    "sentinelFound": true,
+    "evidencePath": ".agent/evidence/EP-010/V-013/gate-security-contract.log",
+    "digest": "a526aa3836363df9bd6180ba5c413a8a855316bb63904dbc7036a4dab1fd8d9d",
+    "note": "the gate exited 0 and printed its sentinel"
+  },
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "PARTIAL",
+  "reason": "the repository gate covering this subject (scripts/security-check.sh) ran as the positive path: the gate exited 0 and printed its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
+  "deferred_provenance": null,
+  "scope_clause": null,
+  "dependency_edge_ref": null,
+  "provisioning_action": null,
+  "recorded_at": "2026-09-20T02:25:54Z"
+}

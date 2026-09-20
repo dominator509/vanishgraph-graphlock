@@ -1,0 +1,82 @@
+# EP-010 M4 — stages V-010 through V-019 executed with durable accounting: evidence
+
+## 1. The stages, in order, and what each accounted
+
+| stage | owned IDs | statuses | gates executed |
+|---|---|---|---|
+| V-010 | 5 | 1 PARTIAL, 4 BLOCKED_PREREQUISITE | integration, build |
+| V-011 | 5 | 5 BLOCKED_PREREQUISITE | build, config |
+| V-012 | 14 | 3 PARTIAL, 11 BLOCKED_PREREQUISITE | integration, **mutation**, security-contract |
+| V-013 | **298** | **170 PARTIAL**, 121 BLOCKED_PREREQUISITE, 6 BLOCKED_CREDENTIALS, 1 BLOCKED_ENVIRONMENT | static-analysis, security-contract, pipeline, unit, secrets, integration, supply-chain, **coverage**, mutation, config |
+| V-014 | 1 | 1 BLOCKED_PREREQUISITE | — |
+| V-015 | 3 | 1 PARTIAL, 2 BLOCKED_PREREQUISITE | browser, build |
+| V-016 | 16 | 4 PARTIAL, 11 BLOCKED_PREREQUISITE, **1 BLOCKED_SAFETY** | integration, security-contract, build |
+| V-017 | 1 | **1 DEFERRED_LONG_RUNNING** | — |
+| V-018 | 4 | 4 BLOCKED_PREREQUISITE | — |
+| V-019 | 20 | 8 PARTIAL, 9 BLOCKED_PREREQUISITE, 2 BLOCKED_ENVIRONMENT, 1 BLOCKED_CREDENTIALS | secrets, integration, static-analysis, security-contract, build |
+
+Every stage printed `stage <V-0NN>: accounted` in order with exit 0, and a candidate `FAIL` would not have halted
+a later independent stage (VG-SHIP-002). **V-017 produced the `DEFERRED_LONG_RUNNING` row the milestone expects**,
+and `BLOCKED_SAFETY` appears exactly where a prompt targets production.
+
+## 2. Long-running honesty (M4(b), DOD-038, VG-SHIP-020)
+
+A soak, endurance, stress, fuzz or recovery-duration prompt is now classified **before** any gate mapping, and the
+row carries the fields the plan names: `workload`, `plannedDuration` (parsed from the prompt, or stated as "not
+declared in the prompt text"), `elapsedDuration` (`PT0S - not started: this campaign window cannot host the planned
+duration`), `startedAt`, `heartbeatRef` (the stage checkpoint a real runner would heartbeat into),
+`partialResultPath`, `completionEta`. **A five-minute run never passes a 72-hour requirement**, and the abbreviated
+portion is never written as `PASS`.
+
+## 3. Non-cascading continuation and the fields a blocker needs (M4(c), FALLBACK)
+
+No `FAIL` occurred, and no blanket block was produced: 192 IDs are `BLOCKED_PREREQUISITE`, each naming the
+capability it waits on **and** `dependencyEdgeRef` pointing at the edge in the dependency graph. Provider
+entitlements are `BLOCKED_CREDENTIALS` **with the probe executed**: the `PREFLIGHT.md` row (`STRIPE_SECRET_KEY`,
+`CLICK2MAIL_API_KEY`, `SEARCH_API_KEY`, `GITHUB_APP_ID`, `LOCAL_MODEL_ENDPOINT`), the probe script, its exit code
+and its output are recorded as evidence (7 such rows). Production-touching prompts are `BLOCKED_SAFETY` **with the
+scope clause named** (`VG-SCOPE-009`). Environments are `BLOCKED_ENVIRONMENT` with `provisioningAction` and
+`scopeClause`.
+
+## 4. Change invalidation (M4(d), DOD-040, VG-SHIP-005)
+
+The executor's classification changed **after 103 statuses existed**, which is exactly the case the rule is for:
+the artifact surface changed, so the epoch **rolled** — `FORGE-SPEC-2` → **`FORGE-SPEC-3`** — with the reason, the
+changed surfaces and the revocation recorded in `.agent/verification/state/CHANGE_INVALIDATION_GRAPH.md`, and the
+older rows retained in the ledger as history but no longer counted. The revocation was measured before the
+re-run: **165 rows covering 103 IDs**, of which **0 were `PASS`** (they were PARTIAL and blockers). Every stage was
+then re-run under the new epoch, so the whole set is accounted inside one epoch rather than stitched across two.
+
+## 5. Measured state after M4
+
+```
+$ sh scripts/harness-accounting.sh
+accounting: 470/484 accounted in epoch FORGE-SPEC-3; 14 unaccounted; 165 row(s) for a registry id belong to an earlier epoch and are NOT counted
+accounting: the whole ledger holds 2343 row(s), of which 1873 belong to an earlier epoch
+accounting: unaccounted: GEN-018, GEN-020, GEN-021, GEN-103, BC-031, BC-032, BC-036, BC-111, BC-152, BC-153, E2E-011, E2E-020, SUP-013, SUP-015
+exit 1, no sentinel
+
+$ sh scripts/harness-next.sh
+NEXT V-020
+
+$ sh scripts/harness-validate.sh
+harness validation: ok      # real rows validated against SPEC-006 §4.1, all eight self-tests rejected as required
+```
+
+**The 14 unaccounted IDs are exactly the 14 owned by V-020 and V-021** (`19-EXTERNAL-HUMAN` = 10,
+`19-FINAL-ARTIFACT` = 2, `20-UAT-HUMAN` = 2), which are M5's stages. `harness-next.sh` selecting `V-020` is the
+same fact stated by the selector.
+
+Totals across the twenty stages: **265 PARTIAL, 192 BLOCKED_PREREQUISITE, 7 BLOCKED_CREDENTIALS,
+4 BLOCKED_ENVIRONMENT, 1 BLOCKED_SAFETY, 1 DEFERRED_LONG_RUNNING.**
+
+## 6. What M4 does not claim
+
+- **No ID passed.** 265 are `PARTIAL`: the covering gate ran, and the prompt's own scope discovery, methodology
+  and negative case — which only an authorised agentic runner can execute — did not.
+- **No long-running workload ran**: 1 ID is `DEFERRED_LONG_RUNNING` with its planned duration and the reason the
+  campaign window cannot host it.
+- **Seven IDs are blocked on provider entitlements**, with the probe exit codes as evidence rather than an
+  assertion that the providers are unavailable.
+- **`accounting: 484/484` is not claimed**; the remaining 14 IDs belong to stages V-020 and V-021.
+- `RELEASE_GATE.json` remains `INCONCLUSIVE` / `FORGE_ONLY`.

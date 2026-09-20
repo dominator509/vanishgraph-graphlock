@@ -1,13 +1,67 @@
 {
-  "stage": "V-017",
-  "epoch": "FORGE-SPEC-2",
-  "candidate_sha": "16fbab170130a421e86d4a71d2ffa3c909cd94c3",
-  "artifact_digest": "sha256:dfd7ccd7aa8bd2b8864c75f1cc7c6927bcf6667f6c550e369a3460dbfbd39c2f",
-  "owned_ids": 1,
+  "stage": "V-019",
+  "epoch": "FORGE-SPEC-3",
+  "candidate_sha": "e1e8fdcc0a9e9e93bcb3ee96047d6b6f6f2eaafc",
+  "artifact_digest": "sha256:6c789950212646a91a28bd640f1ff772b1ca844190a56b8285a398dd892859f7",
+  "owned_ids": 20,
   "statuses": {
-    "DEFERRED_LONG_RUNNING": 1
+    "PARTIAL": 8,
+    "BLOCKED_PREREQUISITE": 9,
+    "BLOCKED_ENVIRONMENT": 2,
+    "BLOCKED_CREDENTIALS": 1
   },
-  "gates": [],
-  "updated_at": "2026-09-20T01:47:03Z",
+  "gates": [
+    {
+      "gate": "secrets",
+      "script": "secret-scan.sh",
+      "exitCode": 0,
+      "sentinel": "secret scan: ok",
+      "sentinelFound": true,
+      "evidencePath": ".agent/evidence/EP-010/V-019/gate-secrets.log",
+      "digest": "6ac26c98ed065de589588fef311b49159d4477b13487cf57864bcf37e43642b0",
+      "note": "the gate exited 0 and printed its sentinel"
+    },
+    {
+      "gate": "integration",
+      "script": "test-integration.sh",
+      "exitCode": 0,
+      "sentinel": "test-integration: ok",
+      "sentinelFound": true,
+      "evidencePath": ".agent/evidence/EP-010/V-019/gate-integration.log",
+      "digest": "96b524699d7f565b8dd84de20c11825ff4836973ac35dfd4f27b2b736ea22ef9",
+      "note": "the gate exited 0 and printed its sentinel"
+    },
+    {
+      "gate": "static-analysis",
+      "script": "lint.sh",
+      "exitCode": 0,
+      "sentinel": "lint: ok",
+      "sentinelFound": true,
+      "evidencePath": ".agent/evidence/EP-010/V-019/gate-static-analysis.log",
+      "digest": "1cb5585a8213ae09f387ab5ab60c159793d6e2ce6e20e6e1306ad490a543effc",
+      "note": "the gate exited 0 and printed its sentinel"
+    },
+    {
+      "gate": "security-contract",
+      "script": "security-check.sh",
+      "exitCode": 0,
+      "sentinel": "security check: ok",
+      "sentinelFound": true,
+      "evidencePath": ".agent/evidence/EP-010/V-019/gate-security-contract.log",
+      "digest": "74bf07ce4eff109d7e4e48ac57d46906d7cc88c450b84136cb9e8c21cb1933d7",
+      "note": "the gate exited 0 and printed its sentinel"
+    },
+    {
+      "gate": "build",
+      "script": "build-artifact.sh",
+      "exitCode": 0,
+      "sentinel": "artifact: built",
+      "sentinelFound": true,
+      "evidencePath": ".agent/evidence/EP-010/V-019/gate-build.log",
+      "digest": "2ade2ac281b3a98e8b4a84fe83a5e8be6bea99ed9d51bbb6b2bf2c41f846ff9e",
+      "note": "the gate exited 0 and printed its sentinel"
+    }
+  ],
+  "updated_at": "2026-09-20T03:03:36Z",
   "next_action": "run sh scripts/harness-next.sh to select the next stage"
 }

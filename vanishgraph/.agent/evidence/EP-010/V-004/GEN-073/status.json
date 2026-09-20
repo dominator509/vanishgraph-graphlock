@@ -7,6 +7,7 @@
   "definition_path": ".agent/evidence/EP-010/V-004/GEN-073/definition.md",
   "definition_digest": "da9a5391d05a299856d6f3d390af50585720e87910aa6e65be1f17bc98359566",
   "definition_located": true,
+  "definition_kind": "prompt-block",
   "gate": {
     "gate": "supply-chain",
     "script": "dependency-audit.sh",
@@ -22,5 +23,9 @@
   "prompt_requires_runner": false,
   "status": "PARTIAL",
   "reason": "the repository gate covering this subject (scripts/dependency-audit.sh) ran as the positive path: the gate exited 1 and did NOT print its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
-  "recorded_at": "2026-09-20T01:14:03Z"
+  "deferred_provenance": null,
+  "scope_clause": null,
+  "dependency_edge_ref": null,
+  "provisioning_action": null,
+  "recorded_at": "2026-09-20T01:56:58Z"
 }

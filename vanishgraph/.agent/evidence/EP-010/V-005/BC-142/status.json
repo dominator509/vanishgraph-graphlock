@@ -14,5 +14,9 @@
   "prompt_requires_runner": false,
   "status": "BLOCKED_PREREQUISITE",
   "reason": "no repository gate covers this prompt's subject and no environment path exists to execute it here; the definition was extracted from .agent/verification/source-library/security/blockchain-security-testing-prompts.md and NOT executed",
-  "recorded_at": "2026-09-20T01:44:02Z"
+  "deferred_provenance": null,
+  "scope_clause": null,
+  "dependency_edge_ref": "capability:execution-mapping->V-005",
+  "provisioning_action": null,
+  "recorded_at": "2026-09-20T01:57:19Z"
 }

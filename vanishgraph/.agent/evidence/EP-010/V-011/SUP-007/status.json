@@ -1,0 +1,31 @@
+{
+  "test_id": "SUP-007",
+  "owner_stage": "V-011",
+  "title": "Configuration & Feature-Flag Combinatorial Verification",
+  "kind": "production-gate",
+  "source_library": ".agent/verification/SUPPLEMENTAL_PRODUCTION_GATES.md",
+  "definition_path": ".agent/evidence/EP-010/V-011/SUP-007/definition.md",
+  "definition_digest": "28eec0c9908f00034b411a1e9c0e1b16504cf00cae83a50d21e46a8f395665f3",
+  "definition_located": true,
+  "definition_kind": "summary-source",
+  "gate": {
+    "gate": "config",
+    "script": "config-validate.sh",
+    "exitCode": 0,
+    "sentinel": "config: ok",
+    "sentinelFound": true,
+    "evidencePath": ".agent/evidence/EP-010/V-011/gate-config.log",
+    "digest": "170f8db78e499e16f11ab6c1b5991e1fa0e3436935d010847cfec3b15e94659b",
+    "note": "the gate exited 0 and printed its sentinel"
+  },
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "BLOCKED_PREREQUISITE",
+  "reason": "the declared source .agent/verification/SUPPLEMENTAL_PRODUCTION_GATES.md is a summary that names this gate's subject but contains no method, command or completion gate; there is nothing to execute for this ID",
+  "deferred_provenance": null,
+  "scope_clause": null,
+  "dependency_edge_ref": "capability:per-id-definition->V-011",
+  "provisioning_action": null,
+  "recorded_at": "2026-09-20T02:14:35Z"
+}

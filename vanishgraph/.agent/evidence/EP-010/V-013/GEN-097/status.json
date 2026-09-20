@@ -1,0 +1,22 @@
+{
+  "test_id": "GEN-097",
+  "owner_stage": "V-013",
+  "title": "Security Feature Design Review",
+  "kind": "atomic-security",
+  "source_library": ".agent/verification/source-library/security/general-dev-security-testing-prompts.md",
+  "definition_path": ".agent/evidence/EP-010/V-013/GEN-097/definition.md",
+  "definition_digest": "b2fc97223b3c81514f8f8e92779925442da3143eaa93990aae12162bb49680e5",
+  "definition_located": true,
+  "definition_kind": "prompt-block",
+  "gate": null,
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "BLOCKED_PREREQUISITE",
+  "reason": "no repository gate covers this prompt's subject and no environment path exists to execute it here; the definition was extracted from .agent/verification/source-library/security/general-dev-security-testing-prompts.md and NOT executed",
+  "deferred_provenance": null,
+  "scope_clause": null,
+  "dependency_edge_ref": "capability:execution-mapping->V-013",
+  "provisioning_action": null,
+  "recorded_at": "2026-09-20T02:48:56Z"
+}

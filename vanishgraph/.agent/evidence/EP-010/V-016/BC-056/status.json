@@ -1,0 +1,22 @@
+{
+  "test_id": "BC-056",
+  "owner_stage": "V-016",
+  "title": "Denial of Service (DoS) Testing",
+  "kind": "atomic-security",
+  "source_library": ".agent/verification/source-library/security/blockchain-security-testing-prompts.md",
+  "definition_path": ".agent/evidence/EP-010/V-016/BC-056/definition.md",
+  "definition_digest": "9e850fadc4e1b999904d9930ae40890989b942a893f7d3bfe5170615a902a48c",
+  "definition_located": true,
+  "definition_kind": "prompt-block",
+  "gate": null,
+  "prompt_requires_authorization": true,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "BLOCKED_SAFETY",
+  "reason": "the prompt's own authorization boundary requires explicit authorization for active testing, which this harness does not have; the definition was extracted from .agent/verification/source-library/security/blockchain-security-testing-prompts.md and NOT executed",
+  "deferred_provenance": null,
+  "scope_clause": null,
+  "dependency_edge_ref": null,
+  "provisioning_action": null,
+  "recorded_at": "2026-09-20T02:49:12Z"
+}

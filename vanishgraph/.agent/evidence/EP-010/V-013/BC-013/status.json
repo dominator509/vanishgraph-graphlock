@@ -1,0 +1,22 @@
+{
+  "test_id": "BC-013",
+  "owner_stage": "V-013",
+  "title": "Behavioral Analysis",
+  "kind": "atomic-security",
+  "source_library": ".agent/verification/BLOCKCHAIN_008_022_RECONSTRUCTED.md",
+  "definition_path": ".agent/evidence/EP-010/V-013/BC-013/definition.md",
+  "definition_digest": "ac322bc58c2cc0c9d76615b566a5a596493a4e3bb9ce025d7b24f72e1064dec4",
+  "definition_located": true,
+  "definition_kind": "prompt-block",
+  "gate": null,
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "BLOCKED_PREREQUISITE",
+  "reason": "no repository gate covers this prompt's subject and no environment path exists to execute it here; the definition was extracted from .agent/verification/BLOCKCHAIN_008_022_RECONSTRUCTED.md and NOT executed",
+  "deferred_provenance": null,
+  "scope_clause": null,
+  "dependency_edge_ref": "capability:execution-mapping->V-013",
+  "provisioning_action": null,
+  "recorded_at": "2026-09-20T02:25:54Z"
+}
