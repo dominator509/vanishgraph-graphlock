@@ -1,0 +1,78 @@
+# EP-009 M5 — installer, published commands, release checklist and upgrade record: evidence
+
+## 1. The installer, measured
+
+```
+$ sh scripts/install.sh
+install: vanishgraph 0.1.0 installed at /tmp/vanishgraph-install (digest verified before installing: sha256:<recorded in .agent/evidence/EP-009/M5-install.txt>)
+install: dependency supply - the lockfile-installed node_modules of this repository, linked into the install (offline environment)
+install: ok
+exit=0
+```
+
+It installs from the **artifact**, not from the repository: the input is the tarball the published identity
+describes, the digest is recomputed and compared **before** anything is unpacked, the destination defaults outside
+the repository (`${TMPDIR:-/tmp}/vanishgraph-install`), and a destination inside the repository is refused so no
+gate can read installed files as source. The record (name, version, artifact path, verified digest, source
+commit, destination, entry point, installed file count, dependency supply) is written to
+`.agent/evidence/EP-009/M5-install.txt`.
+
+Two limits are stated on the installer's own output rather than left for a user to discover: the package ships
+TypeScript sources run by Node 24's type stripping, and the 11 runtime dependencies come from the
+lockfile-installed tree because this environment is offline — so a clean-room install (`VG-SHIP-028`) is **not**
+claimed.
+
+## 2. Published commands, executed exactly as written
+
+`sh scripts/published-commands.sh` extracts every command from fenced shell blocks in `README.md`,
+`docs/release/upgrade.md`, `docs/release/release-checklist.md`, `ROLLBACK.md` and `DEPLOYMENT.md`, runs each one
+exactly as written, and requires the documented result. Measured:
+
+```
+published commands: 11 command(s) executed exactly as written across 5 document(s); 3 recorded BLOCKED_CREDENTIALS
+published commands: ok
+exit=0
+```
+
+The three `BLOCKED_CREDENTIALS` entries are `npm run serve` (the six required configuration keys are
+unprovisioned) and the staging pair (staging is `NOT_PROVISIONED`). Each is marked in the documentation itself as
+requiring operator credentials, which is the plan's FALLBACK: a command may not stay published and unexecuted
+without that label.
+
+## 3. Two defects the checker found, and what was done
+
+**(a) The build's cleanliness rule was wider than the property it protects.** `scripts/build-artifact.sh` and
+`scripts/build-reproducibility.sh` required the **whole tree** to be clean, while `scripts/artifact-identity.sh`
+correctly required only the artifact's **source surface** (the `package.json` `files` allowlist plus
+`package.json`). MEASURED consequence: the documented release sequence could not be executed at all, because the
+install stage writes its evidence into `.agent/evidence/` and the build stage that follows it then refused to
+run. Both scripts now apply the same source-surface rule as the identity check, so a stage's own evidence no
+longer invalidates the artifact, while an uncommitted change to `src/`, `scripts/`, `config/`, `db/`, `docs/`,
+`ui/` or `package.json` still stops the build. The fix was verified in both directions: the build refused while
+the two edited scripts were uncommitted, and succeeded once they were committed.
+
+**(b) The release checklist published commands that cannot run here** (the staging pair). They are now inside a
+block explicitly labelled as requiring operator credentials, so the checker executes them, records
+`BLOCKED_CREDENTIALS`, and the documentation cannot quietly imply that staging works.
+
+## 4. What the documents now say, and refuse to say
+
+- `README.md` (new): what the repository is, the prerequisites, install, verify, run, upgrade/rollback, and an
+  explicit "what is NOT claimed" section — no container image, unsigned artifact, no deployment, and **the
+  artifact-bound smoke does not pass** because the health surface does not implement SPEC-003 §5.17, with the
+  evidence path.
+- `docs/release/release-checklist.md` (new): pre-conditions, the gate sequence with the sentinel each stage must
+  print, the evidence list, the rollback trigger with its decision owner, and the `MANUAL_ONLY` production
+  statement.
+- `docs/release/upgrade.md` (new): **no supported upgrade path is claimed**, because this repository has no prior
+  released schema and `scripts/test-migrations.sh` — the script `db/UPGRADE_MATRIX.md` names as the producer of
+  those evidence rows — does not exist. The paths that *were* executed (migrations from empty, RLS coverage on
+  the live schema, the failed-migration retry of EP-003 M7) are listed as executed.
+
+## 5. What M5 does not claim
+
+- No upgrade path from a released prior state: none exists.
+- No clean-room install, for the recorded offline reason.
+- No staging, and therefore no published staging command that has ever run successfully.
+- The install record's dependency supply is the repository's locked tree, which is stated on the installer's
+  output and in the evidence file rather than presented as a self-contained installation.
