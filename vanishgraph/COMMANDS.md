@@ -58,6 +58,8 @@ a milestone that needs a new one must add it here in the same change.
 | `sh scripts/harness-accounting.sh` | `accounting: 484/484 accounted` — **not printed yet**: no per-ID status exists for epoch FORGE-SPEC-2, and the invariant is reported as `0/484 accounted` until the verification stages run |
 | `sh scripts/harness-next.sh` | `NEXT <V-0NN>` or `ALL_STAGES_ACCOUNTED` |
 | `sh scripts/harness-run-stage.sh <V-0NN>` | `stage <V-0NN>: accounted` (exit 0 on accounting completion even when candidate tests recorded FAIL; non-zero only on a harness ERROR) |
+| `sh scripts/clean-room.sh` | `clean room: ok` — **not printed yet**: the virgin-room procedure runs and reports its inventory, and any undocumented prerequisite is a defect that suppresses the sentinel |
+| `sh scripts/live-fire.sh` | `live-fire: ok` — **not printed yet**: 10 outcomes prove their rule at the domain/contract layer (`PARTIAL`) and 2 need a named external participant (`EXTERNAL_REQUIRED`) |
 | `sh scripts/staging-deploy.sh` | `staging deploy: ok` |
 | `sh scripts/staging-verify.sh` | `staging verify: ok` |
 | `sh scripts/install.sh` | `install: ok` |

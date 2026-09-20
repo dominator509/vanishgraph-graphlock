@@ -31,30 +31,53 @@ cd "$(dirname "$0")/.."
 fail() { echo "install: FAIL - $1" >&2; exit 1; }
 
 IDENTITY=.agent/verification/state/ARTIFACT_IDENTITY.json
-[ -f "$IDENTITY" ] || fail "$IDENTITY is missing; run sh scripts/build-artifact.sh first"
 
-# `--dir <path>` is accepted because the published documentation uses it; the variable wins if both are given.
+# `--dir <path>` is accepted because the published documentation uses it; `--artifact <tarball>` and
+# `--digest <sha256:...>` exist because a VIRGIN CLEAN ROOM HAS NO IDENTITY DOCUMENT: the artifact is transferred
+# as a file plus its checksums, and the installer must verify it without the repository that produced it
+# (EP-010 M5(a), VG-SHIP-028). Inside the repository the identity is still read, so the ordinary path is unchanged.
 DEST=${VG_INSTALL_DIR:-}
+EXPLICIT_ARTIFACT=""
+EXPLICIT_DIGEST=""
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --dir) DEST=${2:-}; shift 2 ;;
     --dir=*) DEST=${1#--dir=}; shift ;;
-    *) fail "unknown argument: $1 (accepted: --dir <path>, or VG_INSTALL_DIR)" ;;
+    --artifact) EXPLICIT_ARTIFACT=${2:-}; shift 2 ;;
+    --artifact=*) EXPLICIT_ARTIFACT=${1#--artifact=}; shift ;;
+    --digest) EXPLICIT_DIGEST=${2:-}; shift 2 ;;
+    --digest=*) EXPLICIT_DIGEST=${1#--digest=}; shift ;;
+    *) fail "unknown argument: $1 (accepted: --dir <path>, --artifact <tarball>, --digest <sha256:...>, or VG_INSTALL_DIR)" ;;
   esac
 done
 DEST=${DEST:-${TMPDIR:-/tmp}/vanishgraph-install}
 
-# 1. The pinned artifact and its digest, from the identity document.
-PINNED=$(node -e '
+# 1. The pinned artifact and its digest: from the identity when it is present, otherwise from the two arguments a
+#    clean room can actually supply.
+if [ -f "$IDENTITY" ]; then
+  PINNED=$(node -e '
 const fs = require("node:fs");
 const identity = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
 const path = identity.artifact_paths.find((p) => p.endsWith(".tgz"));
 if (path === undefined) { console.error("the identity declares no tarball"); process.exit(1); }
 process.stdout.write(`${path}\n${identity.artifact_digests[path]}\n${identity.source_commit_sha}\n`);
 ' "$IDENTITY") || fail "the identity could not be read"
-TARBALL=$(printf '%s\n' "$PINNED" | sed -n '1p')
-DIGEST=$(printf '%s\n' "$PINNED" | sed -n '2p')
-COMMIT=$(printf '%s\n' "$PINNED" | sed -n '3p')
+  TARBALL=$(printf '%s\n' "$PINNED" | sed -n '1p')
+  DIGEST=$(printf '%s\n' "$PINNED" | sed -n '2p')
+  COMMIT=$(printf '%s\n' "$PINNED" | sed -n '3p')
+  if [ -n "$EXPLICIT_ARTIFACT" ] && [ "$EXPLICIT_ARTIFACT" != "$TARBALL" ]; then
+    fail "an artifact was named explicitly ($EXPLICIT_ARTIFACT) and the identity describes $TARBALL; refusing to install a different artifact than the published one"
+  fi
+  if [ -n "$EXPLICIT_DIGEST" ] && [ "$EXPLICIT_DIGEST" != "$DIGEST" ]; then
+    fail "a digest was declared explicitly ($EXPLICIT_DIGEST) and the identity records $DIGEST; a mismatched digest is a stop condition"
+  fi
+else
+  [ -n "$EXPLICIT_ARTIFACT" ] || fail "no identity document and no --artifact: a clean room must name the artifact it installs"
+  [ -n "$EXPLICIT_DIGEST" ] || fail "no identity document and no --digest: a clean room must name the digest it expects"
+  TARBALL=$EXPLICIT_ARTIFACT
+  DIGEST=$EXPLICIT_DIGEST
+  COMMIT="not recorded (installed from an artifact and a digest alone, outside the repository that produced it)"
+fi
 [ -f "$TARBALL" ] || fail "the artifact $TARBALL does not exist; there is nothing to install"
 
 # 2. Verify BEFORE installing. A mismatch is a stop condition, never a warning.

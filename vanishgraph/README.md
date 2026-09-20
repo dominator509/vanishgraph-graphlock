@@ -37,6 +37,22 @@ only when they all resolve; `install.sh` verifies the tarball's digest **before*
 destination outside the repository, and prints `install: ok`. Set `VG_INSTALL_DIR` (or pass `--dir <path>`) to
 choose the destination; the default is `${TMPDIR:-/tmp}/vanishgraph-install`.
 
+### Installing in a virgin environment (the clean-room path)
+
+A clean room receives the artifact and its checksums and nothing else, so it cannot read the repository's identity
+document. The shipped installer therefore accepts the artifact and its expected digest directly — the same command
+the clean-room procedure runs:
+
+```sh
+sh scripts/install.sh --artifact dist/vanishgraph-0.1.0.tgz --digest sha256:<digest from dist/SHA256SUMS> --dir /opt/vanishgraph
+```
+
+`sh scripts/clean-room.sh` performs that whole procedure in a zero-state directory: it transfers the artifact by
+digest, verifies it against the transferred `SHA256SUMS`, installs it with the shipped installer, boots the
+installed package, completes the unauthenticated golden path, and then lists **everything it had to supply beyond
+this document** with each item classified `DOCUMENTED` or `UNDOCUMENTED`. **An undocumented prerequisite is a
+defect, not a note**, and the procedure fails rather than printing its sentinel when it finds one.
+
 ## Verify an installation
 
 ```sh

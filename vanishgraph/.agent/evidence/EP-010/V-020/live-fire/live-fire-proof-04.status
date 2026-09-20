@@ -1,0 +1,8 @@
+LIVE-FIRE-PROOF-04 PARTIAL
+whatRan: node --test tests/regression/live-fire-proof-04.test.ts (6 test(s), 0 fail, 0 skipped, exit 0)
+whatIsProven: the outcome rule and its required negative case, at the layer the suite asserts them
+whatIsNotProven: the end-to-end half through the real entry point against real dependencies - see the NOT_PROVEN columns for this outcome in .agent/verification/FUNCTIONAL_PROOF_MATRIX.csv
+artifactDigest: sha256:6c789950212646a91a28bd640f1ff772b1ca844190a56b8285a398dd892859f7
+evidencePath: .agent/evidence/EP-010/V-020/live-fire/live-fire-proof-04.log
+evidenceDigest: sha256:fe1afa1393b9e3e7b12e6487da8b6ad38a986f2f16bf466cd2a18668df975ca8
+nextAction: run this outcome end to end against the deployed artifact digest with runtime-generated canaries and an independent read-back, then record PASS

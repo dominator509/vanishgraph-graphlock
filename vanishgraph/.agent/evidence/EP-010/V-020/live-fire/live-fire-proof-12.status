@@ -1,0 +1,9 @@
+LIVE-FIRE-PROOF-12 EXTERNAL_REQUIRED
+externalPartyRole: Authorised enterprise administrator plus qualified counsel for the enterprise authorization path
+requestedArtifactDigest: sha256:6c789950212646a91a28bd640f1ff772b1ca844190a56b8285a398dd892859f7
+requestEvidencePath: .agent/evidence/EP-010/V-020/live-fire/live-fire-proof-12.log
+requestedAt: 2026-09-20T03:06:51Z
+ownerContactRef: PREFLIGHT.md provider rows and LEGAL_REVIEW_REQUIRED.md
+suite: tests/regression/live-fire-proof-12.test.ts (5 test(s), 0 skipped)
+preparedRequest: execute the outcome end to end against the real provider transport (08) or the enterprise authorization path (12) under the named participant, and sign the result
+sentinelRecorded: none - an external gate is never signed by an agent (DOD-039)
