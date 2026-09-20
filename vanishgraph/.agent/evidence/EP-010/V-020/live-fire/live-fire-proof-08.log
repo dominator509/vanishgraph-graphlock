@@ -1,0 +1,15 @@
+▶ LIVE-FIRE-PROOF-08: only official transports, and the entitlement run stays external (ADR-004)
+  ✔ NEGATIVE CASE: a transport mode outside the three official ones is REFUSED by the domain factory (3.0169ms)
+  ✔ the DATABASE carries the same three-member CHECK, read from the migration that declares it (0.8647ms)
+  ✔ the SPECIFICATION prohibits the alternatives, and the prohibition is about endpoints and session credentials (0.8663ms)
+  ✔ the undocumented-endpoint refusal is proven by SSRF suites that exist, and is not claimed here (0.9388ms)
+  ✔ THE ENTITLEMENT RUN STAYS EXTERNAL_REQUIRED: the provider credentials are unprovisioned, read from the contract (38.4789ms)
+✔ LIVE-FIRE-PROOF-08: only official transports, and the entitlement run stays external (ADR-004) (47.3424ms)
+ℹ tests 5
+ℹ suites 1
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 375.6991

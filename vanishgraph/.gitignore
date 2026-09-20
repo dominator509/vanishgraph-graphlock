@@ -3,9 +3,14 @@ node_modules/
 
 # Build output (the artifact digest under .agent/evidence/ IS committed)
 dist/
-build/
+# `build/` and `coverage/` were BARE, so they matched at ANY depth and silently swallowed real
+# content: EP-010 M9 found `ui/src/components/coverage/` -- four VG-UI-017 source components that
+# existed in no clone of this repository -- and `.agent/evidence/build/`. Output directories are
+# anchored now, and the source directory is re-included explicitly.
+/build/
 .next/
-coverage/
+/ui/coverage/
+!ui/src/components/coverage/
 
 # Local environment and secrets. Never commit credentials (VG-SEC-002).
 .env
@@ -14,8 +19,13 @@ coverage/
 *.pem
 *.key
 
-# Logs and temp
+# Logs and temp.
+# `*.log` ALSO swept `.agent/evidence/**`, which the note above forbids ("deliberately NOT ignored")
+# and which RELEASE_GATE.json cites as blocker evidence (EP-010/M8/verify.log, the V-001..V-021 gate
+# logs and the twelve live-fire proofs). Evidence logs are re-included; credentials are policed by
+# scripts/secret-scan.sh and the fail-closed probes, not by gitignore (VG-SEC-002).
 *.log
+!.agent/evidence/**/*.log
 npm-debug.log*
 .DS_Store
 Thumbs.db

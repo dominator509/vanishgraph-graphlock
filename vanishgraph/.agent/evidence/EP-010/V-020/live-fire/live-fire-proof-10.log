@@ -1,0 +1,17 @@
+▶ LIVE-FIRE-PROOF-10: a crash capsule is sanitized and deduplicated before any change is proposed (VG-EGRESS-002)
+  ✔ NEGATIVE CASE: apparent personal data in ANY of the three text fields is refused (3.0645ms)
+  ✔ the sanitized text is what is STORED, and the raw event is not a field of the entity at all (0.4852ms)
+  ✔ the FINGERPRINT is the dedup key and is required, and the table does NOT constrain it unique — recorded (1.3612ms)
+  ✔ NO AUTO-MERGE OR AUTO-DEPLOY PATH EXISTS HERE, asserted over the pipeline that now exists (3.5597ms)
+  ✔ the pipeline scan fires on every shape it looks for, so the assertion above is not vacuous (0.7385ms)
+  ✔ the prohibition on autonomous deployment is in the specification, read from the spec that owns it (0.7856ms)
+  ✔ the durable capsule store is exercised in a suite that exists, and is not claimed here (0.8656ms)
+✔ LIVE-FIRE-PROOF-10: a crash capsule is sanitized and deduplicated before any change is proposed (VG-EGRESS-002) (13.4377ms)
+ℹ tests 7
+ℹ suites 1
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 377.2673

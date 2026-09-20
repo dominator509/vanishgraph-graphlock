@@ -1,0 +1,15 @@
+▶ LIVE-FIRE-PROOF-05: a reappearance links to a prior removal (VG-REAPPEAR-001)
+  ✔ REAPPEARED is reachable ONLY from a verified removal or a delisting, and from no other state (8.012ms)
+  ✔ NEGATIVE CASE: no transition into REAPPEARED starts from creation, so a first find is never a reappearance (0.5699ms)
+  ✔ REAPPEARED RE-ENTERS the flow: it is not a terminal state and it leads back to work, not to a removal (0.5994ms)
+  ✔ every transition carries a guard and named evidence, so a reappearance cannot be recorded without them (0.6273ms)
+  ✔ the removal that a reappearance links to is the only state that asserts removal, so the link is unambiguous (0.3525ms)
+✔ LIVE-FIRE-PROOF-05: a reappearance links to a prior removal (VG-REAPPEAR-001) (12.3993ms)
+ℹ tests 5
+ℹ suites 1
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 330.9675

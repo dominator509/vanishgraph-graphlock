@@ -1,0 +1,6 @@
+reality gate: FAIL - placeholder, simulated, or unfinished behaviour in production paths:
+  - src/adapters/observability/dependency-probes.ts:20: * WHAT IS NOT IMPLEMENTED HERE, STATED SO IT IS NOT ASSUMED: the object-store probe's declared action is `HeadBucket`
+  - src/adapters/observability/metrics-registry.ts:168:      errors.push(`${name}: meaning must be a real one-line meaning, not a placeholder (§6.1)`);
+  - src/infrastructure/observability/compose-telemetry.ts:58: * loud-fail placeholder) and the runtime loaders own two — and a caller that has them supplies them.
+Replace the behaviour with a real implementation, or add a reviewed path:line
+entry to .agent/reality-allow with a reason. Never blanket-allow (DOD-019, DOD-027).

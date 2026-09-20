@@ -1,0 +1,5 @@
+accounting report: .agent/verification/reports/COMPLETE_TEST_ACCOUNTING.csv holds 484 data row(s) for epoch FORGE-SPEC-7; 0 unaccounted; statuses {"PARTIAL":266,"BLOCKED_PREREQUISITE":205,"BLOCKED_CREDENTIALS":7,"BLOCKED_ENVIRONMENT":4,"BLOCKED_SAFETY":1,"DEFERRED_LONG_RUNNING":1}
+accounting: the invariant: registered IDs (484) = BLOCKED_CREDENTIALS 7 + BLOCKED_ENVIRONMENT 4 + BLOCKED_PREREQUISITE 205 + BLOCKED_SAFETY 1 + DEFERRED_LONG_RUNNING 1 + PARTIAL 266 = 484
+accounting: 484/484 accounted in epoch FORGE-SPEC-7; 0 unaccounted; 3074 row(s) for a registry id belong to an earlier epoch and are NOT counted; 0 row(s) carry a status outside the SPEC-006 section 4.1 vocabulary
+accounting: the whole ledger holds 5266 row(s), of which 4782 belong to an earlier epoch: evidence from a previous epoch is reported and never counted (EXECUTION_DAG.md invalidates it)
+accounting: 484/484 accounted

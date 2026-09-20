@@ -1,0 +1,16 @@
+▶ LIVE-FIRE-PROOF-09: one key, one external effect, resumable from durable state (VG-ACTION-001)
+  ✔ a key is compared EXACTLY: surrounding whitespace is refused rather than trimmed (2.2884ms)
+  ✔ the UPPER bound is the type’s, and the LOWER bound is the DATABASE’S — a measured divergence, not an assumption (0.9136ms)
+  ✔ an EMPTY or blank key is refused, so a missing key cannot become a shared one (0.5497ms)
+  ✔ the UNIQUENESS is a database constraint, read from the migration that owns it (0.756ms)
+  ✔ the one-effect-per-key proof and the action history live in suites that exist, and are not claimed here (0.9323ms)
+  ✔ DOD-015 and DOD-017 are ACCOUNTED, so the resumability claim has a row rather than a narrative (1.4031ms)
+✔ LIVE-FIRE-PROOF-09: one key, one external effect, resumable from durable state (VG-ACTION-001) (9.4348ms)
+ℹ tests 6
+ℹ suites 1
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 297.0192

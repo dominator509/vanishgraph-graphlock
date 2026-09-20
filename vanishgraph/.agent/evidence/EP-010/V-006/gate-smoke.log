@@ -1,0 +1,1 @@
+smoke test: FAIL - VG_ARTIFACT_DIGEST is not declared: this stage tests a DIGEST, and a run that does not say which digest it is testing is not artifact-bound (DOD-004, SPEC-008 VG-SHIP-021)

@@ -1,0 +1,16 @@
+published commands: ran README.md: sh scripts/build-artifact.sh
+published commands: ran README.md: sh scripts/artifact-identity.sh
+published commands: ran README.md: sh scripts/install.sh
+published commands: ran README.md: sh scripts/config-validate.sh
+published commands: ran README.md: sh scripts/ci-guard.sh
+published commands: ran docs/release/release-checklist.md: sh scripts/config-validate.sh
+published commands: ran docs/release/release-checklist.md: sh scripts/ci-guard.sh
+published commands: ran docs/release/release-checklist.md: sh scripts/build-artifact.sh
+published commands: ran docs/release/release-checklist.md: sh scripts/build-reproducibility.sh
+published commands: ran docs/release/release-checklist.md: sh scripts/artifact-identity.sh
+published commands: ran docs/release/release-checklist.md: sh scripts/install.sh
+published commands: BLOCKED_CREDENTIALS README.md: npm run serve (exit 1, no credentials provisioned)
+published commands: BLOCKED_CREDENTIALS docs/release/release-checklist.md: sh scripts/staging-deploy.sh (exit 1, no credentials provisioned)
+published commands: BLOCKED_CREDENTIALS docs/release/release-checklist.md: sh scripts/staging-verify.sh (exit 1, no credentials provisioned)
+published commands: 11 command(s) executed exactly as written across 5 document(s); 3 recorded BLOCKED_CREDENTIALS
+published commands: ok

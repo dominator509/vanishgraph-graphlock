@@ -1,0 +1,16 @@
+▶ LIVE-FIRE-PROOF-04: a delisting is not a removal (SPEC-000 §5.1)
+  ✔ the eleven states are the canonical set, and the two claims live in exactly one state each (3.3503ms)
+  ✔ SEARCH_DELISTED does NOT assert a verified removal — the separation itself (0.5128ms)
+  ✔ NEGATIVE CASE: a delisting never counts as removal progress, and no state claims both (0.7319ms)
+  ✔ NEGATIVE CASE: VERIFIED_REMOVED does not assert a delisting either, so the confusion cannot run backwards (0.3045ms)
+  ✔ a removal is the only state requiring an independent observation, which is what stops it being asserted by a delisting (0.4138ms)
+  ✔ the vocabulary is closed: an ad-hoc word for "gone" is not a state (0.4142ms)
+✔ LIVE-FIRE-PROOF-04: a delisting is not a removal (SPEC-000 §5.1) (12.807ms)
+ℹ tests 6
+ℹ suites 1
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 453.5754

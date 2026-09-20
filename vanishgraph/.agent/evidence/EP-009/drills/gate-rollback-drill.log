@@ -1,0 +1,2 @@
+rollback drill: artifact half ok (digest sha256:faafc0d7f03da6f31d03e10c76aa56cce407ea8905733034a5a2b7f82cd5ad1c redeployed and re-hashed); state half: EXECUTED - sh scripts/backup-drill.sh printed backup drill: ok
+rollback drill: BLOCKED_ON_IMPLEMENTATION - rollback to a PREVIOUS VERSION cannot be demonstrated: only one artifact version exists (0.1.0). Evidence: .agent/evidence/EP-009/M6-rollback.txt. NO SENTINEL IS PRINTED.

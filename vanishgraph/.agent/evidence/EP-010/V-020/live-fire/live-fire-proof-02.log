@@ -1,0 +1,16 @@
+▶ LIVE-FIRE-PROOF-02: a removal cannot be asserted without an observation (VG-VERIFY-001)
+  ✔ the ONLY way into VERIFIED_REMOVED is T14, from ACKNOWLEDGED, and it names a VerificationObservation (2.2502ms)
+  ✔ NEGATIVE CASE: a claim with no observation stays ACKNOWLEDGED — the other exits are not a removal (1.6612ms)
+  ✔ NEGATIVE CASE: the six forbidden pairs are exactly the ways of claiming a removal without observing one (1.7252ms)
+  ✔ a SUBMITTED request is explicitly not a removal, and neither is an acknowledgement (0.6352ms)
+  ✔ a DELISTING and a VERIFIED ABSENCE are walled off too, so neither can be relabelled a removal (0.2554ms)
+  ✔ the removal is the only state that requires an independent observation, and the window is the other half (0.5302ms)
+✔ LIVE-FIRE-PROOF-02: a removal cannot be asserted without an observation (VG-VERIFY-001) (9.645ms)
+ℹ tests 6
+ℹ suites 1
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 433.9281

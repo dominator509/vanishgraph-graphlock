@@ -1,0 +1,2 @@
+artifact: identity published to .agent/verification/state/ARTIFACT_IDENTITY.json
+artifact: built (5 file(s) under dist; identity in dist/ARTIFACT_IDENTITY.json)

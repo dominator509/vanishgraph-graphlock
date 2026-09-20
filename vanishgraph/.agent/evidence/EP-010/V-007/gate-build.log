@@ -1,0 +1,4 @@
+artifact: FAIL - the working tree is not clean, so the artifact could not be described by a commit SHA:
+ M vanishgraph/scripts/harness-accounting.sh
+ M vanishgraph/scripts/harness-next.sh
+ M vanishgraph/scripts/harness-run-stage.sh

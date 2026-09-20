@@ -1,0 +1,3 @@
+mutation gate: ok mechanism=7 catalogue_rows=7 features_awaiting_a_mutation=7
+mutation gate: the seven domain mutations are detected and restored; the catalogue's second table names the features that still have no controlled defect
+mutation gate: ok

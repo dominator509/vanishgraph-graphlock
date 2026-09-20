@@ -1,0 +1,1 @@
+staging verify: BLOCKED_CREDENTIALS - staging is NOT_PROVISIONED in .agent/verification/TEST_ENVIRONMENT_MANIFEST.md and VG_STAGING_ENDPOINT is undeclared, so no deployed digest exists to verify. Evidence: .agent/evidence/EP-009/M4-staging-verify.txt. THIS SCRIPT DID NOT VERIFY A LOCAL PROCESS AND DID NOT PRINT ITS SENTINEL.

@@ -1,0 +1,6 @@
+ci pipeline: note - workflow: 17 job(s) parsed: artifact-build, artifact-identity, build, dependency-audit, e2e, format-check, integration, lint, live-fire, preflight, reality-gate, sbom-provenance, security-check, smoke, test-collection-guard, typecheck, unit
+ci pipeline: note - local gate: 15 stage(s) parsed from scripts/verify.sh
+ci pipeline: note - masking scan: 6 construct(s) checked in the PARSED workflow (comments cannot mask a failure, and a scan that reads them reports prose), 0 present
+ci pipeline: note - artifact binding: 1 upload(s), 2 download(s), digest keyed
+ci pipeline: validated (17 job(s): artifact-build, artifact-identity, build, dependency-audit, e2e, format-check, integration, lint, live-fire, preflight, reality-gate, sbom-provenance, security-check, smoke, test-collection-guard, typecheck, unit)
+ci pipeline: ok
