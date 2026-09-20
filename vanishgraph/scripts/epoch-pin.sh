@@ -68,7 +68,18 @@ process.stdout.write(identity.lockfile_digests["package-lock.json"] ?? "");
 [ -n "$BUILD_INPUTS" ] || fail "the identity records no package-lock.json digest, so the build inputs cannot be pinned"
 NODE_VERSION=$(node --version)
 NPM_VERSION=$(npm --version)
-EPOCH_ID=${VG_EPOCH_ID:-FORGE-SPEC-2}
+# THE EPOCH ID IS NEVER A HARDCODED LITERAL. MEASURED DEFECT this corrects, found by the ship gate's own first step:
+# this line used to default to `FORGE-SPEC-2`, so running the pin without the variable -- which is exactly what
+# `sh scripts/production-readiness-check.sh` step 1 does, and what the milestone RUN list does -- SILENTLY ROLLED THE
+# EPOCH BACKWARDS from FORGE-SPEC-6 to FORGE-SPEC-2, revoked the 484/484 accounting and left the run state naming an
+# epoch whose results were three rolls old. An epoch id is either the current one (re-asserted) or a new one the
+# caller names with a reason; it is never a default that rewrites history.
+CURRENT_EPOCH=$(node -e 'process.stdout.write(JSON.parse(require("node:fs").readFileSync(".agent/verification/state/RUN_STATE.json","utf8")).epoch ?? "")')
+EPOCH_ID=${VG_EPOCH_ID:-$CURRENT_EPOCH}
+[ -n "$EPOCH_ID" ] || fail "no epoch id is given and RUN_STATE.json records none; name one with VG_EPOCH_ID"
+if [ "$EPOCH_ID" != "$CURRENT_EPOCH" ] && [ -z "${VG_EPOCH_REASON:-}" ]; then
+  fail "rolling the epoch from $CURRENT_EPOCH to $EPOCH_ID requires VG_EPOCH_REASON: an epoch is not renamed silently"
+fi
 # A NEW EPOCH IS ROLLED, NOT RENAMED (EP-010 M4(d), DOD-040, VG-SHIP-005). When the artifact surface changes AFTER
 # results exist, the epoch id rolls, the reason and the changed surfaces are recorded in EPOCH_HISTORY.md, and the
 # revoked statuses are written to CHANGE_INVALIDATION_GRAPH.md. "Cached green is not green."

@@ -191,6 +191,30 @@
       "epoch": "FORGE-SPEC-6",
       "artifact_digest": "sha256:c1cc7dfa562116a58534e0460b59ac12c32e6835be8872875eb65ed60488f23d",
       "executed_at": "2026-09-20T05:42:21Z"
+    },
+    "FORGE-SPEC-2|sha256:c1cc7dfa562116a58534e0460b59ac12c32e6835be8872875eb65ed60488f23d|test-integration.sh": {
+      "gate": "integration",
+      "script": "test-integration.sh",
+      "exitCode": 0,
+      "sentinel": "test-integration: ok",
+      "sentinelFound": true,
+      "evidencePath": ".agent/evidence/EP-010/V-010/gate-integration.log",
+      "digest": "1b6fff21907d84cd04d0c0845e2ea4f78c55282b26ff28df0400569b10935e63",
+      "epoch": "FORGE-SPEC-2",
+      "artifact_digest": "sha256:c1cc7dfa562116a58534e0460b59ac12c32e6835be8872875eb65ed60488f23d",
+      "executed_at": "2026-09-20T06:20:28Z"
+    },
+    "FORGE-SPEC-2|sha256:c1cc7dfa562116a58534e0460b59ac12c32e6835be8872875eb65ed60488f23d|build-artifact.sh": {
+      "gate": "build",
+      "script": "build-artifact.sh",
+      "exitCode": 0,
+      "sentinel": "artifact: built",
+      "sentinelFound": true,
+      "evidencePath": ".agent/evidence/EP-010/V-010/gate-build.log",
+      "digest": "2ade2ac281b3a98e8b4a84fe83a5e8be6bea99ed9d51bbb6b2bf2c41f846ff9e",
+      "epoch": "FORGE-SPEC-2",
+      "artifact_digest": "sha256:c1cc7dfa562116a58534e0460b59ac12c32e6835be8872875eb65ed60488f23d",
+      "executed_at": "2026-09-20T06:20:41Z"
     }
   }
 }

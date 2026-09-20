@@ -1,6 +1,6 @@
 {
-  "source_commit_sha": "cacb4158021ad73c859171a5633f857e5543b193",
-  "base_revision": "cacb4158021ad73c859171a5633f857e5543b193",
+  "source_commit_sha": "6f9dbbea4eb302da92e3e8736bf318bbacb1ff99",
+  "base_revision": "6f9dbbea4eb302da92e3e8736bf318bbacb1ff99",
   "lockfile_digests": {
     "package-lock.json": "sha256:3be2892e7558559ae9e8fcde4c24228cdcddf356eece6735519bd8ac11f27ee4"
   },
@@ -17,10 +17,10 @@
     "dist/SHA256SUMS"
   ],
   "artifact_digests": {
-    "dist/vanishgraph-0.1.0.tgz": "sha256:c1cc7dfa562116a58534e0460b59ac12c32e6835be8872875eb65ed60488f23d",
-    "dist/vanishgraph-0.1.0.cdx.json": "sha256:fa479e2bc3931c07262bb8fbe90d0717ccaf1d50656f733237117686f7652478",
-    "dist/provenance.json": "sha256:87ddf6e720f3c78b11d2ee68865fa89cb0d6a2552ee8631e1c06dad5dc6596f4",
-    "dist/SHA256SUMS": "sha256:9620e34d0b4d94b4afa4a188f9112fdf7e262ea3f2f4b1ce6157d92888d601e3"
+    "dist/vanishgraph-0.1.0.tgz": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
+    "dist/vanishgraph-0.1.0.cdx.json": "sha256:ef35f5bfd533d4249fcc7ce8fbbb17e98d4783111e380cf1db3f9b0c5fad55b5",
+    "dist/provenance.json": "sha256:13095dfa5d1930bf0e49dc25a3e33e8f746419d054a6c99a3bae130521da7a3c",
+    "dist/SHA256SUMS": "sha256:bde26885f827e76d472f26eb9d3628bde5b44a6fa6b26ccaafebc1f68acda8ed"
   },
   "sbom_reference": "dist/vanishgraph-0.1.0.cdx.json",
   "provenance_reference": "dist/provenance.json",
