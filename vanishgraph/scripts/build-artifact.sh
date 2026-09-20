@@ -25,10 +25,16 @@ command -v node >/dev/null 2>&1 || fail "node is required but not found"
 command -v npm >/dev/null 2>&1 || fail "npm is required but not found"
 command -v git >/dev/null 2>&1 || fail "git is required but not found"
 
-# THE CLEANLINESS CHECK IS ABOUT THE SOURCE, NOT ABOUT GENERATED FILES: this script writes dist/ and the
-# identity file, so a tree that already contains them still has its SOURCE committed. Only the paths this
-# build legitimately produces are filtered out, and nothing else.
-DIRTY=$(git status --porcelain | grep -vE '(dist/|dist-repro-[ab]/|ARTIFACT_IDENTITY\.json$)' || true)
+# THE CLEANLINESS CHECK IS ABOUT THE SOURCE SURFACE, NOT ABOUT THE WHOLE TREE, and that scoping is a correction
+# rather than a convenience. MEASURED: the whole-tree version refused to build after any stage wrote evidence into
+# .agent/evidence/, which every release stage does -- so `sh scripts/published-commands.sh` could not run the
+# documented release sequence at all, because the install stage's own evidence record dirtied the tree for the
+# build stage that follows it. The property that actually matters is the one `scripts/artifact-identity.sh`
+# enforces: the ARTIFACT'S SOURCE SURFACE -- the package.json `files` allowlist plus package.json itself -- must
+# be committed, because that is what makes an artifact describable by a commit SHA (DOD-002, DOD-029). Evidence,
+# ledger rows and build outputs are not part of that surface.
+SURFACE=$(node -e 'const p=require("./package.json");process.stdout.write([...(p.files||[]).map((f)=>f.replace(/\/$/,"")),"package.json"].join(" "))')
+DIRTY=$(git status --porcelain -- $SURFACE | grep -vE 'ARTIFACT_IDENTITY\.json$' || true)
 if [ -n "$DIRTY" ]; then
   echo "artifact: FAIL - the working tree is not clean, so the artifact could not be described by a commit SHA:" >&2
   printf '%s\n' "$DIRTY" | head -n 10 >&2

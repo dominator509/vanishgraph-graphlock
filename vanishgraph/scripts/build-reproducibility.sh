@@ -35,8 +35,12 @@ fail() { echo "artifact reproducible: FAIL - $1" >&2; exit 1; }
 [ -f scripts/build-artifact.sh ] || fail "scripts/build-artifact.sh is missing"
 
 # A CLEAN TREE IS REQUIRED FOR THE SAME REASON THE BUILD REQUIRES ONE: two builds of the same SOURCE, not two
-# builds of two trees that happen to be adjacent in time.
-DIRTY=$(git status --porcelain | grep -vE '(dist/|dist-repro-[ab]/|ARTIFACT_IDENTITY\.json$)' || true)
+# builds of two trees that happen to be adjacent in time. The scope is the ARTIFACT'S SOURCE SURFACE, matching
+# scripts/build-artifact.sh and scripts/artifact-identity.sh: evidence and build outputs written by other stages
+# are not part of the source an artifact is described by, and treating them as if they were made the documented
+# release sequence unrunnable.
+SURFACE=$(node -e 'const p=require("./package.json");process.stdout.write([...(p.files||[]).map((f)=>f.replace(/\/$/,"")),"package.json"].join(" "))')
+DIRTY=$(git status --porcelain -- $SURFACE | grep -vE 'ARTIFACT_IDENTITY\.json$' || true)
 [ -z "$DIRTY" ] || fail "the working tree is not clean, so the two builds would not be builds of the same source: $DIRTY"
 
 REPRO_BASE=${TMPDIR:-/tmp}/vg-repro-$$; rm -rf "$REPRO_BASE"; mkdir -p "$REPRO_BASE"
