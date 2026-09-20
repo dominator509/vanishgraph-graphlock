@@ -3,7 +3,7 @@
   "dod_count": 42,
   "candidate_epoch": "GENERATION",
   "test_overlay_sha": "0562a6c83cc85485ce0a8ca8127c1aeb0acbf1a8",
-  "test_overlay_note": "the git tree hash of vanishgraph/tests at the EP-007 close candidate; the test overlay this node touched. It is a REVISION identifier, not an artifact digest: scripts/artifact-identity.sh is a loud-fail placeholder owned by EP-009 and no build artifact exists for this node.",
+  "test_overlay_note": "the git tree hash of vanishgraph/tests at the EP-007 close candidate; the test overlay that node touched. It is a REVISION identifier, not an artifact digest: the artifact identity is written by EP-009 and its current values are in the artifact section below and in .agent/verification/state/ARTIFACT_IDENTITY.json.",
   "telemetry_resource": {
     "note": "EP-008 M1. The nine canonical resource attributes of SPEC-007 §2.1, each with its source of truth, the value this repository can resolve for a run, and — where it cannot — why. THE RESOLUTION VOCABULARY IS CLOSED: STATIC means the value is read from a file in this repository and `value` records it; PROCESS_INPUT means the value is supplied by the process or its deployment manifest and the run fails closed without it, so `value` is null and `allowed` names the closed set; EXTERNAL_REQUIRED means the source of truth does not exist in this tree yet, so `value` is null and `reason` names the owner. THIS FILE IS NOT A CLAIM THAT TELEMETRY WORKS: it records which of the nine attributes a run in this tree can and cannot resolve, and the answer today is that four cannot be resolved, so a producer here refuses to emit and increments vanishgraph_telemetry_egress_failures_total{reason_code=\"RESOURCE_ATTR_MISSING\"}. That refusal is the specified behaviour (§2.1 rule 1), not a defect, and tests/observability/telemetry-identity.test.ts asserts it against this file rather than against a copied list.",
     "keys": {
@@ -31,14 +31,26 @@
         "source": "Deployment manifest (SPEC-007 §2.1)",
         "resolution": "PROCESS_INPUT",
         "value": null,
-        "allowed": ["local", "ci", "preview", "staging", "production"],
+        "allowed": [
+          "local",
+          "ci",
+          "preview",
+          "staging",
+          "production"
+        ],
         "reason": "the environment is declared by the deployment manifest, which this repository does not contain; a run supplies one of the five tokens and any other value is an unresolved attribute"
       },
       "vanishgraph.tenant.class": {
         "source": "Tenant policy data (SPEC-007 §2.1)",
         "resolution": "PROCESS_INPUT",
         "value": null,
-        "allowed": ["INTERNAL", "TEST", "PILOT_TENANT", "PRODUCTION_TENANT", "EXTERNAL_REQUIRED"],
+        "allowed": [
+          "INTERNAL",
+          "TEST",
+          "PILOT_TENANT",
+          "PRODUCTION_TENANT",
+          "EXTERNAL_REQUIRED"
+        ],
         "reason": "the class comes from tenant policy data for the scope the process serves; this repository holds no static tenant policy source, so the process supplies the class of its scope and the attribute is never a tenant identifier (§2.1 rule 3)"
       },
       "vanishgraph.candidate_epoch": {
@@ -48,15 +60,15 @@
       },
       "vanishgraph.artifact.digest": {
         "source": "Build/release output (DOD-003, DOD-029)",
-        "resolution": "EXTERNAL_REQUIRED",
-        "value": null,
-        "reason": "no build artifact exists in this repository: scripts/build.sh and scripts/artifact-identity.sh are loud-fail placeholders owned by EP-009, so there is no release digest to record and a digest-shaped invention is prohibited by §2.1 rule 1"
+        "resolution": "STATIC",
+        "value": "sha256:a22101df15627219a84ac2e5e2aab00d9811bf158c39651a802070f4f6634a06",
+        "note": "EP-009 M1 built the declared formats and published this digest; sh scripts/artifact-identity.sh resolves it against the bytes on disk. The digests of the tarball container and of the SBOM vary between builds for the documented reasons (tar mtimes, CycloneDX run identifiers) and the reconciliation is recorded in the identity."
       },
       "vanishgraph.build.inputs_digest": {
         "source": "Build output (SPEC-007 §2.1)",
-        "resolution": "EXTERNAL_REQUIRED",
-        "value": null,
-        "reason": "nothing in this tree declares or digests the build inputs; the declaration and the digest arrive with EP-009's artifact identity, and until then a value here would be a fabricated measurement"
+        "resolution": "STATIC",
+        "value": "sha256:3be2892e7558559ae9e8fcde4c24228cdcddf356eece6735519bd8ac11f27ee4",
+        "note": "The build inputs this repository can digest are its locked dependencies: the digest recorded here is the package-lock.json digest from ARTIFACT_IDENTITY.json. It is NOT a digest of the toolchain or of the whole build environment, and this note says so rather than letting the attribute imply more than it carries."
       },
       "vanishgraph.policy.version": {
         "source": "Versioned policy data (VG-POLICY-001)",
@@ -71,5 +83,40 @@
         "reason": "no component in this tree loads a signed RemovalRecipe set, so no set digest exists; the loader and its digest are follow-on work and the key stays unresolved until then"
       }
     }
+  },
+  "artifact": {
+    "recorded_at_round": "EP-009 M7",
+    "identity_document": ".agent/verification/state/ARTIFACT_IDENTITY.json",
+    "source_commit_sha": "cded4370f18230694b45c7a5892b10e322a556fc",
+    "builder_identity": {
+      "tool": "node",
+      "version": "v24.14.1",
+      "package_manager": "npm@11.11.0"
+    },
+    "build_command": "sh scripts/build-artifact.sh",
+    "tarball": "dist/vanishgraph-0.1.0.tgz",
+    "tarball_digest": "sha256:a22101df15627219a84ac2e5e2aab00d9811bf158c39651a802070f4f6634a06",
+    "formats": [
+      "dist/vanishgraph-0.1.0.tgz",
+      "dist/vanishgraph-0.1.0.cdx.json",
+      "dist/provenance.json",
+      "dist/SHA256SUMS"
+    ],
+    "reproducibility": "NOT RECORDED",
+    "signature": "EXTERNAL_REQUIRED",
+    "oci_image": "BLOCKED_ON_IMPLEMENTATION",
+    "note": "This section is a POINTER, not a second source of truth: the digest is read from ARTIFACT_IDENTITY.json, and sh scripts/artifact-identity.sh recomputes every digest from the bytes on disk each time it runs. The recorded digest changes whenever the artifact changes, which is why the identity document, not this manifest, is what the artifact-bound stages resolve against.",
+    "environment_fingerprints": [
+      {
+        "environment": "clean-local",
+        "fingerprint": ".agent/verification/state/artifact-smoke-fingerprint.txt",
+        "what": "the artifact-bound smoke boot: digest, extracted file count, entry point, commit, node version, environment token, dependency supply"
+      },
+      {
+        "environment": "staging",
+        "fingerprint": null,
+        "what": "NOT AVAILABLE: staging is NOT_PROVISIONED, so no fingerprint exists; see .agent/evidence/EP-009/M4-staging-deploy.txt"
+      }
+    ]
   }
 }
