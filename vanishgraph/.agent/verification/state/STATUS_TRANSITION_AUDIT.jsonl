@@ -222,3 +222,4 @@
 {"test_id":"HIPAA-110","from":"PLANNED","to":"PARTIAL","epochId":"FORGE-SPEC-2","at":"2026-09-20T01:44:24Z","ownerStage":"V-005"}
 {"test_id":"SUP-003","from":"PLANNED","to":"BLOCKED_PREREQUISITE","epochId":"FORGE-SPEC-2","at":"2026-09-20T01:44:25Z","ownerStage":"V-005"}
 {"test_id":"SUP-004","from":"PLANNED","to":"BLOCKED_PREREQUISITE","epochId":"FORGE-SPEC-2","at":"2026-09-20T01:44:25Z","ownerStage":"V-005"}
+{"test_id":"E2E-018","from":"PLANNED","to":"DEFERRED_LONG_RUNNING","epochId":"FORGE-SPEC-2","at":"2026-09-20T01:47:03Z","ownerStage":"V-017"}

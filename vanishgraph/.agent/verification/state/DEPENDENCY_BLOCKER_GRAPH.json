@@ -2392,6 +2392,7 @@
     "capability:execution-mapping->V-004",
     "capability:execution-mapping->V-005",
     "capability:execution-mapping->V-009",
+    "capability:long-running-runner->V-017",
     "capability:per-id-definition->V-002",
     "capability:per-id-definition->V-005"
   ],
@@ -2805,6 +2806,17 @@
         }
       ],
       "recorded_at": "2026-09-20T01:44:25Z"
+    },
+    {
+      "stage": "V-017",
+      "epoch": "FORGE-SPEC-2",
+      "artifact_digest": "sha256:dfd7ccd7aa8bd2b8864c75f1cc7c6927bcf6667f6c550e369a3460dbfbd39c2f",
+      "owned_ids": 1,
+      "statuses": {
+        "DEFERRED_LONG_RUNNING": 1
+      },
+      "gates_run": [],
+      "recorded_at": "2026-09-20T01:47:03Z"
     }
   ]
 }

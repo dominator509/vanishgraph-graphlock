@@ -713,7 +713,13 @@
       "sha256": "4fc4b1c45d391a9803dedf3e44edf422f7119d17c9277c4893141283289fa89b",
       "stage": "V-009",
       "epoch": "FORGE-SPEC-2"
+    },
+    {
+      "path": ".agent/evidence/EP-010/V-017/E2E-018/status.json",
+      "sha256": "9340798c1188190364744ebed2f746a20b96514ad24e137927f7143fa3fb980b",
+      "stage": "V-017",
+      "epoch": "FORGE-SPEC-2"
     }
   ],
-  "updatedAt": "2026-09-20T01:44:25Z"
+  "updatedAt": "2026-09-20T01:47:03Z"
 }

@@ -132,6 +132,22 @@ const GATES = [
 const ACTIVE = /active (testing|scanning)|requires? (written )?authoriz|written permission|scope approval|denial of service|exploit(ation)? (attempt|the target)/i;
 const NEEDS_TARGET = /deployed (target|environment|instance)|running (target|service|instance)|staging environment|production environment|browser pool|kubernetes cluster|container runtime/i;
 const NEEDS_RUNNER = /agentic (runner|environment|coding)|claude code|codex|jules|paste it into your agent/i;
+// LONG-RUNNING REQUIREMENTS ARE CLASSIFIED, NOT SKIPPED (EP-010 M4(b), DOD-038, VG-SHIP-020): a duration
+// requirement that cannot complete inside this campaign window is DEFERRED_LONG_RUNNING with the workload, the
+// planned and elapsed durations, the heartbeat reference, the partial result and the completion ETA -- and the
+// abbreviated portion is never reported as PASS. A five-minute run never passes a 72-hour requirement.
+const LONG_RUNNING = /soak|endurance|resource leak|memory leak|stability (run|test)|sustained load|burn.in|long.duration|(24|48|72)[ -]?hour|multi.day/i;
+const DURATION = /\b(\d+)\s*(hour|hr|day|minute|min)s?\b/i;
+// PROVIDER ENTITLEMENTS ARE BLOCKED CREDENTIALS, WITH THE PROBE NAMED (EP-010 M4 FALLBACK): the affected IDs record
+// the PREFLIGHT.md row, the probe command and the probe exit code rather than a generic blocker.
+const PROVIDER_PROBES = [
+  { keywords: /stripe|payment|billing|card|charge/i, row: "STRIPE_SECRET_KEY", probe: "scripts/probes/stripe.sh" },
+  { keywords: /postal|mail|letter|click2mail|\blob\b|postgrid|print.and.mail/i, row: "CLICK2MAIL_API_KEY", probe: "scripts/probes/postal_api.sh" },
+  { keywords: /search (api|provider|engine)|serp|result page/i, row: "SEARCH_API_KEY", probe: "scripts/probes/search_api_key.sh" },
+  { keywords: /github (app|api|integration)|pull request|issue tracker/i, row: "GITHUB_APP_ID", probe: "scripts/probes/github_app.sh" },
+  { keywords: /local model|model gateway|inference (server|endpoint)/i, row: "LOCAL_MODEL_ENDPOINT", probe: "scripts/probes/local_model.sh" },
+];
+const PRODUCTION_TOUCH = /production (system|environment|data|deployment|tenant|instance)/i;
 
 const rows = matrix.filter((row) => row.owner_stage === stage);
 if (rows.length === 0) {
@@ -177,6 +193,25 @@ const runGate = (gate) => {
       : `the gate exited ${exitCode}${sentinelFound ? "" : " and did NOT print its sentinel"}`,
   };
   gateResults.set(gate.id, result);
+  return result;
+};
+
+const probeResults = new Map();
+const runProbe = (probe) => {
+  if (probeResults.has(probe.probe)) return probeResults.get(probe.probe);
+  if (!fs.existsSync(probe.probe)) { const result = { ...probe, exitCode: 127, evidencePath: null }; probeResults.set(probe.probe, result); return result; }
+  let exitCode = 0;
+  let output = "";
+  try {
+    output = execFileSync("sh", [probe.probe], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 120000 });
+  } catch (error) {
+    exitCode = error.status === undefined || error.status === null ? 1 : error.status;
+    output = `${error.stdout ?? ""}${error.stderr ?? ""}`;
+  }
+  const evidencePath = path.join(outDir, `probe-${probe.row}.log`);
+  fs.writeFileSync(evidencePath, `${output}\n# exit code: ${exitCode}\n`);
+  const result = { ...probe, exitCode, evidencePath: evidencePath.split(path.sep).join("/"), digest: digestOf(evidencePath) };
+  probeResults.set(probe.probe, result);
   return result;
 };
 
@@ -249,6 +284,10 @@ for (const row of rows) {
   // SPEC-006 section 4.1 requires a provisioning action on every BLOCKED_ENVIRONMENT row: a blocked environment
   // without the action that would unblock it is a dead end rather than a recorded state.
   let provisioningAction = null;
+  // The fields SPEC-006 section 4.1 and M4(b) require on the statuses this executor can produce.
+  let deferredProvenance = null;
+  let scopeClause = null;
+  let dependencyEdgeRef = null;
   if (definition === null) {
     status = "ERROR";
     reason = `the per-ID definition could not be located in ${libraryPath ?? "(no source_file)"}; a harness precondition failed, so nothing was executed for this ID`;
@@ -264,11 +303,49 @@ for (const row of rows) {
     nextAction = "provision the target the prompt's scope discovery names, then execute the prompt against it";
     blockingDependency = "capability:deployed-target";
     provisioningAction = "provision the deployment target declared in .agent/verification/TEST_ENVIRONMENT_MANIFEST.md (staging is NOT_PROVISIONED: managed US cloud, Kubernetes, KMS, object store, managed Postgres, browser pool), then re-run this stage";
+    scopeClause = "TEST_ENVIRONMENT_MANIFEST.md declares this environment NOT_PROVISIONED";
+  } else if (LONG_RUNNING.test(promptText)) {
+    const duration = DURATION.exec(promptText);
+    status = "DEFERRED_LONG_RUNNING";
+    reason = `the prompt declares a duration requirement (${duration === null ? "no explicit duration in the prompt text" : `${duration[1]} ${duration[2]}`}) that cannot complete inside this campaign window; the abbreviated portion is reported separately and is NEVER a PASS (DOD-038, VG-SHIP-020)`;
+    nextAction = "run this workload for its planned duration with a heartbeat-recording runner, then re-decide the status";
+    blockingDependency = "capability:long-running-runner";
+    deferredProvenance = {
+      workload: registryRow.title ?? id,
+      plannedDuration: duration === null ? "not declared in the prompt text" : `${duration[1]} ${duration[2]}`,
+      elapsedDuration: "PT0S - not started: this campaign window cannot host the planned duration",
+      startedAt: null,
+      heartbeatRef: "the stage checkpoint this runner writes (.agent/verification/state/stage-checkpoint.json); a duration workload needs a runner that heartbeats into it",
+      partialResultPath: `${outDir}/${id}/definition.md`,
+      completionEta: "requires a runner that can hold the workload for its planned duration",
+    };
+  } else if (PRODUCTION_TOUCH.test(promptText)) {
+    status = "BLOCKED_SAFETY";
+    reason = `the prompt targets a production system, and production is manual-only and unauthorized in this run (VG-SCOPE-009, ADR-005); the definition was extracted and NOT executed`;
+    nextAction = "obtain a scoped, written authorization naming the production system and the test types, then execute under it";
+    blockingDependency = "capability:production-authorization";
+    scopeClause = "VG-SCOPE-009: production deployment and production testing are manual-only and unauthorized in this run";
+  } else if (PROVIDER_PROBES.some((entry) => entry.keywords.test(promptText))) {
+    const provider = PROVIDER_PROBES.find((entry) => entry.keywords.test(promptText));
+    const probeResult = runProbe(provider);
+    if (probeResult.exitCode === 0) {
+      status = "PARTIAL";
+      reason = `the declared provider probe ${provider.probe} for ${provider.row} exited 0, so the entitlement is reachable; the prompt's own methodology and negative case still require an authorised agentic runner, so this is NOT a PASS`;
+      nextAction = "execute this prompt in an authorised agentic runner against the entitled provider";
+      blockingDependency = "capability:agentic-runner";
+    } else {
+      status = "BLOCKED_CREDENTIALS";
+      reason = `the prompt needs a provider entitlement that PREFLIGHT.md declares and this environment has not provisioned: ${provider.row}; probe ${provider.probe} exited ${probeResult.exitCode}`;
+      nextAction = `provision ${provider.row} (see PREFLIGHT.md) and re-run the probe, then execute the prompt`;
+      blockingDependency = "capability:provider-entitlement";
+      provisioningAction = `provision ${provider.row}: run ${provider.probe} until it exits 0, then re-run this stage`;
+    }
   } else if (definitionKind === "summary-source" || definitionKind === "summary-line") {
     status = "BLOCKED_PREREQUISITE";
     reason = `the declared source ${definitionSource} is a ${definitionKind === "summary-source" ? "summary" : "single mentioning line"} that names this gate's subject but contains no method, command or completion gate; there is nothing to execute for this ID`;
     nextAction = "write the per-ID definition for this gate (method, commands, oracle, negative case) as the other libraries do, then re-run the stage";
     blockingDependency = "capability:per-id-definition";
+    dependencyEdgeRef = `${blockingDependency}->${stage}`;
   } else if (gateResult !== null && gateResult.status !== "MISSING") {
     // THE HONEST CEILING. The covering gate ran; the prompt's own scope discovery, methodology and completion gate
     // did not, and SPEC-006 section 4.1 requires an executed oracle AND an executed negative case for a PASS.
@@ -281,11 +358,13 @@ for (const row of rows) {
     reason = `the prompt is written for an agentic runner and no repository gate covers its subject; the definition was extracted from ${definitionSource} and NOT executed`;
     nextAction = "execute this prompt in an authorised agentic runner; the extracted definition is under this ID evidence directory";
     blockingDependency = "capability:agentic-runner";
+    dependencyEdgeRef = `${blockingDependency}->${stage}`;
   } else {
     status = "BLOCKED_PREREQUISITE";
     reason = `no repository gate covers this prompt's subject and no environment path exists to execute it here; the definition was extracted from ${definitionSource} and NOT executed`;
     nextAction = "map this ID's subject to a runnable check or provide the environment it needs, then re-run the stage";
     blockingDependency = "capability:execution-mapping";
+    dependencyEdgeRef = `${blockingDependency}->${stage}`;
   }
 
   const evidence = {
@@ -304,6 +383,10 @@ for (const row of rows) {
     prompt_requires_runner: needsRunner,
     status,
     reason,
+    deferred_provenance: deferredProvenance,
+    scope_clause: scopeClause,
+    dependency_edge_ref: dependencyEdgeRef,
+    provisioning_action: provisioningAction,
     recorded_at: now(),
   };
   const evidencePath = path.join(idDir, "status.json");

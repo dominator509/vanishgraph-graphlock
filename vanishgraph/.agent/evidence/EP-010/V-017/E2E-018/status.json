@@ -1,0 +1,30 @@
+{
+  "test_id": "E2E-018",
+  "owner_stage": "V-017",
+  "title": "Soak, Endurance & Resource-Leak Verification",
+  "kind": "orchestrator",
+  "source_library": ".agent/verification/E2E_SUITE_LIBRARY.md",
+  "definition_path": ".agent/evidence/EP-010/V-017/E2E-018/definition.md",
+  "definition_digest": "2e8d6248d14264b9bf0fceab134795dc1db469fae4eab2b505d79c9c0d75d8e6",
+  "definition_located": true,
+  "definition_kind": "prompt-block",
+  "gate": null,
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "DEFERRED_LONG_RUNNING",
+  "reason": "the prompt declares a duration requirement (no explicit duration in the prompt text) that cannot complete inside this campaign window; the abbreviated portion is reported separately and is NEVER a PASS (DOD-038, VG-SHIP-020)",
+  "deferred_provenance": {
+    "workload": "Soak, Endurance & Resource-Leak Verification",
+    "plannedDuration": "not declared in the prompt text",
+    "elapsedDuration": "PT0S - not started: this campaign window cannot host the planned duration",
+    "startedAt": null,
+    "heartbeatRef": "the stage checkpoint this runner writes (.agent/verification/state/stage-checkpoint.json); a duration workload needs a runner that heartbeats into it",
+    "partialResultPath": ".agent/evidence/EP-010/V-017/E2E-018/definition.md",
+    "completionEta": "requires a runner that can hold the workload for its planned duration"
+  },
+  "scope_clause": null,
+  "dependency_edge_ref": null,
+  "provisioning_action": null,
+  "recorded_at": "2026-09-20T01:47:03Z"
+}

@@ -68,7 +68,12 @@ process.stdout.write(identity.lockfile_digests["package-lock.json"] ?? "");
 [ -n "$BUILD_INPUTS" ] || fail "the identity records no package-lock.json digest, so the build inputs cannot be pinned"
 NODE_VERSION=$(node --version)
 NPM_VERSION=$(npm --version)
-EPOCH_ID="FORGE-SPEC-2"
+EPOCH_ID=${VG_EPOCH_ID:-FORGE-SPEC-2}
+# A NEW EPOCH IS ROLLED, NOT RENAMED (EP-010 M4(d), DOD-040, VG-SHIP-005). When the artifact surface changes AFTER
+# results exist, the epoch id rolls, the reason and the changed surfaces are recorded in EPOCH_HISTORY.md, and the
+# revoked statuses are written to CHANGE_INVALIDATION_GRAPH.md. "Cached green is not green."
+PREVIOUS_EPOCH=$(node -e 'process.stdout.write(JSON.parse(require("node:fs").readFileSync(".agent/verification/state/RUN_STATE.json","utf8")).epoch ?? "")')
+INVALIDATION_GRAPH=.agent/verification/state/CHANGE_INVALIDATION_GRAPH.md
 IMAGE_DIGESTS=$(node -e '
 const fs = require("node:fs");
 const identity = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
@@ -159,5 +164,41 @@ fi
   echo "source surface clean: yes (git status --porcelain over the package.json files allowlist plus package.json is empty)"
   echo "run state: status IN_PROGRESS, active_node EP-010, closed_nodes EP-000 through EP-009 (was stale: IN_PROGRESS for EP-003 since 2026-09-14)"
 } >> "$EVIDENCE"
+
+# THE CHANGE INVALIDATION GRAPH: what the new epoch revokes, and why.
+if [ "$PREVIOUS_EPOCH" != "$EPOCH_ID" ] && [ -n "$PREVIOUS_EPOCH" ]; then
+  CHANGED=$(git diff --name-only "$(node -e 'process.stdout.write(JSON.parse(require("node:fs").readFileSync(".agent/verification/state/RUN_MANIFEST.json","utf8")).epoch?.candidate_commit_sha ?? "HEAD")')" HEAD -- src scripts config db ui package.json 2>/dev/null | head -n 20 || true)
+  {
+    echo "# Change invalidation graph"
+    echo
+    echo "Append-only. Written by sh scripts/epoch-pin.sh when the epoch rolls."
+    echo
+    echo "## $(date -u +%Y-%m-%dT%H:%M:%SZ) — $PREVIOUS_EPOCH -> $EPOCH_ID"
+    echo
+    echo "- reason: ${VG_EPOCH_REASON:-not stated}"
+    echo "- candidate: $CANDIDATE"
+    echo "- artifact digest: $ARTIFACT_DIGEST"
+    echo "- changed surfaces (src, scripts, config, db, ui, package.json) between the previous candidate and HEAD:"
+    if [ -n "$CHANGED" ]; then printf '%s\n' "$CHANGED" | sed 's/^/  - /'; else echo "  - (none detected)"; fi
+    echo "- revoked: every status row recorded under $PREVIOUS_EPOCH is invalidated for this epoch; the rows are kept in"
+    echo "  .agent/verification/state/TEST_LEDGER.jsonl as history and are no longer counted by"
+    echo "  sh scripts/harness-accounting.sh, which counts the latest row per ID in the CURRENT epoch."
+    node -e '
+const fs = require("node:fs");
+const previous = process.argv[1];
+const rows = fs.readFileSync(".agent/verification/state/TEST_LEDGER.jsonl", "utf8").split("\n").filter((line) => line.trim() !== "").map((line) => JSON.parse(line));
+const mine = rows.filter((row) => (row.epochId ?? row.epoch) === previous);
+const byStatus = {};
+for (const row of mine) byStatus[row.status] = (byStatus[row.status] ?? 0) + 1;
+const ids = new Set(mine.map((row) => row.test_id ?? row.id));
+console.log(`- revoked rows under ${previous}: ${mine.length} covering ${ids.size} distinct id(s)`);
+console.log(`- revoked by status: ${JSON.stringify(byStatus)}`);
+console.log(`- PASS rows revoked (the ones that matter most): ${byStatus.PASS ?? 0}`);
+' "$PREVIOUS_EPOCH" | sed 's/^/  /'
+    echo "- descendants to re-run: every stage owning a revoked id; sh scripts/harness-next.sh names the first one."
+    echo
+  } >> "$INVALIDATION_GRAPH"
+  echo "epoch: $PREVIOUS_EPOCH rolled to $EPOCH_ID; revocation recorded in $INVALIDATION_GRAPH"
+fi
 
 echo "epoch: pinned ($EPOCH_ID at $CANDIDATE; artifact $ARTIFACT_DIGEST; node $NODE_VERSION, npm $NPM_VERSION)"
