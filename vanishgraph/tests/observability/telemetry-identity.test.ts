@@ -90,18 +90,34 @@ const PROCESS_IDENTITY: ProcessIdentity = {
 };
 
 /**
- * THE FOUR VALUES BELOW ARE DECLARED TEST INPUTS, NOT MEASUREMENTS. Each stands in for a source that does not exist in
- * this tree — two belong to the build/release pipeline (EP-009) and two to runtime loaders — and the suite asserts that
- * the manifest marks each of them EXTERNAL_REQUIRED, so a fixture can never be read as a resolved value.
+ * THE FIXTURE VALUES BELOW ARE DECLARED TEST INPUTS, NOT MEASUREMENTS — except for the two the manifest now records a
+ * value for, and that exception is the whole point of this comment.
+ *
+ * MEASURED, AND CORRECTED HERE: EP-009 built the artifact and published its identity, so
+ * `vanishgraph.artifact.digest` and `vanishgraph.build.inputs_digest` are no longer sources that "do not exist in this
+ * tree" — `RUN_MANIFEST.json` records their resolution as `STATIC` with the value taken from
+ * `.agent/verification/state/ARTIFACT_IDENTITY.json`. THE VALUE STILL ARRIVES THROUGH THE PROCESS: the resolver
+ * (`resolveWorkspaceResource`) takes those two keys from its `ProcessIdentity` parameter, because only the process can
+ * read the identity document at startup, so `workspaceInput()` — which passes no such identity — still cannot resolve
+ * them. This suite asserts BOTH facts: the manifest records a value, and the refusal set is the union of the keys the
+ * manifest marks `EXTERNAL_REQUIRED` and the two it marks `STATIC` but delivers through the process identity. A fixture
+ * that hardcoded a placeholder here would contradict the manifest, which is exactly the failure this correction fixed.
  */
+const PROCESS_CHANNEL_STATIC_KEYS = ['vanishgraph.artifact.digest', 'vanishgraph.build.inputs_digest'] as const;
+
+const manifestValue = (key: string): string | null => {
+  const record = keyRecords[key];
+  return record?.resolution === 'STATIC' && typeof record.value === 'string' ? record.value : null;
+};
+
 const EXTERNAL_INPUTS = {
-  artifactDigest: `sha256:${'a'.repeat(64)}`,
-  buildInputsDigest: `sha256:${'b'.repeat(64)}`,
+  artifactDigest: manifestValue('vanishgraph.artifact.digest') ?? `sha256:${'a'.repeat(64)}`,
+  buildInputsDigest: manifestValue('vanishgraph.build.inputs_digest') ?? `sha256:${'b'.repeat(64)}`,
   policyVersion: '2026-02-14.1',
   recipeSetDigest: `sha256:${'c'.repeat(64)}`,
 } as const;
 
-/** A process that has all nine values available: the three it knows and the four its pipeline and loaders supply. */
+/** A process that has all nine values available: the three it knows, the two the identity document supplies and the two its loaders supply. */
 const SUPPLIED_IDENTITY: ProcessIdentity = { ...PROCESS_IDENTITY, ...EXTERNAL_INPUTS };
 
 function completeInput(): ResolvedResourceInput {
@@ -423,10 +439,13 @@ describe('the workspace as it actually is (EP-008 §9 item 2: an unresolved arti
     assert.deepEqual(producer.emitted(), [], 'zero records');
     assert.deepEqual(sinks.received, [], 'nothing reached the sink');
     assert.equal(sinks.diagnostics.length, 1, 'one TelemetryIdentityMissing record');
+    // THE REFUSAL SET IS THE UNION, and the union is the honest description: every key the manifest marks
+    // EXTERNAL_REQUIRED has no source here, and the two it marks STATIC are delivered through the process identity,
+    // which this workspace input does not carry.
     assert.deepEqual(
       [...(sinks.diagnostics[0]?.unresolvedKeys ?? [])].sort(),
-      [...keysWith('EXTERNAL_REQUIRED')].sort(),
-      'the refusal must name exactly the keys this tree cannot resolve',
+      [...new Set([...keysWith('EXTERNAL_REQUIRED'), ...PROCESS_CHANNEL_STATIC_KEYS])].sort(),
+      'the refusal must name exactly the keys this run cannot resolve',
     );
     assert.ok((producer.counters()[RESOURCE_ATTR_MISSING_SERIES] ?? 0) > 0, 'the failure counter must be non-zero');
     assert.match(sinks.diagnostics[0]?.message ?? '', /will emit no telemetry/);
@@ -434,20 +453,41 @@ describe('the workspace as it actually is (EP-008 §9 item 2: an unresolved arti
     assert.deepEqual(producer.diagnostics(), sinks.diagnostics, 'the producer must report exactly what it wrote');
   });
 
-  test('the unresolved set is the four §2.1 keys whose upstream source does not exist yet', () => {
-    // Named individually because the reason matters: two are build/release outputs owned by EP-009 and two are runtime
-    // loaders. A tree that resolves one of them must change this list deliberately.
-    assert.deepEqual([...keysWith('EXTERNAL_REQUIRED')].sort(), [
-      'vanishgraph.artifact.digest',
-      'vanishgraph.build.inputs_digest',
-      'vanishgraph.policy.version',
-      'vanishgraph.recipe.set_digest',
-    ]);
+  test('the unresolved set is exactly what the manifest declares, each with a reason and an owner', () => {
+    // MEASURED CHANGE, AND WHY THIS ASSERTION IS DERIVED RATHER THAN LISTED: this test used to name four keys as "the
+    // four §2.1 keys whose upstream source does not exist yet", and that list went stale the moment EP-009 built the
+    // artifact and published its identity — `vanishgraph.artifact.digest` and `vanishgraph.build.inputs_digest` became
+    // resolvable STATIC values, so the count changed from four to two and the suite failed. A hardcoded count of
+    // unresolved keys is a snapshot of a pipeline that no longer exists. What is asserted instead is the property the
+    // test was always about: every key the manifest marks EXTERNAL_REQUIRED is unresolved for a stated reason and a
+    // named owner, no other key is unresolved, and the keys this milestone made resolvable really are resolvable.
+    const unresolved = [...keysWith('EXTERNAL_REQUIRED')].sort();
+    assert.deepEqual(
+      unresolved,
+      Object.entries(keyRecords)
+        .filter(([, record]) => record.resolution === 'EXTERNAL_REQUIRED')
+        .map(([key]) => key)
+        .sort(),
+      'the unresolved set must be exactly the set the manifest declares',
+    );
+    for (const key of unresolved) {
+      assert.ok((keyRecords[key]?.reason ?? '').length > 40, `${key} must carry the reason it is unresolved`);
+      assert.match(keyRecords[key]?.reason ?? '', /owner|owned|loader|loads|pipeline|does not exist|no component/i, `${key} must name where its source belongs`);
+      assert.equal(workspaceInput()[key], null, `${key} must resolve to null in this workspace, not to a substitute`);
+    }
+    // THE TWO KEYS EP-009 RESOLVED ARE ASSERTED TO BE RESOLVABLE, so this suite notices if they regress to unresolved.
+    for (const key of PROCESS_CHANNEL_STATIC_KEYS) {
+      assert.equal(keyRecords[key]?.resolution, 'STATIC', `${key} must be STATIC now that the artifact identity exists`);
+      assert.equal(typeof keyRecords[key]?.value, 'string', `${key} must record the value the identity document carries`);
+      // AND THE CHANNEL IS THE PROCESS: the resolver cannot read the identity document itself, so a workspace input
+      // without a ProcessIdentity cannot resolve the key even though the manifest records its value.
+      assert.equal(workspaceInput()[key], null, `${key} is delivered through the process identity, so this workspace input leaves it unresolved`);
+      assert.equal(completeInput()[key], keyRecords[key]?.value, `${key} must carry exactly the manifest-recorded value once the process supplies it`);
+    }
     assert.equal(keyRecords['vanishgraph.artifact.digest']?.source, 'Build/release output (DOD-003, DOD-029)');
-    assert.equal(workspaceInput()['vanishgraph.artifact.digest'], null, 'and the workspace resolution says so, not the test');
   });
 
-  test('a caller that supplies the four unresolved values gets a producer that emits, with no substitution by the module', () => {
+  test('a caller that supplies every unresolved value gets a producer that emits, with no substitution by the module', () => {
     const sinks = recordingSinks();
     const refused = createTelemetryProducer({
       resource: workspaceInput(),

@@ -1,0 +1,5 @@
+$ sh scripts/test-collection-guard.sh
+# exit code: 0
+
+{"tests":1460,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":100,"manifestChecked":98,"failed":[],"verdict":"OK"}
+test collection guard: ok

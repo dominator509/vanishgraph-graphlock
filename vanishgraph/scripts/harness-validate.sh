@@ -162,6 +162,35 @@ const validateStatusRow = (row, currentEpoch, currentArtifact, edges) => {
       problems.push(`${label}: evidence path ${row.evidencePath} does not exist`);
     }
   }
+  // PER-STATUS REQUIRED FIELDS, PARSED FROM THE SPECIFICATION'S OWN SENTENCES (SPEC-006 section 4.1). A status whose
+  // required fields are absent is a word rather than a record, and it is rejected here rather than at the verdict.
+  const STATUS_FIELDS = {
+    FAIL: ["expected", "actual", "firstFailureLogPath"],
+    ERROR: ["harnessStackRef"],
+    BLOCKED_PREREQUISITE: ["dependencyEdgeRef"],
+    BLOCKED_ENVIRONMENT: ["environmentManifestRef", "missingProperty", "provisioningAttemptLogPath"],
+    BLOCKED_CREDENTIALS: ["credentialRef", "probeCommand", "probeExitCode", "provisioningDocRef"],
+    BLOCKED_SAFETY: ["policyRef", "prohibitedAction", "safetyReviewer"],
+    EXTERNAL_REQUIRED: ["externalPartyRole", "requestedArtifactDigest", "requestEvidencePath", "requestedAt", "ownerContactRef"],
+    DEFERRED_LONG_RUNNING: ["workload", "plannedDuration", "elapsedDuration", "startedAt", "heartbeatRef", "partialResultPath"],
+    PARTIAL: ["coverageDenominator", "evidenceDigest"],
+    UNVERIFIED: ["reasonUnverified", "plannedCommand", "owner"],
+    NOT_APPLICABLE: ["decisionRuleRef", "decidedBy", "decidedAt"],
+  };
+  const required = STATUS_FIELDS[row.status];
+  if (required !== undefined) {
+    for (const field of required) {
+      const value = row[field] ?? row.statusFields?.[field];
+      if (value === undefined || value === null || String(value).trim() === "") problems.push(`${label}: ${row.status} without ${field}, which SPEC-006 section 4.1 requires`);
+    }
+  }
+  if (row.status === "PARTIAL") {
+    const uncovered = row.uncoveredSurface ?? row.statusFields?.uncoveredSurface;
+    if (!Array.isArray(uncovered) || uncovered.length === 0) problems.push(`${label}: PARTIAL without a non-empty uncoveredSurface[]`);
+    const covered = row.coveredSurface ?? row.statusFields?.coveredSurface;
+    if (!Array.isArray(covered) || covered.length === 0) problems.push(`${label}: PARTIAL without a non-empty coveredSurface[]`);
+  }
+
   // STALE-EPOCH EVIDENCE IS NOT EVIDENCE FOR THIS EPOCH: EXECUTION_DAG.md invalidates it.
   if (row.epochId !== undefined && row.epochId !== null && row.epochId !== currentEpoch) problems.push(`${label}: evidence belongs to epoch ${row.epochId} and the current epoch is ${currentEpoch}`);
   if (row.artifactDigest !== undefined && row.artifactDigest !== null && currentArtifact !== null && row.artifactDigest !== currentArtifact) {

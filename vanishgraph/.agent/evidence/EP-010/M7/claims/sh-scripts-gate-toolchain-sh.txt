@@ -1,0 +1,4 @@
+$ sh scripts/gate-toolchain.sh
+# exit code: 0
+
+gate-toolchain: ok

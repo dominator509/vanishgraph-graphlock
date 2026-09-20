@@ -11,25 +11,21 @@
   "gate": {
     "gate": "unit",
     "script": "test-unit.sh",
-    "exitCode": 1,
+    "exitCode": 0,
     "sentinel": "test-unit: ok",
-    "sentinelFound": false,
+    "sentinelFound": true,
     "evidencePath": ".agent/evidence/EP-010/V-008/gate-unit.log",
-    "digest": "ba2a7e4b13edaf56be5bcc475c113bbd0575c2a5c02b2e53bac946a060dae241",
-    "epoch": "FORGE-SPEC-6",
-    "artifact_digest": "sha256:c1cc7dfa562116a58534e0460b59ac12c32e6835be8872875eb65ed60488f23d",
-    "executed_at": "2026-09-20T04:45:28Z",
-    "cached": true,
-    "cachedFrom": ".agent/evidence/EP-010/V-008/gate-unit.log"
+    "digest": "d8dd31e2158d3330e3d6732ccb357d0ee7c6977060ad0d94532c700e5114e198",
+    "note": "the gate exited 0 and printed its sentinel"
   },
   "prompt_requires_authorization": false,
   "prompt_requires_target": false,
   "prompt_requires_runner": false,
   "status": "PARTIAL",
-  "reason": "the repository gate covering this subject (scripts/test-unit.sh) ran as the positive path: undefined. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
+  "reason": "the repository gate covering this subject (scripts/test-unit.sh) ran as the positive path: the gate exited 0 and printed its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
   "deferred_provenance": null,
   "scope_clause": null,
   "dependency_edge_ref": "capability:agentic-runner->V-008",
   "provisioning_action": null,
-  "recorded_at": "2026-09-20T05:08:41Z"
+  "recorded_at": "2026-09-20T05:42:21Z"
 }

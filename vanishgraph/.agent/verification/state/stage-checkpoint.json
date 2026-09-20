@@ -1,5 +1,5 @@
 {
-  "stage": "V-009",
+  "stage": "V-008",
   "epoch": "FORGE-SPEC-6",
   "candidate_sha": "5db579e577db4f4b111d1fddcc7452cf27fb5d88",
   "artifact_digest": "sha256:c1cc7dfa562116a58534e0460b59ac12c32e6835be8872875eb65ed60488f23d",
@@ -9,20 +9,16 @@
   },
   "gates": [
     {
-      "gate": "integration",
-      "script": "test-integration.sh",
+      "gate": "unit",
+      "script": "test-unit.sh",
       "exitCode": 0,
-      "sentinel": "test-integration: ok",
+      "sentinel": "test-unit: ok",
       "sentinelFound": true,
-      "evidencePath": ".agent/evidence/EP-010/V-002/gate-integration.log",
-      "digest": "f4961c242167389929cd53a6f3c74a367d82f265f53af6146f7bc1ee093f8755",
-      "epoch": "FORGE-SPEC-6",
-      "artifact_digest": "sha256:c1cc7dfa562116a58534e0460b59ac12c32e6835be8872875eb65ed60488f23d",
-      "executed_at": "2026-09-20T04:40:07Z",
-      "cached": true,
-      "cachedFrom": ".agent/evidence/EP-010/V-002/gate-integration.log"
+      "evidencePath": ".agent/evidence/EP-010/V-008/gate-unit.log",
+      "digest": "d8dd31e2158d3330e3d6732ccb357d0ee7c6977060ad0d94532c700e5114e198",
+      "note": "the gate exited 0 and printed its sentinel"
     }
   ],
-  "updated_at": "2026-09-20T05:08:42Z",
+  "updated_at": "2026-09-20T05:42:21Z",
   "next_action": "run sh scripts/harness-next.sh to select the next stage"
 }

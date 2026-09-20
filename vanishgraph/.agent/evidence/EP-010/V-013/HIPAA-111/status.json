@@ -31,5 +31,5 @@
   "scope_clause": null,
   "dependency_edge_ref": "capability:provider-entitlement->V-013",
   "provisioning_action": "provision STRIPE_SECRET_KEY: run scripts/probes/stripe.sh until it exits 0, then re-run this stage",
-  "recorded_at": "2026-09-20T05:08:30Z"
+  "recorded_at": "2026-09-20T05:12:08Z"
 }

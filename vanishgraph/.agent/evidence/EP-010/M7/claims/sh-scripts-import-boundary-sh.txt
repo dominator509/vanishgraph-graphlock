@@ -1,0 +1,4 @@
+$ sh scripts/import-boundary.sh
+# exit code: 0
+
+import boundary: ok

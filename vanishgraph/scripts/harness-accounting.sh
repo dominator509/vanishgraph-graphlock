@@ -31,6 +31,7 @@ for path in "$REGISTRY" "$MATRIX" "$TEST_LEDGER" "$SPEC006"; do
 done
 command -v node >/dev/null 2>&1 || fail "node is required but not found"
 
+node scripts/emit-accounting-report.mjs || fail "the accounting report could not be emitted"
 node -e '
 const fs = require("node:fs");
 const [registryPath, matrixPath, ledgerPath, specPath, evidencePath] = process.argv.slice(1);
@@ -123,6 +124,10 @@ const report = {
 };
 fs.writeFileSync(evidencePath, `${JSON.stringify(report, null, 2)}\n`);
 
+const statusCounts = {};
+for (const id of accounted) { const row = ledger.filter((entry) => (entry.test_id ?? entry.id) === id && (entry.epochId ?? entry.epoch) === currentEpoch).pop(); statusCounts[row.status] = (statusCounts[row.status] ?? 0) + 1; }
+const equation = Object.entries(statusCounts).sort().map(([status, count]) => `${status} ${count}`).join(" + ") || "no statuses";
+console.log(`accounting: the invariant: registered IDs (484) = ${equation} = ${Object.values(statusCounts).reduce((sum, count) => sum + count, 0)}`);
 console.log(`accounting: ${accounted.length}/484 accounted in epoch ${currentEpoch}; ${unaccounted.length} unaccounted; ${stale} row(s) for a registry id belong to an earlier epoch and are NOT counted; ${unrecognised} row(s) carry a status outside the SPEC-006 section 4.1 vocabulary`);
 console.log(`accounting: the whole ledger holds ${ledger.length} row(s), of which ${staleOverall} belong to an earlier epoch: evidence from a previous epoch is reported and never counted (EXECUTION_DAG.md invalidates it)`);
 if (unaccounted.length > 0 && unaccounted.length <= 20) console.log(`accounting: unaccounted: ${unaccounted.join(", ")}`);

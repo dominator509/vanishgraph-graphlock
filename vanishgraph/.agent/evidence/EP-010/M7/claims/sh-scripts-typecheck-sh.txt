@@ -1,0 +1,4 @@
+$ sh scripts/typecheck.sh
+# exit code: 0
+
+typecheck: ok

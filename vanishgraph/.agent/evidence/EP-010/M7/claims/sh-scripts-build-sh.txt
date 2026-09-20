@@ -1,0 +1,4 @@
+$ sh scripts/build.sh
+# exit code: 0
+
+build: ok

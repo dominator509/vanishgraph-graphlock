@@ -31,5 +31,5 @@
   "scope_clause": null,
   "dependency_edge_ref": "capability:provider-entitlement->V-019",
   "provisioning_action": "provision CLICK2MAIL_API_KEY: run scripts/probes/postal_api.sh until it exits 0, then re-run this stage",
-  "recorded_at": "2026-09-20T05:08:36Z"
+  "recorded_at": "2026-09-20T05:12:13Z"
 }

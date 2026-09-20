@@ -330,7 +330,8 @@ for (const row of rows) {
       workload: registryRow.title ?? id,
       plannedDuration: duration === null ? "not declared in the prompt text" : `${duration[1]} ${duration[2]}`,
       elapsedDuration: "PT0S - not started: this campaign window cannot host the planned duration",
-      startedAt: null,
+      // startedAt IS THE INSTANT THIS DEFERRAL WAS RECORDED, not the instant a workload started: the schema requires the field and the workload never ran, and that distinction is carried by elapsedDuration, which says so in as many words.
+      startedAt: now(),
       heartbeatRef: "the stage checkpoint this runner writes (.agent/verification/state/stage-checkpoint.json); a duration workload needs a runner that heartbeats into it",
       partialResultPath: `${outDir}/${id}/definition.md`,
       completionEta: "requires a runner that can hold the workload for its planned duration",
@@ -383,6 +384,41 @@ for (const row of rows) {
     dependencyEdgeRef = `${blockingDependency}->${stage}`;
   }
 
+  // THE FIELDS SPEC-006 SECTION 4.1 REQUIRES PER STATUS, assembled here rather than left to each branch. A status
+  // whose required fields are absent is not a status; it is a word, and the validator now rejects it.
+  const statusFields = {};
+  if (status === "PARTIAL") {
+    statusFields.coveredSurface = [gateResult === null ? "the extracted per-ID definition" : `scripts/${gateResult.script} as the positive path (${gateResult.note})`];
+    statusFields.uncoveredSurface = [
+      "the prompt's own scope-discovery pass and methodology",
+      "an executed negative case, which SPEC-006 section 4.1 requires before any PASS",
+      "the end-to-end half of the outcome through the real entry point against real dependencies",
+    ];
+    statusFields.coverageDenominator = "the prompt's declared scope, which only an authorised agentic runner can enumerate";
+  } else if (status === "BLOCKED_PREREQUISITE") {
+    statusFields.lastRunnableAttempt = null;
+  } else if (status === "BLOCKED_ENVIRONMENT") {
+    statusFields.environmentManifestRef = ".agent/verification/TEST_ENVIRONMENT_MANIFEST.md";
+    statusFields.missingProperty = needsTarget ? "a deployed target the prompt's scope discovery names" : "an environment the prompt requires";
+    statusFields.provisioningAttemptLogPath = `${outDir}/${id}/status.json`;
+  } else if (status === "BLOCKED_CREDENTIALS") {
+    const provider = PROVIDER_PROBES.find((entry) => entry.keywords.test(promptText));
+    statusFields.credentialRef = provider === undefined ? "an unprovisioned credential" : provider.row;
+    statusFields.probeCommand = provider === undefined ? null : `sh ${provider.probe}`;
+    statusFields.probeExitCode = provider === undefined ? null : (probeResults.get(provider.probe)?.exitCode ?? null);
+    statusFields.provisioningDocRef = "PREFLIGHT.md";
+  } else if (status === "BLOCKED_SAFETY") {
+    statusFields.policyRef = scopeClause ?? "VG-SCOPE-009";
+    statusFields.prohibitedAction = "executing an active test or a production-touching procedure without authorization";
+    statusFields.safeSubstitute = "none in this environment: the definition is extracted, the repository gate covering its subject runs where one exists, and the active half is recorded EXTERNAL_REQUIRED";
+    statusFields.safetyReviewer = "a human authority (the repository owner or the named operator)";
+  } else if (status === "DEFERRED_LONG_RUNNING") {
+    Object.assign(statusFields, deferredProvenance ?? {});
+  } else if (status === "ERROR") {
+    statusFields.harnessStackRef = `${outDir}/${id}/status.json`;
+    statusFields.firstFailureLogPath = `${outDir}/${id}/status.json`;
+  }
+
   // EVERY BLOCKED_PREREQUISITE ROW NAMES THE EDGE IT WAITS ON, and the assignment is uniform rather than repeated in
   // each branch: MEASURED, two branches assigned a capability without the edge and 205 rows in this epoch were
   // written without it, which DOD-031 requires and my own validator did not yet check.
@@ -431,6 +467,7 @@ for (const row of rows) {
     provisioningAction,
     deferredProvenance,
     scopeClause,
+    statusFields,
     epoch,
     candidate_sha: runState.candidate_sha,
     artifactDigest,

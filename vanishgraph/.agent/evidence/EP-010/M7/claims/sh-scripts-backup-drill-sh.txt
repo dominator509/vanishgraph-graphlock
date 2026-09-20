@@ -1,0 +1,20 @@
+$ sh scripts/backup-drill.sh
+# exit code: 0
+
+backup drill: container vanishgraph-ep003-postgres, database vanishgraph_restore
+backup drill: schema at version 34
+backup drill: pre-disaster tombstones=1 audit=4 identifiers=2
+backup drill: dump taken (318391 bytes, digest in dump-digest.txt)
+backup drill: database destroyed (verified absent)
+backup drill: restored
+PASS  erased PII unrecoverable: tenant_key version 1 shredded with no wrapped material (shredded=1, recoverable=0)
+PASS  erasure tombstones present: tombstones=1 (pre-disaster=1)
+PASS  tombstone names the erased subject: tombstone for aaaaaaaa-3333-4333-8333-aaaaaaaaaaaa present=1
+PASS  RLS intact: 35 tenant-scoped tables, 0 unprotected
+PASS  no cross-tenant leakage after restore: as vg_app: cross-tenant rows=0 (want 0), own rows=2 (want 2)
+PASS  audit chain intact: audit rows=4 (pre-disaster=4), append-only rules=2
+PASS  evidence digests verify: digest unchanged and 64 chars (cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc)
+PASS  restore did NOT resurrect erased PII: ciphertext rows returned=2; rows with recoverable key material=0
+backup drill: PITR BLOCKED_CREDENTIALS (recorded in .agent/evidence/EP-003/restore-drill/pitr-status.txt)
+backup drill: all post-conditions passed (see .agent/evidence/EP-003/restore-drill/post-conditions.txt)
+backup drill: ok
