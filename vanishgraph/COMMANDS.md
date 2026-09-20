@@ -55,6 +55,9 @@ a milestone that needs a new one must add it here in the same change.
 | `sh scripts/staging-verify.sh` | `staging verify: ok` |
 | `sh scripts/install.sh` | `install: ok` |
 | `sh scripts/published-commands.sh` | `published commands: ok` |
+| `sh scripts/rollback-drill.sh` | `rollback drill: ok` — **never printed yet**: rollback to a previous version is `BLOCKED_ON_IMPLEMENTATION` because only one artifact version exists |
+| `sh scripts/upgrade-drill.sh` | `upgrade drill: ok` — **never printed yet**: the from-prior path is `BLOCKED_ON_IMPLEMENTATION` because no released prior schema exists and `scripts/test-migrations.sh` is missing |
+| `sh scripts/backup-restore-drill.sh` | `backup restore: ok` |
 | `sh scripts/smoke-test.sh` | `smoke test: ok` |
 | `sh scripts/live-fire.sh` | `live-fire: ok` |
 | `sh scripts/egress-canary-test.sh` | `canary egress: ok` |

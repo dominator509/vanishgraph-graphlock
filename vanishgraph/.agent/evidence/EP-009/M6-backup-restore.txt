@@ -1,0 +1,18 @@
+backup restore: ok
+drill: sh scripts/backup-drill.sh (the EP-003 M8 destructive drill, reused rather than reimplemented)
+sentinel required and found: backup drill: ok
+what the drill proves: after seeding, crypto-shredding one subject, dumping, destroying the database and restoring from the dump alone, the erased subject's PII is unrecoverable, erasure tombstones are intact, RLS is enabled/forced/policied on every tenant-scoped table, the audit chain is intact, and every evidence digest verifies
+evidence files: 10 under .agent/evidence/EP-003/restore-drill
+evidence index:
+  ca31e0b9e86bb9cff46ddd995a6658fad291b1f0afc56ad316cbe61728caccc2  .agent/evidence/EP-003/restore-drill/dump-digest.txt
+  34edaec209c8b792446f134568dd2cc354556c218ab4c1b6f1c49ffce69a02c2  .agent/evidence/EP-003/restore-drill/erasure.txt
+  40b9a21fd299e692c752c0d479fa7ddccd63b6a1c79635b08bda3b76652c5e98  .agent/evidence/EP-003/restore-drill/key-recovery.txt
+  9cdc7b3e25a984bc49106e3cacd54e9041f1f00404b9426b2165e6e15fe57157  .agent/evidence/EP-003/restore-drill/migrate.txt
+  1f1c59a95f3e6d5aab79c878c99be406338d150665c09eea613492b85cdc7057  .agent/evidence/EP-003/restore-drill/pitr-status.txt
+  a2198da9e5aa8f8d1eda200bc6b14ecddf137f7f942cfa02c6561afc128e7322  .agent/evidence/EP-003/restore-drill/post-conditions.txt
+  8d6675b4bb057ccb4ddb6a4ced7226b000e89f98f8d339eb5a9a7953279bcf38  .agent/evidence/EP-003/restore-drill/pre-disaster.txt
+  e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  .agent/evidence/EP-003/restore-drill/privileges.txt
+  e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  .agent/evidence/EP-003/restore-drill/restore.txt
+  34edaec209c8b792446f134568dd2cc354556c218ab4c1b6f1c49ffce69a02c2  .agent/evidence/EP-003/restore-drill/seed.txt
+NOT PROVEN HERE, carried forward from the drill's own report: point-in-time recovery. WAL archiving to object storage is not provisioned, so the PITR row is BLOCKED_CREDENTIALS in the drill's output and is NOT claimed as verified.
+recorded at commit: 202f9181cfb289d94a479f46d27e883b1ab49f74

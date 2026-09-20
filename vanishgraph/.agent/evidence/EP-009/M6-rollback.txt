@@ -1,0 +1,7 @@
+rollback drill: artifact half EXECUTED against the pinned digest sha256:a08b8ad541f7b2e82ea044811cee128005e53059ab0f4e96cdaca796de129b2f into /tmp/vanishgraph-rollback (bytes re-hashed and matched) and the state half: EXECUTED - sh scripts/backup-drill.sh printed backup drill: ok
+STATUS: BLOCKED_ON_IMPLEMENTATION for a rollback to a PREVIOUS VERSION
+reason: only one artifact version exists (0.1.0; one tarball in .agent/verification/state/ARTIFACT_IDENTITY.json). This repository has never had a release, so there is no previous digest to roll back to, and a drill that re-installed the same version and called it a rollback would be theatre.
+dependency edge: a released prior artifact -> a second pinned digest -> rollback to the previous version -> rollback evidence
+named next action: cut a release, keep its artifact and digest, then re-run this drill between the two digests and record the state read-back through an independent connection
+what IS proven: redeployment by digest is mechanical and verified (the installed bytes match the pinned digest), and durable state survives destruction and restore from a dump alone with erasure and isolation intact
+recorded at commit: 202f9181cfb289d94a479f46d27e883b1ab49f74
