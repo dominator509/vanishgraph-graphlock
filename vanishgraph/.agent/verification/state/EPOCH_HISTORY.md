@@ -30,3 +30,4 @@ to HEAD, and the epoch was pinned again.
 committed, not before.** If a later milestone changes the source surface, the artifact must be rebuilt before any
 result is attributed to this epoch, or a new epoch row must be created.
 
+| FORGE-SPEC-2 | 2026-09-20T01:03:01Z | df6556b548e5e5f535d7b7ecf815b5e27f426315 | sha256:5d775517fc1acb381a6067692237ae289a62202e43869e5bcb058b95a0c1f757 | node v24.14.1, npm 11.11.0 | measured by sh scripts/epoch-pin.sh |

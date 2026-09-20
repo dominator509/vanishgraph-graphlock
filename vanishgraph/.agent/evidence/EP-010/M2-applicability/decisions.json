@@ -1,7 +1,7 @@
 {
   "epoch": "FORGE-SPEC-2",
   "artifact_digest": "sha256:6f9b76a63e102b503ca51953bccf3569a429cadce01f555a4abec8bd1771498b",
-  "decided_at": "2026-09-20T01:00:58.989Z",
+  "decided_at": "2026-09-20T01:02:35.137Z",
   "decided_by": "scripts/applicability-decide.sh",
   "probes": {
     "ARTIFACT": {
@@ -38,7 +38,7 @@
     },
     "HUMAN": {
       "present": true,
-      "evidence": "src/domain 74 references to HUMAN_REQUIRED; tests/ui/a11y.spec.ts human gate recorded as EXTERNAL_REQUIRED"
+      "evidence": "src/domain 76 references to HUMAN_REQUIRED; tests/ui/a11y.spec.ts human gate recorded as EXTERNAL_REQUIRED"
     },
     "LONG_RUNNING": {
       "present": true,
@@ -221,9 +221,9 @@
     "alert_rows": 20,
     "config_keys": 43,
     "browser_suites": 6,
-    "human_gate_references": 74,
+    "human_gate_references": 76,
     "blockchain_files": 3,
-    "blockchain_text_files": 24,
+    "blockchain_text_files": 28,
     "model_transport_files": 0,
     "hsm_kms_files": 1
   },
