@@ -141,7 +141,11 @@ const validateStatusRow = (row, currentEpoch, currentArtifact, edges) => {
   }
   if (row.status === "BLOCKED_PREREQUISITE") {
     const dependency = String(row.blockingDependency ?? "");
-    if (!edges.has(dependency)) problems.push(`${label}: BLOCKED_PREREQUISITE names ${dependency}, which is not an edge in the dependency graph`);
+    // THE ROW NAMES ITS BLOCKING DEPENDENCY; THE GRAPH STORES EDGES. MEASURED: the first version looked the name up
+    // in the edge set, so every capability block -- whose edges are written as `capability:x->V-0NN` -- was reported
+    // as naming something that is not in the graph, when the graph had an edge FROM exactly that dependency. The
+    // check is now that the named dependency is a NODE of the graph, which is what the row is claiming.
+    if (!edges.has(dependency)) problems.push(`${label}: BLOCKED_PREREQUISITE names ${dependency}, and the dependency graph has no edge to or from that node`);
   }
   if (row.status === "BLOCKED_ENVIRONMENT" && (row.provisioningAction === undefined || String(row.provisioningAction).trim() === "")) {
     problems.push(`${label}: BLOCKED_ENVIRONMENT without a provisioning action`);
@@ -194,7 +198,8 @@ for (const file of fs.readdirSync(casebookDir).filter((name) => name.endsWith(".
 }
 const seed = JSON.parse(fs.readFileSync(seedPath, "utf8"));
 const ownerStages = new Set(seed.ownership_rows.map((row) => row.test_id));
-const edges = new Set(seed.stage_edges.map((edge) => `${edge.from}->${edge.to}`));
+const capabilityEdgeList = (seed.capability_edges ?? []).map((entry) => { const [from, to] = String(entry).split("->"); return { from, to }; });
+const edges = new Set([...seed.stage_edges, ...capabilityEdgeList].flatMap((edge) => [edge.from, edge.to]));
 const matrixRows = toRecords(readCsv(fs.readFileSync(matrixPath, "utf8")));
 const dodRecords = toRecords(readCsv(fs.readFileSync(dodPath, "utf8")));
 const ledgerRows = fs.existsSync(ledgerPath)
@@ -218,6 +223,21 @@ const registryIds = new Set(registryRecords.map((record) => record.test_id));
 const epochRows = ledgerRows.filter((row) => registryIds.has(row.test_id ?? row.id));
 const staleRows = ledgerRows.filter((row) => row.epoch !== undefined && row.epoch !== runState.epoch);
 const accounted = new Set(epochRows.map((row) => row.test_id ?? row.id));
+
+// THE REAL ROWS ARE VALIDATED, NOT ONLY THE FIXTURES. Each accounted ID contributes its LATEST row in this epoch
+// (the ledger is a history; SPEC-006 section 4.1 requires exactly one status to apply AT ANY TIME), and every such
+// row is put through the same schema check the self-tests use.
+const latestByid = new Map();
+for (const row of ledgerRows) {
+  const id = row.test_id ?? row.id;
+  if (!registryIds.has(id)) continue;
+  const rowEpoch = row.epochId ?? row.epoch;
+  if (rowEpoch !== runState.epoch) continue;
+  latestByid.set(id, row);
+}
+for (const [id, row] of latestByid) {
+  for (const problem of validateStatusRow(row, runState.epoch, artifactDigest, edges)) problems.push(problem);
+}
 
 // -------------------------------------------------------------------------------------------------------------
 // THE EIGHT MANDATED REJECTIONS, as self-tests over the same functions.
@@ -262,6 +282,7 @@ const report = {
     ledger_rows_for_registry_ids: epochRows.length,
     stale_epoch_rows: staleRows.length,
     accounted_ids_this_epoch: accounted.size,
+    rows_validated_this_epoch: latestByid.size,
   },
   accounting_note:
     "REPORTED, NOT ENFORCED HERE: no per-ID status exists for the current epoch yet, so 484/484 is unreachable and " +

@@ -1,0 +1,109 @@
+# EP-010 M3 — stages V-000 through V-009 executed with durable accounting: evidence
+
+Every number here was produced in this session by the command named beside it.
+
+## 1. The stages, in order, each accounting its owned IDs
+
+```
+$ sh scripts/harness-next.sh
+NEXT V-002                     # V-000 and V-001 own no registry IDs, so they are complete with nothing to run
+
+$ sh scripts/harness-run-stage.sh V-000
+stage V-000: no owned IDs in the applicability matrix, so the stage is accounted with nothing to run
+stage V-000: accounted
+
+$ sh scripts/harness-run-stage.sh V-001
+stage V-001: accounted
+
+$ sh scripts/harness-run-stage.sh V-002
+stage V-002: 2 owned ID(s), statuses {"BLOCKED_PREREQUISITE":2}, gate(s) run: reality, integration
+stage V-002: accounted
+
+$ sh scripts/harness-run-stage.sh V-003
+stage V-003: no owned IDs …, accounted
+
+$ sh scripts/harness-run-stage.sh V-004
+stage V-004: 70 owned ID(s), statuses {"PARTIAL":53,"BLOCKED_PREREQUISITE":17}, gate(s) run: static-analysis, supply-chain, build, security-contract, secrets
+stage V-004: accounted
+
+$ sh scripts/harness-run-stage.sh V-005
+stage V-005: 27 owned ID(s), statuses {"PARTIAL":21,"BLOCKED_PREREQUISITE":5,"BLOCKED_ENVIRONMENT":1}, gate(s) run: security-contract, config, static-analysis, build
+stage V-005: accounted
+
+$ sh scripts/harness-run-stage.sh V-006 → 1 ID, {"PARTIAL":1}, gate: smoke        → stage V-006: accounted
+$ sh scripts/harness-run-stage.sh V-007 → 1 ID, {"PARTIAL":1}, gate: reality      → stage V-007: accounted
+$ sh scripts/harness-run-stage.sh V-008 → 1 ID, {"PARTIAL":1}, gate: unit         → stage V-008: accounted
+$ sh scripts/harness-run-stage.sh V-009 → 1 ID, {"PARTIAL":1}, gate: integration  → stage V-009: accounted
+
+$ sh scripts/harness-next.sh
+NEXT V-010
+```
+
+Every one of the ten stages printed `stage <V-0NN>: accounted` **in order**, each exited 0 (accounting completion,
+per VG-SHIP-002, not candidate success), and no `FAIL` halted a later independent stage. **103 IDs are accounted
+in epoch FORGE-SPEC-2**: 78 `PARTIAL`, 24 `BLOCKED_PREREQUISITE`, 1 `BLOCKED_ENVIRONMENT`, **0 ERROR**.
+
+## 2. What the executor found, and why it refuses to call any of this a PASS
+
+**The 484 IDs are entries in a prompt pack.** Each is an `<AGENTIC_PROMPT>` block written for an agentic
+security-testing environment — role, authorization boundary, mandatory scope-discovery pass, methodology,
+completion gate. **The delivered casebooks are templated stubs**: all 484 objects carry the same
+`exact_commands: ["sh scripts/verify.sh"]`, the same oracle phrase (`real evidence or precise terminal blocker`)
+and the same negative case. A harness that ran `sh scripts/verify.sh` 484 times would prove nothing per ID and
+would print a sentinel over a placeholder, so it does not do that. Instead:
+
+1. **The real definition is extracted** from the library the registry's `source_file` column names, and written to
+   `.agent/evidence/EP-010/V-0NN/<ID>/definition.md` with its digest — evidence that the definition was read.
+2. **The repository gate covering the same subject runs once per stage** (static analysis, security contract,
+   secrets, supply chain, build, config, reality, unit, integration, smoke) and its raw output and digest are
+   linked to every ID it covers. One execution cited for the IDs it covers is honest; the same command once per ID
+   would be the same evidence repeated four hundred times.
+3. **No ID is called `PASS`.** SPEC-006 §4.1 requires an executed oracle, a matched sentinel **and an executed
+   negative case**; the negative case here is a paragraph inside a prompt that only an authorised agentic runner
+   can execute. The ceiling for a mapped ID is therefore `PARTIAL`, and an ID needing active testing, a deployed
+   target, or a runner this environment does not have is `BLOCKED_SAFETY`, `BLOCKED_ENVIRONMENT` or
+   `BLOCKED_PREREQUISITE` with the field each requires.
+
+## 3. Defects found in the harness itself, and fixed
+
+| defect | how it was found | fix |
+|---|---|---|
+| Seven definitions reported "not located" (SUP-001…004, E2E-001…004) | the stages' own `ERROR` lines | the E2E library defines entries as **level‑1** headings (`# E2E-001 SOURCE: …`); the matcher demanded 2–4 hashes, and now locates **by ID first**, then by title. The SUP source is a **231-byte summary** with no per-ID method, so a summary source is used **as** a definition and labelled `summary-source`, producing `BLOCKED_PREREQUISITE` with the missing method named instead of a harness `ERROR` |
+| Every re-run died with `definitionKind is not defined` | the re-run output | a `let` inside the extraction block is out of scope in the classification below it; declared outside, with the incident recorded in the script |
+| `BLOCKED_ENVIRONMENT` written without the field SPEC-006 requires | the validator, once it began checking the **real** rows rather than only its fixtures | the executor now emits `provisioningAction` naming the manifest and the missing property |
+| `BLOCKED_PREREQUISITE` reported as "not an edge in the dependency graph" | the same new check | the lookup was wrong, not the rows: a row names the **dependency** it waits on while the graph stores **edges**, so the check now requires the named dependency to be a **node** of the graph |
+| Seven stale `dist-repro-*` directories from the pre-fix reproducibility implementation | a repository-wide search for a definition location | removed; the current tarball was verified to contain **0** `.agent/` entries, so the package allowlist claim from M1 still holds |
+
+**Re-runs are recorded, not erased.** The seven withdrawn statuses were invalidated with a written reason
+(`--invalidate`, recorded as `WITHDRAWN` transitions in `STATUS_TRANSITION_AUDIT.jsonl`), the ledger stayed
+append-only, and the accounting counts the **latest** row per ID while reporting the superseded rows as their own
+number (61 so far) — a duplicate with no recorded withdrawal is still a defect, and that is what the accounting
+now checks.
+
+## 4. Measured state after M3
+
+```
+$ sh scripts/harness-validate.sh
+harness validation: ledger 1872 row(s), 164 for a registry id, 1708 belonging to an earlier epoch, 103/484 accounted in this epoch
+harness validation: self-test rejected as required - a fabricated 484-row blanket BLOCKED_CAPABILITY ledger
+… (all eight self-tests rejected as required)
+harness validation: ok
+
+$ sh scripts/harness-accounting.sh
+accounting: 103/484 accounted in epoch FORGE-SPEC-2; 381 unaccounted; 0 row(s) for a registry id belong to an earlier epoch and are NOT counted
+accounting: the whole ledger holds 1872 row(s), of which 1708 belong to an earlier epoch: evidence from a previous epoch is reported and never counted
+exit 1, no sentinel
+```
+
+The 381 unaccounted IDs belong to stages V-010 through V-021, which are M4's and M5's work. The 1708 rows from
+epoch FORGE-SPEC-1 remain recorded and are still **not** counted, which is what an epoch change means
+(EXECUTION_DAG.md).
+
+## 5. What M3 does not claim
+
+- **No ID passed.** 78 are `PARTIAL` (a covering gate ran; the prompt's own methodology and negative case did
+  not), 24 are `BLOCKED_PREREQUISITE` (no per-ID method, or nothing to execute), 1 is `BLOCKED_ENVIRONMENT`.
+- **No agentic execution happened.** The environment hosts no authorised agentic runner, and the prompts' active
+  testing requires authorization this harness does not have — hence `BLOCKED_SAFETY` is available and used for
+  prompts that demand it.
+- **`accounting: 484/484` is not claimed**, and `RELEASE_GATE.json` remains `INCONCLUSIVE` / `FORGE_ONLY`.

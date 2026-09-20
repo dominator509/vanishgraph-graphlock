@@ -1,0 +1,26 @@
+{
+  "test_id": "GEN-011",
+  "owner_stage": "V-004",
+  "title": "Manual Secure Code Review",
+  "kind": "atomic-security",
+  "source_library": ".agent/verification/source-library/security/general-dev-security-testing-prompts.md",
+  "definition_path": ".agent/evidence/EP-010/V-004/GEN-011/definition.md",
+  "definition_digest": "826dfb82f57dde73b5cf409a3917ffef49a85b91bc013ef55f1c11f20301b5e5",
+  "definition_located": true,
+  "gate": {
+    "gate": "static-analysis",
+    "script": "lint.sh",
+    "exitCode": 0,
+    "sentinel": "lint: ok",
+    "sentinelFound": true,
+    "evidencePath": ".agent/evidence/EP-010/V-004/gate-static-analysis.log",
+    "digest": "1cb5585a8213ae09f387ab5ab60c159793d6e2ce6e20e6e1306ad490a543effc",
+    "note": "the gate exited 0 and printed its sentinel"
+  },
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "PARTIAL",
+  "reason": "the repository gate covering this subject (scripts/lint.sh) ran as the positive path: the gate exited 0 and printed its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
+  "recorded_at": "2026-09-20T01:14:03Z"
+}

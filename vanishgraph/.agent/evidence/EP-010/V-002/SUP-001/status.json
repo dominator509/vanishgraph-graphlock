@@ -1,0 +1,27 @@
+{
+  "test_id": "SUP-001",
+  "owner_stage": "V-002",
+  "title": "Repository Reality / Anti-Simulation Verification",
+  "kind": "production-gate",
+  "source_library": ".agent/verification/SUPPLEMENTAL_PRODUCTION_GATES.md",
+  "definition_path": ".agent/evidence/EP-010/V-002/SUP-001/definition.md",
+  "definition_digest": "28eec0c9908f00034b411a1e9c0e1b16504cf00cae83a50d21e46a8f395665f3",
+  "definition_located": true,
+  "definition_kind": "summary-source",
+  "gate": {
+    "gate": "reality",
+    "script": "reality-gate.sh",
+    "exitCode": 1,
+    "sentinel": "reality gate: ok",
+    "sentinelFound": false,
+    "evidencePath": ".agent/evidence/EP-010/V-002/gate-reality.log",
+    "digest": "3c3e0bc784ef53b713dfe9a8123bbcfdda52095fc6ee6720d67a81c6abd9b4d7",
+    "note": "the gate exited 1 and did NOT print its sentinel"
+  },
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "BLOCKED_PREREQUISITE",
+  "reason": "the declared source .agent/verification/SUPPLEMENTAL_PRODUCTION_GATES.md is a summary that names this gate's subject but contains no method, command or completion gate; there is nothing to execute for this ID",
+  "recorded_at": "2026-09-20T01:25:32Z"
+}

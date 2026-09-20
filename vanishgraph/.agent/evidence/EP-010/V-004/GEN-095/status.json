@@ -1,0 +1,17 @@
+{
+  "test_id": "GEN-095",
+  "owner_stage": "V-004",
+  "title": "Architecture Security Assessment",
+  "kind": "atomic-security",
+  "source_library": ".agent/verification/source-library/security/general-dev-security-testing-prompts.md",
+  "definition_path": ".agent/evidence/EP-010/V-004/GEN-095/definition.md",
+  "definition_digest": "75c22b8a8f96106d1369d3671cbe76d20af51024e06354fe0a4726e563fc3f2d",
+  "definition_located": true,
+  "gate": null,
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "BLOCKED_PREREQUISITE",
+  "reason": "no repository gate covers this prompt's subject and no environment path exists to execute it here; the definition was extracted from .agent/verification/source-library/security/general-dev-security-testing-prompts.md and NOT executed",
+  "recorded_at": "2026-09-20T01:14:03Z"
+}

@@ -1,0 +1,26 @@
+{
+  "test_id": "GEN-083",
+  "owner_stage": "V-004",
+  "title": "Pre-Build Security Testing",
+  "kind": "atomic-security",
+  "source_library": ".agent/verification/source-library/security/general-dev-security-testing-prompts.md",
+  "definition_path": ".agent/evidence/EP-010/V-004/GEN-083/definition.md",
+  "definition_digest": "26e7435b907977dacff4e29e502bec4720c8ae276f129b436c140c1d35611b0a",
+  "definition_located": true,
+  "gate": {
+    "gate": "security-contract",
+    "script": "security-check.sh",
+    "exitCode": 0,
+    "sentinel": "security check: ok",
+    "sentinelFound": true,
+    "evidencePath": ".agent/evidence/EP-010/V-004/gate-security-contract.log",
+    "digest": "dd64b7f95dd2c5a9b6bf51ad72b42ba9fd255bb4caa45daf0321981edb3a0fc4",
+    "note": "the gate exited 0 and printed its sentinel"
+  },
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "PARTIAL",
+  "reason": "the repository gate covering this subject (scripts/security-check.sh) ran as the positive path: the gate exited 0 and printed its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
+  "recorded_at": "2026-09-20T01:14:03Z"
+}

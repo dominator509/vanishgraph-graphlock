@@ -1,0 +1,26 @@
+{
+  "test_id": "BC-001",
+  "owner_stage": "V-004",
+  "title": "Smart Contract Static Analysis",
+  "kind": "atomic-security",
+  "source_library": ".agent/verification/source-library/security/blockchain-security-testing-prompts.md",
+  "definition_path": ".agent/evidence/EP-010/V-004/BC-001/definition.md",
+  "definition_digest": "055b7877c7ba72eac640625d5be4fd20896128db41bbc7224e96b4a5042749b5",
+  "definition_located": true,
+  "gate": {
+    "gate": "static-analysis",
+    "script": "lint.sh",
+    "exitCode": 0,
+    "sentinel": "lint: ok",
+    "sentinelFound": true,
+    "evidencePath": ".agent/evidence/EP-010/V-004/gate-static-analysis.log",
+    "digest": "1cb5585a8213ae09f387ab5ab60c159793d6e2ce6e20e6e1306ad490a543effc",
+    "note": "the gate exited 0 and printed its sentinel"
+  },
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "PARTIAL",
+  "reason": "the repository gate covering this subject (scripts/lint.sh) ran as the positive path: the gate exited 0 and printed its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
+  "recorded_at": "2026-09-20T01:13:43Z"
+}

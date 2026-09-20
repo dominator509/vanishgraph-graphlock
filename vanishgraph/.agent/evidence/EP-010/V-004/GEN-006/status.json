@@ -1,0 +1,26 @@
+{
+  "test_id": "GEN-006",
+  "owner_stage": "V-004",
+  "title": "Credential Scanning",
+  "kind": "atomic-security",
+  "source_library": ".agent/verification/source-library/security/general-dev-security-testing-prompts.md",
+  "definition_path": ".agent/evidence/EP-010/V-004/GEN-006/definition.md",
+  "definition_digest": "c1ae3672984e006282c4c2162c960b0cef651a31f2da58068d010f635b982d96",
+  "definition_located": true,
+  "gate": {
+    "gate": "secrets",
+    "script": "secret-scan.sh",
+    "exitCode": 0,
+    "sentinel": "secret scan: ok",
+    "sentinelFound": true,
+    "evidencePath": ".agent/evidence/EP-010/V-004/gate-secrets.log",
+    "digest": "99710e0103f56662000f9b83c0d9998de0c163b7484008ee2fb4006db721702e",
+    "note": "the gate exited 0 and printed its sentinel"
+  },
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "PARTIAL",
+  "reason": "the repository gate covering this subject (scripts/secret-scan.sh) ran as the positive path: the gate exited 0 and printed its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
+  "recorded_at": "2026-09-20T01:14:03Z"
+}

@@ -1,0 +1,17 @@
+{
+  "test_id": "GEN-101",
+  "owner_stage": "V-004",
+  "title": "Compliance-as-Code Validation",
+  "kind": "atomic-security",
+  "source_library": ".agent/verification/source-library/security/general-dev-security-testing-prompts.md",
+  "definition_path": ".agent/evidence/EP-010/V-004/GEN-101/definition.md",
+  "definition_digest": "b64c48ed4dbfba7666a67c03daf21c9267f23032b2f4740fed298e85deedc181",
+  "definition_located": true,
+  "gate": null,
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "BLOCKED_PREREQUISITE",
+  "reason": "no repository gate covers this prompt's subject and no environment path exists to execute it here; the definition was extracted from .agent/verification/source-library/security/general-dev-security-testing-prompts.md and NOT executed",
+  "recorded_at": "2026-09-20T01:14:03Z"
+}

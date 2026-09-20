@@ -1,0 +1,27 @@
+{
+  "test_id": "SUP-003",
+  "owner_stage": "V-005",
+  "title": "Packaging & Distribution Artifact Verification",
+  "kind": "production-gate",
+  "source_library": ".agent/verification/SUPPLEMENTAL_PRODUCTION_GATES.md",
+  "definition_path": ".agent/evidence/EP-010/V-005/SUP-003/definition.md",
+  "definition_digest": "28eec0c9908f00034b411a1e9c0e1b16504cf00cae83a50d21e46a8f395665f3",
+  "definition_located": true,
+  "definition_kind": "summary-source",
+  "gate": {
+    "gate": "build",
+    "script": "build-artifact.sh",
+    "exitCode": 1,
+    "sentinel": "artifact: built",
+    "sentinelFound": false,
+    "evidencePath": ".agent/evidence/EP-010/V-005/gate-build.log",
+    "digest": "fb990e50349ab158c7a5fac4b0dc5080a150e18508f55f8bce4a2a426eba1153",
+    "note": "the gate exited 1 and did NOT print its sentinel"
+  },
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "BLOCKED_PREREQUISITE",
+  "reason": "the declared source .agent/verification/SUPPLEMENTAL_PRODUCTION_GATES.md is a summary that names this gate's subject but contains no method, command or completion gate; there is nothing to execute for this ID",
+  "recorded_at": "2026-09-20T01:44:25Z"
+}

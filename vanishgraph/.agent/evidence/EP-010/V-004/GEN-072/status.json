@@ -1,0 +1,26 @@
+{
+  "test_id": "GEN-072",
+  "owner_stage": "V-004",
+  "title": "Software Bill of Materials (SBOM) Generation and Verification",
+  "kind": "atomic-security",
+  "source_library": ".agent/verification/source-library/security/general-dev-security-testing-prompts.md",
+  "definition_path": ".agent/evidence/EP-010/V-004/GEN-072/definition.md",
+  "definition_digest": "82b58fd844829c54aa7e36f829f5e415707585c0022366b2545158aaa2314e75",
+  "definition_located": true,
+  "gate": {
+    "gate": "supply-chain",
+    "script": "dependency-audit.sh",
+    "exitCode": 1,
+    "sentinel": "dependency audit: ok",
+    "sentinelFound": false,
+    "evidencePath": ".agent/evidence/EP-010/V-004/gate-supply-chain.log",
+    "digest": "af3fc1fb8f8314c7aa10756ffdcc5a1768a1052eb03b434fcd02a4e18c69f4d3",
+    "note": "the gate exited 1 and did NOT print its sentinel"
+  },
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "PARTIAL",
+  "reason": "the repository gate covering this subject (scripts/dependency-audit.sh) ran as the positive path: the gate exited 1 and did NOT print its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
+  "recorded_at": "2026-09-20T01:14:03Z"
+}

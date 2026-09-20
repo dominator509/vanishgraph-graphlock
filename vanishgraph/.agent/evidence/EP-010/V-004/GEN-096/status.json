@@ -1,0 +1,17 @@
+{
+  "test_id": "GEN-096",
+  "owner_stage": "V-004",
+  "title": "Secure Design Review",
+  "kind": "atomic-security",
+  "source_library": ".agent/verification/source-library/security/general-dev-security-testing-prompts.md",
+  "definition_path": ".agent/evidence/EP-010/V-004/GEN-096/definition.md",
+  "definition_digest": "9eed754dba3f904d5ae0c485d98ba505f7b6cf36250dad8b5fb2baaea1cb7877",
+  "definition_located": true,
+  "gate": null,
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "BLOCKED_PREREQUISITE",
+  "reason": "no repository gate covers this prompt's subject and no environment path exists to execute it here; the definition was extracted from .agent/verification/source-library/security/general-dev-security-testing-prompts.md and NOT executed",
+  "recorded_at": "2026-09-20T01:14:03Z"
+}

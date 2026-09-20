@@ -1,0 +1,27 @@
+{
+  "test_id": "E2E-004",
+  "owner_stage": "V-009",
+  "title": "API Contract & Security Validation",
+  "kind": "orchestrator",
+  "source_library": ".agent/verification/E2E_SUITE_LIBRARY.md",
+  "definition_path": ".agent/evidence/EP-010/V-009/E2E-004/definition.md",
+  "definition_digest": "492307e5ffe2e8ca7f0604b6c8b8867da01f8dd602b19651b3aae359169c4826",
+  "definition_located": true,
+  "definition_kind": "prompt-block",
+  "gate": {
+    "gate": "integration",
+    "script": "test-integration.sh",
+    "exitCode": 0,
+    "sentinel": "test-integration: ok",
+    "sentinelFound": true,
+    "evidencePath": ".agent/evidence/EP-010/V-009/gate-integration.log",
+    "digest": "4fc4b1c45d391a9803dedf3e44edf422f7119d17c9277c4893141283289fa89b",
+    "note": "the gate exited 0 and printed its sentinel"
+  },
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "PARTIAL",
+  "reason": "the repository gate covering this subject (scripts/test-integration.sh) ran as the positive path: the gate exited 0 and printed its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
+  "recorded_at": "2026-09-20T01:43:06Z"
+}

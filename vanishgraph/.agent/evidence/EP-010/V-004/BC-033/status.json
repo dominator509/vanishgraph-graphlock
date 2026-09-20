@@ -1,0 +1,17 @@
+{
+  "test_id": "BC-033",
+  "owner_stage": "V-004",
+  "title": "Architecture Review",
+  "kind": "atomic-security",
+  "source_library": ".agent/verification/source-library/security/blockchain-security-testing-prompts.md",
+  "definition_path": ".agent/evidence/EP-010/V-004/BC-033/definition.md",
+  "definition_digest": "f2189f96e611e3059b57636d6682a7ac14f66c619ffbd92e77454a1573d0a86b",
+  "definition_located": true,
+  "gate": null,
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "BLOCKED_PREREQUISITE",
+  "reason": "no repository gate covers this prompt's subject and no environment path exists to execute it here; the definition was extracted from .agent/verification/source-library/security/blockchain-security-testing-prompts.md and NOT executed",
+  "recorded_at": "2026-09-20T01:13:43Z"
+}

@@ -2380,5 +2380,431 @@
     "casebook_objects": 484,
     "ownership_total": 484
   },
-  "note": "The dependency-blocker graph seed. Stage order comes from .agent/verification/GRAPH.md PARSED AT RUN TIME; ownership comes from the registry default_stage column through the plan mapping, with the one multi-stage value split per id from its title and every such decision listed in split_decisions. Blocker edges are added by the stages themselves as they run: an id that is BLOCKED_PREREQUISITE must name the edge it waits on, which scripts/harness-validate.sh refuses to accept without."
+  "note": "The dependency-blocker graph seed. Stage order comes from .agent/verification/GRAPH.md PARSED AT RUN TIME; ownership comes from the registry default_stage column through the plan mapping, with the one multi-stage value split per id from its title and every such decision listed in split_decisions. Blocker edges are added by the stages themselves as they run: an id that is BLOCKED_PREREQUISITE must name the edge it waits on, which scripts/harness-validate.sh refuses to accept without.",
+  "capability_edges": [
+    "capability:agentic-runner->V-004",
+    "capability:agentic-runner->V-005",
+    "capability:agentic-runner->V-006",
+    "capability:agentic-runner->V-007",
+    "capability:agentic-runner->V-008",
+    "capability:agentic-runner->V-009",
+    "capability:deployed-target->V-005",
+    "capability:execution-mapping->V-004",
+    "capability:execution-mapping->V-005",
+    "capability:execution-mapping->V-009",
+    "capability:per-id-definition->V-002",
+    "capability:per-id-definition->V-005"
+  ],
+  "stage_runs": [
+    {
+      "stage": "V-002",
+      "epoch": "FORGE-SPEC-2",
+      "artifact_digest": "sha256:5d775517fc1acb381a6067692237ae289a62202e43869e5bcb058b95a0c1f757",
+      "owned_ids": 2,
+      "statuses": {
+        "ERROR": 2
+      },
+      "gates_run": [
+        {
+          "gate": "reality",
+          "script": "reality-gate.sh",
+          "exitCode": 1,
+          "sentinelFound": false,
+          "evidencePath": ".agent/evidence/EP-010/V-002/gate-reality.log",
+          "digest": "3c3e0bc784ef53b713dfe9a8123bbcfdda52095fc6ee6720d67a81c6abd9b4d7"
+        },
+        {
+          "gate": "integration",
+          "script": "test-integration.sh",
+          "exitCode": 0,
+          "sentinelFound": true,
+          "evidencePath": ".agent/evidence/EP-010/V-002/gate-integration.log",
+          "digest": "adce07ce58e8d9604fced29cf6f3cd94629ba2712a501d4f413810d4719dc5f1"
+        }
+      ],
+      "recorded_at": "2026-09-20T01:13:22Z"
+    },
+    {
+      "stage": "V-004",
+      "epoch": "FORGE-SPEC-2",
+      "artifact_digest": "sha256:5d775517fc1acb381a6067692237ae289a62202e43869e5bcb058b95a0c1f757",
+      "owned_ids": 70,
+      "statuses": {
+        "PARTIAL": 53,
+        "BLOCKED_PREREQUISITE": 17
+      },
+      "gates_run": [
+        {
+          "gate": "static-analysis",
+          "script": "lint.sh",
+          "exitCode": 0,
+          "sentinelFound": true,
+          "evidencePath": ".agent/evidence/EP-010/V-004/gate-static-analysis.log",
+          "digest": "1cb5585a8213ae09f387ab5ab60c159793d6e2ce6e20e6e1306ad490a543effc"
+        },
+        {
+          "gate": "supply-chain",
+          "script": "dependency-audit.sh",
+          "exitCode": 1,
+          "sentinelFound": false,
+          "evidencePath": ".agent/evidence/EP-010/V-004/gate-supply-chain.log",
+          "digest": "af3fc1fb8f8314c7aa10756ffdcc5a1768a1052eb03b434fcd02a4e18c69f4d3"
+        },
+        {
+          "gate": "build",
+          "script": "build-artifact.sh",
+          "exitCode": 1,
+          "sentinelFound": false,
+          "evidencePath": ".agent/evidence/EP-010/V-004/gate-build.log",
+          "digest": "9fa326afbd7deaedebfe0148d9042e458cde71a84ba1151da0c493c442272c1b"
+        },
+        {
+          "gate": "security-contract",
+          "script": "security-check.sh",
+          "exitCode": 0,
+          "sentinelFound": true,
+          "evidencePath": ".agent/evidence/EP-010/V-004/gate-security-contract.log",
+          "digest": "dd64b7f95dd2c5a9b6bf51ad72b42ba9fd255bb4caa45daf0321981edb3a0fc4"
+        },
+        {
+          "gate": "secrets",
+          "script": "secret-scan.sh",
+          "exitCode": 0,
+          "sentinelFound": true,
+          "evidencePath": ".agent/evidence/EP-010/V-004/gate-secrets.log",
+          "digest": "99710e0103f56662000f9b83c0d9998de0c163b7484008ee2fb4006db721702e"
+        }
+      ],
+      "recorded_at": "2026-09-20T01:14:03Z"
+    },
+    {
+      "stage": "V-005",
+      "epoch": "FORGE-SPEC-2",
+      "artifact_digest": "sha256:5d775517fc1acb381a6067692237ae289a62202e43869e5bcb058b95a0c1f757",
+      "owned_ids": 27,
+      "statuses": {
+        "PARTIAL": 21,
+        "BLOCKED_PREREQUISITE": 3,
+        "BLOCKED_ENVIRONMENT": 1,
+        "ERROR": 2
+      },
+      "gates_run": [
+        {
+          "gate": "security-contract",
+          "script": "security-check.sh",
+          "exitCode": 0,
+          "sentinelFound": true,
+          "evidencePath": ".agent/evidence/EP-010/V-005/gate-security-contract.log",
+          "digest": "ffa7341a080978b90ce5a9a3226c358461eb8de493641cd47c8ba8b5fee5aacc"
+        },
+        {
+          "gate": "config",
+          "script": "config-validate.sh",
+          "exitCode": 0,
+          "sentinelFound": true,
+          "evidencePath": ".agent/evidence/EP-010/V-005/gate-config.log",
+          "digest": "170f8db78e499e16f11ab6c1b5991e1fa0e3436935d010847cfec3b15e94659b"
+        },
+        {
+          "gate": "static-analysis",
+          "script": "lint.sh",
+          "exitCode": 0,
+          "sentinelFound": true,
+          "evidencePath": ".agent/evidence/EP-010/V-005/gate-static-analysis.log",
+          "digest": "1cb5585a8213ae09f387ab5ab60c159793d6e2ce6e20e6e1306ad490a543effc"
+        },
+        {
+          "gate": "build",
+          "script": "build-artifact.sh",
+          "exitCode": 1,
+          "sentinelFound": false,
+          "evidencePath": ".agent/evidence/EP-010/V-005/gate-build.log",
+          "digest": "9fa326afbd7deaedebfe0148d9042e458cde71a84ba1151da0c493c442272c1b"
+        }
+      ],
+      "recorded_at": "2026-09-20T01:14:36Z"
+    },
+    {
+      "stage": "V-006",
+      "epoch": "FORGE-SPEC-2",
+      "artifact_digest": "sha256:5d775517fc1acb381a6067692237ae289a62202e43869e5bcb058b95a0c1f757",
+      "owned_ids": 1,
+      "statuses": {
+        "ERROR": 1
+      },
+      "gates_run": [
+        {
+          "gate": "smoke",
+          "script": "smoke-test.sh",
+          "exitCode": 1,
+          "sentinelFound": false,
+          "evidencePath": ".agent/evidence/EP-010/V-006/gate-smoke.log",
+          "digest": "475d6fec4bb4fff12e43e60bc7a3c68f9e2a1655e68bff2995c06aebc7fa1ee4"
+        }
+      ],
+      "recorded_at": "2026-09-20T01:14:38Z"
+    },
+    {
+      "stage": "V-007",
+      "epoch": "FORGE-SPEC-2",
+      "artifact_digest": "sha256:5d775517fc1acb381a6067692237ae289a62202e43869e5bcb058b95a0c1f757",
+      "owned_ids": 1,
+      "statuses": {
+        "ERROR": 1
+      },
+      "gates_run": [
+        {
+          "gate": "build",
+          "script": "build-artifact.sh",
+          "exitCode": 1,
+          "sentinelFound": false,
+          "evidencePath": ".agent/evidence/EP-010/V-007/gate-build.log",
+          "digest": "9fa326afbd7deaedebfe0148d9042e458cde71a84ba1151da0c493c442272c1b"
+        }
+      ],
+      "recorded_at": "2026-09-20T01:14:39Z"
+    },
+    {
+      "stage": "V-008",
+      "epoch": "FORGE-SPEC-2",
+      "artifact_digest": "sha256:5d775517fc1acb381a6067692237ae289a62202e43869e5bcb058b95a0c1f757",
+      "owned_ids": 1,
+      "statuses": {
+        "ERROR": 1
+      },
+      "gates_run": [
+        {
+          "gate": "unit",
+          "script": "test-unit.sh",
+          "exitCode": 1,
+          "sentinelFound": false,
+          "evidencePath": ".agent/evidence/EP-010/V-008/gate-unit.log",
+          "digest": "16c6026a34d693cb40bb24113d003ea955879eb8183b02b17a97e8658c43b4c6"
+        }
+      ],
+      "recorded_at": "2026-09-20T01:18:59Z"
+    },
+    {
+      "stage": "V-009",
+      "epoch": "FORGE-SPEC-2",
+      "artifact_digest": "sha256:5d775517fc1acb381a6067692237ae289a62202e43869e5bcb058b95a0c1f757",
+      "owned_ids": 1,
+      "statuses": {
+        "ERROR": 1
+      },
+      "gates_run": [],
+      "recorded_at": "2026-09-20T01:19:00Z"
+    },
+    {
+      "stage": "V-009",
+      "epoch": "FORGE-SPEC-2",
+      "artifact_digest": "sha256:5d775517fc1acb381a6067692237ae289a62202e43869e5bcb058b95a0c1f757",
+      "owned_ids": 1,
+      "statuses": {
+        "BLOCKED_PREREQUISITE": 1
+      },
+      "gates_run": [],
+      "recorded_at": "2026-09-20T01:25:16Z"
+    },
+    {
+      "stage": "V-002",
+      "epoch": "FORGE-SPEC-2",
+      "artifact_digest": "sha256:5d775517fc1acb381a6067692237ae289a62202e43869e5bcb058b95a0c1f757",
+      "owned_ids": 2,
+      "statuses": {
+        "BLOCKED_PREREQUISITE": 2
+      },
+      "gates_run": [
+        {
+          "gate": "reality",
+          "script": "reality-gate.sh",
+          "exitCode": 1,
+          "sentinelFound": false,
+          "evidencePath": ".agent/evidence/EP-010/V-002/gate-reality.log",
+          "digest": "3c3e0bc784ef53b713dfe9a8123bbcfdda52095fc6ee6720d67a81c6abd9b4d7"
+        },
+        {
+          "gate": "integration",
+          "script": "test-integration.sh",
+          "exitCode": 0,
+          "sentinelFound": true,
+          "evidencePath": ".agent/evidence/EP-010/V-002/gate-integration.log",
+          "digest": "eb4473984fa64af576f07905241a588ba7063ebb54dd4562d3346f173ccec527"
+        }
+      ],
+      "recorded_at": "2026-09-20T01:32:07Z"
+    },
+    {
+      "stage": "V-005",
+      "epoch": "FORGE-SPEC-2",
+      "artifact_digest": "sha256:5d775517fc1acb381a6067692237ae289a62202e43869e5bcb058b95a0c1f757",
+      "owned_ids": 27,
+      "statuses": {
+        "PARTIAL": 21,
+        "BLOCKED_PREREQUISITE": 5,
+        "BLOCKED_ENVIRONMENT": 1
+      },
+      "gates_run": [
+        {
+          "gate": "security-contract",
+          "script": "security-check.sh",
+          "exitCode": 0,
+          "sentinelFound": true,
+          "evidencePath": ".agent/evidence/EP-010/V-005/gate-security-contract.log",
+          "digest": "01be21e637c28d435a359392dbf58972ebd8ac0cf835b5a9d5e74acbc1535abf"
+        },
+        {
+          "gate": "config",
+          "script": "config-validate.sh",
+          "exitCode": 0,
+          "sentinelFound": true,
+          "evidencePath": ".agent/evidence/EP-010/V-005/gate-config.log",
+          "digest": "170f8db78e499e16f11ab6c1b5991e1fa0e3436935d010847cfec3b15e94659b"
+        },
+        {
+          "gate": "static-analysis",
+          "script": "lint.sh",
+          "exitCode": 0,
+          "sentinelFound": true,
+          "evidencePath": ".agent/evidence/EP-010/V-005/gate-static-analysis.log",
+          "digest": "1cb5585a8213ae09f387ab5ab60c159793d6e2ce6e20e6e1306ad490a543effc"
+        },
+        {
+          "gate": "build",
+          "script": "build-artifact.sh",
+          "exitCode": 1,
+          "sentinelFound": false,
+          "evidencePath": ".agent/evidence/EP-010/V-005/gate-build.log",
+          "digest": "7adc2b20c440598f752d74a533b0eed5aae8d58ab524832c160a22a88faa7eb5"
+        }
+      ],
+      "recorded_at": "2026-09-20T01:32:51Z"
+    },
+    {
+      "stage": "V-006",
+      "epoch": "FORGE-SPEC-2",
+      "artifact_digest": "sha256:5d775517fc1acb381a6067692237ae289a62202e43869e5bcb058b95a0c1f757",
+      "owned_ids": 1,
+      "statuses": {
+        "PARTIAL": 1
+      },
+      "gates_run": [
+        {
+          "gate": "smoke",
+          "script": "smoke-test.sh",
+          "exitCode": 1,
+          "sentinelFound": false,
+          "evidencePath": ".agent/evidence/EP-010/V-006/gate-smoke.log",
+          "digest": "475d6fec4bb4fff12e43e60bc7a3c68f9e2a1655e68bff2995c06aebc7fa1ee4"
+        }
+      ],
+      "recorded_at": "2026-09-20T01:32:52Z"
+    },
+    {
+      "stage": "V-007",
+      "epoch": "FORGE-SPEC-2",
+      "artifact_digest": "sha256:5d775517fc1acb381a6067692237ae289a62202e43869e5bcb058b95a0c1f757",
+      "owned_ids": 1,
+      "statuses": {
+        "PARTIAL": 1
+      },
+      "gates_run": [
+        {
+          "gate": "reality",
+          "script": "reality-gate.sh",
+          "exitCode": 1,
+          "sentinelFound": false,
+          "evidencePath": ".agent/evidence/EP-010/V-007/gate-reality.log",
+          "digest": "3c3e0bc784ef53b713dfe9a8123bbcfdda52095fc6ee6720d67a81c6abd9b4d7"
+        }
+      ],
+      "recorded_at": "2026-09-20T01:32:53Z"
+    },
+    {
+      "stage": "V-008",
+      "epoch": "FORGE-SPEC-2",
+      "artifact_digest": "sha256:5d775517fc1acb381a6067692237ae289a62202e43869e5bcb058b95a0c1f757",
+      "owned_ids": 1,
+      "statuses": {
+        "PARTIAL": 1
+      },
+      "gates_run": [
+        {
+          "gate": "unit",
+          "script": "test-unit.sh",
+          "exitCode": 1,
+          "sentinelFound": false,
+          "evidencePath": ".agent/evidence/EP-010/V-008/gate-unit.log",
+          "digest": "95f61d8a22af0ef0f977266d3198b0047ee97e3636ca2672db24fd75a0237975"
+        }
+      ],
+      "recorded_at": "2026-09-20T01:36:42Z"
+    },
+    {
+      "stage": "V-009",
+      "epoch": "FORGE-SPEC-2",
+      "artifact_digest": "sha256:5d775517fc1acb381a6067692237ae289a62202e43869e5bcb058b95a0c1f757",
+      "owned_ids": 1,
+      "statuses": {
+        "PARTIAL": 1
+      },
+      "gates_run": [
+        {
+          "gate": "integration",
+          "script": "test-integration.sh",
+          "exitCode": 0,
+          "sentinelFound": true,
+          "evidencePath": ".agent/evidence/EP-010/V-009/gate-integration.log",
+          "digest": "4fc4b1c45d391a9803dedf3e44edf422f7119d17c9277c4893141283289fa89b"
+        }
+      ],
+      "recorded_at": "2026-09-20T01:43:06Z"
+    },
+    {
+      "stage": "V-005",
+      "epoch": "FORGE-SPEC-2",
+      "artifact_digest": "sha256:5d775517fc1acb381a6067692237ae289a62202e43869e5bcb058b95a0c1f757",
+      "owned_ids": 27,
+      "statuses": {
+        "PARTIAL": 21,
+        "BLOCKED_PREREQUISITE": 5,
+        "BLOCKED_ENVIRONMENT": 1
+      },
+      "gates_run": [
+        {
+          "gate": "security-contract",
+          "script": "security-check.sh",
+          "exitCode": 0,
+          "sentinelFound": true,
+          "evidencePath": ".agent/evidence/EP-010/V-005/gate-security-contract.log",
+          "digest": "2d61ddeade388ac1f8f077d486d592cabca69bf29880662be617261f800d5a86"
+        },
+        {
+          "gate": "config",
+          "script": "config-validate.sh",
+          "exitCode": 0,
+          "sentinelFound": true,
+          "evidencePath": ".agent/evidence/EP-010/V-005/gate-config.log",
+          "digest": "170f8db78e499e16f11ab6c1b5991e1fa0e3436935d010847cfec3b15e94659b"
+        },
+        {
+          "gate": "static-analysis",
+          "script": "lint.sh",
+          "exitCode": 0,
+          "sentinelFound": true,
+          "evidencePath": ".agent/evidence/EP-010/V-005/gate-static-analysis.log",
+          "digest": "1cb5585a8213ae09f387ab5ab60c159793d6e2ce6e20e6e1306ad490a543effc"
+        },
+        {
+          "gate": "build",
+          "script": "build-artifact.sh",
+          "exitCode": 1,
+          "sentinelFound": false,
+          "evidencePath": ".agent/evidence/EP-010/V-005/gate-build.log",
+          "digest": "fb990e50349ab158c7a5fac4b0dc5080a150e18508f55f8bce4a2a426eba1153"
+        }
+      ],
+      "recorded_at": "2026-09-20T01:44:25Z"
+    }
+  ]
 }

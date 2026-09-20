@@ -64,10 +64,16 @@ const matrixSet = new Set(matrixIds);
 for (const id of registrySet) if (!matrixSet.has(id)) problems.push(`${id} is in the registry and has no applicability decision`);
 for (const id of matrixSet) if (!registrySet.has(id)) problems.push(`${id} has an applicability decision and is not in the registry`);
 
+// THE LEDGER IS A HISTORY; THE ACCOUNTING IS THE LATEST ROW PER ID. MEASURED REASON: a stage whose evidence was
+// invalidated is re-run legitimately, and a re-run appends a new row rather than erasing the old one, so counting
+// occurrences would report a duplicate where the audit trail records a supersession. The superseded rows are
+// reported as their own number so the history stays visible.
 const counted = new Map();
 let stale = 0;
 let unrecognised = 0;
 let staleOverall = 0;
+let superseded = 0;
+const withdrawnMatches = [];
 for (const row of ledger) {
   const id = row.test_id ?? row.id;
   const rowEpoch = row.epochId ?? row.epoch;
@@ -76,12 +82,25 @@ for (const row of ledger) {
   const epoch = row.epochId ?? row.epoch;
   if (epoch !== undefined && epoch !== null && epoch !== currentEpoch) { stale += 1; continue; }
   if (!STATUSES.has(row.status)) { unrecognised += 1; continue; }
+  if (counted.has(id)) superseded += 1;
   counted.set(id, (counted.get(id) ?? 0) + 1);
 }
 const accounted = [...counted.keys()];
 const duplicated = accounted.filter((id) => counted.get(id) > 1);
 const unaccounted = registryIds.filter((id) => !counted.has(id));
-if (duplicated.length > 0) problems.push(`${duplicated.length} id(s) carry more than one status row in this epoch: ${duplicated.slice(0, 10).join(", ")}`);
+// A SUPERSEDED ROW IS NOT A DUPLICATE STATUS: SPEC-006 section 4.1 says exactly one status applies to an ID AT ANY
+// TIME, and the audit trail names the withdrawal. An ID with several rows and NO withdrawal in the audit trail is
+// the real defect, and that is what is reported.
+const auditedWithdrawals = new Set();
+if (fs.existsSync(".agent/verification/state/STATUS_TRANSITION_AUDIT.jsonl")) {
+  for (const line of fs.readFileSync(".agent/verification/state/STATUS_TRANSITION_AUDIT.jsonl", "utf8").split("\n")) {
+    if (line.trim() === "") continue;
+    const row = JSON.parse(line);
+    if (row.to === "WITHDRAWN") auditedWithdrawals.add(row.test_id ?? row.id);
+  }
+}
+const unexplainedDuplicates = duplicated.filter((id) => !auditedWithdrawals.has(id));
+if (unexplainedDuplicates.length > 0) problems.push(`${unexplainedDuplicates.length} id(s) carry more than one status row in this epoch with no withdrawal recorded in the audit trail: ${unexplainedDuplicates.slice(0, 10).join(", ")}`);
 
 const report = {
   epoch: currentEpoch,
@@ -93,11 +112,13 @@ const report = {
   unaccounted_in_this_epoch: unaccounted.length,
   unaccounted_sample: unaccounted.slice(0, 20),
   duplicated_in_this_epoch: duplicated,
+  superseded_rows_in_this_epoch: superseded,
+  unexplained_duplicates: unexplainedDuplicates,
   stale_epoch_rows_not_counted: stale,
   stale_epoch_rows_in_the_whole_ledger: staleOverall,
   unrecognised_status_rows_not_counted: unrecognised,
   invariant: "every registry id accounted exactly once in the current candidate epoch",
-  holds: accounted.length === 484 && duplicated.length === 0 && problems.length === 0,
+  holds: accounted.length === 484 && unexplainedDuplicates.length === 0 && problems.length === 0,
   problems,
 };
 fs.writeFileSync(evidencePath, `${JSON.stringify(report, null, 2)}\n`);

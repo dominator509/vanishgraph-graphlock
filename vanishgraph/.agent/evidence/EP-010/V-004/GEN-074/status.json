@@ -1,0 +1,26 @@
+{
+  "test_id": "GEN-074",
+  "owner_stage": "V-004",
+  "title": "Build Provenance Verification",
+  "kind": "atomic-security",
+  "source_library": ".agent/verification/source-library/security/general-dev-security-testing-prompts.md",
+  "definition_path": ".agent/evidence/EP-010/V-004/GEN-074/definition.md",
+  "definition_digest": "9450f69d0852f2b62664f13baca027f963642c810a0de49aaf3ab3f5dfd51b26",
+  "definition_located": true,
+  "gate": {
+    "gate": "build",
+    "script": "build-artifact.sh",
+    "exitCode": 1,
+    "sentinel": "artifact: built",
+    "sentinelFound": false,
+    "evidencePath": ".agent/evidence/EP-010/V-004/gate-build.log",
+    "digest": "9fa326afbd7deaedebfe0148d9042e458cde71a84ba1151da0c493c442272c1b",
+    "note": "the gate exited 1 and did NOT print its sentinel"
+  },
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "PARTIAL",
+  "reason": "the repository gate covering this subject (scripts/build-artifact.sh) ran as the positive path: the gate exited 1 and did NOT print its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
+  "recorded_at": "2026-09-20T01:14:03Z"
+}

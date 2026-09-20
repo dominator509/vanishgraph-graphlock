@@ -1,0 +1,27 @@
+{
+  "test_id": "HIPAA-109",
+  "owner_stage": "V-005",
+  "title": "Container Image Security Testing",
+  "kind": "atomic-security",
+  "source_library": ".agent/verification/source-library/security/hipaa-software-dev-security-testing-prompts.md",
+  "definition_path": ".agent/evidence/EP-010/V-005/HIPAA-109/definition.md",
+  "definition_digest": "a3ac20acc5d87bd9d52677440f82b6e8a5ee45bde1bfc771aa374de3c3b84278",
+  "definition_located": true,
+  "definition_kind": "prompt-block",
+  "gate": {
+    "gate": "static-analysis",
+    "script": "lint.sh",
+    "exitCode": 0,
+    "sentinel": "lint: ok",
+    "sentinelFound": true,
+    "evidencePath": ".agent/evidence/EP-010/V-005/gate-static-analysis.log",
+    "digest": "1cb5585a8213ae09f387ab5ab60c159793d6e2ce6e20e6e1306ad490a543effc",
+    "note": "the gate exited 0 and printed its sentinel"
+  },
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "PARTIAL",
+  "reason": "the repository gate covering this subject (scripts/lint.sh) ran as the positive path: the gate exited 0 and printed its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
+  "recorded_at": "2026-09-20T01:44:24Z"
+}

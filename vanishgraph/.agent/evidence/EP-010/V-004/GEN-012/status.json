@@ -1,0 +1,17 @@
+{
+  "test_id": "GEN-012",
+  "owner_stage": "V-004",
+  "title": "Source Code Security Audit",
+  "kind": "atomic-security",
+  "source_library": ".agent/verification/source-library/security/general-dev-security-testing-prompts.md",
+  "definition_path": ".agent/evidence/EP-010/V-004/GEN-012/definition.md",
+  "definition_digest": "48c72c9deaac6715ab67eb7217ae7cb1a8553cdb6701df54aa39c4c31145fe98",
+  "definition_located": true,
+  "gate": null,
+  "prompt_requires_authorization": false,
+  "prompt_requires_target": false,
+  "prompt_requires_runner": false,
+  "status": "BLOCKED_PREREQUISITE",
+  "reason": "no repository gate covers this prompt's subject and no environment path exists to execute it here; the definition was extracted from .agent/verification/source-library/security/general-dev-security-testing-prompts.md and NOT executed",
+  "recorded_at": "2026-09-20T01:14:03Z"
+}
