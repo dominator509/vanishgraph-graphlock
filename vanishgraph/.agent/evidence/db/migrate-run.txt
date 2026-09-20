@@ -1,2 +1,36 @@
-migrate: applied 0 migration(s); at version 34
+migrate: applying 0001_enums_and_tenant.sql
+migrate: applying 0002_identity.sql
+migrate: applying 0003_source.sql
+migrate: applying 0004_policy_and_action.sql
+migrate: applying 0005_evidence_audit_and_ops.sql
+migrate: applying 0006_updated_at_triggers.sql
+migrate: applying 0007_rls_invariant_assert.sql
+migrate: applying 0008_job_queue.sql
+migrate: applying 0009_retention.sql
+migrate: applying 0010_repair_vacuous_array_checks.sql
+migrate: applying 0011_http_idempotency.sql
+migrate: applying 0012_api_contract_columns.sql
+migrate: applying 0013_catalog_entry_key.sql
+migrate: applying 0014_disabled_reason_vocabulary.sql
+migrate: applying 0015_appeal_review_state.sql
+migrate: applying 0016_deadline_provenance.sql
+migrate: applying 0017_audit_event_observability.sql
+migrate: applying 0018_observation_paths.sql
+migrate: applying 0019_transition_spine.sql
+migrate: applying 0020_exposure_read_fields.sql
+migrate: applying 0021_exposure_observation_defaults.sql
+migrate: applying 0022_case_aggregate.sql
+migrate: applying 0023_unbound_policy_decision.sql
+migrate: applying 0024_reappearance_content_hash.sql
+migrate: applying 0025_controller_response_fields.sql
+migrate: applying 0026_action_records.sql
+migrate: applying 0027_action_status_and_path.sql
+migrate: applying 0028_policy_version_label.sql
+migrate: applying 0029_coverage_report.sql
+migrate: applying 0030_subject_contact_preference.sql
+migrate: applying 0031_authority_grant_facts.sql
+migrate: applying 0032_webhook_binding.sql
+migrate: applying 0033_webhook_capability_policy.sql
+migrate: applying 0034_authority_grant_execution_time_facts.sql
+migrate: applied 34 migration(s); at version 34
 migrate: ok

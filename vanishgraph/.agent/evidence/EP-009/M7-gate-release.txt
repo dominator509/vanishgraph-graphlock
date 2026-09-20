@@ -1,0 +1,17 @@
+gate-release run
+commit: f62928b0bfed2ac89065c26ef5546a4c3e8ae22b
+recorded at: 2026-09-20T00:27:40Z
+
+stage config-validate: PASSED, sentinel "config: ok" printed
+stage ci-guard: PASSED, sentinel "ci pipeline: ok" printed
+stage build-artifact: PASSED, sentinel "artifact: built" printed
+stage build-reproducibility: PASSED, sentinel "artifact reproducible: ok" printed
+stage artifact-identity: PASSED, sentinel "artifact identity: ok" printed
+stage install: PASSED, sentinel "install: ok" printed
+stage published-commands: PASSED, sentinel "published commands: ok" printed
+stage rollback-drill: BLOCKED with taxonomy status BLOCKED_ON_IMPLEMENTATION
+rollback drill: BLOCKED_ON_IMPLEMENTATION - rollback to a PREVIOUS VERSION cannot be demonstrated: only one artifact version exists (0.1.0). Evidence: .agent/evidence/EP-009/M6-rollback.txt. NO SENTINEL IS PRINTED.
+BLOCKED rollback-drill
+
+summary: 7 stage(s) passed with their sentinel, 1 stage(s) blocked with a taxonomy status, 0 stage(s) failed
+manifest refreshed: artifact digest sha256:901ce2485f0f313aa98…, inputs digest sha256:3be2892e7558559ae9e…, registry_count 484, dod_count 42, candidate_epoch GENERATION

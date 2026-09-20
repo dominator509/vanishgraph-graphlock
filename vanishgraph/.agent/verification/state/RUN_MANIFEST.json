@@ -61,7 +61,7 @@
       "vanishgraph.artifact.digest": {
         "source": "Build/release output (DOD-003, DOD-029)",
         "resolution": "STATIC",
-        "value": "sha256:a22101df15627219a84ac2e5e2aab00d9811bf158c39651a802070f4f6634a06",
+        "value": "sha256:901ce2485f0f313aa985df9e6337649aeec3156c4249bfa07028147d8dd13b55",
         "note": "EP-009 M1 built the declared formats and published this digest; sh scripts/artifact-identity.sh resolves it against the bytes on disk. The digests of the tarball container and of the SBOM vary between builds for the documented reasons (tar mtimes, CycloneDX run identifiers) and the reconciliation is recorded in the identity."
       },
       "vanishgraph.build.inputs_digest": {
@@ -87,7 +87,7 @@
   "artifact": {
     "recorded_at_round": "EP-009 M7",
     "identity_document": ".agent/verification/state/ARTIFACT_IDENTITY.json",
-    "source_commit_sha": "cded4370f18230694b45c7a5892b10e322a556fc",
+    "source_commit_sha": "f62928b0bfed2ac89065c26ef5546a4c3e8ae22b",
     "builder_identity": {
       "tool": "node",
       "version": "v24.14.1",
@@ -95,14 +95,14 @@
     },
     "build_command": "sh scripts/build-artifact.sh",
     "tarball": "dist/vanishgraph-0.1.0.tgz",
-    "tarball_digest": "sha256:a22101df15627219a84ac2e5e2aab00d9811bf158c39651a802070f4f6634a06",
+    "tarball_digest": "sha256:901ce2485f0f313aa985df9e6337649aeec3156c4249bfa07028147d8dd13b55",
     "formats": [
       "dist/vanishgraph-0.1.0.tgz",
       "dist/vanishgraph-0.1.0.cdx.json",
       "dist/provenance.json",
       "dist/SHA256SUMS"
     ],
-    "reproducibility": "NOT RECORDED",
+    "reproducibility": "CONTENT_IDENTICAL",
     "signature": "EXTERNAL_REQUIRED",
     "oci_image": "BLOCKED_ON_IMPLEMENTATION",
     "note": "This section is a POINTER, not a second source of truth: the digest is read from ARTIFACT_IDENTITY.json, and sh scripts/artifact-identity.sh recomputes every digest from the bytes on disk each time it runs. The recorded digest changes whenever the artifact changes, which is why the identity document, not this manifest, is what the artifact-bound stages resolve against.",

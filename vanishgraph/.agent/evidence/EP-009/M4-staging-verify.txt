@@ -1,9 +1,9 @@
 staging verify: BLOCKED_CREDENTIALS
-pinned digest: sha256:a08b8ad541f7b2e82ea044811cee128005e53059ab0f4e96cdaca796de129b2f
+pinned digest: sha256:901ce2485f0f313aa985df9e6337649aeec3156c4249bfa07028147d8dd13b55
 why: staging is NOT_PROVISIONED in .agent/verification/TEST_ENVIRONMENT_MANIFEST.md and VG_STAGING_ENDPOINT is undeclared, so there is no deployed digest to verify
 probe command: sh scripts/probes/cloud_identity.sh
 probe exit code: 1
-what would run against a provisioned staging: sh scripts/smoke-test.sh and sh scripts/test-e2e.sh with VG_ARTIFACT_DIGEST=sha256:a08b8ad541f7b2e82ea044811cee128005e53059ab0f4e96cdaca796de129b2f, plus one independent read-back through a second client (DOD-012)
+what would run against a provisioned staging: sh scripts/smoke-test.sh and sh scripts/test-e2e.sh with VG_ARTIFACT_DIGEST=sha256:901ce2485f0f313aa985df9e6337649aeec3156c4249bfa07028147d8dd13b55, plus one independent read-back through a second client (DOD-012)
 OPEN FINDING that also blocks a green staging verify: the clean-local artifact-bound smoke does NOT pass. See .agent/evidence/EP-009/M4-artifact-smoke.txt: the running artifact answers /v1/health with a status field where SPEC-003 section 5.17.1 requires dependencyState, reports three checks named postgres, valkey and keycloak where the contract names postgresql, valkey, job-worker, object-store, keycloak-jwks and provider-transport, and /v1/live and /v1/startup do not carry the declared dependencyState vocabulary at all.
 named next action: fix the health surface to the declared contract, then provision staging and re-run the pair against the same pinned digest
-recorded at commit: da8101609213baf7074d6b528b363a622115e00d
+recorded at commit: f62928b0bfed2ac89065c26ef5546a4c3e8ae22b

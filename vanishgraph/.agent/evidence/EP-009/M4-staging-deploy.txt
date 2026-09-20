@@ -1,6 +1,6 @@
 staging deploy: BLOCKED_CREDENTIALS
 artifact path: dist/vanishgraph-0.1.0.tgz
-pinned digest: sha256:a08b8ad541f7b2e82ea044811cee128005e53059ab0f4e96cdaca796de129b2f
+pinned digest: sha256:901ce2485f0f313aa985df9e6337649aeec3156c4249bfa07028147d8dd13b55
 target (from .agent/verification/TEST_ENVIRONMENT_MANIFEST.md): | staging | managed US cloud, separate account | Kubernetes, KMS, object store, managed Postgres, browser pool | NOT_PROVISIONED |
 probe command: sh scripts/probes/cloud_identity.sh
 probe exit code: 1
@@ -8,4 +8,4 @@ PREFLIGHT.md rows that would have to be provisioned: CLOUD_WORKLOAD_IDENTITY (OP
 blocking dependency edge: ARTIFACT_IDENTITY.json -> staging platform credentials -> staging deploy -> staging verify -> gate-release
 named next action: provision the staging account and its credentials, add the platform rows to PREFLIGHT.md and .env.example, then re-run sh scripts/staging-deploy.sh and sh scripts/staging-verify.sh against the same pinned digest
 never done here: no local deployment, no source-tree deployment, no sentinel printed
-recorded at commit: da8101609213baf7074d6b528b363a622115e00d
+recorded at commit: f62928b0bfed2ac89065c26ef5546a4c3e8ae22b

@@ -43,6 +43,9 @@ staging-verify|sh scripts/staging-verify.sh|staging verify: ok
 
 TAXONOMY='BLOCKED_CREDENTIALS|BLOCKED_ENVIRONMENT|BLOCKED_ON_IMPLEMENTATION|BLOCKED_CAPABILITY|EXTERNAL_REQUIRED|DEFERRED_LONG_RUNNING|BLOCKED_PREREQUISITE|BLOCKED_VENDOR_LIMITATION'
 
+# HOW MANY STAGES THIS GATE DECLARES, so a loop that stops early can never be mistaken for a clean run.
+DECLARED=$(printf '%s\n' "$STAGES" | grep -c '|' || true)
+
 : > "$GATE_LOG"
 {
   echo "gate-release run"
@@ -59,7 +62,11 @@ printf '%s\n' "$STAGES" | while IFS='|' read -r name command sentinel; do
   [ -n "$name" ] || continue
   out=".agent/evidence/EP-009/drills/gate-$name.log"
   status=0
-  sh -c "$command" >"$out" 2>&1 || status=$?
+  # STDIN IS /dev/null FOR EVERY STAGE, and that is a correction rather than hygiene. MEASURED: the loop reads its
+  # stage list from a pipe, a stage that consumed stdin ended the loop early, and the gate then reported a clean
+  # result for a run in which four of its twelve stages never executed. A gate that can be shortened by one of its
+  # own stages is a gate that can be shortened by anything.
+  sh -c "$command" >"$out" 2>&1 </dev/null || status=$?
   if [ "$status" -eq 0 ]; then
     if grep -qF "$sentinel" "$out"; then
       printf 'gate-release: stage %s PASSED (%s)\n' "$name" "$sentinel"
@@ -91,17 +98,22 @@ done
 PASSED=$(grep -c ': PASSED' "$GATE_LOG" || true)
 BLOCKED=$(grep -c '^BLOCKED ' "$GATE_LOG" || true)
 FAILED=$(grep -cE '^FAILED' "$GATE_LOG" || true)
+PROCESSED=$(grep -c '^stage ' "$GATE_LOG" || true)
+BLOCKED_LIST=$(grep '^BLOCKED ' "$GATE_LOG" | sed 's/^BLOCKED //' | tr '\n' ' ' || true)
 
 {
   echo
-  echo "summary: $PASSED stage(s) passed with their sentinel, $BLOCKED stage(s) blocked with a taxonomy status, $FAILED stage(s) failed"
+  echo "summary: $PASSED stage(s) passed with their sentinel, $BLOCKED stage(s) blocked with a taxonomy status, $FAILED stage(s) failed, $PROCESSED of $DECLARED declared stage(s) processed"
+  echo "blocked stages: ${BLOCKED_LIST:-none}"
 } >> "$GATE_LOG"
 
-if [ "$FAILED" -ne 0 ]; then
-  echo "gate-release: FAIL - $FAILED stage(s) failed; see $GATE_LOG" >&2
-  grep -E '^FAILED' "$GATE_LOG" >&2
+# A STAGE THAT NEVER RAN IS A FAILURE, NOT AN ABSENCE. Without this, a loop that stops early reports a clean gate
+# over the stages it happened to reach, which is precisely the masked failure the pack forbids.
+if [ "$PROCESSED" -ne "$DECLARED" ]; then
+  echo "gate-release: FAIL - only $PROCESSED of $DECLARED declared stages were processed; a stage that never ran cannot be accounted for" >&2
   exit 1
 fi
+[ "$FAILED" -eq 0 ] || { echo "gate-release: FAIL - $FAILED stage(s) failed; see $GATE_LOG" >&2; grep -E '^FAILED' "$GATE_LOG" >&2; exit 1; }
 
 # Index the EP-009 evidence with content hashes, which is part (e) of the milestone.
 INDEX=.agent/evidence/EP-009/INDEX.txt
@@ -121,7 +133,8 @@ const path = identity.artifact_paths.find((p) => p.endsWith(".tgz"));
 process.stdout.write(identity.artifact_digests[path]);
 ')
 
-echo "gate-release: $PASSED of 12 stage(s) passed with their sentinel, $BLOCKED blocked with a taxonomy status (staging deploy, staging verify, rollback drill, upgrade drill), 0 failed"
+echo "gate-release: $PASSED of $DECLARED stage(s) passed with their sentinel, $BLOCKED blocked with a taxonomy status, 0 failed"
+echo "gate-release: blocked stages - ${BLOCKED_LIST:-none}"
 echo "gate-release: artifact digest $DIGEST; evidence indexed with content hashes: $INDEXED file(s) in $INDEX"
 echo "gate-release: NOT CLAIMED HERE - staging verification, a rollback to a previous version, an upgrade from a released schema, and verify: ok"
 echo "gate-release: ok"
