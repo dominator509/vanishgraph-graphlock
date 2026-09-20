@@ -11,25 +11,21 @@
   "gate": {
     "gate": "coverage",
     "script": "coverage-gate.sh",
-    "exitCode": 1,
+    "exitCode": 3,
     "sentinel": "coverage: ok",
     "sentinelFound": false,
     "evidencePath": ".agent/evidence/EP-010/V-013/gate-coverage.log",
-    "digest": "bed320242f9d53fc6a0271e267407bbfe24d006d2b87d5c8e4ebeb5b806a3df1",
-    "epoch": "FORGE-SPEC-6",
-    "artifact_digest": "sha256:c1cc7dfa562116a58534e0460b59ac12c32e6835be8872875eb65ed60488f23d",
-    "executed_at": "2026-09-20T05:00:41Z",
-    "cached": true,
-    "cachedFrom": ".agent/evidence/EP-010/V-013/gate-coverage.log"
+    "digest": "5a619fc2f4b16916107a38625a24d8a99a2100289490b64672388f8ae8d454c5",
+    "note": "the gate exited 3 and did NOT print its sentinel"
   },
   "prompt_requires_authorization": false,
   "prompt_requires_target": false,
   "prompt_requires_runner": false,
   "status": "PARTIAL",
-  "reason": "the repository gate covering this subject (scripts/coverage-gate.sh) ran as the positive path: undefined. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
+  "reason": "the repository gate covering this subject (scripts/coverage-gate.sh) ran as the positive path: the gate exited 3 and did NOT print its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
   "deferred_provenance": null,
   "scope_clause": null,
   "dependency_edge_ref": "capability:agentic-runner->V-013",
   "provisioning_action": null,
-  "recorded_at": "2026-09-20T05:12:03Z"
+  "recorded_at": "2026-09-20T06:38:24Z"
 }

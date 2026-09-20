@@ -1,3 +1,76 @@
-# FINAL_PRODUCTION_READINESS_REPORT.md
+# Final production readiness report
 
-Generation-only pack. No application code, candidate artifact, or production proof is claimed.
+**Verdict: `NO_GO`.** the candidate fails its own verification: 1 clause(s) FAIL and 0 id(s) FAIL across an accounted registry of 484
+
+- candidate epoch: `FORGE-SPEC-7`
+- candidate SHA: `256c7558b84da764f704717d768a0967b7a2aca7`
+- artifact digest: `sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47`
+- emitted at: `2026-09-20T07:15:56Z`
+- verdict schema: `schemas/release-gate.schema.json` — validated, 0 problem(s)
+
+### 1. Executive verdict and exact identity
+
+The verdict is `NO_GO`. It is computed from the facts below and is the only verdict in this repository: `.agent/verification/state/RELEASE_GATE.json`. Any stronger claim anywhere is a fabrication defect (DOD-027).
+
+### 2. Scope and authorization
+
+The run covers the pinned epoch only. Production deployment is manual-only and unauthorized in this run (VG-SCOPE-009, ADR-005); no deployment was performed.
+
+### 3. Repository architecture and product claims
+
+The component structure is recorded in ARCHITECTURE.md and the decisions in DECISIONS.md. The product claims are the twelve core outcomes, whose live-fire status is per-outcome under .agent/evidence/EP-010/V-020/live-fire/.
+
+### 4. Execution adapters and environments
+
+Disposable local services (PostgreSQL, Valkey, MinIO, Keycloak) plus the gates this repository ships. Staging is NOT_PROVISIONED and no production environment exists; the environment fingerprints are in .agent/verification/state/artifact-smoke-fingerprint.txt and the clean-room inventory.
+
+### 5. Test-accounting totals
+
+Registry: 484 total — 0 PASS, 0 FAIL, 0 ERROR, 205 BLOCKED_PREREQUISITE, 4 BLOCKED_ENVIRONMENT, 7 BLOCKED_CREDENTIALS, 1 BLOCKED_SAFETY, 0 EXTERNAL_REQUIRED, 1 DEFERRED_LONG_RUNNING, 0 NOT_APPLICABLE, 0 unaccounted. Accounting rows: .agent/verification/reports/COMPLETE_TEST_ACCOUNTING.csv (484 data rows).
+
+### 6. Material claims and anti-simulation results
+
+python3 scripts/anti-gaming-scan.py . exited 0: no unclassified hit. The claim surface reconciled to 45 rows, each citing a stored artifact with a digest.
+
+### 7. Functional, API, data, compatibility, regression, security, UX, performance, soak, stress, recovery, deployment and UAT summaries
+
+Each is a stage of the subgraph; the per-stage statuses and their evidence are in .agent/state/LEDGER.md and .agent/evidence/EP-010/V-0NN/. No stage reported PASS for an outcome, so these summaries are PARTIAL or blocked, not verified.
+
+### 8. Validated findings ordered by release risk
+
+1. **VERIFY-NOT-OK** — sh scripts/verify.sh did not print verify: ok; the stage it reached last was dependency-audit, and its failure is a release blocker rather than a note (evidence: `.agent/evidence/EP-010/M8/verify.log`)
+2. **DOD-DOD-019** — clause DOD-019 does not pass: reality gate: reality-gate.sh exited 1 WITHOUT its sentinel; the three prose hits recorded in EP-009 remain the gate's only findings (evidence: `.agent/evidence/EP-010/DOD/DOD-019.json`)
+3. **EXTERNAL-GATES-UNSIGNED** — 5 of 5 mandatory external gate(s) are unsigned; while any is open the verdict cannot exceed CONDITIONAL_EXTERNAL_GATES (VG-SHIP-030) (evidence: `.agent/evidence/EP-010/V-021/external-gates.jsonl`)
+4. **NO-PASSING-ID** — not one of the 484 ids carries PASS, so no behaviour was verified end to end through its real entry point (evidence: `.agent/verification/reports/COMPLETE_TEST_ACCOUNTING.csv`)
+
+### 9. Blocked, deferred, external and not-applicable tests with evidence
+
+Blocked: 217. Deferred: 1. External: 0. Not applicable: 0. Every row's reason and evidence path are in the accounting CSV.
+
+### 10. Coverage and limitations
+
+The coverage configuration is declared in TESTING.md and enforced by scripts/coverage-gate.sh; the layer table does not measure every EP-008 module, which is recorded as a limitation.
+
+### 11. Exact release blockers
+
+- **VERIFY-NOT-OK**: sh scripts/verify.sh did not print verify: ok; the stage it reached last was dependency-audit, and its failure is a release blocker rather than a note → resolve the failing verify.sh stage recorded above and re-run the ship gate
+- **DOD-DOD-019**: clause DOD-019 does not pass: reality gate: reality-gate.sh exited 1 WITHOUT its sentinel; the three prose hits recorded in EP-009 remain the gate's only findings → Any unexplained hit is a release blocker or the affected claim is explicitly marked incomplete.
+- **EXTERNAL-GATES-UNSIGNED**: 5 of 5 mandatory external gate(s) are unsigned; while any is open the verdict cannot exceed CONDITIONAL_EXTERNAL_GATES (VG-SHIP-030) → obtain the named participant's sign-off for each gate; an agent can never satisfy one (DOD-039)
+- **NO-PASSING-ID**: not one of the 484 ids carries PASS, so no behaviour was verified end to end through its real entry point → execute the ids in an authorised agentic runner and record PASS only where the oracle and a negative case ran
+
+### 12. Residual risk and required external work
+
+See .agent/verification/reports/RESIDUAL_RISK_AND_EXTERNAL_GATES.md. 5 of 5 mandatory external gates are unsigned, and an agent may never sign one (DOD-039).
+
+### 13. Evidence index
+
+.agent/verification/state/EVIDENCE_INDEX.json lists 530 artefact(s) with content hashes; the EP-010 evidence tree is under .agent/evidence/EP-010/.
+
+### 14. Reproduction and resume instructions
+
+Pin the epoch (`sh scripts/epoch-pin.sh`), run the subgraph to completion (`sh scripts/harness-next.sh` then `sh scripts/harness-run-stage.sh <V-0NN>`), then `sh scripts/harness-validate.sh`, `sh scripts/dod-gate.sh`, `sh scripts/harness-accounting.sh` and `sh scripts/production-readiness-check.sh`. The gate is resumable: it re-runs only what is not already accounted.
+
+### 15. Final release predicate
+
+The predicate is: every applicable clause PASS **and** every mandatory external gate signed. Clause status: 15 pass, 1 fail, 26 other. Gate status: 0 signed of 5. **The predicate does not hold, so the verdict is `NO_GO`.**
+

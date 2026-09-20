@@ -1,4 +1,105 @@
 {
-  "verdict": "INCONCLUSIVE",
-  "reason": "FORGE_ONLY"
+  "verdict": "NO_GO",
+  "reason": "the candidate fails its own verification: 1 clause(s) FAIL and 0 id(s) FAIL across an accounted registry of 484",
+  "candidate_epoch": "FORGE-SPEC-7",
+  "candidate_sha": "256c7558b84da764f704717d768a0967b7a2aca7",
+  "artifact_digest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
+  "dod": {
+    "total": 42,
+    "pass": 15,
+    "fail": 1,
+    "other": 26,
+    "unaccounted": 0
+  },
+  "registry": {
+    "total": 484,
+    "passed": 0,
+    "failed": 0,
+    "errored": 0,
+    "inconclusive": 0,
+    "not_applicable": 0,
+    "blocked_prerequisite": 205,
+    "blocked_environment": 4,
+    "blocked_capability": 0,
+    "blocked_credentials": 7,
+    "blocked_safety": 1,
+    "external_required": 0,
+    "deferred_long_running": 1,
+    "unaccounted": 0
+  },
+  "external_gates": [
+    {
+      "gate": "human UAT of the golden path",
+      "status": "EXTERNAL_REQUIRED",
+      "externalPartyRole": "Named authorised business participant",
+      "requestedArtifactDigest": "sha256:6fe9573315f6fb4d559a7e47df0437b7caa49780f31567229a109e610a633cab",
+      "requestEvidencePath": ".agent/evidence/EP-010/V-021/external-gates.jsonl",
+      "requestedAt": "2026-09-20T03:29:35Z",
+      "ownerContactRef": "SPEC-008 section 9; this repository's owner"
+    },
+    {
+      "gate": "manual assistive-technology validation at WCAG 2.2 AA",
+      "status": "EXTERNAL_REQUIRED",
+      "externalPartyRole": "Named assistive-technology practitioner",
+      "requestedArtifactDigest": "sha256:6fe9573315f6fb4d559a7e47df0437b7caa49780f31567229a109e610a633cab",
+      "requestEvidencePath": ".agent/evidence/EP-010/V-021/external-gates.jsonl",
+      "requestedAt": "2026-09-20T03:29:35Z",
+      "ownerContactRef": "SPEC-008 section 9"
+    },
+    {
+      "gate": "legal and compliance review of jurisdictions, agent evidence, templates and claims",
+      "status": "EXTERNAL_REQUIRED",
+      "externalPartyRole": "Qualified counsel",
+      "requestedArtifactDigest": "sha256:6fe9573315f6fb4d559a7e47df0437b7caa49780f31567229a109e610a633cab",
+      "requestEvidencePath": "LEGAL_REVIEW_REQUIRED.md and .agent/evidence/EP-010/V-021/external-gates.jsonl",
+      "requestedAt": "2026-09-20T03:29:35Z",
+      "ownerContactRef": "LEGAL_REVIEW_REQUIRED.md"
+    },
+    {
+      "gate": "hardware, HSM or accredited assessment where applicable",
+      "status": "EXTERNAL_REQUIRED",
+      "externalPartyRole": "Accredited assessor",
+      "requestedArtifactDigest": "sha256:6fe9573315f6fb4d559a7e47df0437b7caa49780f31567229a109e610a633cab",
+      "requestEvidencePath": ".agent/evidence/EP-010/V-021/external-gates.jsonl",
+      "requestedAt": "2026-09-20T03:29:35Z",
+      "ownerContactRef": "ADR-006 (no managed KMS exists) and .agent/verification/CAPABILITY_MATRIX.md"
+    },
+    {
+      "gate": "production deployment authorization",
+      "status": "EXTERNAL_REQUIRED",
+      "externalPartyRole": "Authorised operator (manual only)",
+      "requestedArtifactDigest": "sha256:6fe9573315f6fb4d559a7e47df0437b7caa49780f31567229a109e610a633cab",
+      "requestEvidencePath": "deploy/production/README.md and .agent/evidence/EP-010/V-021/external-gates.jsonl",
+      "requestedAt": "2026-09-20T03:29:35Z",
+      "ownerContactRef": "deploy/production/README.md; VG-SCOPE-009"
+    }
+  ],
+  "release_blockers": [
+    {
+      "id": "VERIFY-NOT-OK",
+      "what": "sh scripts/verify.sh did not print verify: ok; the stage it reached last was dependency-audit, and its failure is a release blocker rather than a note",
+      "evidence": ".agent/evidence/EP-010/M8/verify.log",
+      "next_action": "resolve the failing verify.sh stage recorded above and re-run the ship gate"
+    },
+    {
+      "id": "DOD-DOD-019",
+      "what": "clause DOD-019 does not pass: reality gate: reality-gate.sh exited 1 WITHOUT its sentinel; the three prose hits recorded in EP-009 remain the gate's only findings",
+      "evidence": ".agent/evidence/EP-010/DOD/DOD-019.json",
+      "next_action": "Any unexplained hit is a release blocker or the affected claim is explicitly marked incomplete."
+    },
+    {
+      "id": "EXTERNAL-GATES-UNSIGNED",
+      "what": "5 of 5 mandatory external gate(s) are unsigned; while any is open the verdict cannot exceed CONDITIONAL_EXTERNAL_GATES (VG-SHIP-030)",
+      "evidence": ".agent/evidence/EP-010/V-021/external-gates.jsonl",
+      "next_action": "obtain the named participant's sign-off for each gate; an agent can never satisfy one (DOD-039)"
+    },
+    {
+      "id": "NO-PASSING-ID",
+      "what": "not one of the 484 ids carries PASS, so no behaviour was verified end to end through its real entry point",
+      "evidence": ".agent/verification/reports/COMPLETE_TEST_ACCOUNTING.csv",
+      "next_action": "execute the ids in an authorised agentic runner and record PASS only where the oracle and a negative case ran"
+    }
+  ],
+  "next_action": "resolve the failing verify.sh stage recorded above and re-run the ship gate",
+  "emitted_at": "2026-09-20T07:15:56Z"
 }

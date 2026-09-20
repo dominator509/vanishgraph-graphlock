@@ -1,7 +1,7 @@
 # Runtime canaries for tests/blackbox/acceptance.test.ts (EP-004 M8, DOD-013)
-run: 1836c441
+run: dc30a978
 source: crypto.randomUUID / crypto.randomBytes, generated at run time by tests/blackbox/acceptance.test.ts
-displayRef: SUBJ-CANARY-1836c441-8EBD47C9
-emailLocalPart: canary-c1b8d7d1387d@example.invalid
-digits: 1789884999838458c64
-secretShaped: sk_1WZrAw1FtdyCirTTgU540JRdEy5tVKHK
+displayRef: SUBJ-CANARY-dc30a978-A2A6CD34
+emailLocalPart: canary-6be953e5fc32@example.invalid
+digits: 1789888337049c85254
+secretShaped: sk_BOTGP8FdSrFufkkw6JO4ADq5DisNc6vw

@@ -15,10 +15,10 @@
     "sentinel": "secret scan: ok",
     "sentinelFound": true,
     "evidencePath": ".agent/evidence/EP-010/V-004/gate-secrets.log",
-    "digest": "baf0b54377d5bc983298fbabed354a16ef3ec670487b3dba5b83aa31261550b8",
-    "epoch": "FORGE-SPEC-6",
-    "artifact_digest": "sha256:c1cc7dfa562116a58534e0460b59ac12c32e6835be8872875eb65ed60488f23d",
-    "executed_at": "2026-09-20T04:41:07Z",
+    "digest": "9e5d01d2b32f86a2ea4c82125ef85148d3737ed84802589b87dd98ec6fda7fc6",
+    "epoch": "FORGE-SPEC-7",
+    "artifact_digest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
+    "executed_at": "2026-09-20T06:29:11Z",
     "cached": true,
     "cachedFrom": ".agent/evidence/EP-010/V-004/gate-secrets.log"
   },
@@ -31,5 +31,5 @@
   "scope_clause": null,
   "dependency_edge_ref": "capability:agentic-runner->V-013",
   "provisioning_action": null,
-  "recorded_at": "2026-09-20T05:12:02Z"
+  "recorded_at": "2026-09-20T06:33:25Z"
 }
