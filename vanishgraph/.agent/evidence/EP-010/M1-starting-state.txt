@@ -160,3 +160,15 @@ toolchain: node v24.14.1, npm 11.11.0
 image digests: not_applicable (BLOCKED_ON_IMPLEMENTATION: no container image exists)
 source surface clean: yes (git status --porcelain over the package.json files allowlist plus package.json is empty)
 run state: status IN_PROGRESS, active_node EP-010, closed_nodes EP-000 through EP-009 (was stale: IN_PROGRESS for EP-003 since 2026-09-14)
+
+== epoch pin ==
+epoch id: FORGE-SPEC-3
+candidate commit: e1e8fdcc0a9e9e93bcb3ee96047d6b6f6f2eaafc
+base revision: e1e8fdcc0a9e9e93bcb3ee96047d6b6f6f2eaafc
+test overlay revision: e6dd9b518f4a627eb1dcf3afdc0cff680d8950c8
+build inputs digest: sha256:3be2892e7558559ae9e8fcde4c24228cdcddf356eece6735519bd8ac11f27ee4
+artifact digest: sha256:6c789950212646a91a28bd640f1ff772b1ca844190a56b8285a398dd892859f7
+toolchain: node v24.14.1, npm 11.11.0
+image digests: not_applicable (BLOCKED_ON_IMPLEMENTATION: no container image exists)
+source surface clean: yes (git status --porcelain over the package.json files allowlist plus package.json is empty)
+run state: status IN_PROGRESS, active_node EP-010, closed_nodes EP-000 through EP-009 (was stale: IN_PROGRESS for EP-003 since 2026-09-14)
