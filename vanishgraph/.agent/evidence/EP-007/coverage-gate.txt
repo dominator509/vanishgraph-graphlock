@@ -264,3 +264,29 @@ suites: tests/contract/**/*.test.ts tests/security/**/*.test.ts
 ℹ end of coverage report
 result: PASS lines=95.26 branches=85.71 functions=90.91 targets=70/65/75
 
+=== layer infrastructure
+tests: 528
+sources: src/infrastructure/**/*.ts
+excludes: （none）
+suites: tests/db/**/*.test.ts tests/integration/**/*.test.ts tests/harness/**/*.test.ts
+ℹ tests 528
+ℹ suites 119
+ℹ pass 528
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 473384.4799
+ℹ start of coverage report
+ℹ ----------------------------------------------------------------------------------------------------------------------------------------
+ℹ file              | line % | branch % | funcs % | uncovered lines
+ℹ ----------------------------------------------------------------------------------------------------------------------------------------
+ℹ src               |        |          |         | 
+ℹ  infrastructure   |        |          |         | 
+ℹ   database        |        |          |         | 
+ℹ    migrate.ts     |  53.15 |    48.15 |   69.23 | 62-65 75-79 93-95 102-109 113-118 124-126 138-150 152-177 179-213 229 238-242 245-254
+ℹ    psql.ts        |  95.15 |    77.78 |  100.00 | 152-155 157-160
+ℹ ----------------------------------------------------------------------------------------------------------------------------------------
+ℹ all files         |  69.69 |    62.96 |   80.95 | 
+ℹ ----------------------------------------------------------------------------------------------------------------------------------------
+ℹ end of coverage report

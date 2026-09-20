@@ -16,16 +16,20 @@
     "sentinelFound": false,
     "evidencePath": ".agent/evidence/EP-010/V-015/gate-browser.log",
     "digest": "59149de0574bda2bcf44cc5e1c0fa77d02b61d0d72b7f67de64b16322415eb5d",
-    "note": "the gate exited 1 and did NOT print its sentinel"
+    "epoch": "FORGE-SPEC-6",
+    "artifact_digest": "sha256:c1cc7dfa562116a58534e0460b59ac12c32e6835be8872875eb65ed60488f23d",
+    "executed_at": "2026-09-20T05:00:49Z",
+    "cached": true,
+    "cachedFrom": ".agent/evidence/EP-010/V-015/gate-browser.log"
   },
   "prompt_requires_authorization": false,
   "prompt_requires_target": false,
   "prompt_requires_runner": false,
   "status": "PARTIAL",
-  "reason": "the repository gate covering this subject (scripts/test-e2e.sh) ran as the positive path: the gate exited 1 and did NOT print its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
+  "reason": "the repository gate covering this subject (scripts/test-e2e.sh) ran as the positive path: undefined. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
   "deferred_provenance": null,
   "scope_clause": null,
-  "dependency_edge_ref": null,
+  "dependency_edge_ref": "capability:agentic-runner->V-015",
   "provisioning_action": null,
-  "recorded_at": "2026-09-20T05:00:49Z"
+  "recorded_at": "2026-09-20T05:08:32Z"
 }

@@ -146,6 +146,9 @@ const validateStatusRow = (row, currentEpoch, currentArtifact, edges) => {
     // as naming something that is not in the graph, when the graph had an edge FROM exactly that dependency. The
     // check is now that the named dependency is a NODE of the graph, which is what the row is claiming.
     if (!edges.has(dependency)) problems.push(`${label}: BLOCKED_PREREQUISITE names ${dependency}, and the dependency graph has no edge to or from that node`);
+    // M4(c) requires the row to carry the edge reference as well as the dependency name, and MEASURED: this check was
+    // missing, so 205 rows without it passed validation while failing the DOD-031 clause evaluation.
+    if (String(row.dependencyEdgeRef ?? "").trim() === "") problems.push(`${label}: BLOCKED_PREREQUISITE carries no dependencyEdgeRef, so the edge it waits on is not identifiable`);
   }
   if (row.status === "BLOCKED_ENVIRONMENT" && (row.provisioningAction === undefined || String(row.provisioningAction).trim() === "")) {
     problems.push(`${label}: BLOCKED_ENVIRONMENT without a provisioning action`);

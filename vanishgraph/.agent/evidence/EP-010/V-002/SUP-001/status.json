@@ -16,7 +16,11 @@
     "sentinelFound": false,
     "evidencePath": ".agent/evidence/EP-010/V-002/gate-reality.log",
     "digest": "3c3e0bc784ef53b713dfe9a8123bbcfdda52095fc6ee6720d67a81c6abd9b4d7",
-    "note": "the gate exited 1 and did NOT print its sentinel"
+    "epoch": "FORGE-SPEC-6",
+    "artifact_digest": "sha256:c1cc7dfa562116a58534e0460b59ac12c32e6835be8872875eb65ed60488f23d",
+    "executed_at": "2026-09-20T04:33:12Z",
+    "cached": true,
+    "cachedFrom": ".agent/evidence/EP-010/V-002/gate-reality.log"
   },
   "prompt_requires_authorization": false,
   "prompt_requires_target": false,
@@ -27,5 +31,5 @@
   "scope_clause": null,
   "dependency_edge_ref": "capability:per-id-definition->V-002",
   "provisioning_action": null,
-  "recorded_at": "2026-09-20T04:33:12Z"
+  "recorded_at": "2026-09-20T05:08:21Z"
 }

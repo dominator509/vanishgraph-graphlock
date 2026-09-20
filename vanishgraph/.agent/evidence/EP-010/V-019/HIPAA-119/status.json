@@ -29,7 +29,7 @@
   "reason": "the prompt needs a provider entitlement that PREFLIGHT.md declares and this environment has not provisioned: CLICK2MAIL_API_KEY; probe scripts/probes/postal_api.sh exited 1",
   "deferred_provenance": null,
   "scope_clause": null,
-  "dependency_edge_ref": null,
+  "dependency_edge_ref": "capability:provider-entitlement->V-019",
   "provisioning_action": "provision CLICK2MAIL_API_KEY: run scripts/probes/postal_api.sh until it exits 0, then re-run this stage",
-  "recorded_at": "2026-09-20T05:00:53Z"
+  "recorded_at": "2026-09-20T05:08:36Z"
 }

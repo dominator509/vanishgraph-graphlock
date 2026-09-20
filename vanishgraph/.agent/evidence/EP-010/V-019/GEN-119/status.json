@@ -29,7 +29,7 @@
   "reason": "the repository gate covering this subject (scripts/security-check.sh) ran as the positive path: undefined. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
   "deferred_provenance": null,
   "scope_clause": null,
-  "dependency_edge_ref": null,
+  "dependency_edge_ref": "capability:agentic-runner->V-019",
   "provisioning_action": null,
-  "recorded_at": "2026-09-20T05:00:53Z"
+  "recorded_at": "2026-09-20T05:08:36Z"
 }

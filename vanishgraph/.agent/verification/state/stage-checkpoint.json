@@ -1,43 +1,28 @@
 {
-  "stage": "V-021",
+  "stage": "V-009",
   "epoch": "FORGE-SPEC-6",
   "candidate_sha": "5db579e577db4f4b111d1fddcc7452cf27fb5d88",
   "artifact_digest": "sha256:c1cc7dfa562116a58534e0460b59ac12c32e6835be8872875eb65ed60488f23d",
-  "owned_ids": 12,
+  "owned_ids": 1,
   "statuses": {
-    "BLOCKED_PREREQUISITE": 11,
     "PARTIAL": 1
   },
   "gates": [
     {
-      "gate": "security-contract",
-      "script": "security-check.sh",
+      "gate": "integration",
+      "script": "test-integration.sh",
       "exitCode": 0,
-      "sentinel": "security check: ok",
+      "sentinel": "test-integration: ok",
       "sentinelFound": true,
-      "evidencePath": ".agent/evidence/EP-010/V-004/gate-security-contract.log",
-      "digest": "1f7c9d9892651fa55284ba3aa424c6c7eb2876cfddfc3c5f3ac6cb055acedd79",
+      "evidencePath": ".agent/evidence/EP-010/V-002/gate-integration.log",
+      "digest": "f4961c242167389929cd53a6f3c74a367d82f265f53af6146f7bc1ee093f8755",
       "epoch": "FORGE-SPEC-6",
       "artifact_digest": "sha256:c1cc7dfa562116a58534e0460b59ac12c32e6835be8872875eb65ed60488f23d",
-      "executed_at": "2026-09-20T04:41:06Z",
+      "executed_at": "2026-09-20T04:40:07Z",
       "cached": true,
-      "cachedFrom": ".agent/evidence/EP-010/V-004/gate-security-contract.log"
-    },
-    {
-      "gate": "build",
-      "script": "build-artifact.sh",
-      "exitCode": 0,
-      "sentinel": "artifact: built",
-      "sentinelFound": true,
-      "evidencePath": ".agent/evidence/EP-010/V-004/gate-build.log",
-      "digest": "2ade2ac281b3a98e8b4a84fe83a5e8be6bea99ed9d51bbb6b2bf2c41f846ff9e",
-      "epoch": "FORGE-SPEC-6",
-      "artifact_digest": "sha256:c1cc7dfa562116a58534e0460b59ac12c32e6835be8872875eb65ed60488f23d",
-      "executed_at": "2026-09-20T04:40:41Z",
-      "cached": true,
-      "cachedFrom": ".agent/evidence/EP-010/V-004/gate-build.log"
+      "cachedFrom": ".agent/evidence/EP-010/V-002/gate-integration.log"
     }
   ],
-  "updated_at": "2026-09-20T05:00:55Z",
+  "updated_at": "2026-09-20T05:08:42Z",
   "next_action": "run sh scripts/harness-next.sh to select the next stage"
 }

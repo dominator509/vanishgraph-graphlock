@@ -16,7 +16,7 @@
   "reason": "the prompt's own authorization boundary requires explicit authorization for active testing, which this harness does not have; the definition was extracted from .agent/verification/source-library/security/blockchain-security-testing-prompts.md and NOT executed",
   "deferred_provenance": null,
   "scope_clause": null,
-  "dependency_edge_ref": null,
+  "dependency_edge_ref": "capability:authorized-active-testing->V-016",
   "provisioning_action": null,
-  "recorded_at": "2026-09-20T05:00:49Z"
+  "recorded_at": "2026-09-20T05:08:33Z"
 }

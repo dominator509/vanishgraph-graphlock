@@ -29,7 +29,7 @@
   "reason": "the prompt requires a deployed target or infrastructure this environment does not host; the definition was extracted from .agent/verification/source-library/security/hipaa-software-dev-security-testing-prompts.md and NOT executed",
   "deferred_provenance": null,
   "scope_clause": "TEST_ENVIRONMENT_MANIFEST.md declares this environment NOT_PROVISIONED",
-  "dependency_edge_ref": null,
+  "dependency_edge_ref": "capability:deployed-target->V-019",
   "provisioning_action": "provision the deployment target declared in .agent/verification/TEST_ENVIRONMENT_MANIFEST.md (staging is NOT_PROVISIONED: managed US cloud, Kubernetes, KMS, object store, managed Postgres, browser pool), then re-run this stage",
-  "recorded_at": "2026-09-20T05:00:53Z"
+  "recorded_at": "2026-09-20T05:08:36Z"
 }

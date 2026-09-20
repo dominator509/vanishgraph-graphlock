@@ -383,6 +383,11 @@ for (const row of rows) {
     dependencyEdgeRef = `${blockingDependency}->${stage}`;
   }
 
+  // EVERY BLOCKED_PREREQUISITE ROW NAMES THE EDGE IT WAITS ON, and the assignment is uniform rather than repeated in
+  // each branch: MEASURED, two branches assigned a capability without the edge and 205 rows in this epoch were
+  // written without it, which DOD-031 requires and my own validator did not yet check.
+  if (blockingDependency !== null && dependencyEdgeRef === null) dependencyEdgeRef = `${blockingDependency}->${stage}`;
+
   const evidence = {
     test_id: id,
     owner_stage: stage,
@@ -422,7 +427,10 @@ for (const row of rows) {
     epochId: epoch,
     nextAction,
     blockingDependency,
+    dependencyEdgeRef,
     provisioningAction,
+    deferredProvenance,
+    scopeClause,
     epoch,
     candidate_sha: runState.candidate_sha,
     artifactDigest,

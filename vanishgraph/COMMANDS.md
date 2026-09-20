@@ -60,6 +60,7 @@ a milestone that needs a new one must add it here in the same change.
 | `sh scripts/harness-run-stage.sh <V-0NN>` | `stage <V-0NN>: accounted` (exit 0 on accounting completion even when candidate tests recorded FAIL; non-zero only on a harness ERROR) |
 | `sh scripts/clean-room.sh` | `clean room: ok` — **not printed yet**: the virgin-room procedure runs and reports its inventory, and any undocumented prerequisite is a defect that suppresses the sentinel |
 | `sh scripts/live-fire.sh` | `live-fire: ok` — **not printed yet**: 10 outcomes prove their rule at the domain/contract layer (`PARTIAL`) and 2 need a named external participant (`EXTERNAL_REQUIRED`) |
+| `sh scripts/dod-gate.sh` | `definition of done: ok` — **not printed yet**: 15 of 42 clauses pass with linked evidence; every clause that does not carries the registry's exact `or_else` consequence |
 | `sh scripts/staging-deploy.sh` | `staging deploy: ok` |
 | `sh scripts/staging-verify.sh` | `staging verify: ok` |
 | `sh scripts/install.sh` | `install: ok` |

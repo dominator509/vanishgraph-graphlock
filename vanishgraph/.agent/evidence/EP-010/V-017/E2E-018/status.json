@@ -24,7 +24,7 @@
     "completionEta": "requires a runner that can hold the workload for its planned duration"
   },
   "scope_clause": null,
-  "dependency_edge_ref": null,
+  "dependency_edge_ref": "capability:long-running-runner->V-017",
   "provisioning_action": null,
-  "recorded_at": "2026-09-20T05:00:51Z"
+  "recorded_at": "2026-09-20T05:08:34Z"
 }
