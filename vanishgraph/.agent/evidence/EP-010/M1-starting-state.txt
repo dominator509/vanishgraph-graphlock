@@ -1,0 +1,66 @@
+EP-010 M1 starting state, captured 2026-09-19T17:46:46.4450853-07:00
+
+\$ git rev-parse HEAD
+120789b5875f18a63c499ba14135f49c13663a06
+
+\$ git status --porcelain
+
+
+\$ git log --oneline -1
+120789b [EP-009][M7] close the deployment and release node: gate-release: ok, 4 stages accounted with taxonomy statuses
+
+\$ cat .agent/verification/state/RUN_STATE.json
+{
+  "status": "IN_PROGRESS",
+  "active_node": "EP-003",
+  "closed_nodes": ["EP-000", "EP-001", "EP-002"],
+  "candidate_sha": "ffb808f622add1ff2cfc2a5b7818f1a8714b5936",
+  "epoch": "FORGE-SPEC-1",
+  "updated_at": "2026-09-14T08:19:59Z"
+}
+
+\$ cat .agent/verification/state/RELEASE_GATE.json
+{
+  "verdict": "INCONCLUSIVE",
+  "reason": "FORGE_ONLY"
+}
+
+\$ cat .agent/verification/state/EVIDENCE_INDEX.json
+{
+  "entries": []
+}
+
+\$ cat .agent/verification/state/DEPENDENCY_BLOCKER_GRAPH.json
+{
+  "edges": []
+}
+
+\$ wc -l .agent/verification/reports/COMPLETE_TEST_ACCOUNTING.csv
+1
+
+\$ wc -l .agent/verification/reports/CLAIM_TO_RELEASE_TRACEABILITY.csv
+46
+
+\$ wc -l .agent/verification/state/TEST_LEDGER.jsonl
+1708
+
+\$ wc -l .agent/verification/state/DOD_STATUS.jsonl
+42
+
+\$ wc -l .agent/verification/APPLICABILITY_MATRIX.csv
+6
+
+\$ wc -l .agent/verification/state/STATUS_TRANSITION_AUDIT.jsonl
+0
+
+\$ git tag
+green/EP-000
+green/EP-001
+green/EP-002
+green/EP-003
+green/EP-004
+green/EP-005
+green/EP-006
+green/EP-007
+green/EP-008
+green/EP-009

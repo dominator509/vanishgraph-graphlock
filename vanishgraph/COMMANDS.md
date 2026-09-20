@@ -51,6 +51,7 @@ a milestone that needs a new one must add it here in the same change.
 | `sh scripts/artifact-identity.sh` | `artifact identity: ok` |
 | `sh scripts/config-validate.sh` | `config: ok` |
 | `sh scripts/ci-guard.sh` | `ci pipeline: ok` |
+| `sh scripts/epoch-pin.sh` | `epoch: pinned` |
 | `sh scripts/staging-deploy.sh` | `staging deploy: ok` |
 | `sh scripts/staging-verify.sh` | `staging verify: ok` |
 | `sh scripts/install.sh` | `install: ok` |
