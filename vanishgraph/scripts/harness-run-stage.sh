@@ -166,7 +166,7 @@ const gateResults = new Map();
 // times and took over an hour -- and every epoch roll paid that cost again. The cache is keyed by epoch AND
 // artifact digest, so a cached result can only come from THIS epoch against THIS artifact; a stage that cites it
 // says so explicitly (`cachedFrom`), and the run it cites is a real execution whose log and digest are recorded.
-const GATE_CACHE=.agent/verification/state/gate-cache.json;
+const GATE_CACHE = ".agent/verification/state/gate-cache.json";
 const gateCache = fs.existsSync(GATE_CACHE) ? JSON.parse(fs.readFileSync(GATE_CACHE, "utf8")) : { entries: {} };
 const cacheKey = (gate) => `${epoch}|${artifactDigest}|${gate.script}`;
 const runGate = (gate) => {

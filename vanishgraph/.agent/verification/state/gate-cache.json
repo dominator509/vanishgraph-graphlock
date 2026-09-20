@@ -1,15 +1,6 @@
 {
-  "stage": "V-021",
-  "epoch": "FORGE-SPEC-5",
-  "candidate_sha": "de22167eaf724cb35f1a4baf2d6cf989c48a0b0b",
-  "artifact_digest": "sha256:870e934809b40cab7699d4018c7e071af7c8c47cf9ba48293c8437aeba86eef3",
-  "owned_ids": 12,
-  "statuses": {
-    "BLOCKED_PREREQUISITE": 11,
-    "PARTIAL": 1
-  },
-  "gates": [
-    {
+  "entries": {
+    "FORGE-SPEC-5|sha256:870e934809b40cab7699d4018c7e071af7c8c47cf9ba48293c8437aeba86eef3|security-check.sh": {
       "gate": "security-contract",
       "script": "security-check.sh",
       "exitCode": 0,
@@ -17,9 +8,11 @@
       "sentinelFound": true,
       "evidencePath": ".agent/evidence/EP-010/V-021/gate-security-contract.log",
       "digest": "4c73880740e2cb3348cb73c0f7d2645a01d5e67505709948082bff577e59b760",
-      "note": "the gate exited 0 and printed its sentinel"
+      "epoch": "FORGE-SPEC-5",
+      "artifact_digest": "sha256:870e934809b40cab7699d4018c7e071af7c8c47cf9ba48293c8437aeba86eef3",
+      "executed_at": "2026-09-20T04:32:35Z"
     },
-    {
+    "FORGE-SPEC-5|sha256:870e934809b40cab7699d4018c7e071af7c8c47cf9ba48293c8437aeba86eef3|build-artifact.sh": {
       "gate": "build",
       "script": "build-artifact.sh",
       "exitCode": 1,
@@ -27,9 +20,9 @@
       "sentinelFound": false,
       "evidencePath": ".agent/evidence/EP-010/V-021/gate-build.log",
       "digest": "e392949dd1a8c0d3ce1892c9d9fa2c60de051df4ac20bb34fc4c037f9dde6098",
-      "note": "the gate exited 1 and did NOT print its sentinel"
+      "epoch": "FORGE-SPEC-5",
+      "artifact_digest": "sha256:870e934809b40cab7699d4018c7e071af7c8c47cf9ba48293c8437aeba86eef3",
+      "executed_at": "2026-09-20T04:32:36Z"
     }
-  ],
-  "updated_at": "2026-09-20T04:32:36Z",
-  "next_action": "run sh scripts/harness-next.sh to select the next stage"
+  }
 }

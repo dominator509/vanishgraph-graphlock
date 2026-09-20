@@ -3998,6 +3998,39 @@
         }
       ],
       "recorded_at": "2026-09-20T04:28:31Z"
+    },
+    {
+      "stage": "V-021",
+      "epoch": "FORGE-SPEC-5",
+      "artifact_digest": "sha256:870e934809b40cab7699d4018c7e071af7c8c47cf9ba48293c8437aeba86eef3",
+      "owned_ids": 12,
+      "statuses": {
+        "BLOCKED_PREREQUISITE": 11,
+        "PARTIAL": 1
+      },
+      "gates_run": [
+        {
+          "gate": "security-contract",
+          "script": "security-check.sh",
+          "exitCode": 0,
+          "sentinelFound": true,
+          "cached": false,
+          "cachedFrom": null,
+          "evidencePath": ".agent/evidence/EP-010/V-021/gate-security-contract.log",
+          "digest": "4c73880740e2cb3348cb73c0f7d2645a01d5e67505709948082bff577e59b760"
+        },
+        {
+          "gate": "build",
+          "script": "build-artifact.sh",
+          "exitCode": 1,
+          "sentinelFound": false,
+          "cached": false,
+          "cachedFrom": null,
+          "evidencePath": ".agent/evidence/EP-010/V-021/gate-build.log",
+          "digest": "e392949dd1a8c0d3ce1892c9d9fa2c60de051df4ac20bb34fc4c037f9dde6098"
+        }
+      ],
+      "recorded_at": "2026-09-20T04:32:36Z"
     }
   ]
 }
