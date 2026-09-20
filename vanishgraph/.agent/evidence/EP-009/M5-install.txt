@@ -2,10 +2,10 @@ install: ok
 installed name: vanishgraph
 installed version: 0.1.0
 artifact: dist/vanishgraph-0.1.0.tgz
-verified digest: sha256:901ce2485f0f313aa985df9e6337649aeec3156c4249bfa07028147d8dd13b55 (recomputed from the bytes before installing, and it matched)
-source commit: f62928b0bfed2ac89065c26ef5546a4c3e8ae22b
+verified digest: sha256:faafc0d7f03da6f31d03e10c76aa56cce407ea8905733034a5a2b7f82cd5ad1c (recomputed from the bytes before installing, and it matched)
+source commit: dabc6cd39580f5adf209ca1c7f4ae28cb02e154b
 destination: /tmp/vanishgraph-rollback
 entry point: /tmp/vanishgraph-rollback/package/src/infrastructure/main.ts
 files installed: 400
-installed at: 2026-09-20T00:34:59Z
+installed at: 2026-09-20T00:43:17Z
 dependency supply: the lockfile-installed node_modules of this repository, linked into the install (offline environment)

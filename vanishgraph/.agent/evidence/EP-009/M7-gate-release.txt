@@ -1,6 +1,6 @@
 gate-release run
-commit: f62928b0bfed2ac89065c26ef5546a4c3e8ae22b
-recorded at: 2026-09-20T00:27:40Z
+commit: dabc6cd39580f5adf209ca1c7f4ae28cb02e154b
+recorded at: 2026-09-20T00:36:49Z
 
 stage config-validate: PASSED, sentinel "config: ok" printed
 stage ci-guard: PASSED, sentinel "ci pipeline: ok" printed
@@ -12,6 +12,17 @@ stage published-commands: PASSED, sentinel "published commands: ok" printed
 stage rollback-drill: BLOCKED with taxonomy status BLOCKED_ON_IMPLEMENTATION
 rollback drill: BLOCKED_ON_IMPLEMENTATION - rollback to a PREVIOUS VERSION cannot be demonstrated: only one artifact version exists (0.1.0). Evidence: .agent/evidence/EP-009/M6-rollback.txt. NO SENTINEL IS PRINTED.
 BLOCKED rollback-drill
+stage upgrade-drill: BLOCKED with taxonomy status BLOCKED_ON_IMPLEMENTATION
+upgrade drill: BLOCKED_ON_IMPLEMENTATION - the from-prior upgrade path has no prior to start from and scripts/test-migrations.sh does not exist (db/UPGRADE_MATRIX.md names it as the producer of those rows). Migrations from empty and a repeat application were executed and reached schema version 34 with the isolation invariant ok. Evidence: .agent/evidence/EP-009/M6-upgrade.txt. NO SENTINEL IS PRINTED.
+BLOCKED upgrade-drill
+stage backup-restore-drill: PASSED, sentinel "backup restore: ok" printed
+stage staging-deploy: BLOCKED with taxonomy status BLOCKED_CREDENTIALS
+staging deploy: BLOCKED_CREDENTIALS - staging is NOT_PROVISIONED in .agent/verification/TEST_ENVIRONMENT_MANIFEST.md (managed US cloud, separate account; Kubernetes, KMS, object store, managed Postgres, browser pool). Probe: sh scripts/probes/cloud_identity.sh exit=1. PREFLIGHT.md declares no platform credential because no platform was provisioned; the pinned digest is sha256:faafc0d7f03da6f31d03e10c76aa56cce407ea8905733034a5a2b7f82cd5ad1c and the artifact is dist/vanishgraph-0.1.0.tgz. Evidence: .agent/evidence/EP-009/M4-staging-deploy.txt. NO LOCAL DEPLOYMENT WAS PERFORMED.
+BLOCKED staging-deploy
+stage staging-verify: BLOCKED with taxonomy status BLOCKED_CREDENTIALS
+staging verify: BLOCKED_CREDENTIALS - staging is NOT_PROVISIONED in .agent/verification/TEST_ENVIRONMENT_MANIFEST.md and VG_STAGING_ENDPOINT is undeclared, so no deployed digest exists to verify. Evidence: .agent/evidence/EP-009/M4-staging-verify.txt. THIS SCRIPT DID NOT VERIFY A LOCAL PROCESS AND DID NOT PRINT ITS SENTINEL.
+BLOCKED staging-verify
 
-summary: 7 stage(s) passed with their sentinel, 1 stage(s) blocked with a taxonomy status, 0 stage(s) failed
-manifest refreshed: artifact digest sha256:901ce2485f0f313aa98…, inputs digest sha256:3be2892e7558559ae9e…, registry_count 484, dod_count 42, candidate_epoch GENERATION
+summary: 8 stage(s) passed with their sentinel, 4 stage(s) blocked with a taxonomy status, 0 stage(s) failed, 12 of 12 declared stage(s) processed
+blocked stages: rollback-drill upgrade-drill staging-deploy staging-verify 
+manifest refreshed: artifact digest sha256:faafc0d7f03da6f31d0…, inputs digest sha256:3be2892e7558559ae9e…, registry_count 484, dod_count 42, candidate_epoch GENERATION

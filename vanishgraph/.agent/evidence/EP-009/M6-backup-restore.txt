@@ -4,7 +4,7 @@ sentinel required and found: backup drill: ok
 what the drill proves: after seeding, crypto-shredding one subject, dumping, destroying the database and restoring from the dump alone, the erased subject's PII is unrecoverable, erasure tombstones are intact, RLS is enabled/forced/policied on every tenant-scoped table, the audit chain is intact, and every evidence digest verifies
 evidence files: 10 under .agent/evidence/EP-003/restore-drill
 evidence index:
-  0c44ed68ed9821980f284298a6d356a2c19620acdff0333539754848127c714e  .agent/evidence/EP-003/restore-drill/dump-digest.txt
+  07f0b19b5913d8bc698a2efa5a41abba677e83f2f1dbdb9cb61f8bdd63c47556  .agent/evidence/EP-003/restore-drill/dump-digest.txt
   34edaec209c8b792446f134568dd2cc354556c218ab4c1b6f1c49ffce69a02c2  .agent/evidence/EP-003/restore-drill/erasure.txt
   40b9a21fd299e692c752c0d479fa7ddccd63b6a1c79635b08bda3b76652c5e98  .agent/evidence/EP-003/restore-drill/key-recovery.txt
   9cdc7b3e25a984bc49106e3cacd54e9041f1f00404b9426b2165e6e15fe57157  .agent/evidence/EP-003/restore-drill/migrate.txt
@@ -15,4 +15,4 @@ evidence index:
   e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  .agent/evidence/EP-003/restore-drill/restore.txt
   34edaec209c8b792446f134568dd2cc354556c218ab4c1b6f1c49ffce69a02c2  .agent/evidence/EP-003/restore-drill/seed.txt
 NOT PROVEN HERE, carried forward from the drill's own report: point-in-time recovery. WAL archiving to object storage is not provisioned, so the PITR row is BLOCKED_CREDENTIALS in the drill's output and is NOT claimed as verified.
-recorded at commit: f62928b0bfed2ac89065c26ef5546a4c3e8ae22b
+recorded at commit: dabc6cd39580f5adf209ca1c7f4ae28cb02e154b

@@ -61,7 +61,7 @@
       "vanishgraph.artifact.digest": {
         "source": "Build/release output (DOD-003, DOD-029)",
         "resolution": "STATIC",
-        "value": "sha256:901ce2485f0f313aa985df9e6337649aeec3156c4249bfa07028147d8dd13b55",
+        "value": "sha256:faafc0d7f03da6f31d03e10c76aa56cce407ea8905733034a5a2b7f82cd5ad1c",
         "note": "EP-009 M1 built the declared formats and published this digest; sh scripts/artifact-identity.sh resolves it against the bytes on disk. The digests of the tarball container and of the SBOM vary between builds for the documented reasons (tar mtimes, CycloneDX run identifiers) and the reconciliation is recorded in the identity."
       },
       "vanishgraph.build.inputs_digest": {
@@ -87,7 +87,7 @@
   "artifact": {
     "recorded_at_round": "EP-009 M7",
     "identity_document": ".agent/verification/state/ARTIFACT_IDENTITY.json",
-    "source_commit_sha": "f62928b0bfed2ac89065c26ef5546a4c3e8ae22b",
+    "source_commit_sha": "dabc6cd39580f5adf209ca1c7f4ae28cb02e154b",
     "builder_identity": {
       "tool": "node",
       "version": "v24.14.1",
@@ -95,7 +95,7 @@
     },
     "build_command": "sh scripts/build-artifact.sh",
     "tarball": "dist/vanishgraph-0.1.0.tgz",
-    "tarball_digest": "sha256:901ce2485f0f313aa985df9e6337649aeec3156c4249bfa07028147d8dd13b55",
+    "tarball_digest": "sha256:faafc0d7f03da6f31d03e10c76aa56cce407ea8905733034a5a2b7f82cd5ad1c",
     "formats": [
       "dist/vanishgraph-0.1.0.tgz",
       "dist/vanishgraph-0.1.0.cdx.json",

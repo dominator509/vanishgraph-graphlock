@@ -1,6 +1,6 @@
 {
-  "source_commit_sha": "f62928b0bfed2ac89065c26ef5546a4c3e8ae22b",
-  "base_revision": "f62928b0bfed2ac89065c26ef5546a4c3e8ae22b",
+  "source_commit_sha": "dabc6cd39580f5adf209ca1c7f4ae28cb02e154b",
+  "base_revision": "dabc6cd39580f5adf209ca1c7f4ae28cb02e154b",
   "lockfile_digests": {
     "package-lock.json": "sha256:3be2892e7558559ae9e8fcde4c24228cdcddf356eece6735519bd8ac11f27ee4"
   },
@@ -17,10 +17,10 @@
     "dist/SHA256SUMS"
   ],
   "artifact_digests": {
-    "dist/vanishgraph-0.1.0.tgz": "sha256:901ce2485f0f313aa985df9e6337649aeec3156c4249bfa07028147d8dd13b55",
-    "dist/vanishgraph-0.1.0.cdx.json": "sha256:1d6b67f613bd5d6a56ffd5263d998cad6c520b9ec02a4929fdd79bc19bb5b1b8",
-    "dist/provenance.json": "sha256:52f23138bfd80cddf7855c8f90c2fb82ee7dc6c2b65db17b4f35d265bf519de9",
-    "dist/SHA256SUMS": "sha256:d38e943ab5078a4004ca1946cb551e3b345995904cfc6f4d260788c445cc9824"
+    "dist/vanishgraph-0.1.0.tgz": "sha256:faafc0d7f03da6f31d03e10c76aa56cce407ea8905733034a5a2b7f82cd5ad1c",
+    "dist/vanishgraph-0.1.0.cdx.json": "sha256:d6271c89ecb4780086de3779598c8e00254d16fa3c44a802eb491ed758489a69",
+    "dist/provenance.json": "sha256:292fa99f0d90b6d05c16247db41730db479af2d0b6a3f1b471ac096d5928a388",
+    "dist/SHA256SUMS": "sha256:cf700bafad5b7733514228d16c67c78d8c426c62d28a497b845060c6231129d5"
   },
   "sbom_reference": "dist/vanishgraph-0.1.0.cdx.json",
   "provenance_reference": "dist/provenance.json",
@@ -38,8 +38,8 @@
     "verdict": "CONTENT_IDENTICAL",
     "content_manifest_entries": 400,
     "tarball_container_digests": {
-      "first_build": "sha256:901ce2485f0f313aa985df9e6337649aeec3156c4249bfa07028147d8dd13b55",
-      "second_build": "sha256:901ce2485f0f313aa985df9e6337649aeec3156c4249bfa07028147d8dd13b55"
+      "first_build": "sha256:faafc0d7f03da6f31d03e10c76aa56cce407ea8905733034a5a2b7f82cd5ad1c",
+      "second_build": "sha256:faafc0d7f03da6f31d03e10c76aa56cce407ea8905733034a5a2b7f82cd5ad1c"
     },
     "tarball_containers_identical": true,
     "reconciliation": "none needed: the two tarball containers are byte-identical",

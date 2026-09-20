@@ -6,4 +6,4 @@ STATUS: BLOCKED_ON_IMPLEMENTATION for the from-prior path, and for the failed-mi
 reason: no released prior schema exists, and scripts/test-migrations.sh - the producer db/UPGRADE_MATRIX.md names for the from-empty, from-prior and failed-migration rows - is yes (missing: yes). The failed-migration rollback was executed once in EP-003 M7 and is referenced there rather than re-claimed here.
 dependency edge: a released prior schema -> scripts/test-migrations.sh -> the upgrade matrix rows -> upgrade evidence
 named next action: write scripts/test-migrations.sh so the from-empty, from-prior and failed-migration rows have a producer, cut a release, then run this drill from the released schema
-recorded at commit: 202f9181cfb289d94a479f46d27e883b1ab49f74
+recorded at commit: dabc6cd39580f5adf209ca1c7f4ae28cb02e154b
