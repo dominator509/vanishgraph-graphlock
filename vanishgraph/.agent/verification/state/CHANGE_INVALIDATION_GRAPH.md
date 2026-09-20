@@ -20,3 +20,22 @@ Append-only. Written by sh scripts/epoch-pin.sh when the epoch rolls.
   - PASS rows revoked (the ones that matter most): 0
 - descendants to re-run: every stage owning a revoked id; sh scripts/harness-next.sh names the first one.
 
+# Change invalidation graph
+
+Append-only. Written by sh scripts/epoch-pin.sh when the epoch rolls.
+
+## 2026-09-20T03:08:46Z — FORGE-SPEC-3 -> FORGE-SPEC-4
+
+- reason: M5 added scripts/clean-room.sh and the live-fire implementation, and taught scripts/install.sh to install from an artifact and digest alone (a virgin clean room has no identity document); the artifact surface changed after 470 statuses existed under FORGE-SPEC-3, so the epoch rolls
+- candidate: d3b142adc25586222faf690328325fd09966dc31
+- artifact digest: sha256:6fe9573315f6fb4d559a7e47df0437b7caa49780f31567229a109e610a633cab
+- changed surfaces (src, scripts, config, db, ui, package.json) between the previous candidate and HEAD:
+  - (none detected)
+- revoked: every status row recorded under FORGE-SPEC-3 is invalidated for this epoch; the rows are kept in
+  .agent/verification/state/TEST_LEDGER.jsonl as history and are no longer counted by
+  sh scripts/harness-accounting.sh, which counts the latest row per ID in the CURRENT epoch.
+  - revoked rows under FORGE-SPEC-3: 470 covering 470 distinct id(s)
+  - revoked by status: {"BLOCKED_PREREQUISITE":192,"PARTIAL":265,"BLOCKED_ENVIRONMENT":4,"BLOCKED_CREDENTIALS":7,"BLOCKED_SAFETY":1,"DEFERRED_LONG_RUNNING":1}
+  - PASS rows revoked (the ones that matter most): 0
+- descendants to re-run: every stage owning a revoked id; sh scripts/harness-next.sh names the first one.
+
