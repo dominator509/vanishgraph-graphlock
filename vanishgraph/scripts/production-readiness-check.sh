@@ -30,7 +30,13 @@ GATE=.agent/verification/state/RELEASE_GATE.json
 RUN_STATE=.agent/verification/state/RUN_STATE.json
 REPORT=.agent/verification/reports/FINAL_PRODUCTION_READINESS_REPORT.md
 RESIDUAL=.agent/verification/reports/RESIDUAL_RISK_AND_EXTERNAL_GATES.md
-OUTDIR=.agent/evidence/EP-010/M8
+# THE STEP-LOG DIRECTORY IS EPOCH-SCOPED. It used to be the literal `.agent/evidence/EP-010/M8`, so a
+# LATER epoch's ship-gate run OVERWROTE the earlier epoch's step logs in the working tree: the M8 row's
+# cited evidence path ended up holding a FORGE-SPEC-8 run, and the FORGE-SPEC-7 copy survived only
+# because it had been committed first. Evidence that two epochs share one path belongs to neither, so
+# the path names the epoch. The id is read from RUN_STATE.json, which step 1 re-asserts immediately.
+EPOCH_ID=$(node -e 'process.stdout.write(String(JSON.parse(require("node:fs").readFileSync(".agent/verification/state/RUN_STATE.json","utf8")).epoch||"UNKNOWN"))')
+OUTDIR=".agent/evidence/EP-010/ship-gate-$EPOCH_ID"
 mkdir -p "$OUTDIR" .agent/verification/reports
 
 [ -f "$SCHEMA" ] || fail "$SCHEMA is missing; a verdict is emitted against a schema written first, not one shaped around the answer"

@@ -1,6 +1,6 @@
 # Residual risk and external gates
 
-Every mandatory gate of SPEC-008 section 9 for candidate `256c7558b84da764f704717d768a0967b7a2aca7` and artifact `sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47`. **An agent can never satisfy one of these gates** (DOD-039): only the named participant can, by producing a named, scoped, dated sign-off. While any is open the verdict cannot exceed `CONDITIONAL_EXTERNAL_GATES` (VG-SHIP-030).
+Every mandatory gate of SPEC-008 section 9 for candidate `d94e8647af174968d8453d7aa88bf2152d0d34f7` and artifact `sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47`. **An agent can never satisfy one of these gates** (DOD-039): only the named participant can, by producing a named, scoped, dated sign-off. While any is open the verdict cannot exceed `CONDITIONAL_EXTERNAL_GATES` (VG-SHIP-030).
 
 | gate | status | participant role | digest to sign | request evidence | requested at | owner contact |
 |---|---|---|---|---|---|---|
@@ -12,7 +12,7 @@ Every mandatory gate of SPEC-008 section 9 for candidate `256c7558b84da764f70471
 
 ## Residual risk carried by this verdict
 
-- **VERIFY-NOT-OK** — sh scripts/verify.sh did not print verify: ok; the stage it reached last was dependency-audit, and its failure is a release blocker rather than a note (evidence: `.agent/evidence/EP-010/M8/verify.log`; next action: resolve the failing verify.sh stage recorded above and re-run the ship gate)
+- **VERIFY-NOT-OK** — sh scripts/verify.sh did not print verify: ok; the stage it reached last was dependency-audit, and its failure is a release blocker rather than a note (evidence: `.agent/evidence/EP-010/ship-gate-FORGE-SPEC-8/verify.log`; next action: resolve the failing verify.sh stage recorded above and re-run the ship gate)
 - **DOD-DOD-019** — clause DOD-019 does not pass: reality gate: reality-gate.sh exited 1 WITHOUT its sentinel; the three prose hits recorded in EP-009 remain the gate's only findings (evidence: `.agent/evidence/EP-010/DOD/DOD-019.json`; next action: Any unexplained hit is a release blocker or the affected claim is explicitly marked incomplete.)
 - **EXTERNAL-GATES-UNSIGNED** — 5 of 5 mandatory external gate(s) are unsigned; while any is open the verdict cannot exceed CONDITIONAL_EXTERNAL_GATES (VG-SHIP-030) (evidence: `.agent/evidence/EP-010/V-021/external-gates.jsonl`; next action: obtain the named participant's sign-off for each gate; an agent can never satisfy one (DOD-039))
 - **NO-PASSING-ID** — not one of the 484 ids carries PASS, so no behaviour was verified end to end through its real entry point (evidence: `.agent/verification/reports/COMPLETE_TEST_ACCOUNTING.csv`; next action: execute the ids in an authorised agentic runner and record PASS only where the oracle and a negative case ran)

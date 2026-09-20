@@ -115,3 +115,22 @@ Append-only. Written by sh scripts/epoch-pin.sh when the epoch rolls.
   - PASS rows revoked (the ones that matter most): 0
 - descendants to re-run: every stage owning a revoked id; sh scripts/harness-next.sh names the first one.
 
+# Change invalidation graph
+
+Append-only. Written by sh scripts/epoch-pin.sh when the epoch rolls.
+
+## 2026-09-20T19:51:16Z — FORGE-SPEC-7 -> FORGE-SPEC-8
+
+- reason: EP-010 M9 POST-RUN: the gitignore anchoring fix added 93 tracked files (recovered UI source imported by a tracked test, and the evidence logs RELEASE_GATE.json cites); tracked-file surfaces (applicability, gate-foundation, secret-scan) therefore changed after FORGE-SPEC-7 results existed, so the epoch ROLLS rather than being renamed
+- candidate: d94e8647af174968d8453d7aa88bf2152d0d34f7
+- artifact digest: sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47
+- changed surfaces (src, scripts, config, db, ui, package.json) between the previous candidate and HEAD:
+  - (none detected)
+- revoked: every status row recorded under FORGE-SPEC-7 is invalidated for this epoch; the rows are kept in
+  .agent/verification/state/TEST_LEDGER.jsonl as history and are no longer counted by
+  sh scripts/harness-accounting.sh, which counts the latest row per ID in the CURRENT epoch.
+  - revoked rows under FORGE-SPEC-7: 484 covering 484 distinct id(s)
+  - revoked by status: {"BLOCKED_PREREQUISITE":205,"PARTIAL":266,"BLOCKED_ENVIRONMENT":4,"BLOCKED_CREDENTIALS":7,"BLOCKED_SAFETY":1,"DEFERRED_LONG_RUNNING":1}
+  - PASS rows revoked (the ones that matter most): 0
+- descendants to re-run: every stage owning a revoked id; sh scripts/harness-next.sh names the first one.
+

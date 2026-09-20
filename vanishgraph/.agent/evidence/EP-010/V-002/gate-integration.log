@@ -1,4 +1,4 @@
-test-integration: seed already present (3792 tenant row(s))
+test-integration: seed already present (4024 tenant row(s))
 {"tests":360,"fail":0,"skipped":0,"fileArtifactsExcluded":0,"filesSeen":31,"manifestChecked":31,"failed":[],"verdict":"OK"}
 ℹ tests 360
 ℹ suites 106
@@ -7,6 +7,6 @@ test-integration: seed already present (3792 tenant row(s))
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 207936.1029
+ℹ duration_ms 192926.592
 test-integration: upgrade matrix UNPROVEN (scripts/test-migrations.sh absent); recorded in integration-migrations.txt
 test-integration: ok

@@ -4,8 +4,8 @@
   "evidence": "gates run with declared thresholds and print exit codes (coverage, mutation, flake guard); no time-bounded waiver has been requested, so none is claimed",
   "or_else": "The gate records FAIL or unresolved risk; silent continuation is prohibited.",
   "facts": {
-    "epoch": "FORGE-SPEC-7",
-    "candidate_sha": "256c7558b84da764f704717d768a0967b7a2aca7",
+    "epoch": "FORGE-SPEC-8",
+    "candidate_sha": "d94e8647af174968d8453d7aa88bf2152d0d34f7",
     "artifact_digest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
     "accounted_ids": 484,
     "status_counts": {
@@ -23,7 +23,7 @@
     "stage_edges": 21,
     "capability_edges": 43,
     "evidence_index_entries": 530,
-    "audit_records": 5072,
+    "audit_records": 5556,
     "clean_room": {
       "ok": true,
       "undocumented": 0,

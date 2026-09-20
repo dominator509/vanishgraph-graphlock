@@ -1,7 +1,7 @@
 {
-  "epoch": "FORGE-SPEC-2",
-  "artifact_digest": "sha256:6f9b76a63e102b503ca51953bccf3569a429cadce01f555a4abec8bd1771498b",
-  "decided_at": "2026-09-20T01:02:35.137Z",
+  "epoch": "FORGE-SPEC-8",
+  "artifact_digest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
+  "decided_at": "2026-09-20T19:54:06.454Z",
   "decided_by": "scripts/applicability-decide.sh",
   "probes": {
     "ARTIFACT": {
@@ -38,7 +38,7 @@
     },
     "HUMAN": {
       "present": true,
-      "evidence": "src/domain 76 references to HUMAN_REQUIRED; tests/ui/a11y.spec.ts human gate recorded as EXTERNAL_REQUIRED"
+      "evidence": "src/domain 75 references to HUMAN_REQUIRED; tests/ui/a11y.spec.ts human gate recorded as EXTERNAL_REQUIRED"
     },
     "LONG_RUNNING": {
       "present": true,
@@ -150,15 +150,15 @@
     },
     "BLOCKCHAIN": {
       "present": false,
-      "evidence": "no blockchain, chain, wallet, contract or on-chain implementation exists: 0 of 250 implementation file(s) under src/, ui/ and db/ import a matching module (708 import specifier(s) read) and 0 of 11 runtime dependencies match"
+      "evidence": "no blockchain, chain, wallet, contract or on-chain implementation exists: 0 of 254 implementation file(s) under src/, ui/ and db/ import a matching module (712 import specifier(s) read) and 0 of 11 runtime dependencies match"
     },
     "HSM": {
       "present": false,
-      "evidence": "no HSM, PKCS#11, TPM or hardware security module implementation exists: 0 of 250 implementation file(s) under src/, ui/ and db/ import a matching module (708 import specifier(s) read) and 0 of 11 runtime dependencies match"
+      "evidence": "no HSM, PKCS#11, TPM or hardware security module implementation exists: 0 of 254 implementation file(s) under src/, ui/ and db/ import a matching module (712 import specifier(s) read) and 0 of 11 runtime dependencies match"
     },
     "MODEL": {
       "present": false,
-      "evidence": "no model or agent transport implementation exists: 0 of 250 implementation file(s) under src/, ui/ and db/ import a matching module (708 import specifier(s) read) and 0 of 11 runtime dependencies match"
+      "evidence": "no model or agent transport implementation exists: 0 of 254 implementation file(s) under src/, ui/ and db/ import a matching module (712 import specifier(s) read) and 0 of 11 runtime dependencies match"
     },
     "CONTAINER": {
       "present": false,
@@ -166,11 +166,11 @@
     },
     "MOBILE": {
       "present": false,
-      "evidence": "no mobile, iOS, Android or desktop application implementation exists: 0 of 250 implementation file(s) under src/, ui/ and db/ import a matching module (708 import specifier(s) read) and 0 of 11 runtime dependencies match"
+      "evidence": "no mobile, iOS, Android or desktop application implementation exists: 0 of 254 implementation file(s) under src/, ui/ and db/ import a matching module (712 import specifier(s) read) and 0 of 11 runtime dependencies match"
     },
     "IOT": {
       "present": false,
-      "evidence": "no IoT, embedded device, firmware or device path implementation exists: 0 of 250 implementation file(s) under src/, ui/ and db/ import a matching module (708 import specifier(s) read) and 0 of 11 runtime dependencies match"
+      "evidence": "no IoT, embedded device, firmware or device path implementation exists: 0 of 254 implementation file(s) under src/, ui/ and db/ import a matching module (712 import specifier(s) read) and 0 of 11 runtime dependencies match"
     },
     "CRYPTO": {
       "present": true,
@@ -186,15 +186,15 @@
     },
     "GRAPHQL_GRPC": {
       "present": false,
-      "evidence": "no GraphQL or gRPC transport implementation exists: 0 of 250 implementation file(s) under src/, ui/ and db/ import a matching module (708 import specifier(s) read) and 0 of 11 runtime dependencies match"
+      "evidence": "no GraphQL or gRPC transport implementation exists: 0 of 254 implementation file(s) under src/, ui/ and db/ import a matching module (712 import specifier(s) read) and 0 of 11 runtime dependencies match"
     },
     "CLOUD_IAM": {
       "present": false,
-      "evidence": "no cloud IAM, role or service-account integration implementation exists: 0 of 250 implementation file(s) under src/, ui/ and db/ import a matching module (708 import specifier(s) read) and 0 of 11 runtime dependencies match"
+      "evidence": "no cloud IAM, role or service-account integration implementation exists: 0 of 254 implementation file(s) under src/, ui/ and db/ import a matching module (712 import specifier(s) read) and 0 of 11 runtime dependencies match"
     },
     "SERVERLESS": {
       "present": false,
-      "evidence": "no serverless framework or function runtime implementation exists: 0 of 250 implementation file(s) under src/, ui/ and db/ import a matching module (708 import specifier(s) read) and 0 of 11 runtime dependencies match"
+      "evidence": "no serverless framework or function runtime implementation exists: 0 of 254 implementation file(s) under src/, ui/ and db/ import a matching module (712 import specifier(s) read) and 0 of 11 runtime dependencies match"
     },
     "WEBSOCKET": {
       "present": false,
@@ -210,8 +210,8 @@
     }
   },
   "facts": {
-    "epoch": "FORGE-SPEC-2",
-    "artifact_digest": "sha256:6f9b76a63e102b503ca51953bccf3569a429cadce01f555a4abec8bd1771498b",
+    "epoch": "FORGE-SPEC-8",
+    "artifact_digest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
     "rendered_routes": 27,
     "api_route_modules": 19,
     "migrations": 34,
@@ -221,9 +221,9 @@
     "alert_rows": 20,
     "config_keys": 43,
     "browser_suites": 6,
-    "human_gate_references": 76,
+    "human_gate_references": 75,
     "blockchain_files": 3,
-    "blockchain_text_files": 28,
+    "blockchain_text_files": 227,
     "model_transport_files": 0,
     "hsm_kms_files": 1
   },

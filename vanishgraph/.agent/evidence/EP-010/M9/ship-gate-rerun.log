@@ -1,0 +1,14 @@
+production-readiness: step epoch-pin OK
+production-readiness: step artifact-identity OK
+production-readiness: step verify DID NOT PASS (see .agent/evidence/EP-010/ship-gate-FORGE-SPEC-8/verify.log)
+production-readiness: step harness-next OK
+production-readiness: step harness-validate OK
+production-readiness: step dod-gate DID NOT PASS (see .agent/evidence/EP-010/ship-gate-FORGE-SPEC-8/dod-gate.log)
+production-readiness: step harness-accounting OK
+production-readiness: verdict NO_GO — the candidate fails its own verification: 1 clause(s) FAIL and 0 id(s) FAIL across an accounted registry of 484
+production-readiness: registry 484 (0 PASS, 0 FAIL, 0 unaccounted); DOD 42 (15 PASS, 1 FAIL); external gates 0/5 signed; blockers 4
+production-readiness: verdict schema validation: valid against schemas/release-gate.schema.json
+production-readiness: run state ALL_DONE; report .agent/verification/reports/FINAL_PRODUCTION_READINESS_REPORT.md; residual risk .agent/verification/reports/RESIDUAL_RISK_AND_EXTERNAL_GATES.md
+production-readiness: accounted
+production-readiness: the sentinel means ACCOUNTING COMPLETED, never passed; the verdict is NO_GO
+production-readiness: NO_GO - no release tag is created, no deployment occurs, and the exact blockers and next action are in .agent/verification/state/RELEASE_GATE.json

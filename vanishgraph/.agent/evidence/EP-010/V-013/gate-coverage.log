@@ -1,26 +1,5 @@
-  }
-
-test at tests\harness\gate-scripts.test.ts:406:5
-✖ scripts/gate-toolchain.sh prints gate-toolchain: ok (61841.6517ms)
-  AssertionError [ERR_ASSERTION]: scripts/gate-toolchain.sh failed:
-  gate-toolchain: FAIL - shell scripts failing 'sh -n':
-    - scripts/production-readiness-check.sh
-  
-  
-  1 !== 0
-  
-      at TestContext.<anonymous> (file:///C:/dev/vanishgraph-graphlock/vanishgraph/tests/harness/gate-scripts.test.ts:408:14)
-      at Test.runInAsyncScope (node:async_hooks:228:14)
-      at Test.run (node:internal/test_runner/test:1118:25)
-      at Suite.processPendingSubtests (node:internal/test_runner/test:787:18)
-      at Test.postRun (node:internal/test_runner/test:1247:19)
-      at Test.run (node:internal/test_runner/test:1175:12)
-      at async Suite.processPendingSubtests (node:internal/test_runner/test:787:7) {
-    generatedMessage: false,
-    code: 'ERR_ASSERTION',
-    actual: 1,
-    expected: 0,
-    operator: 'strictEqual',
-    diff: 'simple'
-  }
-coverage: ERROR - layer domain: its suites did not pass, so no coverage verdict is available
+coverage: domain lines=95.19 branches=92.12 functions=95.20 (targets 90/85/95)
+coverage: application lines=99.35 branches=95.67 functions=93.94 (targets 85/80/90)
+coverage: adapters lines=93.34 branches=78.39 functions=93.19 (targets 75/70/80)
+coverage: http lines=78.36 branches=73.49 functions=75.20 (targets 70/65/75)
+coverage: mcp lines=95.26 branches=85.71 functions=90.91 (targets 70/65/75)

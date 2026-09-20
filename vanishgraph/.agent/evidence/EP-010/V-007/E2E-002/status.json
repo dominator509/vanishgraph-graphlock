@@ -16,9 +16,9 @@
     "sentinelFound": false,
     "evidencePath": ".agent/evidence/EP-010/V-002/gate-reality.log",
     "digest": "3c3e0bc784ef53b713dfe9a8123bbcfdda52095fc6ee6720d67a81c6abd9b4d7",
-    "epoch": "FORGE-SPEC-7",
+    "epoch": "FORGE-SPEC-8",
     "artifact_digest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
-    "executed_at": "2026-09-20T06:21:38Z",
+    "executed_at": "2026-09-20T20:22:53Z",
     "cached": true,
     "cachedFrom": ".agent/evidence/EP-010/V-002/gate-reality.log"
   },
@@ -31,5 +31,5 @@
   "scope_clause": null,
   "dependency_edge_ref": "capability:agentic-runner->V-007",
   "provisioning_action": null,
-  "recorded_at": "2026-09-20T06:29:16Z"
+  "recorded_at": "2026-09-20T20:31:29Z"
 }

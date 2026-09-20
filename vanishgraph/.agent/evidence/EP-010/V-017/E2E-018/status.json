@@ -18,7 +18,7 @@
     "workload": "Soak, Endurance & Resource-Leak Verification",
     "plannedDuration": "not declared in the prompt text",
     "elapsedDuration": "PT0S - not started: this campaign window cannot host the planned duration",
-    "startedAt": "2026-09-20T06:38:32Z",
+    "startedAt": "2026-09-20T20:50:56Z",
     "heartbeatRef": "the stage checkpoint this runner writes (.agent/verification/state/stage-checkpoint.json); a duration workload needs a runner that heartbeats into it",
     "partialResultPath": ".agent/evidence/EP-010/V-017/E2E-018/definition.md",
     "completionEta": "requires a runner that can hold the workload for its planned duration"
@@ -26,5 +26,5 @@
   "scope_clause": null,
   "dependency_edge_ref": "capability:long-running-runner->V-017",
   "provisioning_action": null,
-  "recorded_at": "2026-09-20T06:38:32Z"
+  "recorded_at": "2026-09-20T20:50:56Z"
 }

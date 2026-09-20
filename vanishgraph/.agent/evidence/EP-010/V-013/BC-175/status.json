@@ -11,14 +11,14 @@
   "gate": {
     "gate": "unit",
     "script": "test-unit.sh",
-    "exitCode": 1,
+    "exitCode": 0,
     "sentinel": "test-unit: ok",
-    "sentinelFound": false,
+    "sentinelFound": true,
     "evidencePath": ".agent/evidence/EP-010/V-008/gate-unit.log",
-    "digest": "cc2e0cf9460a0e87061d8d91eee391e65ec7b7cdd9e5f05c4b2d1df939072b2c",
-    "epoch": "FORGE-SPEC-7",
+    "digest": "38eaac0d24543a488c51aba89ca8ae5f7ba9a642c8eff97a85a736254fd5fff7",
+    "epoch": "FORGE-SPEC-8",
     "artifact_digest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
-    "executed_at": "2026-09-20T06:33:12Z",
+    "executed_at": "2026-09-20T20:35:20Z",
     "cached": true,
     "cachedFrom": ".agent/evidence/EP-010/V-008/gate-unit.log"
   },
@@ -31,5 +31,5 @@
   "scope_clause": null,
   "dependency_edge_ref": "capability:agentic-runner->V-013",
   "provisioning_action": null,
-  "recorded_at": "2026-09-20T06:38:25Z"
+  "recorded_at": "2026-09-20T20:50:39Z"
 }

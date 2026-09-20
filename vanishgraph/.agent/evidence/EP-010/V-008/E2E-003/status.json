@@ -11,21 +11,21 @@
   "gate": {
     "gate": "unit",
     "script": "test-unit.sh",
-    "exitCode": 1,
+    "exitCode": 0,
     "sentinel": "test-unit: ok",
-    "sentinelFound": false,
+    "sentinelFound": true,
     "evidencePath": ".agent/evidence/EP-010/V-008/gate-unit.log",
-    "digest": "cc2e0cf9460a0e87061d8d91eee391e65ec7b7cdd9e5f05c4b2d1df939072b2c",
-    "note": "the gate exited 1 and did NOT print its sentinel"
+    "digest": "38eaac0d24543a488c51aba89ca8ae5f7ba9a642c8eff97a85a736254fd5fff7",
+    "note": "the gate exited 0 and printed its sentinel"
   },
   "prompt_requires_authorization": false,
   "prompt_requires_target": false,
   "prompt_requires_runner": false,
   "status": "PARTIAL",
-  "reason": "the repository gate covering this subject (scripts/test-unit.sh) ran as the positive path: the gate exited 1 and did NOT print its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
+  "reason": "the repository gate covering this subject (scripts/test-unit.sh) ran as the positive path: the gate exited 0 and printed its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
   "deferred_provenance": null,
   "scope_clause": null,
   "dependency_edge_ref": "capability:agentic-runner->V-008",
   "provisioning_action": null,
-  "recorded_at": "2026-09-20T06:33:12Z"
+  "recorded_at": "2026-09-20T20:35:20Z"
 }
