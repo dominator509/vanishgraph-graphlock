@@ -1,0 +1,15 @@
+{"level":30,"time":1790013614680,"pid":71996,"hostname":"DESKTOP-0RCPJ1P","msg":"Server listening at http://127.0.0.1:45711"}
+serve: listening on http://127.0.0.1:45711/v1
+{"level":30,"time":1790013614826,"pid":71996,"hostname":"DESKTOP-0RCPJ1P","reqId":"","req":{"method":"GET","url":"/v1/live","host":"127.0.0.1:45711","remoteAddress":"127.0.0.1","remotePort":57995},"msg":"incoming request"}
+{"level":30,"time":1790013614831,"pid":71996,"hostname":"DESKTOP-0RCPJ1P","reqId":"","res":{"statusCode":200},"responseTime":4.2970000000000255,"msg":"request completed"}
+{"level":30,"time":1790013614838,"pid":71996,"hostname":"DESKTOP-0RCPJ1P","reqId":"","req":{"method":"GET","url":"/v1/health","host":"127.0.0.1:45711","remoteAddress":"127.0.0.1","remotePort":57996},"msg":"incoming request"}
+{"level":30,"time":1790013614862,"pid":71996,"hostname":"DESKTOP-0RCPJ1P","reqId":"","res":{"statusCode":200},"responseTime":23.805899999999838,"msg":"request completed"}
+{"level":30,"time":1790013614867,"pid":71996,"hostname":"DESKTOP-0RCPJ1P","reqId":"","req":{"method":"GET","url":"/v1/live","host":"127.0.0.1:45711","remoteAddress":"127.0.0.1","remotePort":57995},"msg":"incoming request"}
+{"level":30,"time":1790013614868,"pid":71996,"hostname":"DESKTOP-0RCPJ1P","reqId":"","res":{"statusCode":200},"responseTime":0.5908999999999196,"msg":"request completed"}
+{"level":30,"time":1790013614870,"pid":71996,"hostname":"DESKTOP-0RCPJ1P","reqId":"","req":{"method":"GET","url":"/v1/startup","host":"127.0.0.1:45711","remoteAddress":"127.0.0.1","remotePort":57996},"msg":"incoming request"}
+{"level":30,"time":1790013614871,"pid":71996,"hostname":"DESKTOP-0RCPJ1P","reqId":"","res":{"statusCode":200},"responseTime":0.7960000000000491,"msg":"request completed"}
+{"level":30,"time":1790013614872,"pid":71996,"hostname":"DESKTOP-0RCPJ1P","reqId":"","req":{"method":"GET","url":"/v1/ready","host":"127.0.0.1:45711","remoteAddress":"127.0.0.1","remotePort":57995},"msg":"incoming request"}
+{"level":30,"time":1790013614894,"pid":71996,"hostname":"DESKTOP-0RCPJ1P","reqId":"","res":{"statusCode":200},"responseTime":21.779899999999998,"msg":"request completed"}
+{"level":30,"time":1790013614896,"pid":71996,"hostname":"DESKTOP-0RCPJ1P","reqId":"","req":{"method":"GET","url":"/v1/subjects","host":"127.0.0.1:45711","remoteAddress":"127.0.0.1","remotePort":57996},"msg":"incoming request"}
+{"level":50,"time":1790013614897,"pid":71996,"hostname":"DESKTOP-0RCPJ1P","reqId":"","err":{"type":"ApiError","message":"TOKEN_MISSING","stack":"ApiError: TOKEN_MISSING\n    at Object.<anonymous> (file:///C:/dev/vanishgraph-graphlock/vanishgraph/.agent/verification/state/artifact-smoke/package/src/http/plugins/identity.ts:104:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)","code":"TOKEN_MISSING","name":"ApiError"},"code":"TOKEN_MISSING","correlationId":"05c5750e9b1d45e78641a60e560826fe","alert":false,"msg":"request failed"}
+{"level":30,"time":1790013614898,"pid":71996,"hostname":"DESKTOP-0RCPJ1P","reqId":"","res":{"statusCode":401},"responseTime":1.7407000000000608,"msg":"request completed"}
