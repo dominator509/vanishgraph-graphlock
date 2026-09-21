@@ -220,7 +220,19 @@ over too small a tree.
 
 The credential probes that produce every `BLOCKED_CREDENTIALS` row are declared in `PREFLIGHT.md`:
 `sh scripts/probes/keycloak.sh`, `sh scripts/probes/database_url.sh`, `sh scripts/probes/valkey_url.sh`,
-`sh scripts/probes/cloud_identity.sh`, `sh scripts/probes/local_model.sh`. Each names its variable and exits non-zero.
+`sh scripts/probes/object_store.sh`, `sh scripts/probes/github_app.sh`, `sh scripts/probes/stripe.sh`,
+`sh scripts/probes/postal_api.sh`, `sh scripts/probes/search_api_key.sh`, `sh scripts/probes/local_model.sh`,
+`sh scripts/probes/cloud_identity.sh`.
+
+**THE PROBE CONTRACT (EP-010 M20; implemented in `scripts/lib/loud-fail.sh`).** A probe answers ONE question about ONE
+declared credential and has exactly THREE outcomes, each a distinct exit code so that a caller never has to parse prose:
+`0` REACHABLE (`vg_probe_ok <NAME> <detail>`, prints `<NAME>: ok - <detail>`); `1` UNPROVISIONED (`vg_require_env`, the
+declared variable is unset); `2` CANNOT PROBE (`vg_probe_cannot <NAME> <why>`, this environment cannot host the check at
+all). Two rules bind every probe: **it never prints a value** — not the credential, not a connection string, not a token,
+only the key's name, a reason and a measured fact — and **it is discriminating** (SPEC-007 §7.2 rule 3), passing with the
+dependency healthy and failing with it unavailable on the same code path, so a probe that cannot fail and a probe that
+cannot pass are both defects. Outcome `2` is reserved for a check this environment genuinely cannot host; "I did not
+implement the check" is a defect to record as a blocker, not an environment problem.
 ### The portal (EP-005)
 
 `sh scripts/gate-ui.sh` (gate-ui: ok, node EP-005) is this node's gate. It verifies what can be
