@@ -16,9 +16,10 @@
     "sentinelFound": true,
     "evidencePath": ".agent/evidence/EP-010/V-004/gate-static-analysis.log",
     "digest": "1cb5585a8213ae09f387ab5ab60c159793d6e2ce6e20e6e1306ad490a543effc",
-    "epoch": "FORGE-SPEC-10",
+    "epoch": "FORGE-SPEC-11",
     "artifact_digest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
-    "executed_at": "2026-09-21T06:55:11Z",
+    "executed_at": "2026-09-21T12:02:12Z",
+    "note": "the gate exited 0 and printed its sentinel",
     "cached": true,
     "cachedFrom": ".agent/evidence/EP-010/V-004/gate-static-analysis.log"
   },
@@ -26,10 +27,10 @@
   "prompt_requires_target": false,
   "prompt_requires_runner": false,
   "status": "PARTIAL",
-  "reason": "the repository gate covering this subject (scripts/lint.sh) ran as the positive path: undefined. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
+  "reason": "the repository gate covering this subject (scripts/lint.sh) ran as the positive path: the gate exited 0 and printed its sentinel. NOT a PASS: SPEC-006 section 4.1 repository-mapped execution additionally requires an EXECUTED negative control, and no negative control is DECLARED for the static-analysis gate",
   "deferred_provenance": null,
   "scope_clause": null,
   "dependency_edge_ref": "capability:agentic-runner->V-013",
   "provisioning_action": null,
-  "recorded_at": "2026-09-21T07:18:18Z"
+  "recorded_at": "2026-09-21T12:23:52Z"
 }

@@ -1,0 +1,15 @@
+production-readiness: step epoch-pin OK
+production-readiness: step artifact-identity OK
+production-readiness: step external-gates OK
+production-readiness: step verify DID NOT PASS (see .agent/evidence/EP-010/ship-gate-FORGE-SPEC-11/verify.log)
+production-readiness: step harness-next OK
+production-readiness: step harness-validate OK
+production-readiness: step dod-gate DID NOT PASS (see .agent/evidence/EP-010/ship-gate-FORGE-SPEC-11/dod-gate.log)
+production-readiness: step harness-accounting OK
+production-readiness: verdict NO_GO — the candidate fails its own verification independently of the 5 unsigned external gate(s): VERIFY-NOT-OK - a verdict of CONDITIONAL_EXTERNAL_GATES would claim the external gates are the only obstacle, which these blockers contradict
+production-readiness: registry 484 (15 PASS, 0 FAIL, 0 unaccounted); DOD 42 (16 PASS, 0 FAIL); external gates 0/5 signed; blockers 2
+production-readiness: verdict schema validation: valid against schemas/release-gate.schema.json
+production-readiness: run state ALL_DONE; report .agent/verification/reports/FINAL_PRODUCTION_READINESS_REPORT.md; residual risk .agent/verification/reports/RESIDUAL_RISK_AND_EXTERNAL_GATES.md
+production-readiness: accounted
+production-readiness: the sentinel means ACCOUNTING COMPLETED, never passed; the verdict is NO_GO
+production-readiness: NO_GO - no release tag is created, no deployment occurs, and the exact blockers and next action are in .agent/verification/state/RELEASE_GATE.json

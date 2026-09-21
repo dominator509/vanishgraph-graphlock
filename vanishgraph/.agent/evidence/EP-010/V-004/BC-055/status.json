@@ -15,17 +15,17 @@
     "sentinel": "dependency audit: ok",
     "sentinelFound": true,
     "evidencePath": ".agent/evidence/EP-010/V-004/gate-supply-chain.log",
-    "digest": "132f31d36545f4e8fb0666db9f2cf3f1fecbc3da66fb40cc80fa6b5edb5f3f18",
+    "digest": "709e5197eb3ca9e179c629771e15b5b2ac35a80b592e2fab913af6ffb5d98c61",
     "note": "the gate exited 0 and printed its sentinel"
   },
   "prompt_requires_authorization": false,
   "prompt_requires_target": false,
   "prompt_requires_runner": false,
   "status": "PARTIAL",
-  "reason": "the repository gate covering this subject (scripts/dependency-audit.sh) ran as the positive path: the gate exited 0 and printed its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
+  "reason": "the repository gate covering this subject (scripts/dependency-audit.sh) ran as the positive path: the gate exited 0 and printed its sentinel. NOT a PASS: SPEC-006 section 4.1 repository-mapped execution additionally requires an EXECUTED negative control, and no negative control is DECLARED for the supply-chain gate",
   "deferred_provenance": null,
   "scope_clause": null,
   "dependency_edge_ref": "capability:agentic-runner->V-004",
   "provisioning_action": null,
-  "recorded_at": "2026-09-21T06:55:25Z"
+  "recorded_at": "2026-09-21T12:02:23Z"
 }

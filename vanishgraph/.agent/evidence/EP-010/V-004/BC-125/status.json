@@ -22,10 +22,10 @@
   "prompt_requires_target": false,
   "prompt_requires_runner": false,
   "status": "PARTIAL",
-  "reason": "the repository gate covering this subject (scripts/build-artifact.sh) ran as the positive path: the gate exited 0 and printed its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
+  "reason": "the repository gate covering this subject (scripts/build-artifact.sh) ran as the positive path: the gate exited 0 and printed its sentinel. NOT a PASS: SPEC-006 section 4.1 repository-mapped execution additionally requires an EXECUTED negative control, and no negative control is DECLARED for the build gate",
   "deferred_provenance": null,
   "scope_clause": null,
   "dependency_edge_ref": "capability:agentic-runner->V-004",
   "provisioning_action": null,
-  "recorded_at": "2026-09-21T06:55:55Z"
+  "recorded_at": "2026-09-21T12:02:38Z"
 }

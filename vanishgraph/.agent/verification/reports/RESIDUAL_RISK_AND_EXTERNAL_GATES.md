@@ -1,6 +1,6 @@
 # Residual risk and external gates
 
-Every mandatory gate of SPEC-008 section 9 for candidate `1e6c59a7acc0aa06ac47ac82bc6bb5d576803d23` and artifact `sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46`. **An agent can never satisfy one of these gates** (DOD-039): only the named participant can, by producing a named, scoped, dated sign-off. While any is open the verdict cannot exceed `CONDITIONAL_EXTERNAL_GATES` (VG-SHIP-030).
+Every mandatory gate of SPEC-008 section 9 for candidate `9f9764591a0ec1d2df6da6c6dce7db54fba9934d` and artifact `sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46`. **An agent can never satisfy one of these gates** (DOD-039): only the named participant can, by producing a named, scoped, dated sign-off. While any is open the verdict cannot exceed `CONDITIONAL_EXTERNAL_GATES` (VG-SHIP-030).
 
 | gate | status | participant role | digest to sign | request evidence | requested at | owner contact |
 |---|---|---|---|---|---|---|
@@ -12,13 +12,12 @@ Every mandatory gate of SPEC-008 section 9 for candidate `1e6c59a7acc0aa06ac47ac
 
 ## Residual risk carried by this verdict
 
-- **VERIFY-NOT-OK** — sh scripts/verify.sh did not print verify: ok; the stage it reached last was smoke, and its failure is a release blocker rather than a note (evidence: `.agent/evidence/EP-010/ship-gate-FORGE-SPEC-10/verify.log`; next action: resolve the failing verify.sh stage recorded above and re-run the ship gate)
+- **VERIFY-NOT-OK** — sh scripts/verify.sh did not print verify: ok; the stage it reached last was smoke, and its failure is a release blocker rather than a note (evidence: `.agent/evidence/EP-010/ship-gate-FORGE-SPEC-11/verify.log`; next action: resolve the failing verify.sh stage recorded above and re-run the ship gate)
 - **EXTERNAL-GATES-UNSIGNED** — 5 of 5 mandatory external gate(s) are unsigned; while any is open the verdict cannot exceed CONDITIONAL_EXTERNAL_GATES (VG-SHIP-030) (evidence: `.agent/evidence/EP-010/V-021/external-gates.jsonl`; next action: obtain the named participant's sign-off for each gate; an agent can never satisfy one (DOD-039))
-- **NO-PASSING-ID** — not one of the 484 ids carries PASS, so no behaviour was verified end to end through its real entry point (evidence: `.agent/verification/reports/COMPLETE_TEST_ACCOUNTING.csv`; next action: execute the ids in an authorised agentic runner and record PASS only where the oracle and a negative case ran)
 
 ## What is not claimed
 
-- No outcome was verified end to end: 0 of 484 ids carry PASS.
+- No outcome was verified end to end: 15 of 484 ids carry PASS.
 - No deployment occurred, in staging or production.
 - The artifact is unsigned (ADR-006 open) and no container image exists.
 - The verdict is not rounded: it is exactly one of the four tokens, and it is `NO_GO`.

@@ -172,3 +172,22 @@ Append-only. Written by sh scripts/epoch-pin.sh when the epoch rolls.
   - PASS rows revoked (the ones that matter most): 0
 - descendants to re-run: every stage owning a revoked id; sh scripts/harness-next.sh names the first one.
 
+# Change invalidation graph
+
+Append-only. Written by sh scripts/epoch-pin.sh when the epoch rolls.
+
+## 2026-09-21T11:52:10Z — FORGE-SPEC-10 -> FORGE-SPEC-11
+
+- reason: EP-010 M13: the executor classification rules changed (SPEC-006 section 4.1 repository-mapped execution, declared negative controls, and the fifteen SUP per-ID definitions replacing a 231-byte summary), so statuses produced under the previous rules are revoked and every stage re-runs; the shipped artifact surface is unchanged
+- candidate: 9f9764591a0ec1d2df6da6c6dce7db54fba9934d
+- artifact digest: sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46
+- changed surfaces (src, scripts, config, db, ui, package.json) between the previous candidate and HEAD:
+  - (none detected)
+- revoked: every status row recorded under FORGE-SPEC-10 is invalidated for this epoch; the rows are kept in
+  .agent/verification/state/TEST_LEDGER.jsonl as history and are no longer counted by
+  sh scripts/harness-accounting.sh, which counts the latest row per ID in the CURRENT epoch.
+  - revoked rows under FORGE-SPEC-10: 541 covering 484 distinct id(s)
+  - revoked by status: {"BLOCKED_PREREQUISITE":215,"PARTIAL":310,"BLOCKED_ENVIRONMENT":6,"BLOCKED_CREDENTIALS":7,"BLOCKED_SAFETY":1,"DEFERRED_LONG_RUNNING":1,"PASS":1}
+  - PASS rows revoked (the ones that matter most): 1
+- descendants to re-run: every stage owning a revoked id; sh scripts/harness-next.sh names the first one.
+

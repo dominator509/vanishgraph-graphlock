@@ -5,9 +5,9 @@
   "kind": "production-gate",
   "source_library": ".agent/verification/SUPPLEMENTAL_PRODUCTION_GATES.md",
   "definition_path": ".agent/evidence/EP-010/V-002/SUP-001/definition.md",
-  "definition_digest": "28eec0c9908f00034b411a1e9c0e1b16504cf00cae83a50d21e46a8f395665f3",
+  "definition_digest": "d866ca0f8cb329730580d33f83de4ea0c76dda69710b7284689bec50652a10c4",
   "definition_located": true,
-  "definition_kind": "summary-source",
+  "definition_kind": "prompt-block",
   "gate": {
     "gate": "reality",
     "script": "reality-gate.sh",
@@ -21,11 +21,11 @@
   "prompt_requires_authorization": false,
   "prompt_requires_target": false,
   "prompt_requires_runner": false,
-  "status": "BLOCKED_PREREQUISITE",
-  "reason": "the declared source .agent/verification/SUPPLEMENTAL_PRODUCTION_GATES.md is a summary that names this gate's subject but contains no method, command or completion gate; there is nothing to execute for this ID",
+  "status": "PARTIAL",
+  "reason": "the repository gate covering this subject (scripts/reality-gate.sh) ran as the positive path: the gate exited 0 and printed its sentinel. NOT a PASS: SPEC-006 section 4.1 repository-mapped execution additionally requires an EXECUTED negative control, and no negative control is DECLARED for the reality gate",
   "deferred_provenance": null,
   "scope_clause": null,
-  "dependency_edge_ref": "capability:per-id-definition->V-002",
+  "dependency_edge_ref": "capability:agentic-runner->V-002",
   "provisioning_action": null,
-  "recorded_at": "2026-09-21T06:40:11Z"
+  "recorded_at": "2026-09-21T11:54:59Z"
 }

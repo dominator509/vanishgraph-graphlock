@@ -5,9 +5,9 @@
   "kind": "production-gate",
   "source_library": ".agent/verification/SUPPLEMENTAL_PRODUCTION_GATES.md",
   "definition_path": ".agent/evidence/EP-010/V-005/SUP-004/definition.md",
-  "definition_digest": "28eec0c9908f00034b411a1e9c0e1b16504cf00cae83a50d21e46a8f395665f3",
+  "definition_digest": "0f79640e9f72f5d45dd378f681d8e9e5a5b0d9ed5516d2bf5d9e97d38fb304f3",
   "definition_located": true,
-  "definition_kind": "summary-source",
+  "definition_kind": "prompt-block",
   "gate": {
     "gate": "build",
     "script": "build-artifact.sh",
@@ -16,9 +16,9 @@
     "sentinelFound": true,
     "evidencePath": ".agent/evidence/EP-010/V-004/gate-build.log",
     "digest": "2ade2ac281b3a98e8b4a84fe83a5e8be6bea99ed9d51bbb6b2bf2c41f846ff9e",
-    "epoch": "FORGE-SPEC-10",
+    "epoch": "FORGE-SPEC-11",
     "artifact_digest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
-    "executed_at": "2026-09-21T06:55:55Z",
+    "executed_at": "2026-09-21T12:02:38Z",
     "note": "the gate exited 0 and printed its sentinel",
     "cached": true,
     "cachedFrom": ".agent/evidence/EP-010/V-004/gate-build.log"
@@ -26,11 +26,11 @@
   "prompt_requires_authorization": false,
   "prompt_requires_target": false,
   "prompt_requires_runner": false,
-  "status": "BLOCKED_PREREQUISITE",
-  "reason": "the declared source .agent/verification/SUPPLEMENTAL_PRODUCTION_GATES.md is a summary that names this gate's subject but contains no method, command or completion gate; there is nothing to execute for this ID",
+  "status": "PARTIAL",
+  "reason": "the repository gate covering this subject (scripts/build-artifact.sh) ran as the positive path: the gate exited 0 and printed its sentinel. NOT a PASS: SPEC-006 section 4.1 repository-mapped execution additionally requires an EXECUTED negative control, and no negative control is DECLARED for the build gate",
   "deferred_provenance": null,
   "scope_clause": null,
-  "dependency_edge_ref": "capability:per-id-definition->V-005",
+  "dependency_edge_ref": "capability:agentic-runner->V-005",
   "provisioning_action": null,
-  "recorded_at": "2026-09-21T11:50:41Z"
+  "recorded_at": "2026-09-21T12:03:37Z"
 }

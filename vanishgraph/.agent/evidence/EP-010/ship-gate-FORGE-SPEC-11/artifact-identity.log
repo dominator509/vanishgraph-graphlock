@@ -1,0 +1,8 @@
+identity: commit 9f9764591a0ec1d2df6da6c6dce7db54fba9934d (HEAD 9f9764591a0ec1d2df6da6c6dce7db54fba9934d), builder node v24.14.1, 4 artifact path(s), 5 digest(s) RESOLVED from the bytes on disk, source surface 20 path(s) identical
+build command: sh scripts/build-artifact.sh
+reproducibility: NOT RECORDED
+signature: EXTERNAL_REQUIRED - no signing key or managed KMS exists in this environment (ADR-006 open); an unsigned artifact is recorded as unsigned rather than represented as signed
+oci image: BLOCKED_ON_IMPLEMENTATION - no container build definition exists in this repository
+downstream test bindings: 0 recorded (a stage that is not bound to this digest is not artifact-bound)
+verdict: OK (every field populated, every digest resolved, source surface identical to the recorded commit and to the working tree)
+artifact identity: ok

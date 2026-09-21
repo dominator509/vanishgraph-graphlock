@@ -1,28 +1,28 @@
 {
   "verdict": "NO_GO",
-  "reason": "the candidate fails its own verification independently of the 5 unsigned external gate(s): VERIFY-NOT-OK, NO-PASSING-ID - a verdict of CONDITIONAL_EXTERNAL_GATES would claim the external gates are the only obstacle, which these blockers contradict",
-  "candidate_epoch": "FORGE-SPEC-10",
-  "candidate_sha": "1e6c59a7acc0aa06ac47ac82bc6bb5d576803d23",
+  "reason": "the candidate fails its own verification independently of the 5 unsigned external gate(s): VERIFY-NOT-OK - a verdict of CONDITIONAL_EXTERNAL_GATES would claim the external gates are the only obstacle, which these blockers contradict",
+  "candidate_epoch": "FORGE-SPEC-11",
+  "candidate_sha": "9f9764591a0ec1d2df6da6c6dce7db54fba9934d",
   "artifact_digest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
   "dod": {
     "total": 42,
-    "pass": 17,
+    "pass": 16,
     "fail": 0,
-    "other": 25,
+    "other": 26,
     "unaccounted": 0
   },
   "registry": {
     "total": 484,
-    "passed": 0,
+    "passed": 15,
     "failed": 0,
     "errored": 0,
     "inconclusive": 0,
     "not_applicable": 0,
-    "partial": 266,
+    "partial": 265,
     "simulated": 0,
     "unverified": 0,
     "withdrawn": 0,
-    "blocked_prerequisite": 205,
+    "blocked_prerequisite": 191,
     "blocked_environment": 4,
     "blocked_capability": 0,
     "blocked_credentials": 7,
@@ -92,7 +92,7 @@
     {
       "id": "VERIFY-NOT-OK",
       "what": "sh scripts/verify.sh did not print verify: ok; the stage it reached last was smoke, and its failure is a release blocker rather than a note",
-      "evidence": ".agent/evidence/EP-010/ship-gate-FORGE-SPEC-10/verify.log",
+      "evidence": ".agent/evidence/EP-010/ship-gate-FORGE-SPEC-11/verify.log",
       "next_action": "resolve the failing verify.sh stage recorded above and re-run the ship gate"
     },
     {
@@ -100,14 +100,8 @@
       "what": "5 of 5 mandatory external gate(s) are unsigned; while any is open the verdict cannot exceed CONDITIONAL_EXTERNAL_GATES (VG-SHIP-030)",
       "evidence": ".agent/evidence/EP-010/V-021/external-gates.jsonl",
       "next_action": "obtain the named participant's sign-off for each gate; an agent can never satisfy one (DOD-039)"
-    },
-    {
-      "id": "NO-PASSING-ID",
-      "what": "not one of the 484 ids carries PASS, so no behaviour was verified end to end through its real entry point",
-      "evidence": ".agent/verification/reports/COMPLETE_TEST_ACCOUNTING.csv",
-      "next_action": "execute the ids in an authorised agentic runner and record PASS only where the oracle and a negative case ran"
     }
   ],
   "next_action": "resolve the failing verify.sh stage recorded above and re-run the ship gate",
-  "emitted_at": "2026-09-21T10:58:40Z"
+  "emitted_at": "2026-09-21T12:45:52Z"
 }

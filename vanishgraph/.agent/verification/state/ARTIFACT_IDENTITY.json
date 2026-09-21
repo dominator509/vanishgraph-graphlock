@@ -1,6 +1,6 @@
 {
-  "source_commit_sha": "1e6c59a7acc0aa06ac47ac82bc6bb5d576803d23",
-  "base_revision": "1e6c59a7acc0aa06ac47ac82bc6bb5d576803d23",
+  "source_commit_sha": "9f9764591a0ec1d2df6da6c6dce7db54fba9934d",
+  "base_revision": "9f9764591a0ec1d2df6da6c6dce7db54fba9934d",
   "lockfile_digests": {
     "package-lock.json": "sha256:3be2892e7558559ae9e8fcde4c24228cdcddf356eece6735519bd8ac11f27ee4"
   },
@@ -18,9 +18,9 @@
   ],
   "artifact_digests": {
     "dist/vanishgraph-0.1.0.tgz": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
-    "dist/vanishgraph-0.1.0.cdx.json": "sha256:24b95f0371be77f47bdabaf3e89d149dd3a0e245e6f00c0e8da27135eea10204",
-    "dist/provenance.json": "sha256:3cac046bfed0e8e4f1ad7ebf9db42a14edb2a389f5496b3a731882e7ce4c1434",
-    "dist/SHA256SUMS": "sha256:2883e258241138d25434182e72633b67c8db16aa0d2af1e5a22bcaff0848fb7e"
+    "dist/vanishgraph-0.1.0.cdx.json": "sha256:5439b1a82945bb41db809361b6deb008cddba067f1a6a77b5cd99e5d9c43c697",
+    "dist/provenance.json": "sha256:de3f140b3fcfa831cc36d9b0221c1df80089eda752e8cf7be1c0977aef6408cb",
+    "dist/SHA256SUMS": "sha256:9207f9fe6100dab26915f639eb79d559f39664ae907af9b8fc23c95f10465cb2"
   },
   "sbom_reference": "dist/vanishgraph-0.1.0.cdx.json",
   "provenance_reference": "dist/provenance.json",
@@ -33,29 +33,5 @@
     "reason": "no container build definition exists in this repository"
   },
   "downstream_test_bindings": [],
-  "recorded_at_round": "EP-009 M1",
-  "reproducibility": {
-    "verdict": "CONTENT_IDENTICAL",
-    "content_manifest_entries": 305,
-    "tarball_container_digests": {
-      "first_build": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
-      "second_build": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46"
-    },
-    "tarball_containers_identical": true,
-    "reconciliation": "none needed: the two tarball containers are byte-identical",
-    "byte_identical_formats": [
-      "dist/provenance.json",
-      "dist/SHA256SUMS"
-    ],
-    "canonicalized_formats": [
-      {
-        "path": "dist/vanishgraph-<version>.cdx.json",
-        "removed_fields": [
-          "serialNumber",
-          "metadata.timestamp"
-        ]
-      }
-    ],
-    "checked_at": "EP-009 M1"
-  }
+  "recorded_at_round": "EP-009 M1"
 }

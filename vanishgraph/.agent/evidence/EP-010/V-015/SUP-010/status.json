@@ -16,12 +16,7 @@
     "sentinelFound": false,
     "evidencePath": ".agent/evidence/EP-010/V-015/gate-browser.log",
     "digest": "59149de0574bda2bcf44cc5e1c0fa77d02b61d0d72b7f67de64b16322415eb5d",
-    "epoch": "FORGE-SPEC-10",
-    "artifact_digest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
-    "executed_at": "2026-09-21T07:18:23Z",
-    "note": "the gate exited 1 and did NOT print its sentinel",
-    "cached": true,
-    "cachedFrom": ".agent/evidence/EP-010/V-015/gate-browser.log"
+    "note": "the gate exited 1 and did NOT print its sentinel"
   },
   "prompt_requires_authorization": false,
   "prompt_requires_target": false,
@@ -32,5 +27,5 @@
   "scope_clause": null,
   "dependency_edge_ref": "capability:agentic-runner->V-015",
   "provisioning_action": null,
-  "recorded_at": "2026-09-21T11:51:43Z"
+  "recorded_at": "2026-09-21T12:23:59Z"
 }
