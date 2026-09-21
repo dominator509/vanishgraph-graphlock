@@ -1,0 +1,13 @@
+F
+======================================================================
+FAIL: test_discovery_entrypoint (test_ep000_discovery.TestEP000Discovery.test_discovery_entrypoint)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/app/vanishgraph/tests/e2e/test_ep000_discovery.py", line 15, in test_discovery_entrypoint
+    self.assertIn("error", result.stderr.lower(), "Expected error message for missing subject")
+AssertionError: 'error' not found in "python3: can't open file '/app/vanishgraph/src/discovery.py': [errno 2] no such file or directory\n" : Expected error message for missing subject
+
+----------------------------------------------------------------------
+Ran 1 test in 0.020s
+
+FAILED (failures=1)
