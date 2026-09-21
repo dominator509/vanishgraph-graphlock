@@ -121,8 +121,8 @@
   },
   "epoch": {
     "epoch_id": "FORGE-SPEC-9",
-    "pinned_at_commit": "c01c388fa6821b621facb066e04aae2a98c7a36a",
-    "candidate_commit_sha": "c01c388fa6821b621facb066e04aae2a98c7a36a",
+    "pinned_at_commit": "6f3a8951eedd36b0c6699d1fdb821c6abce48652",
+    "candidate_commit_sha": "6f3a8951eedd36b0c6699d1fdb821c6abce48652",
     "base_revision": "b70162f20bad97f60147e951cb5b9951be116486",
     "test_overlay_revision": "d06841147f75be68e70337aa208ae3200f4a5386",
     "build_inputs_digest": "sha256:3be2892e7558559ae9e8fcde4c24228cdcddf356eece6735519bd8ac11f27ee4",

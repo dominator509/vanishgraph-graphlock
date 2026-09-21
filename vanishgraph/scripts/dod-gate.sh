@@ -144,13 +144,32 @@ const facts = {
     failed: Number((/failed: (\d+)/.exec(liveFireSummary) ?? [null, "?"])[1]),
   },
   external_gates: externalGates.length,
-  external_gates_signed: 0,
+  // COMPUTED, NOT ASSUMED, AND READ FROM THE ONE IMPLEMENTATION OF THE RULES. Until EP-010 M12 this was the literal
+  // 0, which made DOD-039 report EXTERNAL_REQUIRED for ever and made a legitimate human sign-off indistinguishable
+  // from no sign-off at all. The rules now live in scripts/external-gates-status.sh and this reads its document;
+  // the ship gate runs that script as a step before this gate, so the document belongs to this run.
+  external_gates_signed: (readJson(".agent/verification/state/EXTERNAL_GATES_STATUS.json") ?? {}).gates_signed ?? 0,
+  external_gates_marked_signed: (readJson(".agent/verification/state/EXTERNAL_GATES_STATUS.json") ?? {}).gates_marked_signed ?? 0,
+  external_gates_status_document: exists(".agent/verification/state/EXTERNAL_GATES_STATUS.json"),
   invalid_previous_status_tokens: invalidPrevious.length,
   invalid_previous_token_sample: [...new Set(invalidPrevious.map((row) => row.status))],
   gate_release: /gate-release: ok/.test(readText(".agent/evidence/EP-009/M7-gate-release.txt")),
   deferred_rows: [...latest.values()].filter((row) => row.status === "DEFERRED_LONG_RUNNING").length,
   pass_rows: [...latest.values()].filter((row) => row.status === "PASS").length,
   blocked_credentials_rows: [...latest.values()].filter((row) => row.status === "BLOCKED_CREDENTIALS").length,
+  // WHICH credential blocks which ID, computed from the rows: the rule text used to assert a set the rows did not
+  // support. A row's credential may be recorded structurally or only named inside its reason string.
+  blocked_credentials_by_reference: (() => {
+    const counts = {};
+    for (const row of latest.values()) {
+      if (row.status !== "BLOCKED_CREDENTIALS") continue;
+      const named = String((row.statusFields ?? {}).credentialRef ?? row.credentialRef ?? "").trim();
+      const match = named !== "" ? null : String(row.reason ?? "").match(/\b(STRIPE_SECRET_KEY|STRIPE_WEBHOOK_SECRET|CLICK2MAIL_API_KEY|SEARCH_API_KEY|LOB_API_KEY|POSTGRID_API_KEY|GITHUB_APP_ID|LOCAL_MODEL_ENDPOINT|CLOUD_WORKLOAD_IDENTITY|SESSION_SECRET|S3_ACCESS_KEY_ID|S3_SECRET_ACCESS_KEY|S3_BUCKET|KEYCLOAK_[A-Z0-9_]+)\b/);
+      const reference = named !== "" ? named : (match === null ? "(unnamed credential)" : match[1]);
+      counts[reference] = (counts[reference] ?? 0) + 1;
+    }
+    return counts;
+  })(),
   // RELEASE-LOOKING tags only. The `green/EP-*` tags mark NODE CLOSURE and exist on NO_GO candidates by design,
   // so they are not release evidence; a tag that names a version or a release is. DOD-042 reads this to check that
   // no release tag exists while the verdict is not GO (its or_else: no production-ready tag or deployment).
@@ -192,7 +211,11 @@ const RULES = {
   "DOD-017": () => ({ status: "PARTIAL", evidence: "idempotency keys and concurrency guards are asserted in the suites; no commit/acknowledge fault case was injected against a real provider" }),
   "DOD-018": () => ({ status: gate("mutation-gate.sh").ok ? "PASS" : "UNVERIFIED", evidence: `mutation gate: ${gate("mutation-gate.sh").note}; the mutation catalogue names the seeded defects and their detection` }),
   "DOD-019": () => ({ status: gate("reality-gate.sh").ok ? "PASS" : "FAIL", evidence: `reality gate: ${gate("reality-gate.sh").note}; the three prose hits recorded in EP-009 remain the gate's only findings` }),
-  "DOD-020": () => ({ status: "BLOCKED_CREDENTIALS", evidence: `production configuration resolution is not exercised: the audience and ACR keys are REQUIRED_BEFORE_E2E and unprovisioned, so no production-class configuration resolves (${facts.blocked_credentials_rows} ID(s) blocked on credentials)` }),
+  // CORRECTED IN EP-010 M12: this rule used to say the credential-blocked rows were blocked by the unprovisioned
+  // Keycloak audience/ACR keys. The ledger rows do not support that - they name provider entitlements - so the
+  // breakdown is now COMPUTED FROM THE ROWS rather than typed, and the two distinct credential sets are named
+  // separately instead of being merged into one sentence.
+  "DOD-020": () => ({ status: "BLOCKED_CREDENTIALS", evidence: `production configuration resolution is not exercised: the KEYCLOAK audience and step-up ACR keys are REQUIRED_BEFORE_E2E and unprovisioned, so no production-class configuration resolves. SEPARATELY, ${facts.blocked_credentials_rows} ID(s) are BLOCKED_CREDENTIALS on PROVIDER ENTITLEMENTS - ${Object.entries(facts.blocked_credentials_by_reference).map(([reference, count]) => `${reference} ${count}`).join(", ") || "(none recorded)"} - which is a different credential set from the Keycloak keys; the rule's earlier text attributed these rows to the Keycloak keys, and the ledger rows do not support that` }),
   "DOD-021": () => ({ status: "PARTIAL", evidence: "gates run with declared thresholds and print exit codes (coverage, mutation, flake guard); no time-bounded waiver has been requested, so none is claimed" }),
   "DOD-022": () => ({ status: "DEFERRED_LONG_RUNNING", evidence: `performance objectives are declared in config/slo/objectives.json and ${facts.deferred_rows} ID is DEFERRED_LONG_RUNNING with its duration provenance; no percentile measurement was taken` }),
   "DOD-023": () => ({ status: "PASS", evidence: "published-commands.sh extracted and executed 11 documented commands exactly as written, recording 3 BLOCKED_CREDENTIALS and 0 drift" }),
@@ -211,7 +234,27 @@ const RULES = {
   "DOD-036": () => ({ status: "PARTIAL", evidence: "the destructive restore drill proves recovery against reconciled state with erasure and isolation intact; RPO/RTO are not measured because point-in-time recovery is not provisioned" }),
   "DOD-037": () => ({ status: "PARTIAL", evidence: "the alert catalogue maps signals to runbooks and the induced-failure stage proves probe discrimination across all six dependencies; no fault injection was mapped onto a live alert lifecycle" }),
   "DOD-038": () => ({ status: facts.deferred_rows > 0 ? "PARTIAL" : "FAIL", evidence: `${facts.deferred_rows} row is DEFERRED_LONG_RUNNING with workload, planned and elapsed duration, heartbeat reference, partial result and ETA; no full-duration workload ran and no abbreviated run is reported as PASS` }),
-  "DOD-039": () => ({ status: facts.external_gates_signed === 0 ? "EXTERNAL_REQUIRED" : "FAIL", evidence: `${facts.external_gates} external gate(s) recorded with participant role, prepared scenario list and prepared artifact; ${facts.external_gates_signed} signed, and an agent may never sign one` }),
+  // REWRITTEN IN EP-010 M12. The rule used to be `facts.external_gates_signed === 0 ? "EXTERNAL_REQUIRED" : "FAIL"`,
+  // so the clause could never PASS: the moment a human legitimately signed a gate it would FAIL, and because the
+  // signed count was itself hardcoded to 0 the branch was unreachable anyway. The clause is that an agent may never
+  // SATISFY an external gate - so the measurable form is: every mandatory gate carries a participant role and a
+  // prepared request; a gate claiming SIGNED must carry an attributable sign-off covering the pinned digest, and a
+  // claim without one is a fabrication risk and FAILS; gates that are recorded and unsigned are EXTERNAL_REQUIRED,
+  // which is exactly what caps the verdict at CONDITIONAL_EXTERNAL_GATES (VG-SHIP-030).
+  "DOD-039": () => {
+    if (!facts.external_gates_status_document) {
+      return { status: "FAIL", evidence: "scripts/external-gates-status.sh produced no status document, so the mandatory external gates cannot be assessed in this run; run it (the ship gate does, as a step) before relying on any gate status" };
+    }
+    const marked = facts.external_gates_marked_signed;
+    const signed = facts.external_gates_signed;
+    if (marked > signed) {
+      return { status: "FAIL", evidence: `${marked} gate(s) claim SIGNED and only ${signed} carry a sign-off record naming a signer, a method, a date and the pinned digest; a signature that cannot be attributed to a named participant is treated as a fabrication risk, not as a signature (DOD-039)` };
+    }
+    if (signed === 0) {
+      return { status: "EXTERNAL_REQUIRED", evidence: `${facts.external_gates} external gate(s) recorded with participant role, prepared scenario list and prepared artifact; 0 signed, and an agent may never sign one` };
+    }
+    return { status: "PASS", evidence: `${facts.external_gates} external gate(s) recorded and ${signed} signed by named participants whose sign-off records carry role, method, date and the pinned digest ${artifactDigest}; the sign-off file is authored outside this harness and no script in this repository writes it` };
+  },
   "DOD-040": () => ({ status: exists(".agent/verification/state/CHANGE_INVALIDATION_GRAPH.md") ? "PASS" : "FAIL", evidence: `the change-invalidation graph records every roll with its reason, its changed surfaces and its measured revocation; the current epoch is ${facts.epoch}` }),
   "DOD-041": () => ({ status: facts.applicability_decided === 484 ? "PASS" : "FAIL", evidence: `${facts.applicability_decided}/484 ids carry an applicability decision derived from repository evidence, each citing a probe result and the rule that produced it` }),
   // FIXED IN EP-010 M11. This rule used to be a hardcoded constant - `() => ({ status: "INCONCLUSIVE", evidence:

@@ -10,7 +10,8 @@
  * can resolve from its own files are read from those files (`package.json`, `RUN_MANIFEST.json`) and compared with what
  * the manifest records, so a drift between the two fails. The values it CANNOT resolve are marked `EXTERNAL_REQUIRED` in
  * the manifest with the reason — the artifact digest and the build-inputs digest belong to the build/release pipeline
- * (`scripts/artifact-identity.sh` is still a loud-fail placeholder owned by EP-009), and the loaded policy set and recipe
+ * (`scripts/artifact-identity.sh` resolves them for the manifest; the resolver takes them from its ProcessIdentity
+ * parameter), and the loaded policy set and recipe
  * set belong to runtime loaders that do not exist yet — and the suite supplies those four as declared test inputs. The
  * suite also asserts that the manifest marks them unresolved, so a fixture can never be mistaken for a measurement.
  *

@@ -5,7 +5,7 @@
   "or_else": "The report is invalid and completion cannot be declared.",
   "facts": {
     "epoch": "FORGE-SPEC-9",
-    "candidate_sha": "c01c388fa6821b621facb066e04aae2a98c7a36a",
+    "candidate_sha": "6f3a8951eedd36b0c6699d1fdb821c6abce48652",
     "artifact_digest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
     "accounted_ids": 484,
     "status_counts": {
@@ -36,6 +36,8 @@
     },
     "external_gates": 5,
     "external_gates_signed": 0,
+    "external_gates_marked_signed": 0,
+    "external_gates_status_document": true,
     "invalid_previous_status_tokens": 17,
     "invalid_previous_token_sample": [
       "NOT_STARTED"
@@ -44,6 +46,10 @@
     "deferred_rows": 1,
     "pass_rows": 0,
     "blocked_credentials_rows": 7,
+    "blocked_credentials_by_reference": {
+      "STRIPE_SECRET_KEY": 5,
+      "CLICK2MAIL_API_KEY": 2
+    },
     "release_tags": [],
     "gates": {
       "lint.sh": {

@@ -17,9 +17,9 @@
  *   5. **THE BUDGET IS NEVER EXTENDED.** 1 500 ms total, at most one retry inside a probe, and a probe that exceeds its
  *      own timeout is `TIMEOUT` rather than a longer wait.
  *
- * WHAT IS NOT IMPLEMENTED HERE, STATED SO IT IS NOT ASSUMED: the object-store probe's declared action is `HeadBucket`
- * plus a SIGNED `GetObject`, and NO module in this repository can sign an S3 request — there is no object-store client,
- * no SigV4 implementation and no credential resolver for one. The probe therefore reports `MISCONFIGURED` with that
+ * WHAT THIS REPOSITORY CANNOT DO, STATED SO IT IS NOT ASSUMED: the object-store probe's declared action is `HeadBucket`
+ * plus a SIGNED `GetObject`, and NO module here can sign an S3 request — there is no object-store client,
+ * no SigV4 signer and no credential resolver for one. The probe therefore reports `MISCONFIGURED` with that
  * reason rather than pretending to check the store. It is recorded as an open item in the M5 evidence file and the
  * operator runbook, not smoothed over.
  */

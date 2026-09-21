@@ -69,6 +69,32 @@ collections.
 ## Enforcement
 
 - `python3 scripts/anti-gaming-scan.py .` runs in every verification pass.
-- Dependency and licence scanning is a mandatory gate (`scripts/dependency-audit.sh`),
-  currently a loud-fail placeholder and implemented in EP-001/EP-009.
+- Dependency and licence scanning is a mandatory gate (`scripts/dependency-audit.sh`), implemented and enforcing
+  the review requirements above.
 - An unreviewed dependency is a release blocker, not a follow-up item.
+- The review record is `config/licences/runtime-allowlist.json`. The gate fails if a runtime dependency has no
+  entry, if an entry's SPDX identifier, locked revision, tarball URL or integrity hash disagrees with the
+  lockfile, if a licence falls outside the permitted set above, or if an entry reviews a dependency that no
+  longer exists.
+- The **consumer installer** (`scripts/install.sh`) must keep no third-party runtime dependency at all, so a
+  consumer can install the product on the Node standard library alone.
+- The emitted CycloneDX SBOM must reconcile against the lockfile: every runtime dependency must appear at its
+  locked version.
+
+## Scope of the "no runtime dependencies" claim (EP-010 M12, Decision 1)
+
+`scripts/dependency-audit.sh` previously failed while ANY runtime dependency existed, citing this policy as its
+basis. **This policy never required that.** It requires every dependency to be pinned and to carry an SPDX
+identifier, provenance, attribution, a security review and a compatibility verdict — and the table above lists
+MIT, which is the licence of all eleven runtime dependencies, as permitted. The gate enforced an invariant written
+nowhere in this policy, in any specification or in any DOD clause, and it made the verification ladder
+unreachable for an ordinary Node/Fastify/PostgreSQL/React service.
+
+- **Withdrawn:** the claim that the shipped *application* has no third-party runtime supply chain.
+- **Kept and enforced:** the claim that a consumer can run the *installer* with no third-party runtime dependency.
+- **Added in its place:** the review record above, bound to the lockfile's own integrity hashes, plus SBOM
+  reconciliation against the lockfile.
+
+Nothing was dropped silently: the gate prints what it now enforces and what it no longer assumes, and the
+correction is recorded in the ledger with this decision.
+

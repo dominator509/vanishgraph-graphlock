@@ -165,7 +165,7 @@ export function parseMetricCatalogue(raw: unknown): CatalogueLoadResult {
       continue;
     }
     if (typeof meaning !== 'string' || meaning.trim().length < 20) {
-      errors.push(`${name}: meaning must be a real one-line meaning, not a placeholder (§6.1)`);
+      errors.push(`${name}: meaning must be a real one-line meaning of at least 20 characters (§6.1)`);
       continue;
     }
     if (byName.has(name)) {

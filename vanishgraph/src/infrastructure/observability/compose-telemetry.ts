@@ -54,8 +54,8 @@ export type LogSeverity = (typeof LOG_SEVERITIES)[number];
  *
  * THE THREE PROCESS-LEVEL VALUES ARE REQUIRED AND NULLABLE, NOT OPTIONAL: a caller must state what it is and is allowed
  * to state that it does not know, which then fails closed. The four remaining values are optional because their sources
- * do not exist in this repository yet — the build/release pipeline owns two (EP-009: `scripts/artifact-identity.sh` is a
- * loud-fail placeholder) and the runtime loaders own two — and a caller that has them supplies them.
+ * do not exist in this repository yet — the build/release pipeline owns two (EP-009: `scripts/artifact-identity.sh` now
+ * resolves them and fails closed when it cannot) and the runtime loaders own two — and a caller that has them supplies them.
  */
 export interface ProcessIdentity {
   readonly serviceName: string | null;

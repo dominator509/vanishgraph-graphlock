@@ -104,7 +104,17 @@
           "requestedArtifactDigest": { "type": "string", "minLength": 1 },
           "requestEvidencePath": { "type": "string" },
           "requestedAt": { "type": "string" },
-          "ownerContactRef": { "type": "string" }
+          "ownerContactRef": { "type": "string" },
+          "signedAt": { "type": "string", "description": "EP-010 M12: present only when a named human signed this gate. Before M12 the verdict discarded every gate's own status and reported EXTERNAL_REQUIRED for all of them, so a signature could never register." },
+          "signerRef": { "type": "string", "description": "EP-010 M12: how a reader identifies the participant who signed, as a REFERENCE (role, roster entry, ticket, counsel-of-record label) rather than personal data." },
+          "signatureMethod": { "type": "string", "description": "EP-010 M12: how the sign-off was produced and where it is kept, e.g. a detached signature over SHA256SUMS, a committed review record, or a signed scan." },
+          "signedArtifactDigest": { "type": "string", "description": "EP-010 M12: the digest the participant actually signed. It must equal the PINNED artifact digest; a sign-off for a superseded artifact is reported as a blocker and does not count." },
+          "signatureEvidencePath": { "type": "string", "description": "EP-010 M12: the stored sign-off record." },
+          "scope": { "type": "string", "description": "EP-010 M12: what the participant actually reviewed or exercised, as DOD-039's required evidence demands (scope)." },
+          "unresolvedFindings": { "type": "string", "description": "EP-010 M12: the findings the participant left open, stated explicitly - `none` is a finding and an empty value is not accepted (DOD-039 required evidence)." },
+          "gate_id": { "type": "string", "description": "EP-010 M12: the stable identifier of the mandatory gate (EXT-GATE-01..05), so a sign-off can be matched to its request without matching prose." },
+          "supersededRequestedArtifactDigest": { "type": "string", "description": "EP-010 M12: present when the request was re-issued because the candidate artifact changed. A sign-off must cover the CURRENT digest; this field keeps the earlier request visible instead of erasing it." },
+          "signatureEvidenceDigest": { "type": "string", "description": "EP-010 M12: the sha256 of the stored sign-off artifact named by signatureEvidencePath, so the sign-off itself resolves to a hash (VG-EVIDENCE-002)." }
         }
       }
     },

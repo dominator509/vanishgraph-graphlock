@@ -49,6 +49,7 @@ a milestone that needs a new one must add it here in the same change.
 | `sh scripts/build-artifact.sh` | `artifact: built` |
 | `sh scripts/build-reproducibility.sh` | `artifact reproducible: ok` |
 | `sh scripts/artifact-identity.sh` | `artifact identity: ok` |
+| `sh scripts/external-gates-status.sh` | `external gates status: N/M signed` |
 | `sh scripts/config-validate.sh` | `config: ok` |
 | `sh scripts/ci-guard.sh` | `ci pipeline: ok` |
 | `sh scripts/epoch-pin.sh` | `epoch: pinned` |

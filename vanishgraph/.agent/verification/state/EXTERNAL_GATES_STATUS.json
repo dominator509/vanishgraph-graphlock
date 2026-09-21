@@ -1,0 +1,69 @@
+{
+  "epoch": "FORGE-SPEC-9",
+  "candidate_sha": "6f3a8951eedd36b0c6699d1fdb821c6abce48652",
+  "artifact_digest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
+  "produced_by": "sh scripts/external-gates-status.sh",
+  "signoff_store": ".agent/evidence/EP-010/V-021/signoffs.jsonl",
+  "gates": [
+    {
+      "gate_id": "EXT-GATE-01",
+      "gate": "human UAT of the golden path",
+      "status": "EXTERNAL_REQUIRED",
+      "externalPartyRole": "Named authorised business participant",
+      "requestedArtifactDigest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
+      "supersededRequestedArtifactDigest": "sha256:6fe9573315f6fb4d559a7e47df0437b7caa49780f31567229a109e610a633cab",
+      "requestEvidencePath": ".agent/evidence/EP-010/V-021/external-gates.jsonl",
+      "requestedAt": "2026-09-21T05:58:59Z",
+      "ownerContactRef": "SPEC-008 section 9; this repository's owner"
+    },
+    {
+      "gate_id": "EXT-GATE-02",
+      "gate": "manual assistive-technology validation at WCAG 2.2 AA",
+      "status": "EXTERNAL_REQUIRED",
+      "externalPartyRole": "Named assistive-technology practitioner",
+      "requestedArtifactDigest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
+      "supersededRequestedArtifactDigest": "sha256:6fe9573315f6fb4d559a7e47df0437b7caa49780f31567229a109e610a633cab",
+      "requestEvidencePath": ".agent/evidence/EP-010/V-021/external-gates.jsonl",
+      "requestedAt": "2026-09-21T05:58:59Z",
+      "ownerContactRef": "SPEC-008 section 9"
+    },
+    {
+      "gate_id": "EXT-GATE-03",
+      "gate": "legal and compliance review of jurisdictions, agent evidence, templates and claims",
+      "status": "EXTERNAL_REQUIRED",
+      "externalPartyRole": "Qualified counsel",
+      "requestedArtifactDigest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
+      "supersededRequestedArtifactDigest": "sha256:6fe9573315f6fb4d559a7e47df0437b7caa49780f31567229a109e610a633cab",
+      "requestEvidencePath": "LEGAL_REVIEW_REQUIRED.md and .agent/evidence/EP-010/V-021/external-gates.jsonl",
+      "requestedAt": "2026-09-21T05:58:59Z",
+      "ownerContactRef": "LEGAL_REVIEW_REQUIRED.md"
+    },
+    {
+      "gate_id": "EXT-GATE-04",
+      "gate": "hardware, HSM or accredited assessment where applicable",
+      "status": "EXTERNAL_REQUIRED",
+      "externalPartyRole": "Accredited assessor",
+      "requestedArtifactDigest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
+      "supersededRequestedArtifactDigest": "sha256:6fe9573315f6fb4d559a7e47df0437b7caa49780f31567229a109e610a633cab",
+      "requestEvidencePath": ".agent/evidence/EP-010/V-021/external-gates.jsonl",
+      "requestedAt": "2026-09-21T05:58:59Z",
+      "ownerContactRef": "ADR-006 (no managed KMS exists) and .agent/verification/CAPABILITY_MATRIX.md"
+    },
+    {
+      "gate_id": "EXT-GATE-05",
+      "gate": "production deployment authorization",
+      "status": "EXTERNAL_REQUIRED",
+      "externalPartyRole": "Authorised operator (manual only)",
+      "requestedArtifactDigest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
+      "supersededRequestedArtifactDigest": "sha256:6fe9573315f6fb4d559a7e47df0437b7caa49780f31567229a109e610a633cab",
+      "requestEvidencePath": "deploy/production/README.md and .agent/evidence/EP-010/V-021/external-gates.jsonl",
+      "requestedAt": "2026-09-21T05:58:59Z",
+      "ownerContactRef": "deploy/production/README.md; VG-SCOPE-009"
+    }
+  ],
+  "gates_total": 5,
+  "gates_signed": 0,
+  "gates_external_required": 5,
+  "gates_marked_signed": 0,
+  "blockers": []
+}

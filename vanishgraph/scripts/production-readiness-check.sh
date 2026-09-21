@@ -58,6 +58,9 @@ record_stage() {
 # 1. The identity, re-asserted.
 record_stage epoch-pin sh scripts/epoch-pin.sh
 record_stage artifact-identity sh scripts/artifact-identity.sh
+# 1b. The external gate status, produced by the ONE implementation of the sign-off rules, which the DOD gate reads
+#     too. It runs as a step so a stale status document can never be mistaken for this run's.
+record_stage external-gates sh scripts/external-gates-status.sh
 
 # 2. The local gate. MEASURED: it cannot print its sentinel today, and the exact stage that fails is a blocker.
 record_stage verify sh scripts/verify.sh
@@ -154,16 +157,19 @@ const dodSummary = {
   other: 42 - (dodCounts.PASS ?? 0) - (dodCounts.FAIL ?? 0),
   unaccounted: 42 - dod.length,
 };
-const gates = readText(".agent/evidence/EP-010/V-021/external-gates.jsonl").split("\n").filter((line) => line.trim() !== "").map((line) => JSON.parse(line));
-const externalGates = gates.map((gate) => ({
-  gate: gate.gate,
-  status: "EXTERNAL_REQUIRED",
-  externalPartyRole: gate.externalPartyRole,
-  requestedArtifactDigest: gate.requestedArtifactDigest,
-  requestEvidencePath: gate.requestEvidencePath,
-  requestedAt: gate.requestedAt,
-  ownerContactRef: gate.ownerContactRef,
-}));
+// THE EXTERNAL GATE RULES LIVE IN ONE PLACE - scripts/external-gates-status.sh - and this reads its output.
+// Defect fixed in EP-010 M12 (A3): the rules were implemented HERE and again inside scripts/dod-gate.sh, and BOTH
+// copies were wrong in the same way. This one rebuilt every gate with `status: "EXTERNAL_REQUIRED"` hardcoded, so
+// the record's own status was discarded and `signedGates` could never exceed zero; the other hardcoded
+// `external_gates_signed: 0`, so DOD-039 could never pass either. A human sign-off therefore had NO effect on the
+// verdict. The rules are now implemented once and consumed twice.
+const externalStatus = readJson(".agent/verification/state/EXTERNAL_GATES_STATUS.json");
+const externalStatusBlockers = [];
+if (externalStatus === null) {
+  externalStatusBlockers.push({ id: "EXTERNAL-GATES-STATUS-MISSING", what: "scripts/external-gates-status.sh produced no status document, so no gate can be reported as signed or unsigned in this verdict", evidence: ".agent/verification/state/EXTERNAL_GATES_STATUS.json", next_action: "run sh scripts/external-gates-status.sh and inspect why it produced nothing; the ship gate runs it as a step and records the outcome" });
+}
+const externalGates = externalStatus?.gates ?? [];
+for (const blocker of externalStatus?.blockers ?? []) externalStatusBlockers.push(blocker);
 const signedGates = externalGates.filter((gate) => gate.status === "SIGNED").length;
 
 // EVERY PASS IS CHECKED FOR REAL EVIDENCE IN THIS EPOCH, and a stale or unhashed PASS is revoked rather than reported.
@@ -182,6 +188,7 @@ if (reconciliation.idsCarryingARowButNoCounter !== 0 || reconciliation.schemaReg
     next_action: "give every status token of SPEC-006 section 4.1 a counter in the verdict schema, and map every schema key to its token, before emitting a verdict",
   });
 }
+blockers.push(...externalStatusBlockers);
 const validatorLog = readText(path.join(outDir, "harness-validate.log"));
 if (!/harness validation: ok/.test(validatorLog)) {
   blockers.push({ id: "HARNESS-INVALID", what: "the harness validator did not print its sentinel, so every result it governs is INCONCLUSIVE by SPEC-008 section 2", evidence: `${outDir}/harness-validate.log`, next_action: "correct the validator or the registry integrity defect it reports, then re-run the ship gate" });

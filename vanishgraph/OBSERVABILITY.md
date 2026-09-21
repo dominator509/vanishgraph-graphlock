@@ -67,7 +67,8 @@ local structured error, and increments
 
 **MEASURED STATE OF THIS REPOSITORY:** a run here resolves five of the nine and refuses four.
 `vanishgraph.artifact.digest` and `vanishgraph.build.inputs_digest` need build/release output that does not exist
-(`scripts/artifact-identity.sh` is a loud-fail placeholder owned by EP-009); `vanishgraph.policy.version` and
+(`scripts/artifact-identity.sh` resolves them for the manifest; the resolver takes them from its ProcessIdentity
+parameter, so this document does not claim they resolve from the environment alone); `vanishgraph.policy.version` and
 `vanishgraph.recipe.set_digest` need runtime loaders that do not exist. `.agent/verification/state/RUN_MANIFEST.json`
 records each key's source and status. Substituting `unknown`, `n/a`, `latest` or a zero digest is prohibited and refused.
 

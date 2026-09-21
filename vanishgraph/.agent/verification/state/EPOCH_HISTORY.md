@@ -48,3 +48,4 @@ result is attributed to this epoch, or a new epoch row must be created.
 | FORGE-SPEC-9 | 2026-09-21T01:25:28Z | b70162f20bad97f60147e951cb5b9951be116486 | sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47 | node v24.14.1, npm 11.11.0 | measured by sh scripts/epoch-pin.sh |
 | FORGE-SPEC-9 | 2026-09-21T02:07:16Z | b70162f20bad97f60147e951cb5b9951be116486 | sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47 | node v24.14.1, npm 11.11.0 | measured by sh scripts/epoch-pin.sh |
 | FORGE-SPEC-9 | 2026-09-21T03:30:14Z | c01c388fa6821b621facb066e04aae2a98c7a36a | sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47 | node v24.14.1, npm 11.11.0 | measured by sh scripts/epoch-pin.sh |
+| FORGE-SPEC-9 | 2026-09-21T05:59:39Z | 6f3a8951eedd36b0c6699d1fdb821c6abce48652 | sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47 | node v24.14.1, npm 11.11.0 | measured by sh scripts/epoch-pin.sh |
