@@ -109,7 +109,13 @@ describe('the entry point binds a real socket and reports the port it got (EP-00
       const response = await fetch(`http://127.0.0.1:${String(bound.port)}/v1/health`);
       assert.equal(response.status, 200, `GET /v1/health over the socket must answer 200, saw ${String(response.status)}`);
       const payload = (await response.json()) as Record<string, unknown>;
-      assert.equal(typeof payload['status'], 'string', `the health payload must be JSON with a status, saw ${JSON.stringify(payload)}`);
+      // SPEC-003 §5.17.1 DECLARES `dependencyState` AND FORBIDS `status` ON THIS ROUTE: the state is a
+      // dependency-health classification and must never be confused with a truth state. This assertion used to read
+      // `payload['status']` - the shape the artifact shipped until EP-010 M15, and the exact field the specification
+      // forbids, which is why `smoke-test.sh` refused the artifact. The specification outranks the test, so both
+      // halves are asserted now: the declared field is present AND the forbidden one is absent.
+      assert.equal(typeof payload['dependencyState'], 'string', `the health payload must be JSON with a dependencyState, saw ${JSON.stringify(payload)}`);
+      assert.equal('status' in payload, false, `the health payload must NOT carry a status field (SPEC-003 section 5.17.1 forbids it), saw ${JSON.stringify(payload)}`);
     } finally {
       await app.close();
     }

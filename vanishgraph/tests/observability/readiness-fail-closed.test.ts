@@ -316,7 +316,12 @@ describe('the readiness composition: one ReadinessChanged ERROR per transition, 
     const decision = await composition.port.decide();
     const deps = toHealthDependencies(decision, { now: () => new Date('2026-02-14T09:31:07.412Z'), startedAt: new Date('2026-02-14T09:30:00.000Z'), decide: () => composition.port.decide() });
     assert.equal(deps.probes.length, 6, 'all six declared dependencies, not only the failing one');
-    const results = await Promise.all(deps.probes.map((probe) => probe()));
+    // THE SHAPE IS A UNION SINCE EP-010 M15: a declared DependencyProbe carries its own name, requirement and
+    // deadline, while a legacy probe is a bare function that names itself only when it runs. Both are accepted, so
+    // the adapter may emit either; the assertions below are unchanged.
+    const results = await Promise.all(
+      deps.probes.map((probe) => (typeof probe === 'function' ? probe() : probe.run().then((outcome) => ({ name: probe.name, ok: outcome.ok, reason: outcome.reasonCode ?? undefined })))),
+    );
     assert.deepEqual(results.map((result) => result.name).sort(), [...DEPENDENCY_KEYS].sort());
     const failedProbe = results.find((result) => result.name === 'postgresql');
     assert.equal(failedProbe?.ok, false);
