@@ -50,6 +50,7 @@ a milestone that needs a new one must add it here in the same change.
 | `sh scripts/build-reproducibility.sh` | `artifact reproducible: ok` |
 | `sh scripts/artifact-identity.sh` | `artifact identity: ok` |
 | `sh scripts/external-gates-status.sh` | `external gates status: N/M signed` |
+| `sh scripts/external-gate-requests.sh` | `external gate requests: written` — writes one per-gate REQUEST packet (what is attested, what to return, the exact accepted record shape); it writes requests and never signatures, and `sentAt` stays absent until a human records the send |
 | `sh scripts/config-validate.sh` | `config: ok` |
 | `sh scripts/ci-guard.sh` | `ci pipeline: ok` |
 | `sh scripts/epoch-pin.sh` | `epoch: pinned` |
