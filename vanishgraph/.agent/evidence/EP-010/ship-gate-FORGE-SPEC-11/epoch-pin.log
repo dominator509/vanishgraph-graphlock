@@ -1,2 +1,2 @@
-epoch: FORGE-SPEC-11 pinned at 9f9764591a0ec1d2df6da6c6dce7db54fba9934d; run state set to IN_PROGRESS for EP-010
-epoch: pinned (FORGE-SPEC-11 at 9f9764591a0ec1d2df6da6c6dce7db54fba9934d; artifact sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46; node v24.14.1, npm 11.11.0)
+epoch: FORGE-SPEC-11 pinned at 8b8cd15b0b05994a1271e43f13f3a44ce86b5c2f; run state set to IN_PROGRESS for EP-010
+epoch: pinned (FORGE-SPEC-11 at 8b8cd15b0b05994a1271e43f13f3a44ce86b5c2f; artifact sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46; node v24.14.1, npm 11.11.0)

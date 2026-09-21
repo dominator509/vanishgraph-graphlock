@@ -55,3 +55,4 @@ result is attributed to this epoch, or a new epoch row must be created.
 | FORGE-SPEC-10 | 2026-09-21T10:19:31Z | 1e6c59a7acc0aa06ac47ac82bc6bb5d576803d23 | sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46 | node v24.14.1, npm 11.11.0 | measured by sh scripts/epoch-pin.sh |
 | FORGE-SPEC-11 | 2026-09-21T11:52:09Z | 9f9764591a0ec1d2df6da6c6dce7db54fba9934d | sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46 | node v24.14.1, npm 11.11.0 | measured by sh scripts/epoch-pin.sh |
 | FORGE-SPEC-11 | 2026-09-21T12:28:12Z | 9f9764591a0ec1d2df6da6c6dce7db54fba9934d | sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46 | node v24.14.1, npm 11.11.0 | measured by sh scripts/epoch-pin.sh |
+| FORGE-SPEC-11 | 2026-09-21T12:48:35Z | 8b8cd15b0b05994a1271e43f13f3a44ce86b5c2f | sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46 | node v24.14.1, npm 11.11.0 | measured by sh scripts/epoch-pin.sh |

@@ -3,9 +3,9 @@
 **Verdict: `NO_GO`.** the candidate fails its own verification independently of the 5 unsigned external gate(s): VERIFY-NOT-OK - a verdict of CONDITIONAL_EXTERNAL_GATES would claim the external gates are the only obstacle, which these blockers contradict
 
 - candidate epoch: `FORGE-SPEC-11`
-- candidate SHA: `9f9764591a0ec1d2df6da6c6dce7db54fba9934d`
+- candidate SHA: `8b8cd15b0b05994a1271e43f13f3a44ce86b5c2f`
 - artifact digest: `sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46`
-- emitted at: `2026-09-21T12:45:52Z`
+- emitted at: `2026-09-21T13:02:25Z`
 - verdict schema: `schemas/release-gate.schema.json` — validated, 0 problem(s)
 
 ### 1. Executive verdict and exact identity
@@ -68,5 +68,5 @@ Pin the epoch (`sh scripts/epoch-pin.sh`), run the subgraph to completion (`sh s
 
 ### 15. Final release predicate
 
-The predicate is: every applicable clause PASS **and** every mandatory external gate signed. Clause status: 16 pass, 0 fail, 26 other. Gate status: 0 signed of 5. **The predicate does not hold, so the verdict is `NO_GO`.**
+The predicate is: every applicable clause PASS **and** every mandatory external gate signed. Clause status: 17 pass, 0 fail, 25 other. Gate status: 0 signed of 5. **The predicate does not hold, so the verdict is `NO_GO`.**
 

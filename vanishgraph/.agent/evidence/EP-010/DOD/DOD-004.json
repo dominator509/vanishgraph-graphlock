@@ -5,7 +5,7 @@
   "or_else": "Artifact-level behavior is UNVERIFIED and completion is prohibited.",
   "facts": {
     "epoch": "FORGE-SPEC-11",
-    "candidate_sha": "9f9764591a0ec1d2df6da6c6dce7db54fba9934d",
+    "candidate_sha": "8b8cd15b0b05994a1271e43f13f3a44ce86b5c2f",
     "artifact_digest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
     "accounted_ids": 484,
     "status_counts": {

@@ -73,6 +73,18 @@ const gates = requests.map((request) => {
     ownerContactRef: request.ownerContactRef,
   };
   const declared = String(request.status ?? "EXTERNAL_REQUIRED");
+  // A STALE REQUEST IS A TRAP FOR A REAL HUMAN, SO IT IS A BLOCKER RATHER THAN A NOTE (EP-010 M14). The requests were
+  // re-issued against a digest that a later rebuild superseded, and nothing said so: a participant would have signed
+  // an artifact that no longer exists and the sign-off validator would have refused the signature by name - costing
+  // that person an attempt and the run a cycle. If the request does not name the pinned digest, the gate says so.
+  if (request.requestedArtifactDigest !== artifactDigest) {
+    blockers.push({
+      id: `EXTERNAL-GATE-REQUEST-STALE-${gateKey(request)}`,
+      what: `gate ${JSON.stringify(request.gate)} asks its participant to sign ${request.requestedArtifactDigest} while the pinned artifact is ${artifactDigest}, so a signature over this request would attest bytes that do not exist`,
+      evidence: REQUESTS,
+      next_action: "re-issue the request against the pinned digest before asking the participant to sign; a stale request wastes a real person's attempt",
+    });
+  }
   if (declared === "WITHDRAWN") return { ...entry, status: "WITHDRAWN" };
   const record = records.find((candidate) => gateKey(candidate) === gateKey(request));
   if (record === undefined) {
