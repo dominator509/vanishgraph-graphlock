@@ -1,0 +1,2 @@
+stage V-013: 298 owned ID(s), statuses {"PARTIAL":166,"BLOCKED_PREREQUISITE":120,"PASS":5,"BLOCKED_CREDENTIALS":6,"BLOCKED_ENVIRONMENT":1}, gate(s) run: static-analysis, security-contract, pipeline, unit, secrets, integration, supply-chain, coverage, mutation, config
+stage V-013: accounted

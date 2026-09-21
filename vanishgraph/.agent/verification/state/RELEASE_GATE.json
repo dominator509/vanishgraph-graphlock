@@ -1,9 +1,9 @@
 {
   "verdict": "NO_GO",
   "reason": "the candidate fails its own verification independently of the 5 unsigned external gate(s): VERIFY-NOT-OK - a verdict of CONDITIONAL_EXTERNAL_GATES would claim the external gates are the only obstacle, which these blockers contradict",
-  "candidate_epoch": "FORGE-SPEC-11",
-  "candidate_sha": "8b8cd15b0b05994a1271e43f13f3a44ce86b5c2f",
-  "artifact_digest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
+  "candidate_epoch": "FORGE-SPEC-12",
+  "candidate_sha": "7751571791ed7cf6ba1b375b875b6b1350571353",
+  "artifact_digest": "sha256:371fe881dc40f0d9c0f31cb7321f2d2df68c5f437ded3d765c7912b772df4c57",
   "dod": {
     "total": 42,
     "pass": 17,
@@ -37,10 +37,10 @@
       "gate": "human UAT of the golden path",
       "status": "EXTERNAL_REQUIRED",
       "externalPartyRole": "Named authorised business participant",
-      "requestedArtifactDigest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
-      "supersededRequestedArtifactDigest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
+      "requestedArtifactDigest": "sha256:371fe881dc40f0d9c0f31cb7321f2d2df68c5f437ded3d765c7912b772df4c57",
+      "supersededRequestedArtifactDigest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
       "requestEvidencePath": ".agent/evidence/EP-010/V-021/external-gates.jsonl",
-      "requestedAt": "2026-09-21T12:48:24Z",
+      "requestedAt": "2026-09-21T18:32:44Z",
       "ownerContactRef": "SPEC-008 section 9; this repository's owner"
     },
     {
@@ -48,10 +48,10 @@
       "gate": "manual assistive-technology validation at WCAG 2.2 AA",
       "status": "EXTERNAL_REQUIRED",
       "externalPartyRole": "Named assistive-technology practitioner",
-      "requestedArtifactDigest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
-      "supersededRequestedArtifactDigest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
+      "requestedArtifactDigest": "sha256:371fe881dc40f0d9c0f31cb7321f2d2df68c5f437ded3d765c7912b772df4c57",
+      "supersededRequestedArtifactDigest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
       "requestEvidencePath": ".agent/evidence/EP-010/V-021/external-gates.jsonl",
-      "requestedAt": "2026-09-21T12:48:24Z",
+      "requestedAt": "2026-09-21T18:32:44Z",
       "ownerContactRef": "SPEC-008 section 9"
     },
     {
@@ -59,10 +59,10 @@
       "gate": "legal and compliance review of jurisdictions, agent evidence, templates and claims",
       "status": "EXTERNAL_REQUIRED",
       "externalPartyRole": "Qualified counsel",
-      "requestedArtifactDigest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
-      "supersededRequestedArtifactDigest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
+      "requestedArtifactDigest": "sha256:371fe881dc40f0d9c0f31cb7321f2d2df68c5f437ded3d765c7912b772df4c57",
+      "supersededRequestedArtifactDigest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
       "requestEvidencePath": "LEGAL_REVIEW_REQUIRED.md and .agent/evidence/EP-010/V-021/external-gates.jsonl",
-      "requestedAt": "2026-09-21T12:48:24Z",
+      "requestedAt": "2026-09-21T18:32:44Z",
       "ownerContactRef": "LEGAL_REVIEW_REQUIRED.md"
     },
     {
@@ -70,10 +70,10 @@
       "gate": "hardware, HSM or accredited assessment where applicable",
       "status": "EXTERNAL_REQUIRED",
       "externalPartyRole": "Accredited assessor",
-      "requestedArtifactDigest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
-      "supersededRequestedArtifactDigest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
+      "requestedArtifactDigest": "sha256:371fe881dc40f0d9c0f31cb7321f2d2df68c5f437ded3d765c7912b772df4c57",
+      "supersededRequestedArtifactDigest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
       "requestEvidencePath": ".agent/evidence/EP-010/V-021/external-gates.jsonl",
-      "requestedAt": "2026-09-21T12:48:24Z",
+      "requestedAt": "2026-09-21T18:32:44Z",
       "ownerContactRef": "ADR-006 (no managed KMS exists) and .agent/verification/CAPABILITY_MATRIX.md"
     },
     {
@@ -81,18 +81,18 @@
       "gate": "production deployment authorization",
       "status": "EXTERNAL_REQUIRED",
       "externalPartyRole": "Authorised operator (manual only)",
-      "requestedArtifactDigest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
-      "supersededRequestedArtifactDigest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
+      "requestedArtifactDigest": "sha256:371fe881dc40f0d9c0f31cb7321f2d2df68c5f437ded3d765c7912b772df4c57",
+      "supersededRequestedArtifactDigest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
       "requestEvidencePath": "deploy/production/README.md and .agent/evidence/EP-010/V-021/external-gates.jsonl",
-      "requestedAt": "2026-09-21T12:48:24Z",
+      "requestedAt": "2026-09-21T18:32:44Z",
       "ownerContactRef": "deploy/production/README.md; VG-SCOPE-009"
     }
   ],
   "release_blockers": [
     {
       "id": "VERIFY-NOT-OK",
-      "what": "sh scripts/verify.sh did not print verify: ok; the stage it reached last was smoke, and its failure is a release blocker rather than a note",
-      "evidence": ".agent/evidence/EP-010/ship-gate-FORGE-SPEC-11/verify.log",
+      "what": "sh scripts/verify.sh did not print verify: ok; the stage it reached last was live-fire, and its failure is a release blocker rather than a note",
+      "evidence": ".agent/evidence/EP-010/ship-gate-FORGE-SPEC-12/verify.log",
       "next_action": "resolve the failing verify.sh stage recorded above and re-run the ship gate"
     },
     {
@@ -103,5 +103,5 @@
     }
   ],
   "next_action": "resolve the failing verify.sh stage recorded above and re-run the ship gate",
-  "emitted_at": "2026-09-21T13:02:25Z"
+  "emitted_at": "2026-09-21T18:54:49Z"
 }

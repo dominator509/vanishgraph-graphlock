@@ -1,5 +1,8 @@
 coverage: domain lines=95.19 branches=92.12 functions=95.20 (targets 90/85/95)
 coverage: application lines=99.35 branches=95.67 functions=93.94 (targets 85/80/90)
-coverage: adapters lines=93.34 branches=78.34 functions=93.19 (targets 75/70/80)
-coverage: http lines=78.36 branches=73.49 functions=75.20 (targets 70/65/75)
+coverage: adapters lines=93.34 branches=78.39 functions=93.19 (targets 75/70/80)
+coverage: http lines=78.81 branches=74.05 functions=75.26 (targets 70/65/75)
 coverage: mcp lines=95.26 branches=85.71 functions=90.91 (targets 70/65/75)
+coverage: infrastructure lines=69.69 branches=62.96 functions=80.95 (targets 60/55/65)
+coverage: ui lines=89.49 branches=86.19 functions=87.57 (targets 70/65/75)
+coverage: ok

@@ -1,10 +1,10 @@
 {
-  "epoch": "FORGE-SPEC-11",
-  "candidate_commit_sha": "8b8cd15b0b05994a1271e43f13f3a44ce86b5c2f",
-  "artifact_digest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
+  "epoch": "FORGE-SPEC-12",
+  "candidate_commit_sha": "7751571791ed7cf6ba1b375b875b6b1350571353",
+  "artifact_digest": "sha256:371fe881dc40f0d9c0f31cb7321f2d2df68c5f437ded3d765c7912b772df4c57",
   "registry_sha256": "d8a5389cfb2968855b88a0e7f78bdbb1f0c65851c8d400c8c04224e161cd1b95",
   "applicability_matrix_sha256": "ad3923f3427050d1fdc5cc532051c924f381042e5a9e1f8063ad57fd97629105",
-  "dependency_seed_sha256": "41406c3ce56bd272d644c41e47c3847365d1e3b8cf6d8a67ad02733c56975d9f",
+  "dependency_seed_sha256": "6871d7bbf32babc2f5dcea40acb28fade429c50b47085250ea5ab58dbc6d93b2",
   "status_vocabulary_size": 16,
   "status_vocabulary": [
     "PASS",
@@ -42,9 +42,9 @@
     "stages": 22,
     "owned_ids": 484,
     "dod_clauses": 42,
-    "ledger_rows": 7259,
-    "ledger_rows_for_registry_ids": 5551,
-    "stale_epoch_rows": 6775,
+    "ledger_rows": 7743,
+    "ledger_rows_for_registry_ids": 6035,
+    "stale_epoch_rows": 7259,
     "accounted_ids_this_epoch": 484,
     "rows_validated_this_epoch": 484
   },

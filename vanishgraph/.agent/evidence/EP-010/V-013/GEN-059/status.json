@@ -15,10 +15,10 @@
     "sentinel": "config: ok",
     "sentinelFound": true,
     "evidencePath": ".agent/evidence/EP-010/V-005/gate-config.log",
-    "digest": "170f8db78e499e16f11ab6c1b5991e1fa0e3436935d010847cfec3b15e94659b",
-    "epoch": "FORGE-SPEC-11",
-    "artifact_digest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
-    "executed_at": "2026-09-21T12:03:37Z",
+    "digest": "e33bd4640471525cd16227d7cd132bfaeada970c1be66f4d379aa357367e45d2",
+    "epoch": "FORGE-SPEC-12",
+    "artifact_digest": "sha256:371fe881dc40f0d9c0f31cb7321f2d2df68c5f437ded3d765c7912b772df4c57",
+    "executed_at": "2026-09-21T18:07:14Z",
     "note": "the gate exited 0 and printed its sentinel",
     "cached": true,
     "cachedFrom": ".agent/evidence/EP-010/V-005/gate-config.log"
@@ -32,5 +32,5 @@
   "scope_clause": null,
   "dependency_edge_ref": null,
   "provisioning_action": null,
-  "recorded_at": "2026-09-21T12:23:47Z"
+  "recorded_at": "2026-09-21T18:21:00Z"
 }

@@ -1,0 +1,2 @@
+stage V-005: 27 owned ID(s), statuses {"PARTIAL":22,"BLOCKED_PREREQUISITE":3,"PASS":1,"BLOCKED_ENVIRONMENT":1}, gate(s) run: security-contract, config, static-analysis, supply-chain, build
+stage V-005: accounted

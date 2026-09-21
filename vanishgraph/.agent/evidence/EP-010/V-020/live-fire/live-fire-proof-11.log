@@ -1,8 +1,8 @@
 ▶ LIVE-FIRE-PROOF-11: coverage honesty is a property of the report, not of a summary line (VG-DISC-002)
-  ✔ the effectiveness figure states its own caveats, and they are sentences rather than placeholders (1.928ms)
-  ✔ the skip reasons are a CLOSED vocabulary, and none of them is a synonym for a completed outcome (0.9464ms)
-  ✔ the denominator rule is stated IN THE CONTRACT, and the suites that render it exist (2.7875ms)
-✔ LIVE-FIRE-PROOF-11: coverage honesty is a property of the report, not of a summary line (VG-DISC-002) (9.8467ms)
+  ✔ the effectiveness figure states its own caveats, and they are sentences rather than placeholders (0.8531ms)
+  ✔ the skip reasons are a CLOSED vocabulary, and none of them is a synonym for a completed outcome (0.2555ms)
+  ✔ the denominator rule is stated IN THE CONTRACT, and the suites that render it exist (0.8291ms)
+✔ LIVE-FIRE-PROOF-11: coverage honesty is a property of the report, not of a summary line (VG-DISC-002) (3.0708ms)
 ℹ tests 3
 ℹ suites 1
 ℹ pass 3
@@ -10,4 +10,4 @@
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 447.6281
+ℹ duration_ms 223.0485

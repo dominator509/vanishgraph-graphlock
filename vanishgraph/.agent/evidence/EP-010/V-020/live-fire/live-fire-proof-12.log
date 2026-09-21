@@ -1,10 +1,10 @@
 ▶ LIVE-FIRE-PROOF-12: enrolment needs an explicit grant, and the human gate stays open (VG-IDENT-001)
-  ✔ NEGATIVE CASE: an EXPIRED grant cannot enrol anyone, and no grant object is produced (2.2792ms)
-  ✔ NEGATIVE CASE: an AGENT enrolment with NO instrument is refused, which is the forged-grant shape (0.425ms)
-  ✔ the ENROLMENT CONSTRAINT is in the migration that owns it, read from the migration text (0.9742ms)
-  ✔ the TWO-LAYER tenant denial is proven by suites that exist, and is not claimed here (4.1516ms)
-  ✔ NEGATIVE CASE: the enterprise human sign-off is EXTERNAL_REQUIRED in the accounting, not implied away (47.5509ms)
-✔ LIVE-FIRE-PROOF-12: enrolment needs an explicit grant, and the human gate stays open (VG-IDENT-001) (58.2273ms)
+  ✔ NEGATIVE CASE: an EXPIRED grant cannot enrol anyone, and no grant object is produced (1.1976ms)
+  ✔ NEGATIVE CASE: an AGENT enrolment with NO instrument is refused, which is the forged-grant shape (0.1885ms)
+  ✔ the ENROLMENT CONSTRAINT is in the migration that owns it, read from the migration text (1.3721ms)
+  ✔ the TWO-LAYER tenant denial is proven by suites that exist, and is not claimed here (0.4479ms)
+  ✔ NEGATIVE CASE: the enterprise human sign-off is EXTERNAL_REQUIRED in the accounting, not implied away (107.3961ms)
+✔ LIVE-FIRE-PROOF-12: enrolment needs an explicit grant, and the human gate stays open (VG-IDENT-001) (112.2134ms)
 ℹ tests 5
 ℹ suites 1
 ℹ pass 5
@@ -12,4 +12,4 @@
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 363.5252
+ℹ duration_ms 381.7742

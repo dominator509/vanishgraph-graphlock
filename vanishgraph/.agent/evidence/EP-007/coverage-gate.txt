@@ -1,20 +1,20 @@
-coverage gate - 2026-09-21T12:08:43Z
+coverage gate - 2026-09-21T18:09:54Z
 configuration: config/testing/coverage-thresholds.json
 node: v24.14.1
 
 === layer domain
-tests: 1149
+tests: 1157
 sources: src/domain/**/*.ts
 excludes: （none）
 suites: tests/domain/**/*.test.ts tests/harness/**/*.test.ts tests/architecture/**/*.test.ts tests/contract/**/*.test.ts tests/security/**/*.test.ts
-ℹ tests 1149
-ℹ suites 250
-ℹ pass 1149
+ℹ tests 1157
+ℹ suites 252
+ℹ pass 1157
 ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 341144.5844
+ℹ duration_ms 176984.9248
 ℹ start of coverage report
 ℹ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ℹ file                       | line % | branch % | funcs % | uncovered lines
@@ -40,18 +40,18 @@ suites: tests/domain/**/*.test.ts tests/harness/**/*.test.ts tests/architecture/
 result: PASS lines=95.19 branches=92.12 functions=95.20 targets=90/85/95
 
 === layer application
-tests: 966
+tests: 974
 sources: src/application/**/*.ts
 excludes: （none）
 suites: tests/contract/**/*.test.ts tests/security/**/*.test.ts tests/domain/**/*.test.ts
-ℹ tests 966
-ℹ suites 234
-ℹ pass 966
+ℹ tests 974
+ℹ suites 236
+ℹ pass 974
 ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 33199.2458
+ℹ duration_ms 16150.2626
 ℹ start of coverage report
 ℹ ----------------------------------------------------------------------------------
 ℹ file                              | line % | branch % | funcs % | uncovered lines
@@ -96,18 +96,18 @@ suites: tests/contract/**/*.test.ts tests/security/**/*.test.ts tests/domain/**/
 result: PASS lines=99.35 branches=95.67 functions=93.94 targets=85/80/90
 
 === layer adapters
-tests: 1101
+tests: 1109
 sources: src/adapters/**/*.ts
 excludes: src/adapters/agent/**
 suites: tests/contract/**/*.test.ts tests/db/**/*.test.ts tests/integration/**/*.test.ts
-ℹ tests 1101
-ℹ suites 292
-ℹ pass 1101
+ℹ tests 1109
+ℹ suites 294
+ℹ pass 1109
 ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 264464.2696
+ℹ duration_ms 117210.0964
 ℹ start of coverage report
 ℹ -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ℹ file                           | line % | branch % | funcs % | uncovered lines
@@ -138,7 +138,7 @@ suites: tests/contract/**/*.test.ts tests/db/**/*.test.ts tests/integration/**/*
 ℹ    audit-queries.ts            | 100.00 |    80.95 |  100.00 | 
 ℹ    audit-sink.ts               |  96.34 |    93.10 |   91.67 | 213-216 218-221 326-327 358-361
 ℹ    authority-repository.ts     |  86.67 |    72.73 |   84.62 | 194-195 206-209 260-274 300-304 344-371
-ℹ    cases.ts                    |  94.46 |    65.43 |   92.59 | 137-142 191-195 565-573 670-671 794-795 799-800 831-841 890-896 901-902 909-910 945-952 983-989 1075-1076 1097-1101
+ℹ    cases.ts                    |  94.46 |    65.84 |   92.59 | 137-142 191-195 565-573 670-671 794-795 799-800 831-841 890-896 901-902 909-910 945-952 983-989 1075-1076 1097-1101
 ℹ    controller-responses.ts     |  97.42 |    91.67 |  100.00 | 51-57
 ℹ    coverage.ts                 |  98.61 |    71.43 |  100.00 | 323-327
 ℹ    deadlines.ts                |  99.13 |    80.65 |   87.50 | 64-65
@@ -162,24 +162,24 @@ suites: tests/contract/**/*.test.ts tests/db/**/*.test.ts tests/integration/**/*
 ℹ    fetch-guard.ts              | 100.00 |   100.00 |  100.00 | 
 ℹ    target-classifier.ts        | 100.00 |    90.59 |  100.00 | 
 ℹ -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ℹ all files                      |  93.34 |    78.34 |   93.19 | 
+ℹ all files                      |  93.34 |    78.39 |   93.19 | 
 ℹ -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ℹ end of coverage report
-result: PASS lines=93.34 branches=78.34 functions=93.19 targets=75/70/80
+result: PASS lines=93.34 branches=78.39 functions=93.19 targets=75/70/80
 
 === layer http
-tests: 766
+tests: 774
 sources: src/http/**/*.ts
 excludes: （none）
 suites: tests/contract/**/*.test.ts tests/security/**/*.test.ts tests/blackbox/**/*.test.ts
-ℹ tests 766
-ℹ suites 193
-ℹ pass 766
+ℹ tests 774
+ℹ suites 195
+ℹ pass 774
 ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 31632.7418
+ℹ duration_ms 17546.6696
 ℹ start of coverage report
 ℹ -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ℹ file                       | line % | branch % | funcs % | uncovered lines
@@ -220,7 +220,7 @@ suites: tests/contract/**/*.test.ts tests/security/**/*.test.ts tests/blackbox/*
 ℹ    evidence.ts             | 100.00 |    93.33 |   91.67 | 
 ℹ    exposures.ts            |  58.02 |    63.64 |   47.62 | 54-73 79-80 86-87 99-100 109-110 132-137 146-168 199-208 212-246 258-262 279-280 284-299 324-341 348-371 376-381 420-424
 ℹ    handler-context.ts      |  95.10 |    95.45 |   83.33 | 61-64 128-130
-ℹ    health.ts               |  94.48 |    64.71 |  100.00 | 101-109
+ℹ    health.ts               |  96.81 |    84.21 |   86.96 | 291-299 301-304
 ℹ    idempotent-write.ts     | 100.00 |   100.00 |  100.00 | 
 ℹ    observations.ts         |  55.13 |    56.52 |   78.57 | 63-64 69-88 109-110 120-124 127-128 156-158 160 162 164-171 173-177 179 182-185 200-201 204-205 211 213-252 267-270 284 292-360 372-373
 ℹ    policies.ts             |  64.58 |    43.75 |   62.50 | 38-39 62-63 66-67 82-83 86-87 90-91 93-94 97-98 104-106 124-126 128 130 132 134-141 143 145-151 153-157 160-161 169-179 186-193 213-214 222-224 226-238
@@ -232,24 +232,24 @@ suites: tests/contract/**/*.test.ts tests/security/**/*.test.ts tests/blackbox/*
 ℹ   webhooks                 |        |          |         | 
 ℹ    verify.ts               | 100.00 |    95.12 |  100.00 | 
 ℹ -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-ℹ all files                  |  78.36 |    73.49 |   75.20 | 
+ℹ all files                  |  78.81 |    74.05 |   75.26 | 
 ℹ -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ℹ end of coverage report
-result: PASS lines=78.36 branches=73.49 functions=75.20 targets=70/65/75
+result: PASS lines=78.81 branches=74.05 functions=75.26 targets=70/65/75
 
 === layer mcp
-tests: 760
+tests: 768
 sources: src/adapters/agent/**/*.ts
 excludes: （none）
 suites: tests/contract/**/*.test.ts tests/security/**/*.test.ts
-ℹ tests 760
-ℹ suites 192
-ℹ pass 760
+ℹ tests 768
+ℹ suites 194
+ℹ pass 768
 ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 29247.145
+ℹ duration_ms 16496.424
 ℹ start of coverage report
 ℹ ----------------------------------------------------------------------------
 ℹ file                | line % | branch % | funcs % | uncovered lines
@@ -276,7 +276,7 @@ suites: tests/db/**/*.test.ts tests/integration/**/*.test.ts tests/harness/**/*.
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 468012.2781
+ℹ duration_ms 247267.7824
 ℹ start of coverage report
 ℹ ----------------------------------------------------------------------------------------------------------------------------------------
 ℹ file              | line % | branch % | funcs % | uncovered lines
@@ -290,3 +290,87 @@ suites: tests/db/**/*.test.ts tests/integration/**/*.test.ts tests/harness/**/*.
 ℹ all files         |  69.69 |    62.96 |   80.95 | 
 ℹ ----------------------------------------------------------------------------------------------------------------------------------------
 ℹ end of coverage report
+result: PASS lines=69.69 branches=62.96 functions=80.95 targets=60/55/65
+
+=== layer ui
+tests: 755
+sources: .cache-ui-render/**/*.js ui/src/**/*.ts
+excludes: .cache-ui-render/**/api/** .cache-ui-render/**/lib/** .cache-ui-render/**/copy/**
+suites: tests/contract/**/*.test.ts
+ℹ tests 755
+ℹ suites 189
+ℹ pass 755
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 14498.3526
+ℹ start of coverage report
+ℹ -------------------------------------------------------------------------------------------------------------------------
+ℹ file                         | line % | branch % | funcs % | uncovered lines
+ℹ -------------------------------------------------------------------------------------------------------------------------
+ℹ .cache-ui-render             |        |          |         | 
+ℹ  ui-src-62156                |        |          |         | 
+ℹ   components                 |        |          |         | 
+ℹ    auditor                   |        |          |         | 
+ℹ     AuditorSurfaces.js       | 100.00 |   100.00 |  100.00 | 
+ℹ    coverage                  |        |          |         | 
+ℹ     ConfidenceBasis.js       |  91.67 |    83.33 |  100.00 | 21-22
+ℹ     CoveragePanel.js         | 100.00 |    93.33 |  100.00 | 
+ℹ     MetricFigure.js          | 100.00 |    94.44 |  100.00 | 
+ℹ     PartialCoverageBanner.js |  94.44 |    66.67 |   50.00 | 35-36
+ℹ    PageShell.js              | 100.00 |   100.00 |  100.00 | 
+ℹ    portal                    |        |          |         | 
+ℹ     AlertsAndAppeals.js      |  63.64 |    70.83 |   55.56 | 57-89 97-102 108
+ℹ     AuthoritySummary.js      | 100.00 |    78.57 |  100.00 | 
+ℹ     CaseDetail.js            | 100.00 |    94.44 |  100.00 | 
+ℹ     ExposureReviewList.js    | 100.00 |    87.50 |   60.00 | 
+ℹ     OnboardingStepper.js     |  90.00 |    80.95 |   50.00 | 12-13
+ℹ     TruthStateLegend.js      | 100.00 |   100.00 |  100.00 | 
+ℹ    region                    |        |          |         | 
+ℹ     region-from-query.js     |  37.50 |    16.67 |   50.00 | 23-25 28-29 31-71 75-79 81-82 85-86
+ℹ     RegionRoute.js           |  97.62 |    80.00 |  100.00 | 10
+ℹ    scope                     |        |          |         | 
+ℹ     ServiceScopeStatement.js | 100.00 |   100.00 |  100.00 | 
+ℹ    states                    |        |          |         | 
+ℹ     AccessDenied.js          | 100.00 |   100.00 |  100.00 | 
+ℹ     EmptyState.js            | 100.00 |   100.00 |  100.00 | 
+ℹ     ErrorState.js            | 100.00 |   100.00 |  100.00 | 
+ℹ     HumanGateNotice.js       | 100.00 |   100.00 |  100.00 | 
+ℹ     LoadingRegion.js         |  71.15 |   100.00 |   66.67 | 31-45
+ℹ     Region.js                |  92.31 |    92.31 |   75.00 | 20-22 50
+ℹ     SessionExpiryNotice.js   | 100.00 |    94.12 |  100.00 | 
+ℹ    truth                     |        |          |         | 
+ℹ     StateQualifier.js        | 100.00 |   100.00 |  100.00 | 
+ℹ     TruthStateBadge.js       |  80.00 |    87.50 |  100.00 | 6-7
+ℹ     TruthTimeline.js         |  97.37 |    90.91 |  100.00 | 56-57
+ℹ   routes                     |        |          |         | 
+ℹ    portal.alerts.js          | 100.00 |   100.00 |  100.00 | 
+ℹ    portal.authority.js       | 100.00 |   100.00 |  100.00 | 
+ℹ    portal.exposures.js       | 100.00 |   100.00 |  100.00 | 
+ℹ    portal.js                 | 100.00 |   100.00 |  100.00 | 
+ℹ    portal.limitations.js     | 100.00 |   100.00 |  100.00 | 
+ℹ    portal.onboarding.js      | 100.00 |   100.00 |  100.00 | 
+ℹ    portal.requests.js        | 100.00 |   100.00 |  100.00 | 
+ℹ ui                           |        |          |         | 
+ℹ  src                         |        |          |         | 
+ℹ   api                        |        |          |         | 
+ℹ    client.ts                 |  96.15 |    91.67 |  100.00 | 110-114
+ℹ    errors.ts                 | 100.00 |    66.67 |  100.00 | 
+ℹ    portal.ts                 |  78.35 |    75.00 |   75.68 | 199-235 291-294 306 310-311 315-328 332-347 351-365 461-476
+ℹ   copy                       |        |          |         | 
+ℹ    catalogue.ts              | 100.00 |   100.00 |  100.00 | 
+ℹ    service-scope.ts          | 100.00 |   100.00 |  100.00 | 
+ℹ    truth-state.ts            | 100.00 |   100.00 |  100.00 | 
+ℹ   lib                        |        |          |         | 
+ℹ    telemetry.ts              |  97.73 |    96.43 |  100.00 | 101-103
+ℹ    url.ts                    | 100.00 |    94.64 |  100.00 | 
+ℹ   routes                     |        |          |         | 
+ℹ    table.ts                  |  96.67 |    50.00 |  100.00 | 29
+ℹ -------------------------------------------------------------------------------------------------------------------------
+ℹ all files                    |  89.49 |    86.19 |   87.57 | 
+ℹ -------------------------------------------------------------------------------------------------------------------------
+ℹ end of coverage report
+result: PASS lines=89.49 branches=86.19 functions=87.57 targets=70/65/75
+
+coverage gate: complete verdict=PASS

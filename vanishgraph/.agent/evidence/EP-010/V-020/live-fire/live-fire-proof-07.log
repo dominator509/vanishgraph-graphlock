@@ -1,11 +1,11 @@
 ▶ LIVE-FIRE-PROOF-07: protected data does not leave, and tenant isolation has its own proof (VG-EGRESS-001)
-  ✔ the deny-by-default set is exactly the four classes the specification names (2.8945ms)
-  ✔ NEGATIVE CASE: an IDENTITY_DOCUMENT is denied with a WILLING scrubber, zero attempts and no evidence id (0.464ms)
-  ✔ NEGATIVE CASE: every protected class is denied on the same terms, so none is a special case (0.3007ms)
-  ✔ NEGATIVE CASE: telemetry cannot carry a payload — the label set is closed and its values are enum-checked (1.2605ms)
-  ✔ the DETECTION the denial rests on: apparent personal data is caught, opaque identifiers are not (0.7034ms)
-  ✔ the TENANT half is asserted where it can be: the suites that own it exist, and none of that is claimed here (1.1643ms)
-✔ LIVE-FIRE-PROOF-07: protected data does not leave, and tenant isolation has its own proof (VG-EGRESS-001) (9.6895ms)
+  ✔ the deny-by-default set is exactly the four classes the specification names (1.5709ms)
+  ✔ NEGATIVE CASE: an IDENTITY_DOCUMENT is denied with a WILLING scrubber, zero attempts and no evidence id (0.2716ms)
+  ✔ NEGATIVE CASE: every protected class is denied on the same terms, so none is a special case (0.2019ms)
+  ✔ NEGATIVE CASE: telemetry cannot carry a payload — the label set is closed and its values are enum-checked (0.7994ms)
+  ✔ the DETECTION the denial rests on: apparent personal data is caught, opaque identifiers are not (0.3986ms)
+  ✔ the TENANT half is asserted where it can be: the suites that own it exist, and none of that is claimed here (0.5356ms)
+✔ LIVE-FIRE-PROOF-07: protected data does not leave, and tenant isolation has its own proof (VG-EGRESS-001) (5.3052ms)
 ℹ tests 6
 ℹ suites 1
 ℹ pass 6
@@ -13,4 +13,4 @@
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 316.7188
+ℹ duration_ms 181.2919

@@ -1,11 +1,11 @@
 ▶ LIVE-FIRE-PROOF-01: discovery reads and declares its bounds (VG-DISC-001/002)
-  ✔ the ONLY non-GET discovery route is the one that STARTS a run, and it is named here (3.0797ms)
-  ✔ NEGATIVE CASE: only WRITE_PERMITTED allows an automated write, and WRITE_UNCLEAR is treated as PROHIBITED (0.4227ms)
-  ✔ the discovery contract carries the coverage block, read from the contract itself (2.1861ms)
-  ✔ NEGATIVE CASE: absence cannot be reported unqualified — `complete: false` is representable (1.271ms)
-  ✔ the durable read path is proven in a suite that exists, and is not claimed here (1.128ms)
-  ✔ discovery routes declare scopes, so an unauthenticated caller cannot reach them (4.9696ms)
-✔ LIVE-FIRE-PROOF-01: discovery reads and declares its bounds (VG-DISC-001/002) (19.6071ms)
+  ✔ the ONLY non-GET discovery route is the one that STARTS a run, and it is named here (1.8216ms)
+  ✔ NEGATIVE CASE: only WRITE_PERMITTED allows an automated write, and WRITE_UNCLEAR is treated as PROHIBITED (0.2051ms)
+  ✔ the discovery contract carries the coverage block, read from the contract itself (0.6556ms)
+  ✔ NEGATIVE CASE: absence cannot be reported unqualified — `complete: false` is representable (0.354ms)
+  ✔ the durable read path is proven in a suite that exists, and is not claimed here (0.4002ms)
+  ✔ discovery routes declare scopes, so an unauthenticated caller cannot reach them (0.2248ms)
+✔ LIVE-FIRE-PROOF-01: discovery reads and declares its bounds (VG-DISC-001/002) (4.9614ms)
 ℹ tests 6
 ℹ suites 1
 ℹ pass 6
@@ -13,4 +13,4 @@
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 447.919
+ℹ duration_ms 178.8899

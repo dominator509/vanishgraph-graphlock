@@ -1,11 +1,11 @@
 ▶ LIVE-FIRE-PROOF-06: an unknown route cannot write, and a gated one needs an approval on record (VG-CHANNEL-002)
-  ✔ NEGATIVE CASE: an UNCLEAR permission class is refused, with the code the specification names for it (2.2444ms)
-  ✔ NEGATIVE CASE: a GATED channel cannot be selected without a recorded reason (1.4445ms)
-  ✔ NEGATIVE CASE: a recipe that stopped being fresh cannot direct a write (VG-CHANNEL-003) (0.9506ms)
-  ✔ quarantine is a DATABASE fact, read from the migration that defines it (1.2553ms)
-  ✔ the APPROVAL is structural: the transition into REQUEST_READY is guarded by channel and recipe (0.702ms)
-  ✔ the durable halves are proven in suites that exist, and are not claimed here (0.7066ms)
-✔ LIVE-FIRE-PROOF-06: an unknown route cannot write, and a gated one needs an approval on record (VG-CHANNEL-002) (10.7772ms)
+  ✔ NEGATIVE CASE: an UNCLEAR permission class is refused, with the code the specification names for it (1.4945ms)
+  ✔ NEGATIVE CASE: a GATED channel cannot be selected without a recorded reason (1.5502ms)
+  ✔ NEGATIVE CASE: a recipe that stopped being fresh cannot direct a write (VG-CHANNEL-003) (0.425ms)
+  ✔ quarantine is a DATABASE fact, read from the migration that defines it (0.5866ms)
+  ✔ the APPROVAL is structural: the transition into REQUEST_READY is guarded by channel and recipe (0.2385ms)
+  ✔ the durable halves are proven in suites that exist, and are not claimed here (0.5064ms)
+✔ LIVE-FIRE-PROOF-06: an unknown route cannot write, and a gated one needs an approval on record (VG-CHANNEL-002) (6.7495ms)
 ℹ tests 6
 ℹ suites 1
 ℹ pass 6
@@ -13,4 +13,4 @@
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 365.7889
+ℹ duration_ms 205.2297

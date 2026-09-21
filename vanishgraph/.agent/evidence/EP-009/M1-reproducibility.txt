@@ -1,18 +1,18 @@
 EP-009 M1(c) artifact reproducibility -- measured, not assumed
-date-of-record: 2026-09-21T17:55:12Z
-source commit: 081a4763bf563d02cad870321f43ed60b2184d1a
-builds compared: VG_DIST_DIR=/tmp/vg-repro-553/a and /tmp/vg-repro-553/b, both from this tree
+date-of-record: 2026-09-21T18:02:20Z
+source commit: 7751571791ed7cf6ba1b375b875b6b1350571353
+builds compared: VG_DIST_DIR=/tmp/vg-repro-992/a and /tmp/vg-repro-992/b, both from this tree
 checkout deviation, recorded not hidden: both builds run from ONE verified-clean tree into two scratch output directories, where section 3 says two clean checkouts; a second checkout would need its own dependency installation for npm sbom to see the closure. Exercised: output-path independence and container-metadata non-determinism. NOT exercised: dependence on the absolute path of the source directory. See docs/release/supported-formats.md.
 tarball content manifest entries: 306 (identical in both builds, per-file SHA-256)
-tarball container digest, first build:  sha256:a49b298639e480883240e4965e692356596ed4c2bbd437c5cb82ccbdbc2fba0b
-tarball container digest, second build: sha256:a49b298639e480883240e4965e692356596ed4c2bbd437c5cb82ccbdbc2fba0b
+tarball container digest, first build:  sha256:371fe881dc40f0d9c0f31cb7321f2d2df68c5f437ded3d765c7912b772df4c57
+tarball container digest, second build: sha256:371fe881dc40f0d9c0f31cb7321f2d2df68c5f437ded3d765c7912b772df4c57
 containers byte-identical: yes
 container difference, if any: a tar archive records file mtimes in its headers; content manifests identical
 provenance.json: byte-identical (the record carries no timestamp by construction)
 SHA256SUMS: byte-identical over the deterministic formats (tarball and SBOM digests excluded, since they follow the container/run)
 SBOM: identical after canonicalization (serialNumber and metadata.timestamp removed)
-published identity digest before the scratch builds: a77b0f5f2afc19512cbc13cb6df38885b21b66f56c657560947b115e9a28f217
-published identity digest after the scratch builds:  a77b0f5f2afc19512cbc13cb6df38885b21b66f56c657560947b115e9a28f217
+published identity digest before the scratch builds: 627dd818aec8f322de6c3d2dde164eebc13f0801b2adee364e038ab4b837fd3c
+published identity digest after the scratch builds:  627dd818aec8f322de6c3d2dde164eebc13f0801b2adee364e038ab4b837fd3c
 published identity untouched by scratch builds: yes
 scratch identity comparison: scoped -- source commit, lockfile digest, builder, build command, declared path set and the provenance digest must agree; the tarball, SBOM and SHA256SUMS digests are excluded BY NAME because this script has already measured that those three are the non-deterministic ones
 finding recorded: an earlier version of this comparison required the two identities to be identical outright and FAILED, because the identity legitimately records the per-build digests of the formats that differ; the check was scoped, not removed

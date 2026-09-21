@@ -1,12 +1,12 @@
 ▶ LIVE-FIRE-PROOF-03: escalation follows the documented priority (VG-CHANNEL-001)
-  ✔ the priority order is total and matches the declaration order, so "higher priority" is not a judgement call (3.5349ms)
-  ✔ the HIGHEST-priority available channel is selected, whatever order the options arrive in (0.7458ms)
-  ✔ NEGATIVE CASE: a lower-priority channel cannot be chosen while a lawful higher one is available (0.3796ms)
-  ✔ an unavailable higher channel is skipped AND reported with its reason (0.3348ms)
-  ✔ NEGATIVE CASE: an unavailable channel with NO recorded reason is refused (0.7895ms)
-  ✔ NEGATIVE CASE: with no lawful channel the selection is refused, never forced (0.3955ms)
-  ✔ an EMPTY option set is refused, so "no channel considered" is not a selection (0.3497ms)
-✔ LIVE-FIRE-PROOF-03: escalation follows the documented priority (VG-CHANNEL-001) (8.9904ms)
+  ✔ the priority order is total and matches the declaration order, so "higher priority" is not a judgement call (1.7747ms)
+  ✔ the HIGHEST-priority available channel is selected, whatever order the options arrive in (0.4857ms)
+  ✔ NEGATIVE CASE: a lower-priority channel cannot be chosen while a lawful higher one is available (0.2443ms)
+  ✔ an unavailable higher channel is skipped AND reported with its reason (0.2784ms)
+  ✔ NEGATIVE CASE: an unavailable channel with NO recorded reason is refused (0.5827ms)
+  ✔ NEGATIVE CASE: with no lawful channel the selection is refused, never forced (0.272ms)
+  ✔ an EMPTY option set is refused, so "no channel considered" is not a selection (0.2293ms)
+✔ LIVE-FIRE-PROOF-03: escalation follows the documented priority (VG-CHANNEL-001) (5.2665ms)
 ℹ tests 7
 ℹ suites 1
 ℹ pass 7
@@ -14,4 +14,4 @@
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 650.5243
+ℹ duration_ms 192.2235

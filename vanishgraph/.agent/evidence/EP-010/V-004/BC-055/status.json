@@ -15,7 +15,7 @@
     "sentinel": "dependency audit: ok",
     "sentinelFound": true,
     "evidencePath": ".agent/evidence/EP-010/V-004/gate-supply-chain.log",
-    "digest": "709e5197eb3ca9e179c629771e15b5b2ac35a80b592e2fab913af6ffb5d98c61",
+    "digest": "c1edb1abe917da8ecfcf4dbd7044ad1a5b8361a92230b5e1b9bd41bf12e80ea3",
     "note": "the gate exited 0 and printed its sentinel"
   },
   "prompt_requires_authorization": false,
@@ -27,5 +27,5 @@
   "scope_clause": null,
   "dependency_edge_ref": "capability:agentic-runner->V-004",
   "provisioning_action": null,
-  "recorded_at": "2026-09-21T12:02:23Z"
+  "recorded_at": "2026-09-21T18:06:37Z"
 }

@@ -1,4 +1,4 @@
-config: note - code surface: 24 key(s) read by src/ (DATABASE_URL, HOST, KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET, KEYCLOAK_ISSUER, KEYCLOAK_MCP_AUDIENCE, KEYCLOAK_PORTAL_AUDIENCE, KEYCLOAK_SERVICE_AUDIENCE, KEYCLOAK_STEP_UP_ACR, LOG_LEVEL, PORT, RECIPE_VERIFICATION_KEYS, SESSION_SECRET, VALKEY_URL, VANISHGRAPH_ENVIRONMENT, VANISHGRAPH_METRICS_HOST, VANISHGRAPH_METRICS_PATH, VANISHGRAPH_METRICS_PORT, VG_COMMIT, VG_DB_CONTAINER, VG_DB_STATE_FILE, VG_POSTGRES_IMAGE, VG_REPLAY_LOG, VG_TEST_DSN_OWNER)
+config: note - code surface: 29 key(s) read by src/ (DATABASE_URL, HOST, KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET, KEYCLOAK_ISSUER, KEYCLOAK_MCP_AUDIENCE, KEYCLOAK_PORTAL_AUDIENCE, KEYCLOAK_SERVICE_AUDIENCE, KEYCLOAK_STEP_UP_ACR, LOG_LEVEL, PORT, RECIPE_VERIFICATION_KEYS, S3_ACCESS_KEY_ID, S3_BUCKET, S3_ENDPOINT, S3_REGION, S3_SECRET_ACCESS_KEY, SESSION_SECRET, VALKEY_URL, VANISHGRAPH_ENVIRONMENT, VANISHGRAPH_METRICS_HOST, VANISHGRAPH_METRICS_PATH, VANISHGRAPH_METRICS_PORT, VG_COMMIT, VG_DB_CONTAINER, VG_DB_STATE_FILE, VG_POSTGRES_IMAGE, VG_REPLAY_LOG, VG_TEST_DSN_OWNER)
 config: note - dependency table: postgresql(web=yes,worker=yes,300ms) valkey(web=yes,worker=yes,200ms) job-worker(web=no,worker=no,200ms) object-store(web=yes,worker=yes,400ms) keycloak-jwks(web=yes,worker=no,300ms) provider-transport(web=no,worker=yes,1000ms)
 config: note - control missing-required-key: refused with MISSING_REQUIRED_KEY naming DATABASE_URL, and no value was printed
 config: note - control empty-required-value: refused with EMPTY_VALUE naming SESSION_SECRET, and no value was printed
@@ -6,5 +6,5 @@ config: note - control prohibited-substitute: refused with PROHIBITED_SUBSTITUTE
 config: note - control malformed-value: refused with MALFORMED_VALUE naming S3_BUCKET, and no value was printed
 config: note - control unknown-key: refused with UNKNOWN_KEY naming CONFIG_FIXTURE_UNKNOWN_KEY, and no value was printed
 config: note - restoration: the untouched fixture validates cleanly after every control
-config: validation complete (43 declared keys, 3 environment classes, 2 service roles)
+config: validation complete (44 declared keys, 3 environment classes, 2 service roles)
 config: ok

@@ -191,3 +191,22 @@ Append-only. Written by sh scripts/epoch-pin.sh when the epoch rolls.
   - PASS rows revoked (the ones that matter most): 1
 - descendants to re-run: every stage owning a revoked id; sh scripts/harness-next.sh names the first one.
 
+# Change invalidation graph
+
+Append-only. Written by sh scripts/epoch-pin.sh when the epoch rolls.
+
+## 2026-09-21T18:00:52Z — FORGE-SPEC-11 -> FORGE-SPEC-12
+
+- reason: the readiness surface was completed to SPEC-003 5.17.1-4 and SPEC-007 7.2: the composition root composes all six declared dependency probes with the web role's requiredness, warms the drivers and the dependency paths before it listens, and the object-store region is declared in config/environment/schema.json; scripts/smoke-test.sh exports the configuration it declares. The shipped bytes changed (src/**, config/**), so every result recorded under FORGE-SPEC-11 is revoked for this epoch.
+- candidate: 7751571791ed7cf6ba1b375b875b6b1350571353
+- artifact digest: sha256:371fe881dc40f0d9c0f31cb7321f2d2df68c5f437ded3d765c7912b772df4c57
+- changed surfaces (src, scripts, config, db, ui, package.json) between the previous candidate and HEAD:
+  - (none detected)
+- revoked: every status row recorded under FORGE-SPEC-11 is invalidated for this epoch; the rows are kept in
+  .agent/verification/state/TEST_LEDGER.jsonl as history and are no longer counted by
+  sh scripts/harness-accounting.sh, which counts the latest row per ID in the CURRENT epoch.
+  - revoked rows under FORGE-SPEC-11: 484 covering 484 distinct id(s)
+  - revoked by status: {"PARTIAL":265,"BLOCKED_PREREQUISITE":191,"PASS":15,"BLOCKED_ENVIRONMENT":4,"BLOCKED_CREDENTIALS":7,"BLOCKED_SAFETY":1,"DEFERRED_LONG_RUNNING":1}
+  - PASS rows revoked (the ones that matter most): 15
+- descendants to re-run: every stage owning a revoked id; sh scripts/harness-next.sh names the first one.
+

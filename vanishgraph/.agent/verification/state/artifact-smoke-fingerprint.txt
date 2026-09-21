@@ -1,7 +1,7 @@
 artifact digest: sha256:371fe881dc40f0d9c0f31cb7321f2d2df68c5f437ded3d765c7912b772df4c57
 artifact files extracted: 306
 entry point (from the artifact): .agent/verification/state/artifact-smoke/package/src/infrastructure/main.ts
-commit: 5089dcb5ca7770b18ace98b2ee0a9d654a511307
+commit: 7751571791ed7cf6ba1b375b875b6b1350571353
 node: v24.14.1
 environment token: local
 keycloak issuer host: https://localhost:58443

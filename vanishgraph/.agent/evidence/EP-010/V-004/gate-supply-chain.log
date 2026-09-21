@@ -1,6 +1,6 @@
 dependency audit: inventory ok (11 runtime dependencies, each exact-pinned, licence-reviewed and bound to its lockfile integrity; 11 exact-pinned devDependencies; installer surface third-party runtime imports: 0)
 dependency audit: runtime licence review read from config/licences/runtime-allowlist.json (reviewed 2026-09-21T06:00:28Z by repository owner (the entry set was approved with Decision 1). An agent may PRUNE nothing from this file: a dependency that disappears from it fails the gate.); what is NOT enforced here: the absence of runtime dependencies, withdrawn in EP-010 M12 because LICENSE_POLICY.md requires review, not absence
 dependency audit: advisory scan clean at --audit-level=high
-dependency audit: sbom sha256 faf12f4210a9c0ff0bfb45fb382129bf77bf039b3b55dbd759e2e64c547a3b1b
+dependency audit: sbom sha256 74e7bd3e75db5fd68b43d2a4d942685b0d3659a2a0d27a0f1449a8a6097e717b
 dependency audit: sbom reconciles with the lockfile (11 runtime component(s) matched at their locked versions)
 dependency audit: ok

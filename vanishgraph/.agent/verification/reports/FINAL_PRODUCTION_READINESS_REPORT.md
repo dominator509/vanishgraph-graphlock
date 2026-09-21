@@ -2,10 +2,10 @@
 
 **Verdict: `NO_GO`.** the candidate fails its own verification independently of the 5 unsigned external gate(s): VERIFY-NOT-OK - a verdict of CONDITIONAL_EXTERNAL_GATES would claim the external gates are the only obstacle, which these blockers contradict
 
-- candidate epoch: `FORGE-SPEC-11`
-- candidate SHA: `8b8cd15b0b05994a1271e43f13f3a44ce86b5c2f`
-- artifact digest: `sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46`
-- emitted at: `2026-09-21T13:02:25Z`
+- candidate epoch: `FORGE-SPEC-12`
+- candidate SHA: `7751571791ed7cf6ba1b375b875b6b1350571353`
+- artifact digest: `sha256:371fe881dc40f0d9c0f31cb7321f2d2df68c5f437ded3d765c7912b772df4c57`
+- emitted at: `2026-09-21T18:54:49Z`
 - verdict schema: `schemas/release-gate.schema.json` — validated, 0 problem(s)
 
 ### 1. Executive verdict and exact identity
@@ -38,7 +38,7 @@ Each is a stage of the subgraph; the per-stage statuses and their evidence are i
 
 ### 8. Validated findings ordered by release risk
 
-1. **VERIFY-NOT-OK** — sh scripts/verify.sh did not print verify: ok; the stage it reached last was smoke, and its failure is a release blocker rather than a note (evidence: `.agent/evidence/EP-010/ship-gate-FORGE-SPEC-11/verify.log`)
+1. **VERIFY-NOT-OK** — sh scripts/verify.sh did not print verify: ok; the stage it reached last was live-fire, and its failure is a release blocker rather than a note (evidence: `.agent/evidence/EP-010/ship-gate-FORGE-SPEC-12/verify.log`)
 2. **EXTERNAL-GATES-UNSIGNED** — 5 of 5 mandatory external gate(s) are unsigned; while any is open the verdict cannot exceed CONDITIONAL_EXTERNAL_GATES (VG-SHIP-030) (evidence: `.agent/evidence/EP-010/V-021/external-gates.jsonl`)
 
 ### 9. Blocked, deferred, external and not-applicable tests with evidence
@@ -51,7 +51,7 @@ The coverage configuration is declared in TESTING.md and enforced by scripts/cov
 
 ### 11. Exact release blockers
 
-- **VERIFY-NOT-OK**: sh scripts/verify.sh did not print verify: ok; the stage it reached last was smoke, and its failure is a release blocker rather than a note → resolve the failing verify.sh stage recorded above and re-run the ship gate
+- **VERIFY-NOT-OK**: sh scripts/verify.sh did not print verify: ok; the stage it reached last was live-fire, and its failure is a release blocker rather than a note → resolve the failing verify.sh stage recorded above and re-run the ship gate
 - **EXTERNAL-GATES-UNSIGNED**: 5 of 5 mandatory external gate(s) are unsigned; while any is open the verdict cannot exceed CONDITIONAL_EXTERNAL_GATES (VG-SHIP-030) → obtain the named participant's sign-off for each gate; an agent can never satisfy one (DOD-039)
 
 ### 12. Residual risk and required external work
