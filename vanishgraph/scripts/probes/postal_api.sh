@@ -27,11 +27,26 @@ set -eu
 . "$(dirname "$0")/../lib/loud-fail.sh"
 
 PRESENT=""
+EMPTY=""
 for NAME in LOB_API_KEY CLICK2MAIL_API_KEY POSTGRID_API_KEY; do
   eval "VALUE=\${${NAME}:-}"
-  if [ -n "${VALUE}" ]; then PRESENT="${PRESENT} ${NAME}"; fi
+  if [ -n "${VALUE}" ]; then PRESENT="${PRESENT} ${NAME}"; else
+    # PRESENT-BUT-EMPTY IS ITS OWN STATE AND IS NOT THE SAME AS UNSET (EP-010 M33, MEASURED). The operator's declared
+    # provider file carries CLICK2MAIL_API_KEY with an EMPTY value, and the first version of this dispatch treated that
+    # exactly like an unset variable and reported `LOB_API_KEY is unset` - naming a DIFFERENT credential than the one the
+    # environment actually declares, which sends the reader to provision something they already have. An empty value is
+    # not a credential (config-validate.sh refuses EMPTY_VALUE for the same reason), so this is still outcome 1, and it
+    # now says which declared key is EMPTY. Only the NAME is tested, never the value.
+    eval "DECLARED=\${${NAME}+set}"
+    if [ -n "${DECLARED}" ]; then EMPTY="${EMPTY} ${NAME}"; fi
+  fi
 done
-# Outcome 1 names the FIRST declared credential, so the message is stable and matches PREFLIGHT.md's naming.
+# Outcome 1 names the FIRST declared credential, so the message is stable and matches PREFLIGHT.md's naming - unless a
+# postal credential is present and EMPTY, which is the more specific and more actionable fact.
+if [ -z "${PRESENT}" ] && [ -n "${EMPTY}" ]; then
+  echo "ERROR: the declared postal credential(s)${EMPTY} are present in the environment with an EMPTY value; an empty value is not a credential, so this probe has nothing to test. NOTE: CLICK2MAIL and POSTGRID additionally have NO transport endpoint declared anywhere in this repository, so obtaining a key is NOT sufficient for them; see PREFLIGHT.md; unblocked by EP-013" >&2
+  exit 1
+fi
 [ -n "${PRESENT}" ] || vg_require_env 'LOB_API_KEY' 'EP-013'
 
 if [ -n "${LOB_API_KEY:-}" ]; then
