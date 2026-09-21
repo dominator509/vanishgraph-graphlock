@@ -335,9 +335,18 @@ export function createProbeRunner(options: ProbeRunnerOptions): ProbeRunner {
 /* ----------------------------------------------------------------------------------------------------------------
  * The real probe clients
  *
- * EACH CLIENT PERFORMS THE DECLARED ACTION AND NOTHING ELSE. Two of them are deliberately absent rather than faked:
- * the object-store client cannot sign an S3 request anywhere in this repository, and the provider-transport client needs
- * a declared official transport to reach. A probe that cannot run reports that fact.
+ * EACH CLIENT PERFORMS THE DECLARED ACTION AND NOTHING ELSE, and every one of the six is IMPLEMENTED here rather than
+ * stubbed: `postgresProbe` verifies the session role as well as running the round trip, `valkeyProbe` verifies the value
+ * it reads back, `objectStoreProbe` SIGNS its own S3 requests (`signS3Request` below) and verifies the digest of the
+ * content it reads, `keycloakJwksProbe` fetches discovery and JWKS without minting a token, and
+ * `providerTransportProbe` treats an auth rejection as the FAILURE §7.4 induces rather than as reachability.
+ *
+ * A CORRECTION RECORDED WHERE IT WAS MADE (EP-010 M18): this paragraph used to say "the object-store client cannot sign
+ * an S3 request anywhere in this repository". THAT WAS FALSE, and it was false in the same file as the signer it denied
+ * - `signS3Request` at the bottom of this module has signed every HeadBucket and GetObject the probe issues. A comment
+ * that contradicts its own code is worse than a missing one: it was read as fact and repeated in a plan as a reason to
+ * ship a weaker probe than the declaration requires. What the object-store client actually needs is CONFIGURATION
+ * (endpoint, bucket, region, credentials) and a probe object whose digest is known - not a different probe.
  * ---------------------------------------------------------------------------------------------------------------- */
 
 /** The expected digest a signed probe read must return, so the read is verified rather than merely attempted (§7.2). */
