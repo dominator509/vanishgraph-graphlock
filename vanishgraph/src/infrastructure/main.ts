@@ -22,11 +22,11 @@ import { loadConfig, ConfigurationError, missingVariables } from './config.ts';
 import { createMetricsRegistryFromFile } from '../adapters/observability/metrics-registry.ts';
 import { startMetricsListener } from './observability/compose-telemetry.ts';
 import { buildServer, listen } from '../http/server.ts';
-import type { ProbeResult } from '../http/routes/health.ts';
 import { AUDIENCES, verifyToken } from '../adapters/oidc/verify.ts';
 import { JwksCache, httpsJwksFetcher } from '../adapters/oidc/jwks.ts';
 import { PostgresIdempotencyStore } from '../adapters/idempotency/postgres-store.ts';
-import { PostgresTenantRunner, postgresReadinessProbe } from '../adapters/persistence/postgres-runner.ts';
+import { PostgresTenantRunner } from '../adapters/persistence/postgres-runner.ts';
+import { createDependencyClients, toDependencyProbes } from './observability/dependency-clients.ts';
 import { PostgresSubjectQueries } from '../adapters/persistence/subjects.ts';
 import { PostgresSubjectCommands } from '../adapters/persistence/subject-commands.ts';
 import { PostgresSourceQueries, verificationKeysFrom } from '../adapters/persistence/sources.ts';
@@ -106,33 +106,18 @@ const VERSION = process.env.npm_package_version ?? '0.1.0';
 const COMMIT = process.env.VG_COMMIT ?? 'unknown';
 
 /**
- * Readiness probes.
+ * Readiness probe composition.
  *
- * DELIBERATELY HONEST ABOUT THEIR OWN LIMITS: these check that configuration is present, not that
- * the dependency answers. Reaching PostgreSQL and Valkey requires the drivers and the network,
- * which EP-004 M6 supplies; until then a probe that reported "postgres ok" without connecting
- * would be exactly the static-200 failure VG-API-059 forbids.
+ * The probes are no longer configuration-presence stubs. Each of the six declared dependencies has
+ * a probe that performs the SPEC-007 §7.2 action against the real dependency and classifies what it
+ * measured: PostgreSQL opens a transaction and reads `current_user` for the session role, Valkey
+ * PINGs and round-trips a namespaced key, the object store signs and fetches a probe object and
+ * verifies its digest, Keycloak fetches discovery plus JWKS, the job worker reads heartbeat
+ * freshness, and provider transport performs a read-only reachability request.
  *
- * So the probes below report what they can actually prove, and a `/ready` on this build returns
- * 503 with the reason named. That is the correct answer for a service whose dependencies are not
- * yet wired, and it is visible rather than hidden.
+ * A probe that cannot reach its dependency reports NOT READY with the reason named rather than
+ * asserting health it has not measured, which is the static-200 failure VG-API-059 forbids.
  */
-function configuredProbe(name: string, envName: string): () => Promise<ProbeResult> {
-  return async () => {
-    const value = process.env[envName];
-    if (value === undefined || value.trim().length === 0) {
-      return { name, ok: false, reason: `${envName} is unset` };
-    }
-    return {
-      name,
-      ok: false,
-      // Reachability is the operational half of this probe and arrives with the driver wiring in
-      // EP-004 M6. Until then the probe reports NOT READY rather than asserting health it has not
-      // measured, which is the whole point of VG-API-059.
-      reason: `${envName} is configured; reachability is measured once the driver wiring lands (EP-004 M6)`,
-    };
-  };
-}
 
 // The catalogue path is a repository-relative constant rather than a variable: the metrics endpoint serves the ONE
 // registered catalogue, and a second path would be a second source of truth for what a metric is.
@@ -261,13 +246,53 @@ async function main(): Promise<number> {
     health: {
       startedAt: new Date(),
       now: () => new Date(),
-      probes: [
-        // A REAL query, not a configuration check: a probe that only read the environment would
-        // report ready for a database that is down (VG-API-059).
-        () => postgresReadinessProbe(runner),
-        configuredProbe('valkey', 'VALKEY_URL'),
-        configuredProbe('keycloak', 'KEYCLOAK_ISSUER'),
-      ],
+      // THE SIX DECLARED DEPENDENCIES, BUILT FROM THIS PROCESS'S OWN CONFIGURATION (EP-010 M26; SPEC-007 §7.2).
+      // What stood here was three probes, two of them stubs that returned ok:false unconditionally, so `/v1/ready` was
+      // permanently 503 and `/v1/health` was 503 because a REQUIRED dependency could never pass - and a probe that can
+      // never pass is as much a defect as one that can never fail. The real actions live in
+      // src/adapters/observability/dependency-probes.ts; `createDependencyClients` only composes them.
+      //
+      // REQUIREDNESS IS THE WEB ROLE'S, from config/environment/required.json `service_roles.web`: all four of these are
+      // required, and the two this role does NOT require are absent from this list on purpose. A dependency with no
+      // configuration gets no client, so it is reported as unconfigured rather than as healthy - and on this process the
+      // worker heartbeat and the provider transport are exactly that, because neither store nor transport is declared
+      // for this role here.
+      role: 'web',
+      probes: toDependencyProbes(
+        createDependencyClients({
+          // A REAL query, not a configuration check: a probe that only read the environment would report ready for a
+          // database that is down (VG-API-059).
+          querySessionRole: async (): Promise<string> => {
+            let role = '';
+            await runner.withTenantTransaction('00000000-0000-4000-8000-000000000000', async (tx) => {
+              const result = (await tx.query('SELECT current_user AS role')) as { rows?: { role?: unknown }[] };
+              role = String(result.rows?.[0]?.role ?? '');
+            });
+            return role;
+          },
+          // The tenant-scoped application role. A pool that connected as the owner would bypass row-level security, and
+          // the probe treats that as the failure it is (VG-DATA-001).
+          expectedRole: 'vg_app',
+          valkeyUrl: config.valkeyUrl,
+          keycloakIssuer: config.keycloakIssuer,
+          // THE OBJECT STORE IS CONFIGURED FROM THE DECLARED VARIABLES, and the probe object's digest is the one
+          // .agent/evidence/EP-010/M25-object-store/object-store-verification.md records as verified.
+          ...(process.env['S3_ENDPOINT'] === undefined || process.env['S3_BUCKET'] === undefined
+            ? {}
+            : {
+                objectStore: {
+                  endpoint: String(process.env['S3_ENDPOINT']),
+                  bucket: String(process.env['S3_BUCKET']),
+                  region: process.env['S3_REGION'] ?? 'us-east-1',
+                  accessKeyId: String(process.env['S3_ACCESS_KEY_ID'] ?? ''),
+                  secretAccessKey: String(process.env['S3_SECRET_ACCESS_KEY'] ?? ''),
+                  probeKey: 'readiness/probe-object',
+                  expectedDigest: '870ca51706812c52d2360d17a64dfe68edff9c6a475eb4098c9c24937b031561',
+                },
+              }),
+        }),
+        ['postgresql', 'valkey', 'object-store', 'keycloak-jwks'],
+      ),
     },
   });
 
