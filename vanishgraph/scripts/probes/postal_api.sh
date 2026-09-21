@@ -1,18 +1,88 @@
 #!/usr/bin/env sh
-# LOB_API_KEY readiness probe -- PRE-DISCOVERY LOUD-FAIL PLACEHOLDER.
+# Postal provider readiness probe (LOB_API_KEY | CLICK2MAIL_API_KEY | POSTGRID_API_KEY).
 #
-# SPEC BASIS: PREFLIGHT.md declares this probe for the named credential.
-# 6Layer-MasterPrompt line 882 requires readiness probes to be real:
-#   "Any started service is probed, never assumed: loop up to N times ...
-#    against an exact readiness command".
+# SPEC BASIS. PREFLIGHT.md declares this probe for the postal credentials and 6Layer-MasterPrompt line 882 requires
+# readiness probes to be real ("Any started service is probed, never assumed"). The contract - three outcomes, never
+# print a value, be discriminating - is declared in scripts/lib/loud-fail.sh and COMMANDS.md (EP-010 M20/M23).
 #
-# ORIGINAL DEFECT (corrected here): this probe printed 'probe ok' without
-# reading the credential, contacting the service, or verifying anything. It
-# reported readiness for a dependency that may not exist.
+# WHICH PROVIDER IS PROBED, AND WHY THAT IS A DECISION RATHER THAN A GUESS. This one probe serves THREE declared
+# credentials, and the executor maps a postal id onto whichever is present, so the dispatch has to be stated:
 #
-# This guard checks only that LOB_API_KEY is present, then fails loudly. It does
-# NOT assert reachability -- that is the EP-000 M1 discovery implementation.
+#   * LOB        -> https://api.lob.com/v1/us_verifications is RECORDED in this repository
+#                   (.agent/evidence/EP-008/induced-failure/provider-transport-attempt.txt line 2), so the transport is
+#                   declared and can be tested.
+#   * CLICK2MAIL -> NO endpoint is declared anywhere in this repository.
+#   * POSTGRID   -> NO endpoint is declared anywhere in this repository.
+#
+# FOR THE TWO PROVIDERS WITH NO DECLARED TRANSPORT THIS PROBE REPORTS OUTCOME 2 (CANNOT PROBE) AND NAMES THE MISSING
+# DECLARATION. An invented host would be a fabricated dependency, and a silent exit 1 would blame the credential for a
+# documentation gap. THAT IS THE HONEST ANSWER FOR THE TWO IDS BLOCKED ON CLICK2MAIL_API_KEY: obtaining the key is NOT
+# SUFFICIENT until the transport is declared, and this probe says so instead of leaving that to be discovered later.
+#
+# AND A METHOD DIFFERENCE, STATED RATHER THAN HIDDEN: this probe issues a GET, so a provider that only serves POST on
+# the recorded path answers 405. A 405 is reported as REACHABLE-WITHOUT-AN-ENDPOINT-RESULT rather than as a pass on the
+# endpoint, which is the same distinction the TypeScript provider-transport probe draws (its declared reachability check
+# accepts 405 and refuses 401/403 and 5xx).
 set -eu
 . "$(dirname "$0")/../lib/loud-fail.sh"
-vg_require_env 'LOB_API_KEY' 'EP-013'
-vg_loud_fail 'LOB_API_KEY probe' 'EP-013'
+
+PRESENT=""
+for NAME in LOB_API_KEY CLICK2MAIL_API_KEY POSTGRID_API_KEY; do
+  eval "VALUE=\${${NAME}:-}"
+  if [ -n "${VALUE}" ]; then PRESENT="${PRESENT} ${NAME}"; fi
+done
+# Outcome 1 names the FIRST declared credential, so the message is stable and matches PREFLIGHT.md's naming.
+[ -n "${PRESENT}" ] || vg_require_env 'LOB_API_KEY' 'EP-013'
+
+if [ -n "${LOB_API_KEY:-}" ]; then
+  # The credential is read INSIDE node and never passed as an argument, so it cannot appear in a process listing, and
+  # only the HTTP status crosses back out.
+  STATUS=$(node -e '
+  (async () => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+    try {
+      const response = await fetch("https://api.lob.com/v1/us_verifications", {
+        method: "GET",
+        headers: { authorization: "Basic " + Buffer.from(String(process.env.LOB_API_KEY ?? "") + ":").toString("base64") },
+        signal: controller.signal,
+      });
+      process.stdout.write(String(response.status));
+    } catch (error) {
+      process.stdout.write(error.name === "AbortError" ? "TIMEOUT" : "UNREACHABLE");
+    } finally {
+      clearTimeout(timer);
+    }
+  })();
+  ' 2>/dev/null || printf 'UNREACHABLE')
+
+  case "$STATUS" in
+    200|201|204)
+      vg_probe_ok 'LOB_API_KEY' "the provider accepted a read-only request to its recorded transport (HTTP ${STATUS})"
+      ;;
+    405)
+      vg_probe_ok 'LOB_API_KEY' 'the recorded transport is reachable and did not refuse the credential (HTTP 405: the path serves another method); this proves reachability, NOT an endpoint-specific result'
+      ;;
+    401|403)
+      echo "ERROR: LOB_API_KEY is present and the provider REFUSED it (HTTP ${STATUS}); provision a key this account accepts, then re-run; see PREFLIGHT.md" >&2
+      exit 1
+      ;;
+    404)
+      vg_probe_cannot 'LOB_API_KEY' 'the recorded transport path answered HTTP 404, so this repository records a path the provider does not serve; correct the endpoint before this credential can be tested'
+      ;;
+    TIMEOUT|UNREACHABLE)
+      vg_probe_cannot 'LOB_API_KEY' 'api.lob.com could not be reached from this environment, so the credential could not be tested'
+      ;;
+    *)
+      echo "ERROR: the provider answered HTTP ${STATUS} to a read-only request, which is neither acceptance nor a declared refusal" >&2
+      exit 1
+      ;;
+  esac
+fi
+
+for NAME in CLICK2MAIL_API_KEY POSTGRID_API_KEY; do
+  eval "VALUE=\${${NAME}:-}"
+  if [ -n "${VALUE}" ]; then
+    vg_probe_cannot "${NAME}" "the credential is present, but no transport endpoint for this provider is declared anywhere in this repository, so nothing can be reached; declare the endpoint (PREFLIGHT.md, or the provider's own documentation) before this probe can succeed"
+  fi
+done
