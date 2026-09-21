@@ -3,9 +3,9 @@
 **Verdict: `NO_GO`.** the candidate fails its own verification: 1 clause(s) FAIL and 0 id(s) FAIL across an accounted registry of 484
 
 - candidate epoch: `FORGE-SPEC-9`
-- candidate SHA: `b70162f20bad97f60147e951cb5b9951be116486`
+- candidate SHA: `c01c388fa6821b621facb066e04aae2a98c7a36a`
 - artifact digest: `sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47`
-- emitted at: `2026-09-21T02:23:21Z`
+- emitted at: `2026-09-21T03:39:03Z`
 - verdict schema: `schemas/release-gate.schema.json` — validated, 0 problem(s)
 
 ### 1. Executive verdict and exact identity
@@ -72,5 +72,5 @@ Pin the epoch (`sh scripts/epoch-pin.sh`), run the subgraph to completion (`sh s
 
 ### 15. Final release predicate
 
-The predicate is: every applicable clause PASS **and** every mandatory external gate signed. Clause status: 15 pass, 1 fail, 26 other. Gate status: 0 signed of 5. **The predicate does not hold, so the verdict is `NO_GO`.**
+The predicate is: every applicable clause PASS **and** every mandatory external gate signed. Clause status: 16 pass, 1 fail, 25 other. Gate status: 0 signed of 5. **The predicate does not hold, so the verdict is `NO_GO`.**
 

@@ -1,6 +1,6 @@
 {
   "epoch": "FORGE-SPEC-9",
-  "candidate_commit_sha": "b70162f20bad97f60147e951cb5b9951be116486",
+  "candidate_commit_sha": "c01c388fa6821b621facb066e04aae2a98c7a36a",
   "artifact_digest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
   "registry_sha256": "d8a5389cfb2968855b88a0e7f78bdbb1f0c65851c8d400c8c04224e161cd1b95",
   "applicability_matrix_sha256": "ad3923f3427050d1fdc5cc532051c924f381042e5a9e1f8063ad57fd97629105",

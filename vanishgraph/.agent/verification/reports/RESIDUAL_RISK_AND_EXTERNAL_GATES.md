@@ -1,6 +1,6 @@
 # Residual risk and external gates
 
-Every mandatory gate of SPEC-008 section 9 for candidate `b70162f20bad97f60147e951cb5b9951be116486` and artifact `sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47`. **An agent can never satisfy one of these gates** (DOD-039): only the named participant can, by producing a named, scoped, dated sign-off. While any is open the verdict cannot exceed `CONDITIONAL_EXTERNAL_GATES` (VG-SHIP-030).
+Every mandatory gate of SPEC-008 section 9 for candidate `c01c388fa6821b621facb066e04aae2a98c7a36a` and artifact `sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47`. **An agent can never satisfy one of these gates** (DOD-039): only the named participant can, by producing a named, scoped, dated sign-off. While any is open the verdict cannot exceed `CONDITIONAL_EXTERNAL_GATES` (VG-SHIP-030).
 
 | gate | status | participant role | digest to sign | request evidence | requested at | owner contact |
 |---|---|---|---|---|---|---|

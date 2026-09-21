@@ -100,23 +100,50 @@ for (const row of ledger) {
   if ((row.epochId ?? row.epoch) !== runState.epoch) continue;
   latest.set(id, row);
 }
+// THE REGISTRY SUMMARY IS BUILT FROM THE SCHEMA'S OWN KEYS, NOT FROM A HAND-WRITTEN LIST.
+// Defect found in EP-010 M11: this object used to enumerate a fixed set of statuses that omitted PARTIAL, so the
+// verdict reported total 484 with counters summing to 218 and `unaccounted` still 0 - 266 of 484 ids were counted
+// nowhere, and the schema had no `partial` property either, so the document VALIDATED while dropping a quarter of
+// the registry. Three verdicts were emitted that way. Now every registry key the schema declares is mapped to the
+// specification's own status tokens, every token the ledger actually carries must have a schema home, and the
+// counters must reconcile with the ids that carry a row - otherwise a blocker names the unmapped token instead of
+// a verdict quietly losing ids.
+const REGISTRY_STATUS_TOKENS = {
+  passed: ["PASS"],
+  failed: ["FAIL"],
+  errored: ["ERROR"],
+  inconclusive: ["INCONCLUSIVE"],
+  simulated: ["SIMULATED"],
+  unverified: ["UNVERIFIED"],
+  not_applicable: ["NOT_APPLICABLE", "SKIPPED_NOT_APPLICABLE"],
+  partial: ["PARTIAL"],
+  withdrawn: ["WITHDRAWN"],
+  blocked_prerequisite: ["BLOCKED_PREREQUISITE"],
+  blocked_environment: ["BLOCKED_ENVIRONMENT"],
+  blocked_capability: ["BLOCKED_CAPABILITY"],
+  blocked_credentials: ["BLOCKED_CREDENTIALS"],
+  blocked_safety: ["BLOCKED_SAFETY"],
+  external_required: ["EXTERNAL_REQUIRED"],
+  deferred_long_running: ["DEFERRED_LONG_RUNNING"],
+};
 const registryCounts = {};
 for (const row of latest.values()) registryCounts[row.status] = (registryCounts[row.status] ?? 0) + 1;
-const registry = {
-  total: 484,
-  passed: registryCounts.PASS ?? 0,
-  failed: registryCounts.FAIL ?? 0,
-  errored: registryCounts.ERROR ?? 0,
-  inconclusive: registryCounts.INCONCLUSIVE ?? 0,
-  not_applicable: (registryCounts.NOT_APPLICABLE ?? 0) + (registryCounts.SKIPPED_NOT_APPLICABLE ?? 0),
-  blocked_prerequisite: registryCounts.BLOCKED_PREREQUISITE ?? 0,
-  blocked_environment: registryCounts.BLOCKED_ENVIRONMENT ?? 0,
-  blocked_capability: registryCounts.BLOCKED_CAPABILITY ?? 0,
-  blocked_credentials: registryCounts.BLOCKED_CREDENTIALS ?? 0,
-  blocked_safety: registryCounts.BLOCKED_SAFETY ?? 0,
-  external_required: registryCounts.EXTERNAL_REQUIRED ?? 0,
-  deferred_long_running: registryCounts.DEFERRED_LONG_RUNNING ?? 0,
-  unaccounted: 484 - latest.size,
+const registryKeys = Object.keys(schema.properties.registry.properties).filter((key) => key !== "total" && key !== "unaccounted");
+const unmappedSchemaKeys = registryKeys.filter((key) => REGISTRY_STATUS_TOKENS[key] === undefined);
+const mappedTokens = new Set(Object.values(REGISTRY_STATUS_TOKENS).flat());
+const unmappedLedgerTokens = [...new Set([...latest.values()].map((row) => row.status))].filter((token) => !mappedTokens.has(token));
+const registry = { total: 484 };
+for (const key of registryKeys) registry[key] = (REGISTRY_STATUS_TOKENS[key] ?? []).reduce((sum, token) => sum + (registryCounts[token] ?? 0), 0);
+const classifiedIds = registryKeys.reduce((sum, key) => sum + registry[key], 0);
+registry.unaccounted = 484 - latest.size;
+const reconciliation = {
+  registryTotal: 484,
+  idsCarryingARow: latest.size,
+  idsClassifiedByTheCounters: classifiedIds,
+  idsCarryingARowButNoCounter: latest.size - classifiedIds,
+  schemaRegistryKeysWithNoStatusMapping: unmappedSchemaKeys,
+  ledgerTokensWithNoSchemaCounter: unmappedLedgerTokens,
+  countersSumToTotal: classifiedIds + registry.unaccounted === 484,
 };
 const dodCounts = {};
 for (const row of dod) dodCounts[row.status] = (dodCounts[row.status] ?? 0) + 1;
@@ -145,6 +172,16 @@ const stalePass = passRows.filter((row) => (row.epochId ?? row.epoch) !== runSta
 
 // THE BLOCKERS, each one an observed fact with the artifact that shows it.
 const blockers = [];
+// The registry summary must account for every id that carries a row in this epoch. Before EP-010 M11 it did not,
+// and nothing said so.
+if (reconciliation.idsCarryingARowButNoCounter !== 0 || reconciliation.schemaRegistryKeysWithNoStatusMapping.length > 0 || reconciliation.ledgerTokensWithNoSchemaCounter.length > 0) {
+  blockers.push({
+    id: "REGISTRY-SUMMARY-INCOMPLETE",
+    what: `the registry summary accounts for ${reconciliation.idsClassifiedByTheCounters} of ${reconciliation.idsCarryingARow} id(s) that carry a row in this epoch, so ${reconciliation.idsCarryingARowButNoCounter} id(s) appear in the verdict nowhere${reconciliation.ledgerTokensWithNoSchemaCounter.length > 0 ? `; ledger token(s) with no counter in the schema: ${reconciliation.ledgerTokensWithNoSchemaCounter.join(", ")}` : ""}${reconciliation.schemaRegistryKeysWithNoStatusMapping.length > 0 ? `; schema key(s) with no status mapping: ${reconciliation.schemaRegistryKeysWithNoStatusMapping.join(", ")}` : ""}`,
+    evidence: ".agent/verification/state/TEST_LEDGER.jsonl and schemas/release-gate.schema.json",
+    next_action: "give every status token of SPEC-006 section 4.1 a counter in the verdict schema, and map every schema key to its token, before emitting a verdict",
+  });
+}
 const validatorLog = readText(path.join(outDir, "harness-validate.log"));
 if (!/harness validation: ok/.test(validatorLog)) {
   blockers.push({ id: "HARNESS-INVALID", what: "the harness validator did not print its sentinel, so every result it governs is INCONCLUSIVE by SPEC-008 section 2", evidence: `${outDir}/harness-validate.log`, next_action: "correct the validator or the registry integrity defect it reports, then re-run the ship gate" });

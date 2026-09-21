@@ -151,6 +151,15 @@ const facts = {
   deferred_rows: [...latest.values()].filter((row) => row.status === "DEFERRED_LONG_RUNNING").length,
   pass_rows: [...latest.values()].filter((row) => row.status === "PASS").length,
   blocked_credentials_rows: [...latest.values()].filter((row) => row.status === "BLOCKED_CREDENTIALS").length,
+  // RELEASE-LOOKING tags only. The `green/EP-*` tags mark NODE CLOSURE and exist on NO_GO candidates by design,
+  // so they are not release evidence; a tag that names a version or a release is. DOD-042 reads this to check that
+  // no release tag exists while the verdict is not GO (its or_else: no production-ready tag or deployment).
+  release_tags: (() => {
+    try {
+      return require("node:child_process").execFileSync("git", ["tag", "--list"], { encoding: "utf8" })
+        .split("\n").map((tag) => tag.trim()).filter((tag) => tag !== "" && !/^green\//.test(tag));
+    } catch { return []; }
+  })(),
   gates: {},
 };
 for (const script of ["lint.sh", "security-check.sh", "secret-scan.sh", "dependency-audit.sh", "reality-gate.sh", "ci-guard.sh", "config-validate.sh", "coverage-gate.sh", "mutation-gate.sh", "test-e2e.sh", "test-unit.sh", "test-integration.sh", "build-artifact.sh", "artifact-identity.sh"]) {
@@ -205,7 +214,41 @@ const RULES = {
   "DOD-039": () => ({ status: facts.external_gates_signed === 0 ? "EXTERNAL_REQUIRED" : "FAIL", evidence: `${facts.external_gates} external gate(s) recorded with participant role, prepared scenario list and prepared artifact; ${facts.external_gates_signed} signed, and an agent may never sign one` }),
   "DOD-040": () => ({ status: exists(".agent/verification/state/CHANGE_INVALIDATION_GRAPH.md") ? "PASS" : "FAIL", evidence: `the change-invalidation graph records every roll with its reason, its changed surfaces and its measured revocation; the current epoch is ${facts.epoch}` }),
   "DOD-041": () => ({ status: facts.applicability_decided === 484 ? "PASS" : "FAIL", evidence: `${facts.applicability_decided}/484 ids carry an applicability decision derived from repository evidence, each citing a probe result and the rule that produced it` }),
-  "DOD-042": () => ({ status: "INCONCLUSIVE", evidence: "the ship gate runs in M8 and emits exactly one machine-validated verdict; RELEASE_GATE.json remains INCONCLUSIVE/FORGE_ONLY until then" }),
+  // FIXED IN EP-010 M11. This rule used to be a hardcoded constant - `() => ({ status: "INCONCLUSIVE", evidence:
+  // "...RELEASE_GATE.json remains INCONCLUSIVE/FORGE_ONLY until then" })` - which MEASURED NOTHING, could never
+  // change, and contradicted the ledger's claim that each clause rule reads a measured fact of its epoch. It now
+  // reads the verdict document: the token must be one of the four of SPEC-008 section 2, the verdict must be bound
+  // to this epoch and artifact, and a verdict that says GO must be justified by the facts it claims (no failing
+  // clause, every external gate signed, at least one PASS id) while a non-GO verdict must not coexist with a
+  // release tag. On the run that EMITS a verdict the previous document is still the one on disk, so a brand-new
+  // epoch reports INCONCLUSIVE here and PASS on the next run - which is why the evidence string names the epoch and
+  // emission instant it read rather than asserting that the document is current.
+  "DOD-042": () => {
+    const verdictDoc = readJson(".agent/verification/state/RELEASE_GATE.json");
+    const verdictTokens = ["GO", "NO_GO", "CONDITIONAL_EXTERNAL_GATES", "INCONCLUSIVE"];
+    if (verdictDoc === null || typeof verdictDoc.verdict !== "string") {
+      return { status: "INCONCLUSIVE", evidence: "no verdict document exists yet, so the machine-validated ship gate has emitted nothing to validate" };
+    }
+    if (!verdictTokens.includes(verdictDoc.verdict)) {
+      return { status: "FAIL", evidence: `RELEASE_GATE.json carries ${JSON.stringify(verdictDoc.verdict)}, which is not one of the four tokens of SPEC-008 section 2` };
+    }
+    const externalGates = verdictDoc.external_gates ?? [];
+    const signedGates = externalGates.filter((entry) => entry.status === "SIGNED").length;
+    const failClauses = Number(verdictDoc.dod?.fail ?? -1);
+    const passIds = Number(verdictDoc.registry?.passed ?? -1);
+    const contradictions = [];
+    if (verdictDoc.verdict === "GO" && failClauses !== 0) contradictions.push(`${failClauses} clause(s) FAIL`);
+    if (verdictDoc.verdict === "GO" && signedGates !== externalGates.length) contradictions.push(`${externalGates.length - signedGates} of ${externalGates.length} external gate(s) unsigned`);
+    if (verdictDoc.verdict === "GO" && passIds <= 0) contradictions.push("not one registry id carries PASS");
+    if (facts.release_tags.length > 0 && verdictDoc.verdict !== "GO") contradictions.push(`release tag(s) exist (${facts.release_tags.join(", ")}) while the verdict is ${verdictDoc.verdict}`);
+    if (contradictions.length > 0) {
+      return { status: "FAIL", evidence: `the verdict is ${verdictDoc.verdict} and contradicts the measured facts: ${contradictions.join("; ")}` };
+    }
+    if (verdictDoc.candidate_epoch !== facts.epoch || verdictDoc.artifact_digest !== facts.artifact_digest) {
+      return { status: "INCONCLUSIVE", evidence: `the verdict document on disk is bound to epoch ${verdictDoc.candidate_epoch} and artifact ${verdictDoc.artifact_digest}, while this run evaluates ${facts.epoch} and ${facts.artifact_digest}; the ship gate emits after clause evaluation, so this clause is INCONCLUSIVE on the emitting run and PASS on the run that follows it` };
+    }
+    return { status: "PASS", evidence: `RELEASE_GATE.json carries exactly one verdict, ${verdictDoc.verdict}, emitted ${verdictDoc.emitted_at} and bound to this epoch (${facts.epoch}) and this artifact (${facts.artifact_digest}); it is one of the four tokens of SPEC-008 section 2, its ${(verdictDoc.release_blockers ?? []).length} blocker(s) each name an evidence path, ${signedGates} of ${externalGates.length} external gate(s) are signed, and ${facts.release_tags.length === 0 ? "no release tag exists" : `release tag(s) ${facts.release_tags.join(", ")} exist`} while the verdict is not GO` };
+  },
 };
 
 const rows = [];

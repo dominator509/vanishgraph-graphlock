@@ -1,11 +1,11 @@
 {
   "dod_id": "DOD-042",
-  "status": "INCONCLUSIVE",
-  "evidence": "the ship gate runs in M8 and emits exactly one machine-validated verdict; RELEASE_GATE.json remains INCONCLUSIVE/FORGE_ONLY until then",
-  "or_else": "No production-ready tag or deployment is allowed; any contradictory claim is invalid.",
+  "status": "PASS",
+  "evidence": "RELEASE_GATE.json carries exactly one verdict, NO_GO, emitted 2026-09-21T02:23:21Z and bound to this epoch (FORGE-SPEC-9) and this artifact (sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47); it is one of the four tokens of SPEC-008 section 2, its 4 blocker(s) each name an evidence path, 0 of 5 external gate(s) are signed, and no release tag exists while the verdict is not GO",
+  "or_else": null,
   "facts": {
     "epoch": "FORGE-SPEC-9",
-    "candidate_sha": "b70162f20bad97f60147e951cb5b9951be116486",
+    "candidate_sha": "c01c388fa6821b621facb066e04aae2a98c7a36a",
     "artifact_digest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
     "accounted_ids": 484,
     "status_counts": {
@@ -44,6 +44,7 @@
     "deferred_rows": 1,
     "pass_rows": 0,
     "blocked_credentials_rows": 7,
+    "release_tags": [],
     "gates": {
       "lint.sh": {
         "gate": "static-analysis",
