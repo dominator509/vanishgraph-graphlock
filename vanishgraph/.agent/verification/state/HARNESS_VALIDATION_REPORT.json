@@ -1,10 +1,10 @@
 {
-  "epoch": "FORGE-SPEC-8",
-  "candidate_commit_sha": "d94e8647af174968d8453d7aa88bf2152d0d34f7",
+  "epoch": "FORGE-SPEC-9",
+  "candidate_commit_sha": "b70162f20bad97f60147e951cb5b9951be116486",
   "artifact_digest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
   "registry_sha256": "d8a5389cfb2968855b88a0e7f78bdbb1f0c65851c8d400c8c04224e161cd1b95",
   "applicability_matrix_sha256": "ad3923f3427050d1fdc5cc532051c924f381042e5a9e1f8063ad57fd97629105",
-  "dependency_seed_sha256": "296deacc30d9e9c3203f39b401a0b7f3fe324f667b4fae5dbfb5ccf84a0770c5",
+  "dependency_seed_sha256": "2ee9956adeea4befb858eeb541365e4e3edaa39a8ebf99872b7a1e674edc5007",
   "status_vocabulary_size": 16,
   "status_vocabulary": [
     "PASS",
@@ -42,9 +42,9 @@
     "stages": 22,
     "owned_ids": 484,
     "dod_clauses": 42,
-    "ledger_rows": 5750,
-    "ledger_rows_for_registry_ids": 4042,
-    "stale_epoch_rows": 5266,
+    "ledger_rows": 6234,
+    "ledger_rows_for_registry_ids": 4526,
+    "stale_epoch_rows": 5750,
     "accounted_ids_this_epoch": 484,
     "rows_validated_this_epoch": 484
   },
@@ -99,7 +99,7 @@
       "name": "stale-epoch evidence",
       "rejected": true,
       "sample": [
-        "GEN-001: evidence belongs to epoch FORGE-SPEC-1 and the current epoch is FORGE-SPEC-8"
+        "GEN-001: evidence belongs to epoch FORGE-SPEC-1 and the current epoch is FORGE-SPEC-9"
       ]
     },
     {

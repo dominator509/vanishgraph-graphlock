@@ -2,10 +2,10 @@
 
 **Verdict: `NO_GO`.** the candidate fails its own verification: 1 clause(s) FAIL and 0 id(s) FAIL across an accounted registry of 484
 
-- candidate epoch: `FORGE-SPEC-8`
-- candidate SHA: `d94e8647af174968d8453d7aa88bf2152d0d34f7`
+- candidate epoch: `FORGE-SPEC-9`
+- candidate SHA: `b70162f20bad97f60147e951cb5b9951be116486`
 - artifact digest: `sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47`
-- emitted at: `2026-09-20T21:20:11Z`
+- emitted at: `2026-09-21T02:23:21Z`
 - verdict schema: `schemas/release-gate.schema.json` — validated, 0 problem(s)
 
 ### 1. Executive verdict and exact identity
@@ -38,7 +38,7 @@ Each is a stage of the subgraph; the per-stage statuses and their evidence are i
 
 ### 8. Validated findings ordered by release risk
 
-1. **VERIFY-NOT-OK** — sh scripts/verify.sh did not print verify: ok; the stage it reached last was dependency-audit, and its failure is a release blocker rather than a note (evidence: `.agent/evidence/EP-010/ship-gate-FORGE-SPEC-8/verify.log`)
+1. **VERIFY-NOT-OK** — sh scripts/verify.sh did not print verify: ok; the stage it reached last was dependency-audit, and its failure is a release blocker rather than a note (evidence: `.agent/evidence/EP-010/ship-gate-FORGE-SPEC-9/verify.log`)
 2. **DOD-DOD-019** — clause DOD-019 does not pass: reality gate: reality-gate.sh exited 1 WITHOUT its sentinel; the three prose hits recorded in EP-009 remain the gate's only findings (evidence: `.agent/evidence/EP-010/DOD/DOD-019.json`)
 3. **EXTERNAL-GATES-UNSIGNED** — 5 of 5 mandatory external gate(s) are unsigned; while any is open the verdict cannot exceed CONDITIONAL_EXTERNAL_GATES (VG-SHIP-030) (evidence: `.agent/evidence/EP-010/V-021/external-gates.jsonl`)
 4. **NO-PASSING-ID** — not one of the 484 ids carries PASS, so no behaviour was verified end to end through its real entry point (evidence: `.agent/verification/reports/COMPLETE_TEST_ACCOUNTING.csv`)

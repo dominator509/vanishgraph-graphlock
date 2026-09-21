@@ -1,0 +1,4 @@
+dod gate: 42 clause(s) evaluated individually; 15 PASS; BLOCKED_CREDENTIALS 1, BLOCKED_ENVIRONMENT 1, BLOCKED_PREREQUISITE 1, DEFERRED_LONG_RUNNING 1, EXTERNAL_REQUIRED 1, FAIL 1, INCONCLUSIVE 1, PARTIAL 20
+dod gate: artifact sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47; epoch FORGE-SPEC-9; accounting 484/484; per-clause evidence under .agent/evidence/EP-010/DOD/
+dod gate: NOT PRINTED - 15/42 clause(s) pass with linked evidence; the registry's exact or_else consequence is recorded for every clause that does not
+dod gate: the definition of done is not met; the per-clause statuses and their exact or_else consequences are in .agent/verification/state/DOD_STATUS.jsonl and PRODUCTION_READINESS.md

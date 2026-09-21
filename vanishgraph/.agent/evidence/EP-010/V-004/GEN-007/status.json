@@ -15,7 +15,7 @@
     "sentinel": "secret scan: ok",
     "sentinelFound": true,
     "evidencePath": ".agent/evidence/EP-010/V-004/gate-secrets.log",
-    "digest": "aee75f7a13a1104bd0022b77277e02095e816bba9486681c2635bebf78a16ca1",
+    "digest": "aa948b622fa8a38b1ed7027a4218af0656278e6fb2847e7f89fb28188ca91fc8",
     "note": "the gate exited 0 and printed its sentinel"
   },
   "prompt_requires_authorization": false,
@@ -27,5 +27,5 @@
   "scope_clause": null,
   "dependency_edge_ref": "capability:agentic-runner->V-004",
   "provisioning_action": null,
-  "recorded_at": "2026-09-20T20:31:23Z"
+  "recorded_at": "2026-09-21T01:36:48Z"
 }

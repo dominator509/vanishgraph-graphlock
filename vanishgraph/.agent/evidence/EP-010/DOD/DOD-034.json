@@ -4,8 +4,8 @@
   "evidence": "the virgin clean room completed its golden path with 0 undocumented prerequisite(s); the inventory records the golden path, the artifact transfer by digest and every supplied item with its document (.agent/evidence/EP-010/V-020/clean-room-inventory.txt)",
   "or_else": null,
   "facts": {
-    "epoch": "FORGE-SPEC-8",
-    "candidate_sha": "d94e8647af174968d8453d7aa88bf2152d0d34f7",
+    "epoch": "FORGE-SPEC-9",
+    "candidate_sha": "b70162f20bad97f60147e951cb5b9951be116486",
     "artifact_digest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
     "accounted_ids": 484,
     "status_counts": {
@@ -23,7 +23,7 @@
     "stage_edges": 21,
     "capability_edges": 43,
     "evidence_index_entries": 530,
-    "audit_records": 5556,
+    "audit_records": 6040,
     "clean_room": {
       "ok": true,
       "undocumented": 0,

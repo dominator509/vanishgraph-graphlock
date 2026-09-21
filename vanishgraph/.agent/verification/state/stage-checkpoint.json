@@ -1,7 +1,7 @@
 {
   "stage": "V-021",
-  "epoch": "FORGE-SPEC-8",
-  "candidate_sha": "d94e8647af174968d8453d7aa88bf2152d0d34f7",
+  "epoch": "FORGE-SPEC-9",
+  "candidate_sha": "b70162f20bad97f60147e951cb5b9951be116486",
   "artifact_digest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
   "owned_ids": 12,
   "statuses": {
@@ -16,10 +16,10 @@
       "sentinel": "security check: ok",
       "sentinelFound": true,
       "evidencePath": ".agent/evidence/EP-010/V-004/gate-security-contract.log",
-      "digest": "1b6f697b07253292aedf8ed68412c191a8de32a3fcff5119ed89c9eb40c7c77d",
-      "epoch": "FORGE-SPEC-8",
+      "digest": "7d60544b1871c0d1fc0e53e05257612195a80a9fb57b9ff46033007bc22f2dbc",
+      "epoch": "FORGE-SPEC-9",
       "artifact_digest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
-      "executed_at": "2026-09-20T20:31:22Z",
+      "executed_at": "2026-09-21T01:36:46Z",
       "cached": true,
       "cachedFrom": ".agent/evidence/EP-010/V-004/gate-security-contract.log"
     },
@@ -31,13 +31,13 @@
       "sentinelFound": true,
       "evidencePath": ".agent/evidence/EP-010/V-004/gate-build.log",
       "digest": "2ade2ac281b3a98e8b4a84fe83a5e8be6bea99ed9d51bbb6b2bf2c41f846ff9e",
-      "epoch": "FORGE-SPEC-8",
+      "epoch": "FORGE-SPEC-9",
       "artifact_digest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
-      "executed_at": "2026-09-20T20:31:04Z",
+      "executed_at": "2026-09-21T01:36:10Z",
       "cached": true,
       "cachedFrom": ".agent/evidence/EP-010/V-004/gate-build.log"
     }
   ],
-  "updated_at": "2026-09-20T20:51:16Z",
+  "updated_at": "2026-09-21T02:03:59Z",
   "next_action": "run sh scripts/harness-next.sh to select the next stage"
 }

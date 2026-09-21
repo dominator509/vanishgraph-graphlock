@@ -1,12 +1,12 @@
 security check: step 1/4: secret scan
-secret scan: 2087 file(s) scanned, 0 findings
+secret scan: 2148 file(s) scanned, 0 findings
 secret scan: ok
 security check: step 2/4: security contract suites
 ▶ the masking scan fires on every shape it looks for (SPEC-006 §8)
-  ✔ each planted shape is reported (15.4418ms)
-  ✔ the fail-closed idiom is NOT reported: disabling errexit and reading the status is not masking (1.0496ms)
-  ✔ this repository’s own scripts carry no masking pattern (14.4413ms)
-✔ the masking scan fires on every shape it looks for (SPEC-006 §8) (32.5995ms)
+  ✔ each planted shape is reported (61.938ms)
+  ✔ the fail-closed idiom is NOT reported: disabling errexit and reading the status is not masking (2.2465ms)
+  ✔ this repository’s own scripts carry no masking pattern (92.1127ms)
+✔ the masking scan fires on every shape it looks for (SPEC-006 §8) (159.9977ms)
 ℹ tests 3
 ℹ suites 1
 ℹ pass 3
@@ -14,20 +14,20 @@ security check: step 2/4: security contract suites
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 214.7383
+ℹ duration_ms 697.6695
 ▶ a revoked grant halts the next write, and the check is at execution time (VG-AUTH-024)
-  ✔ a grant revoked after the case reached REQUEST_READY refuses the write with zero effects (3.3525ms)
-  ✔ the TIME-SHIFTED grant is refused at execution time even though it was valid when queued (0.7243ms)
-✔ a revoked grant halts the next write, and the check is at execution time (VG-AUTH-024) (5.8674ms)
+  ✔ a grant revoked after the case reached REQUEST_READY refuses the write with zero effects (3.606ms)
+  ✔ the TIME-SHIFTED grant is refused at execution time even though it was valid when queued (0.6994ms)
+✔ a revoked grant halts the next write, and the check is at execution time (VG-AUTH-024) (6.178ms)
 ▶ a scope violation is refused with the state unchanged (VG-AUTH-025)
-  ✔ a read-scoped grant cannot write, and the refusal is a decision rather than an exception (0.5719ms)
-  ✔ a grant for one subject cannot act for another, and the refusal names the binding (0.4756ms)
-  ✔ the boundary gate refuses a missing scope and a missing role, with the state unchanged (0.7245ms)
-✔ a scope violation is refused with the state unchanged (VG-AUTH-025) (2.1722ms)
+  ✔ a read-scoped grant cannot write, and the refusal is a decision rather than an exception (0.6595ms)
+  ✔ a grant for one subject cannot act for another, and the refusal names the binding (0.5984ms)
+  ✔ the boundary gate refuses a missing scope and a missing role, with the state unchanged (1.0227ms)
+✔ a scope violation is refused with the state unchanged (VG-AUTH-025) (2.776ms)
 ▶ cross-tenant access is refused by the service layer, and looks like absence (VG-AUTH-022, SPEC-006 H-9)
-  ✔ another tenant is refused by the matrix for every role, and the answer is absence rather than a violation (0.8441ms)
-  ✔ the RLS half is asserted in the integration stage, and this test only checks that pointer (1.7884ms)
-✔ cross-tenant access is refused by the service layer, and looks like absence (VG-AUTH-022, SPEC-006 H-9) (3.0476ms)
+  ✔ another tenant is refused by the matrix for every role, and the answer is absence rather than a violation (0.8964ms)
+  ✔ the RLS half is asserted in the integration stage, and this test only checks that pointer (2.4307ms)
+✔ cross-tenant access is refused by the service layer, and looks like absence (VG-AUTH-022, SPEC-006 H-9) (3.9714ms)
 ℹ tests 7
 ℹ suites 3
 ℹ pass 7
@@ -35,12 +35,12 @@ security check: step 2/4: security contract suites
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 221.4428
+ℹ duration_ms 632.7102
 ▶ the secret scanner detects every shape it claims to (DOD-018)
-  ✔ each planted shape is reported, and its near-miss is not (21.3858ms)
-  ✔ the scanner has no baseline auto-accept mechanism, and refuses a zero-file scan (0.5239ms)
-  ✔ the scanner excludes only itself and the lockfile, each for a stated reason (0.2389ms)
-✔ the secret scanner detects every shape it claims to (DOD-018) (23.9189ms)
+  ✔ each planted shape is reported, and its near-miss is not (44.5059ms)
+  ✔ the scanner has no baseline auto-accept mechanism, and refuses a zero-file scan (3.0602ms)
+  ✔ the scanner excludes only itself and the lockfile, each for a stated reason (0.4434ms)
+✔ the secret scanner detects every shape it claims to (DOD-018) (50.0699ms)
 ℹ tests 3
 ℹ suites 1
 ℹ pass 3
@@ -48,28 +48,28 @@ security check: step 2/4: security contract suites
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 223.2499
+ℹ duration_ms 776.1442
 ▶ the scope vocabulary equals SPEC-003 §3.3 (EP-006 M1)
-  ✔ set equality in both directions, against the parsed specification table (4.009ms)
-  ✔ isScope accepts every declared scope and refuses anything else (0.4292ms)
-  ✔ a wildcard is refused, never expanded (0.9971ms)
-  ✔ the ingress scope is refused wherever a caller could present it (0.3824ms)
-  ✔ the machine-forbidden set is the SEVEN §3.2 item 9 names, not the four the plan states (0.7269ms)
-✔ the scope vocabulary equals SPEC-003 §3.3 (EP-006 M1) (8.4533ms)
+  ✔ set equality in both directions, against the parsed specification table (9.7931ms)
+  ✔ isScope accepts every declared scope and refuses anything else (0.4388ms)
+  ✔ a wildcard is refused, never expanded (0.9464ms)
+  ✔ the ingress scope is refused wherever a caller could present it (0.3364ms)
+  ✔ the machine-forbidden set is the SEVEN §3.2 item 9 names, not the four the plan states (0.749ms)
+✔ the scope vocabulary equals SPEC-003 §3.3 (EP-006 M1) (14.3279ms)
 ▶ the role bundles are derived from the specification, not invented (EP-006 M1)
-  ✔ every role in the catalogue is one of the seven §2 declares, and every declared role is present (1.0931ms)
-  ✔ each bundle equals the scopes §3.3 says that role may carry (1.8677ms)
-  ✔ every bundle is inside the catalogue, carries no wildcard and no ingress scope (0.9092ms)
-  ✔ every role carries its prohibition sentence from §2, not an empty note (0.5304ms)
-  ✔ the prohibited combinations the specification names are absent from the bundles (0.4946ms)
-  ✔ NEGATIVE CASE: a bundle carrying a scope outside the catalogue fails (0.532ms)
-✔ the role bundles are derived from the specification, not invented (EP-006 M1) (6.1281ms)
+  ✔ every role in the catalogue is one of the seven §2 declares, and every declared role is present (1.0315ms)
+  ✔ each bundle equals the scopes §3.3 says that role may carry (1.496ms)
+  ✔ every bundle is inside the catalogue, carries no wildcard and no ingress scope (0.889ms)
+  ✔ every role carries its prohibition sentence from §2, not an empty note (0.514ms)
+  ✔ the prohibited combinations the specification names are absent from the bundles (0.5335ms)
+  ✔ NEGATIVE CASE: a bundle carrying a scope outside the catalogue fails (0.558ms)
+✔ the role bundles are derived from the specification, not invented (EP-006 M1) (5.7921ms)
 ▶ the security configuration names variables and never values (EP-006 M1)
-  ✔ a complete environment reads, and the values are returned rather than logged (0.5966ms)
-  ✔ every absent variable aborts with its own name, and no message contains a value (1.3408ms)
-  ✔ a short SESSION_SECRET is refused, and the message names the requirement rather than the value (0.5022ms)
-  ✔ the absent-variable report lists names only, in declaration order (0.3774ms)
-✔ the security configuration names variables and never values (EP-006 M1) (3.2642ms)
+  ✔ a complete environment reads, and the values are returned rather than logged (0.5405ms)
+  ✔ every absent variable aborts with its own name, and no message contains a value (1.7121ms)
+  ✔ a short SESSION_SECRET is refused, and the message names the requirement rather than the value (0.491ms)
+  ✔ the absent-variable report lists names only, in declaration order (0.5502ms)
+✔ the security configuration names variables and never values (EP-006 M1) (3.8247ms)
 ℹ tests 15
 ℹ suites 3
 ℹ pass 15
@@ -77,7 +77,7 @@ security check: step 2/4: security contract suites
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 279.7096
+ℹ duration_ms 465.177
 security check: step 3/4: SSRF target classification
 security check: step 4/4: masking-pattern scan
 security check:   errexit disabled in: scripts/backup-drill.sh scripts/induced-failure-readiness.sh scripts/security-check.sh scripts/slo-evaluate.sh scripts/test-e2e.sh  (each reads the status it captured)

@@ -15,10 +15,10 @@
     "sentinel": "test-unit: ok",
     "sentinelFound": true,
     "evidencePath": ".agent/evidence/EP-010/V-008/gate-unit.log",
-    "digest": "38eaac0d24543a488c51aba89ca8ae5f7ba9a642c8eff97a85a736254fd5fff7",
-    "epoch": "FORGE-SPEC-8",
+    "digest": "fe0d479af56955ccce998e037e28f901aefbbd5c8d42a6f8a3f340ee464ea92d",
+    "epoch": "FORGE-SPEC-9",
     "artifact_digest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
-    "executed_at": "2026-09-20T20:35:20Z",
+    "executed_at": "2026-09-21T01:48:21Z",
     "cached": true,
     "cachedFrom": ".agent/evidence/EP-010/V-008/gate-unit.log"
   },
@@ -31,5 +31,5 @@
   "scope_clause": null,
   "dependency_edge_ref": "capability:agentic-runner->V-013",
   "provisioning_action": null,
-  "recorded_at": "2026-09-20T20:50:39Z"
+  "recorded_at": "2026-09-21T02:03:39Z"
 }

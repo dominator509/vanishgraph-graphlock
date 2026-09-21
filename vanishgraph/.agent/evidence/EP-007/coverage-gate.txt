@@ -1,4 +1,4 @@
-coverage gate - 2026-09-20T20:35:40Z
+coverage gate - 2026-09-21T01:48:40Z
 configuration: config/testing/coverage-thresholds.json
 node: v24.14.1
 
@@ -14,7 +14,7 @@ suites: tests/domain/**/*.test.ts tests/harness/**/*.test.ts tests/architecture/
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 320637.6271
+ℹ duration_ms 372280.784
 ℹ start of coverage report
 ℹ ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ℹ file                       | line % | branch % | funcs % | uncovered lines
@@ -51,7 +51,7 @@ suites: tests/contract/**/*.test.ts tests/security/**/*.test.ts tests/domain/**/
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 25632.9828
+ℹ duration_ms 23891.8007
 ℹ start of coverage report
 ℹ ----------------------------------------------------------------------------------
 ℹ file                              | line % | branch % | funcs % | uncovered lines
@@ -107,7 +107,7 @@ suites: tests/contract/**/*.test.ts tests/db/**/*.test.ts tests/integration/**/*
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 197298.5726
+ℹ duration_ms 172703.2099
 ℹ start of coverage report
 ℹ -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ℹ file                           | line % | branch % | funcs % | uncovered lines
@@ -179,7 +179,7 @@ suites: tests/contract/**/*.test.ts tests/security/**/*.test.ts tests/blackbox/*
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 29382.1013
+ℹ duration_ms 25822.6735
 ℹ start of coverage report
 ℹ -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ℹ file                       | line % | branch % | funcs % | uncovered lines
@@ -249,7 +249,7 @@ suites: tests/contract/**/*.test.ts tests/security/**/*.test.ts
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 31252.1898
+ℹ duration_ms 21601.8356
 ℹ start of coverage report
 ℹ ----------------------------------------------------------------------------
 ℹ file                | line % | branch % | funcs % | uncovered lines
@@ -276,7 +276,7 @@ suites: tests/db/**/*.test.ts tests/integration/**/*.test.ts tests/harness/**/*.
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 497801.5539
+ℹ duration_ms 410450.0218
 ℹ start of coverage report
 ℹ ----------------------------------------------------------------------------------------------------------------------------------------
 ℹ file              | line % | branch % | funcs % | uncovered lines
