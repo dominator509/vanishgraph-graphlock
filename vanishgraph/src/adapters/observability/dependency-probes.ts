@@ -94,6 +94,16 @@ export interface ProbeRunnerOptions {
   readonly service?: string;
   /** Injected so the budget test can drive the clock instead of waiting for it. */
   readonly now?: () => number;
+  /**
+   * WHICH DEPENDENCIES ARE REQUIRED **FOR THIS ROLE** (SPEC-007 §7.2 rule 1; config/environment/required.json
+   * `service_roles`). ADDED IN EP-010 M16, BECAUSE THE DECLARED TABLE IS NOT THE ROLE'S ANSWER: `DECLARED_DEPENDENCIES`
+   * marks all six `required: true`, while the configured roles differ - the web role does NOT require
+   * `provider-transport` and the worker role does NOT require `keycloak-jwks`. Using the table value for every role
+   * makes a failing dependency the role does not need force `NOT_READY`, which is precisely what §7.2 rule 1 forbids
+   * ("`required: false` dependencies report their status but do not block readiness"). When this is omitted the
+   * declared table value is used, which is the honest default for a caller that has not stated a role.
+   */
+  readonly requiredKeys?: readonly DependencyKey[];
 }
 
 export interface ReadinessEvaluation {
@@ -141,9 +151,10 @@ async function runProbe(
   dependency: (typeof DECLARED_DEPENDENCIES)[number],
   probe: Probe | undefined,
   now: () => number,
+  required: boolean,
 ): Promise<ProbeResult> {
   const started = now();
-  const base = { name: dependency.key, required: dependency.required } as const;
+  const base = { name: dependency.key, required } as const;
   if (probe === undefined) {
     // A MISSING CLIENT IS A FAILURE, NOT A PASS. A probe that has not been wired is a dependency nobody is checking, and
     // reporting it healthy would be the fabrication DOD-037 forbids.
@@ -228,10 +239,19 @@ export function createProbeRunner(options: ProbeRunnerOptions): ProbeRunner {
   /** The previous readiness verdict, so the state-change counter advances on a change rather than on every evaluation. */
   let lastState: 'READY' | 'NOT_READY' | null = null;
 
+  /**
+   * REQUIREDNESS IS THE ROLE'S, AND THE DECLARED TABLE IS ONLY THE FALLBACK (EP-010 M16; SPEC-007 §7.2 rule 1).
+   * `DECLARED_DEPENDENCIES` marks all six required, but the configured roles differ: the web role does not require
+   * `provider-transport` and the worker role does not require `keycloak-jwks`. Taking the table value for every role
+   * would make a failing dependency that the role does not need force NOT_READY, which rule 1 forbids.
+   */
+  const isRequired = (key: DependencyKey, tableValue: boolean): boolean =>
+    options.requiredKeys === undefined ? tableValue : options.requiredKeys.includes(key);
+
   const runAndRecord = async (key: DependencyKey): Promise<ProbeResult> => {
     const dependency = DECLARED_DEPENDENCIES.find((candidate) => candidate.key === key);
     if (dependency === undefined) throw new RangeError(`${key} is not a declared dependency (§7.2)`);
-    const result = await runProbe(dependency, probes[key], now);
+    const result = await runProbe(dependency, probes[key], now, isRequired(dependency.key, dependency.required));
     record(result);
     return result;
   };
@@ -259,7 +279,7 @@ export function createProbeRunner(options: ProbeRunnerOptions): ProbeRunner {
           if (elapsedBeforeProbe >= READINESS_BUDGET_MS) {
             const unrun: ProbeResult = Object.freeze({
               name: dependency.key,
-              required: dependency.required,
+              required: isRequired(dependency.key, dependency.required),
               status: 'TIMEOUT' as const,
               latencyMs: 0,
               reasonCode: 'TIMEOUT' as const,

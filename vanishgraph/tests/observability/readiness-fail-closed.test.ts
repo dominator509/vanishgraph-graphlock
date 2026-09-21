@@ -163,6 +163,29 @@ describe('the decision is fail-closed on the FIRST failing evaluation (§7.3)', 
     assert.match(valkey?.detail ?? '', /no probe is wired/);
   });
 
+  test('AN OPTIONAL DEPENDENCY THAT FAILS IS REPORTED AND DOES NOT BLOCK READINESS (SPEC-007 §7.2 rule 1)', async () => {
+    // THE WEB ROLE'S REQUIRED SET, from config/environment/required.json `service_roles.web`: `provider-transport` is
+    // NOT required for this role. Before EP-010 M16 the runner used the declared table's all-true value, so a failing
+    // provider transport made the whole verdict NOT_READY - and rule 1 says a `required: false` dependency must still be
+    // VISIBLE without blocking. That is why the failure is asserted twice below: reported, and not blocking.
+    const clients = passingClients();
+    clients.providerTransport = failing('ENOTFOUND', 'no provider transport is reachable');
+    const runner = createProbeRunner({ clients, requiredKeys: ['postgresql', 'valkey', 'object-store', 'keycloak-jwks'] });
+    const evaluation = await runner.evaluate();
+    const optional = evaluation.checks.find((check) => check.name === 'provider-transport');
+    assert.equal(optional?.required, false, 'the web role does not require this dependency');
+    assert.equal(optional?.status, 'FAIL', 'and its failure is still REPORTED, so "not required" never becomes "not observed"');
+    assert.equal(evaluation.dependencyState, 'READY', 'a dependency the role does not need must not block readiness');
+    assert.deepEqual([...evaluation.failedChecks], [], 'and it must not appear among the failed checks');
+
+    // THE SAME FAILURE DOES BLOCK WHEN THE ROLE REQUIRES IT: the worker role requires provider-transport, so the
+    // identical client failure is NOT_READY. One probe, two roles, two verdicts - which is the whole point.
+    const worker = createProbeRunner({ clients, requiredKeys: ['postgresql', 'valkey', 'object-store', 'provider-transport'] });
+    const workerEvaluation = await worker.evaluate();
+    assert.equal(workerEvaluation.dependencyState, 'NOT_READY');
+    assert.deepEqual([...workerEvaluation.failedChecks], ['provider-transport']);
+  });
+
   test('liveness is independent of every dependency (§7.3: a restart loop is not a remedy)', async () => {
     const clients = passingClients();
     for (const key of Object.keys(clients) as (keyof DependencyClients)[]) {

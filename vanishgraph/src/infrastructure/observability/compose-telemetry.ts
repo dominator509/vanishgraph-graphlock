@@ -344,6 +344,13 @@ export interface ReadinessCompositionOptions {
   readonly tenantId: string;
   readonly sink?: (line: string) => void;
   readonly now?: () => Date;
+  /**
+   * The dependencies the RUNNING ROLE requires (EP-010 M16; SPEC-007 §7.2 rule 1). Supplied from
+   * `config/environment/required.json` `service_roles` by the composition root, because requiredness is a property of
+   * the ROLE and not of the dependency: the web role does not require `provider-transport` and the worker role does not
+   * require `keycloak-jwks`. Passing nothing falls back to the declared table's all-true value.
+   */
+  readonly requiredKeys?: readonly DependencyKey[];
 }
 
 /**
@@ -364,6 +371,7 @@ export function composeReadiness(options: ReadinessCompositionOptions): Readines
     clients: options.clients,
     service: options.service,
     ...(options.registry === undefined ? {} : { registry: options.registry }),
+    ...(options.requiredKeys === undefined ? {} : { requiredKeys: options.requiredKeys }),
     now: () => now().getTime(),
   });
   const records: ReadinessChangedRecord[] = [];
