@@ -1,27 +1,27 @@
 {
-  "stage": "V-021",
+  "stage": "V-015",
   "epoch": "FORGE-SPEC-10",
   "candidate_sha": "1e6c59a7acc0aa06ac47ac82bc6bb5d576803d23",
   "artifact_digest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
-  "owned_ids": 12,
+  "owned_ids": 3,
   "statuses": {
-    "BLOCKED_PREREQUISITE": 11,
-    "PARTIAL": 1
+    "PARTIAL": 3
   },
   "gates": [
     {
-      "gate": "security-contract",
-      "script": "security-check.sh",
-      "exitCode": 0,
-      "sentinel": "security check: ok",
-      "sentinelFound": true,
-      "evidencePath": ".agent/evidence/EP-010/V-004/gate-security-contract.log",
-      "digest": "b9eed3c359d6f647ea63c9011fbc9f42e161408b10d37cd0625493118b60cd5a",
+      "gate": "browser",
+      "script": "test-e2e.sh",
+      "exitCode": 1,
+      "sentinel": "end-to-end tests: ok",
+      "sentinelFound": false,
+      "evidencePath": ".agent/evidence/EP-010/V-015/gate-browser.log",
+      "digest": "59149de0574bda2bcf44cc5e1c0fa77d02b61d0d72b7f67de64b16322415eb5d",
       "epoch": "FORGE-SPEC-10",
       "artifact_digest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
-      "executed_at": "2026-09-21T06:57:08Z",
+      "executed_at": "2026-09-21T07:18:23Z",
+      "note": "the gate exited 1 and did NOT print its sentinel",
       "cached": true,
-      "cachedFrom": ".agent/evidence/EP-010/V-004/gate-security-contract.log"
+      "cachedFrom": ".agent/evidence/EP-010/V-015/gate-browser.log"
     },
     {
       "gate": "build",
@@ -34,10 +34,11 @@
       "epoch": "FORGE-SPEC-10",
       "artifact_digest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
       "executed_at": "2026-09-21T06:55:55Z",
+      "note": "the gate exited 0 and printed its sentinel",
       "cached": true,
       "cachedFrom": ".agent/evidence/EP-010/V-004/gate-build.log"
     }
   ],
-  "updated_at": "2026-09-21T07:18:38Z",
+  "updated_at": "2026-09-21T11:51:43Z",
   "next_action": "run sh scripts/harness-next.sh to select the next stage"
 }

@@ -162,6 +162,28 @@ every `BLOCKED_*`). Status-specific fields are listed per row.
   of an integration claim (DOD-010), or for a category rather than an executed
   case.
 
+**Repository-mapped execution (EP-010 M13, the approved hybrid).** This repository's
+registry contains 484 entries that are prompts written for an authorised agentic
+runner. Where a prompt's SUBJECT is covered by a repository gate, the gate's oracle may
+stand in for the prompt's oracle, but only under the following conditions — all of them,
+each one recorded as executed evidence in the current epoch:
+
+1. the covering gate's POSITIVE path ran in this epoch against the pinned artifact and
+   printed its declared sentinel;
+2. the covering gate's DECLARED NEGATIVE CONTROL ran in this epoch and refused the bad
+   input it exists to refuse, with the refusal recorded — a gate that has no declared
+   negative control cannot yield a repository-mapped `PASS`, and the entry is left
+   `PARTIAL` naming that absence;
+3. the entry records `executionBasis: "repository-mapped"`, `mappedGate`, the control's
+   `negativeCaseCommand`, `negativeCaseEvidencePath`, and a NON-EMPTY
+   `promptLevelUncovered[]` naming what the prompt's own methodology, scope discovery and
+   completion gate would have covered and did not.
+
+**A repository-mapped `PASS` is never prompt-level compliance.** It says the repository
+gate covering this subject ran, both ways, in this epoch. It may not be summarised as
+"the prompt was executed", it may not be counted as agentic-runner evidence, and an
+entry whose subject no repository gate covers may not use it at all.
+
 #### `FAIL`
 
 - **Exact definition:** The oracle executed successfully as a *harness* operation
@@ -269,7 +291,9 @@ every `BLOCKED_*`). Status-specific fields are listed per row.
   external authority that no automated system can impersonate: legal/counsel
   review, named human UAT, assistive-technology validation by a lived user,
   accredited assessment, written provider authorization, production deployment
-  authorization.
+  authorization, or execution of an authorisation-scoped security test prompt by an
+  authorised agentic runner where the prompt demands authorization this harness does not
+  hold (EP-010 M13; the runner is the external party and is named in `externalPartyRole`).
 - **Correct choice when:** SPEC-000 §11 or DOD-039 applies; the artifact to be
   signed is prepared and its digest pinned.
 - **Required fields:** common fields, plus `externalPartyRole`,

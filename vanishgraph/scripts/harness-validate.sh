@@ -173,6 +173,10 @@ const validateStatusRow = (row, currentEpoch, currentArtifact, edges) => {
     BLOCKED_SAFETY: ["policyRef", "prohibitedAction", "safetyReviewer"],
     EXTERNAL_REQUIRED: ["externalPartyRole", "requestedArtifactDigest", "requestEvidencePath", "requestedAt", "ownerContactRef"],
     DEFERRED_LONG_RUNNING: ["workload", "plannedDuration", "elapsedDuration", "startedAt", "heartbeatRef", "partialResultPath"],
+    // EP-010 M13: a PASS may now be REPOSITORY-MAPPED (SPEC-006 section 4.1), and such a row must carry the mapping
+    // AND the executed control that justified it. The promptLevelUncovered[] check below is what stops a mapped PASS
+    // from being read as prompt-level compliance.
+    PASS: ["executionBasis", "mappedGate", "negativeCaseCommand", "negativeCaseEvidencePath"],
     PARTIAL: ["coverageDenominator", "evidenceDigest"],
     UNVERIFIED: ["reasonUnverified", "plannedCommand", "owner"],
     NOT_APPLICABLE: ["decisionRuleRef", "decidedBy", "decidedAt"],
@@ -182,6 +186,17 @@ const validateStatusRow = (row, currentEpoch, currentArtifact, edges) => {
     for (const field of required) {
       const value = row[field] ?? row.statusFields?.[field];
       if (value === undefined || value === null || String(value).trim() === "") problems.push(`${label}: ${row.status} without ${field}, which SPEC-006 section 4.1 requires`);
+    }
+  }
+  // A REPOSITORY-MAPPED PASS MUST NOT READ AS PROMPT-LEVEL COMPLIANCE (EP-010 M13).
+  if (row.status === "PASS" && String(row.executionBasis ?? row.statusFields?.executionBasis ?? "") === "repository-mapped") {
+    const promptLevelUncovered = row.promptLevelUncovered ?? row.statusFields?.promptLevelUncovered;
+    if (!Array.isArray(promptLevelUncovered) || promptLevelUncovered.length === 0) {
+      problems.push(`${label}: a repository-mapped PASS without a non-empty promptLevelUncovered[] would read as prompt-level compliance that was never executed (SPEC-006 section 4.1)`);
+    }
+    const controlDigest = row.negativeCaseEvidenceDigest ?? row.statusFields?.negativeCaseEvidenceDigest;
+    if (controlDigest === undefined || controlDigest === null || String(controlDigest).trim() === "") {
+      problems.push(`${label}: a repository-mapped PASS without negativeCaseEvidenceDigest, so its executed control resolves to no stored hash (VG-EVIDENCE-002)`);
     }
   }
   if (row.status === "PARTIAL") {

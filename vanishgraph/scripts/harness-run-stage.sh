@@ -112,10 +112,30 @@ for (const file of fs.readdirSync(".agent/verification/casebooks").filter((name)
 const GATES = [
   { id: "static-analysis", script: "lint.sh", sentinel: "lint: ok", keywords: /sast|static analysis|code review|lint|source (code )?analysis|taint|data flow|control flow|complexity|secure coding/i },
   { id: "security-contract", script: "security-check.sh", sentinel: "security check: ok", keywords: /security (check|scan|contract|test)|vulnerability (scan|pattern)|penetration|dast|iast|fuzz|injection|xss|csrf|ssrf|traversal|deserializ/i },
-  { id: "secrets", script: "secret-scan.sh", sentinel: "secret scan: ok", keywords: /secret|credential|hardcoded (password|key)|api key|key exposure/i },
+  { id: "secrets", script: "secret-scan.sh", sentinel: "secret scan: ok", keywords: /secret|credential|hardcoded (password|key)|api key|key exposure/i,
+    // DECLARED NEGATIVE CONTROL (EP-010 M13, SPEC-006 section 4.1 repository-mapped execution). The scanner's own
+    // self-test extracts the REAL pattern out of the gate and asserts it detects a planted canary, so the control is
+    // EXECUTED and refused rather than assumed. A mapped PASS requires a control that behaves as specified; a gate
+    // with no declaration yields PARTIAL naming the absence, and no gate is given one by convention.
+    negativeCase: { kind: "test", command: "node --test tests/security/secret-scan-self-test.test.ts", expectExit: 0, note: "the scanner's self-test proves the gate's own pattern detects a planted canary" } },
   { id: "supply-chain", script: "dependency-audit.sh", sentinel: "dependency audit: ok", keywords: /sca\b|software composition|dependency|third.party|open source|license|sbom|bill of materials/i },
   { id: "reality", script: "reality-gate.sh", sentinel: "reality gate: ok", keywords: /reality|anti.simulation|placeholder|claim integrity|evidence integrity|sanity/i },
-  { id: "config", script: "config-validate.sh", sentinel: "config: ok", keywords: /config|environment variable|setting|misconfiguration|hardening/i },
+  { id: "config", script: "config-validate.sh", sentinel: "config: ok", keywords: /config|environment variable|setting|misconfiguration|hardening/i,
+    // DECLARED NEGATIVE CONTROL (EP-010 M13): this gate executes FIVE negative controls on EVERY run - a missing
+    // required key, an empty value, a prohibited substitute, a malformed value and an unknown key, then restores the
+    // fixture - and prints one marker per control. Requiring the markers proves the gate REFUSED bad configuration in
+    // THIS epoch, from the gate's own output, with no second fixture to maintain.
+    negativeCase: { kind: "markers", markers: [
+      "control missing-required-key: refused with MISSING_REQUIRED_KEY",
+      "control empty-required-value: refused with EMPTY_VALUE",
+      "control prohibited-substitute: refused with PROHIBITED_SUBSTITUTE",
+      "control malformed-value: refused with MALFORMED_VALUE",
+      "control unknown-key: refused with UNKNOWN_KEY",
+      // MEASURED, not assumed: the gate prints `config: note - restoration: ...`, WITHOUT the word "control" -
+      // the first version of this declaration required `control restoration:` and the mechanism correctly REFUSED
+      // the mapped PASS, naming the absent marker in the row's own reason. That refusal is the mechanism working.
+      "restoration: the untouched fixture validates cleanly after every control",
+    ], note: "the gate's own five negative controls, executed on every run, each naming the reason code it refused with" } },
   { id: "pipeline", script: "ci-guard.sh", sentinel: "ci pipeline: ok", keywords: /pipeline|ci\/cd|\bci\b|workflow/i },
   { id: "unit", script: "test-unit.sh", sentinel: "test-unit: ok", keywords: /unit|component|functional|logic|boundary|input validation/i },
   { id: "integration", script: "test-integration.sh", sentinel: "test-integration: ok", keywords: /integration|database|persistence|transaction|migration|tenant|row.level|concurren|race|deadlock|api contract|protocol|serializ|openapi|status code|auth(entication|orization)? matrix|rate limit/i },
@@ -173,7 +193,14 @@ const runGate = (gate) => {
   if (gateResults.has(gate.id)) return gateResults.get(gate.id);
   const cached = gateCache.entries[cacheKey(gate)];
   if (cached !== undefined && fs.existsSync(cached.evidencePath)) {
-    const result = { ...cached, cached: true, cachedFrom: cached.evidencePath };
+    // THE NOTE IS RE-DERIVED, NOT DROPPED. The cache entry records the exit code and whether the sentinel was found,
+    // but not the sentence built from them, so a cited run used to reach every reason string as "undefined" - a
+    // cosmetic defect that a registry row quoted verbatim, in a report about honesty. Rebuilding it here keeps one
+    // definition of the sentence and makes a cited run read exactly like a fresh one.
+    const note = cached.exitCode === 0 && cached.sentinelFound === true
+      ? "the gate exited 0 and printed its sentinel"
+      : `the gate exited ${cached.exitCode}${cached.sentinelFound === true ? "" : " and did NOT print its sentinel"}`;
+    const result = { ...cached, note, cached: true, cachedFrom: cached.evidencePath };
     gateResults.set(gate.id, result);
     return result;
   }
@@ -209,6 +236,62 @@ const runGate = (gate) => {
   gateCache.entries[cacheKey(gate)] = { gate: gate.id, script: gate.script, exitCode, sentinel: gate.sentinel, sentinelFound, evidencePath: result.evidencePath, digest: result.digest, epoch, artifact_digest: artifactDigest, executed_at: now() };
   fs.writeFileSync(GATE_CACHE, `${JSON.stringify(gateCache, null, 2)}\n`);
   gateResults.set(gate.id, result);
+  return result;
+};
+
+// THE DECLARED NEGATIVE CONTROL, EXECUTED (EP-010 M13). SPEC-006 section 4.1's "repository-mapped execution" may
+// produce a PASS only when the covering gate's control RAN in this epoch and refused what it exists to refuse. Two
+// kinds are implemented, and only where the repository genuinely has one:
+//   * "markers" - the gate prints one marker per control it executed; every marker must be present in THIS epoch's
+//     log for that gate, so the proof is the gate's own output and needs no second fixture to maintain;
+//   * "test"    - a named suite that must exit with the declared code; it is run here, bounded, and its log and
+//     digest are recorded.
+// A gate with no declaration is NOT given one by convention: its ids stay PARTIAL and the reason names the absence.
+const negativeResults = new Map();
+const runNegativeCase = (gate, gateResult) => {
+  if (negativeResults.has(gate.id)) return negativeResults.get(gate.id);
+  const declared = gate.negativeCase;
+  let result;
+  if (declared === undefined) {
+    result = { ok: false, kind: "none", note: `no negative control is DECLARED for the ${gate.id} gate`, command: null, evidencePath: null, evidenceDigest: null };
+  } else if (declared.kind === "markers") {
+    const log = gateResult === null || gateResult.evidencePath === null ? "" : (fs.existsSync(gateResult.evidencePath) ? fs.readFileSync(gateResult.evidencePath, "utf8") : "");
+    const missing = declared.markers.filter((marker) => !log.includes(marker));
+    result = {
+      ok: missing.length === 0 && log !== "",
+      kind: "markers",
+      note: missing.length === 0
+        ? `${declared.note}; all ${declared.markers.length} marker(s) are present in this epoch's gate log`
+        : `${declared.note}; ${missing.length} of ${declared.markers.length} marker(s) are ABSENT from this epoch's gate log (${missing.join(" | ")})`,
+      command: `sh scripts/${gate.script} (the gate's own controls)`,
+      evidencePath: gateResult === null ? null : gateResult.evidencePath,
+      evidenceDigest: gateResult === null ? null : gateResult.digest,
+    };
+  } else if (declared.kind === "test") {
+    const logPath = path.join(outDir, `negative-${gate.id}.log`);
+    let exitCode = 0;
+    let output = "";
+    try {
+      output = execFileSync("sh", ["-c", declared.command], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 600000, env: { ...process.env, CI: "true" } });
+    } catch (error) {
+      exitCode = error.status === undefined || error.status === null ? 1 : error.status;
+      output = `${error.stdout ?? ""}${error.stderr ?? ""}`;
+    }
+    fs.writeFileSync(logPath, output);
+    result = {
+      ok: exitCode === declared.expectExit,
+      kind: "test",
+      note: exitCode === declared.expectExit
+        ? `${declared.note}; the control exited ${exitCode} as declared`
+        : `${declared.note}; the control exited ${exitCode} while the declaration expects ${declared.expectExit}`,
+      command: declared.command,
+      evidencePath: logPath.split(path.sep).join("/"),
+      evidenceDigest: digestOf(logPath),
+    };
+  } else {
+    result = { ok: false, kind: String(declared.kind), note: `the declared control kind ${JSON.stringify(declared.kind)} is not implemented, so it cannot be claimed as executed`, command: null, evidencePath: null, evidenceDigest: null };
+  }
+  negativeResults.set(gate.id, result);
   return result;
 };
 
@@ -304,6 +387,13 @@ for (const row of rows) {
   let deferredProvenance = null;
   let scopeClause = null;
   let dependencyEdgeRef = null;
+  // DECLARED BEFORE THE BRANCH CHAIN, NOT AFTER IT (EP-010 M13). The repository-mapped PASS branch writes the fields
+  // that justify it, and a `const statusFields = {}` declared after the chain put this holder in the temporal dead
+  // zone: the stage died with "Cannot access 'statusFields' before initialization". THAT IS THE SAME FAILURE CLASS
+  // RECORDED IN M4(c), where a `let` declared inside one extraction block was out of scope in the classification
+  // below it. The executor failed LOUDLY rather than writing a half-classified row, which is what makes it survivable.
+  const mappedFields = {};
+  const statusFields = {};
   if (definition === null) {
     status = "ERROR";
     reason = `the per-ID definition could not be located in ${libraryPath ?? "(no source_file)"}; a harness precondition failed, so nothing was executed for this ID`;
@@ -364,12 +454,31 @@ for (const row of rows) {
     blockingDependency = "capability:per-id-definition";
     dependencyEdgeRef = `${blockingDependency}->${stage}`;
   } else if (gateResult !== null && gateResult.status !== "MISSING") {
-    // THE HONEST CEILING. The covering gate ran; the prompt's own scope discovery, methodology and completion gate
-    // did not, and SPEC-006 section 4.1 requires an executed oracle AND an executed negative case for a PASS.
-    status = "PARTIAL";
-    reason = `the repository gate covering this subject (scripts/${gateResult.script}) ran as the positive path: ${gateResult.note}. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have`;
-    nextAction = "execute this prompt in an authorised agentic runner; write findings.md and the completion-gate checklist under the ID evidence directory, then re-decide the status";
-    blockingDependency = "capability:agentic-runner";
+    // THE MAPPED PASS AND ITS HONEST CEILING (EP-010 M13; SPEC-006 section 4.1 "repository-mapped execution").
+    // A mapped PASS is available ONLY when the covering gate ran its positive path in this epoch AND its DECLARED
+    // NEGATIVE CONTROL ran and behaved as specified. Otherwise the id stays PARTIAL and the reason names exactly what
+    // is missing - either that no control is declared for the gate, or that the declared one did not refuse.
+    const control = runNegativeCase(gate, gateResult);
+    if (control.ok) {
+      status = "PASS";
+      reason = `repository-mapped PASS: the gate covering this subject (scripts/${gateResult.script}) ran in this epoch (${gateResult.note}) AND its declared negative control ran and behaved as specified (${control.note}). NOT prompt-level compliance: the prompt's own methodology, scope discovery and completion gate were not executed`;
+      nextAction = "none required for the mapped claim; execute the prompt in an authorised agentic runner to replace this mapped PASS with prompt-level evidence and retire promptLevelUncovered[]";
+      mappedFields.executionBasis = "repository-mapped";
+      mappedFields.mappedGate = `scripts/${gateResult.script}`;
+      mappedFields.negativeCaseCommand = control.command;
+      mappedFields.negativeCaseEvidencePath = control.evidencePath;
+      mappedFields.negativeCaseEvidenceDigest = control.evidenceDigest;
+      mappedFields.promptLevelUncovered = [
+        "the prompt's own scope-discovery pass and methodology",
+        "the prompt's own completion gate, findings and negative case",
+        "the end-to-end half of the outcome through the real entry point against real dependencies, where the prompt requires it",
+      ];
+    } else {
+      status = "PARTIAL";
+      reason = `the repository gate covering this subject (scripts/${gateResult.script}) ran as the positive path: ${gateResult.note}. NOT a PASS: SPEC-006 section 4.1 repository-mapped execution additionally requires an EXECUTED negative control, and ${control.note}`;
+      nextAction = "declare and execute a negative control for the covering gate, or execute this prompt in an authorised agentic runner; write findings.md and the completion-gate checklist under the ID evidence directory, then re-decide the status";
+      blockingDependency = "capability:agentic-runner";
+    }
   } else if (needsRunner) {
     status = "BLOCKED_PREREQUISITE";
     reason = `the prompt is written for an agentic runner and no repository gate covers its subject; the definition was extracted from ${definitionSource} and NOT executed`;
@@ -386,7 +495,9 @@ for (const row of rows) {
 
   // THE FIELDS SPEC-006 SECTION 4.1 REQUIRES PER STATUS, assembled here rather than left to each branch. A status
   // whose required fields are absent is not a status; it is a word, and the validator now rejects it.
-  const statusFields = {};
+  // The holder itself is declared ABOVE the branch chain (see mappedFields) because the mapped-PASS branch writes into
+  // it; only the per-status assembly lives here.
+  Object.assign(statusFields, mappedFields);
   if (status === "PARTIAL") {
     statusFields.coveredSurface = [gateResult === null ? "the extracted per-ID definition" : `scripts/${gateResult.script} as the positive path (${gateResult.note})`];
     statusFields.uncoveredSurface = [
