@@ -98,6 +98,20 @@ export const LEGACY_PROBE_TIMEOUT_MS = 400;
 
 export interface HealthDependencies {
   readonly probes: readonly ProbeInput[];
+  /**
+   * THE DECISION PATH (EP-010 M17), AND IT IS THE ONE THE RUNNING SERVICE USES.
+   *
+   * `src/infrastructure/observability/compose-telemetry.ts` already owns the whole readiness evaluation: it runs the six
+   * declared probes CONCURRENTLY under the §7.2 budget, classifies each failure, records the metrics and emits the
+   * `ReadinessChanged` record. Re-running those probes here through `probes` would evaluate every dependency TWICE per
+   * request and could answer from a second evaluation that disagrees with the metrics the first one recorded.
+   *
+   * So when a service supplies `decision`, the routes consume ONE evaluation: the decision is called once per request
+   * and its checks are rendered. When it is absent the `probes` path is used, which is what every route-level test
+   * drives. The shape is structural rather than an import, because `health-routes.ts` already imports from THIS file
+   * and a two-way import between them would be a cycle.
+   */
+  readonly decision?: () => Promise<ReadinessDecisionLike>;
   /** Which required set applies. Declared, not guessed (SPEC-007 §7.2). */
   readonly role?: 'web' | 'worker';
   /** Injected so tests are deterministic and the route never reads the clock itself. */
@@ -119,6 +133,26 @@ export interface HealthDependencies {
 
 export const DEFAULT_SERVICE = 'vanishgraph-api';
 export const DEFAULT_API_VERSION = 'v1';
+
+/**
+ * The shape this layer needs from a readiness decision, declared structurally.
+ *
+ * `status` and `required` are optional because the composer's own decision type carries `ok` today: a check may arrive
+ * as either form, and both are accepted so the bridge does not force a change on the composer before it is needed.
+ * `failedChecks` accepts the SPEC-003 form (`{name, reason}`) and the composer's current form (names as strings).
+ */
+export interface ReadinessDecisionLike {
+  readonly dependencyState: 'READY' | 'NOT_READY';
+  readonly failedChecks: readonly (string | { readonly name: string; readonly reason?: string })[];
+  readonly checks: readonly {
+    readonly name: string;
+    readonly required?: boolean;
+    readonly ok?: boolean;
+    readonly status?: 'PASS' | 'FAIL' | 'SKIPPED';
+    readonly latencyMs: number;
+    readonly reasonCode: string | null;
+  }[];
+}
 
 /** SPEC-007 §7.1's `checks[]` entry, plus `reachable` — the boolean form SPEC-003 §5.17.1 uses. */
 export interface DependencyCheck {
@@ -201,6 +235,37 @@ interface Evaluation {
  */
 async function evaluate(deps: HealthDependencies): Promise<Evaluation> {
   const startedAt = Date.now();
+  // THE DECISION PATH: ONE evaluation, made by the component that also recorded the metrics and the transition record.
+  if (deps.decision !== undefined) {
+    const decision = await deps.decision();
+    const checks = decision.checks.map((check): DependencyCheck => {
+      const status: CheckStatus = check.status ?? (check.ok === true ? 'PASS' : 'FAIL');
+      return Object.freeze({
+        name: check.name,
+        required: check.required ?? true,
+        status,
+        reachable: status === 'PASS',
+        latencyMs: check.latencyMs,
+        reasonCode: status === 'PASS' ? null : (check.reasonCode ?? 'UNKNOWN'),
+      });
+    });
+    const derived = checks
+      .filter((check) => check.required && check.status !== 'PASS')
+      .map((check) => Object.freeze({ name: check.name, reason: check.reasonCode ?? 'UNKNOWN', state: 'FAIL' as const }));
+    // THE DECISION IS RECONCILED, NOT OVERRIDDEN. If it says NOT_READY while no required check is visibly failing, the
+    // failures it NAMES are reported: the decision is what the metrics and the `ReadinessChanged` record were made
+    // from, so quietly answering READY here would contradict the series an operator is alerting on.
+    const named = decision.failedChecks.map((entry) => (typeof entry === 'string' ? { name: entry, reason: 'UNKNOWN' } : { name: entry.name, reason: entry.reason ?? 'UNKNOWN' }));
+    const failedRequired = decision.dependencyState === 'NOT_READY'
+      ? Object.freeze([
+          ...derived,
+          ...named
+            .filter((entry) => !derived.some((failure) => failure.name === entry.name))
+            .map((entry) => Object.freeze({ name: entry.name, reason: entry.reason, state: 'FAIL' as const })),
+        ])
+      : Object.freeze(derived);
+    return { checks: Object.freeze(checks), failedRequired, totalLatencyMs: Date.now() - startedAt };
+  }
   const checks = await Promise.all(
     deps.probes.map(async (input): Promise<DependencyCheck> => {
       const probeStarted = Date.now();
