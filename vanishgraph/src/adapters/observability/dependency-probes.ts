@@ -416,10 +416,19 @@ export function jobWorkerProbe(options: JobWorkerProbeOptions): Probe {
   };
 }
 
-/** §7.2 object-store: the declared action, with the repository's actual limitation stated as the failure. */
+/**
+ * The object-store client for a run that has been given NO object-store configuration.
+ *
+ * IT IS NOT A CLAIM ABOUT THIS REPOSITORY'S CODE, AND ITS EARLIER MESSAGE MADE ONE (corrected in EP-010 M19). It read
+ * "no module in this repository implements S3 request signing or holds an object-store credential", which is FALSE:
+ * `signS3Request` and `objectStoreProbe` below do exactly that, and a provisioning run has already created the bucket,
+ * uploaded a probe object and verified both the digest and the wrong-digest refusal. What this client reports is the
+ * state of a RUN — no endpoint, bucket or credential reached this process, so the declared action cannot be performed
+ * HERE. The induced-failure harness wires it deliberately to represent exactly that.
+ */
 export const objectStoreProbeUnavailable: Probe = async () => {
   throw new ProbeUnavailableError(
-    'the object-store probe requires HeadBucket and a SIGNED GetObject, and no module in this repository implements S3 request signing or holds an object-store credential: the probe is not wired rather than passing',
+    'the declared object-store action requires HeadBucket and a SIGNED GetObject, and this run was given no object-store endpoint, bucket or credential: the probe is UNCONFIGURED IN THIS RUN rather than passing (the signer exists — `objectStoreProbe` below performs the declared action)',
     'MISCONFIGURED',
   );
 };
