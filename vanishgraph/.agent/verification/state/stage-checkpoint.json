@@ -1,8 +1,8 @@
 {
   "stage": "V-021",
-  "epoch": "FORGE-SPEC-9",
-  "candidate_sha": "b70162f20bad97f60147e951cb5b9951be116486",
-  "artifact_digest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
+  "epoch": "FORGE-SPEC-10",
+  "candidate_sha": "1e6c59a7acc0aa06ac47ac82bc6bb5d576803d23",
+  "artifact_digest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
   "owned_ids": 12,
   "statuses": {
     "BLOCKED_PREREQUISITE": 11,
@@ -16,10 +16,10 @@
       "sentinel": "security check: ok",
       "sentinelFound": true,
       "evidencePath": ".agent/evidence/EP-010/V-004/gate-security-contract.log",
-      "digest": "7d60544b1871c0d1fc0e53e05257612195a80a9fb57b9ff46033007bc22f2dbc",
-      "epoch": "FORGE-SPEC-9",
-      "artifact_digest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
-      "executed_at": "2026-09-21T01:36:46Z",
+      "digest": "b9eed3c359d6f647ea63c9011fbc9f42e161408b10d37cd0625493118b60cd5a",
+      "epoch": "FORGE-SPEC-10",
+      "artifact_digest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
+      "executed_at": "2026-09-21T06:57:08Z",
       "cached": true,
       "cachedFrom": ".agent/evidence/EP-010/V-004/gate-security-contract.log"
     },
@@ -31,13 +31,13 @@
       "sentinelFound": true,
       "evidencePath": ".agent/evidence/EP-010/V-004/gate-build.log",
       "digest": "2ade2ac281b3a98e8b4a84fe83a5e8be6bea99ed9d51bbb6b2bf2c41f846ff9e",
-      "epoch": "FORGE-SPEC-9",
-      "artifact_digest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
-      "executed_at": "2026-09-21T01:36:10Z",
+      "epoch": "FORGE-SPEC-10",
+      "artifact_digest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
+      "executed_at": "2026-09-21T06:55:55Z",
       "cached": true,
       "cachedFrom": ".agent/evidence/EP-010/V-004/gate-build.log"
     }
   ],
-  "updated_at": "2026-09-21T02:03:59Z",
+  "updated_at": "2026-09-21T07:18:38Z",
   "next_action": "run sh scripts/harness-next.sh to select the next stage"
 }

@@ -11,21 +11,21 @@
   "gate": {
     "gate": "supply-chain",
     "script": "dependency-audit.sh",
-    "exitCode": 1,
+    "exitCode": 0,
     "sentinel": "dependency audit: ok",
-    "sentinelFound": false,
+    "sentinelFound": true,
     "evidencePath": ".agent/evidence/EP-010/V-004/gate-supply-chain.log",
-    "digest": "af3fc1fb8f8314c7aa10756ffdcc5a1768a1052eb03b434fcd02a4e18c69f4d3",
-    "note": "the gate exited 1 and did NOT print its sentinel"
+    "digest": "132f31d36545f4e8fb0666db9f2cf3f1fecbc3da66fb40cc80fa6b5edb5f3f18",
+    "note": "the gate exited 0 and printed its sentinel"
   },
   "prompt_requires_authorization": false,
   "prompt_requires_target": false,
   "prompt_requires_runner": false,
   "status": "PARTIAL",
-  "reason": "the repository gate covering this subject (scripts/dependency-audit.sh) ran as the positive path: the gate exited 1 and did NOT print its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
+  "reason": "the repository gate covering this subject (scripts/dependency-audit.sh) ran as the positive path: the gate exited 0 and printed its sentinel. NOT a PASS: the prompt's scope discovery, methodology and negative case are executed only by an authorised agentic runner, which this environment does not have",
   "deferred_provenance": null,
   "scope_clause": null,
   "dependency_edge_ref": "capability:agentic-runner->V-004",
   "provisioning_action": null,
-  "recorded_at": "2026-09-21T01:35:54Z"
+  "recorded_at": "2026-09-21T06:55:25Z"
 }

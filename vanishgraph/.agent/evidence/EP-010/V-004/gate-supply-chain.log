@@ -1,1 +1,6 @@
-dependency audit: FAIL - runtime dependencies present: @fastify/type-provider-json-schema-to-ts, @tanstack/react-query, @tanstack/react-router, fastify, ioredis, jose, pg, pino, react, react-dom, zod
+dependency audit: inventory ok (11 runtime dependencies, each exact-pinned, licence-reviewed and bound to its lockfile integrity; 11 exact-pinned devDependencies; installer surface third-party runtime imports: 0)
+dependency audit: runtime licence review read from config/licences/runtime-allowlist.json (reviewed 2026-09-21T06:00:28Z by repository owner (the entry set was approved with Decision 1). An agent may PRUNE nothing from this file: a dependency that disappears from it fails the gate.); what is NOT enforced here: the absence of runtime dependencies, withdrawn in EP-010 M12 because LICENSE_POLICY.md requires review, not absence
+dependency audit: advisory scan clean at --audit-level=high
+dependency audit: sbom sha256 8d830f170a003e65838288a8490c4ff483f3c44f050e6e55575402b2466f4195
+dependency audit: sbom reconciles with the lockfile (11 runtime component(s) matched at their locked versions)
+dependency audit: ok

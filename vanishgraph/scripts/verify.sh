@@ -26,6 +26,31 @@ export CI=true GIT_TERMINAL_PROMPT=0 GIT_PAGER=cat PAGER=cat DEBIAN_FRONTEND=non
 
 cd "$(dirname "$0")/.."
 
+# BIND THE RUN TO A DIGEST BEFORE ANY STAGE RUNS. `smoke` refuses to run without `VG_ARTIFACT_DIGEST`, because a stage
+# that tests a digest must say WHICH digest it is testing (DOD-004, SPEC-008 VG-SHIP-021), and the ladder is the layer
+# that knows it: the pinned tarball digest is published in `.agent/verification/state/ARTIFACT_IDENTITY.json`. EP-010
+# M12: `verify.sh` exported no digest, so `smoke` failed with "VG_ARTIFACT_DIGEST is not declared" on a run whose
+# artifact was valid and whose identity had just validated — one stage from the end, for a reason that had nothing to
+# do with the candidate. The binding is PRINTED, so the log says which digest the whole run was bound to, and the
+# stage's own check is untouched: it still requires the declared digest to equal the recorded one and re-hashes the
+# tarball's bytes.
+if [ -z "${VG_ARTIFACT_DIGEST:-}" ]; then
+  VG_ARTIFACT_DIGEST=$(node -e '
+    const fs = require("node:fs");
+    const p = ".agent/verification/state/ARTIFACT_IDENTITY.json";
+    if (!fs.existsSync(p)) process.exit(0);
+    const identity = JSON.parse(fs.readFileSync(p, "utf8"));
+    const tarball = (identity.artifact_paths ?? []).find((entry) => entry.endsWith(".tgz"));
+    process.stdout.write(tarball === undefined ? "" : ((identity.artifact_digests ?? {})[tarball] ?? ""));
+  ')
+  if [ -n "$VG_ARTIFACT_DIGEST" ]; then
+    printf 'verify: bound to artifact %s (published in .agent/verification/state/ARTIFACT_IDENTITY.json)\n' "$VG_ARTIFACT_DIGEST"
+  else
+    printf 'verify: no published artifact digest could be resolved, so stages that require one will refuse\n' >&2
+  fi
+fi
+export VG_ARTIFACT_DIGEST
+
 # Stage order is mandated by spec line 1357. Do not reorder or remove entries.
 STAGES="
 preflight:preflight.sh

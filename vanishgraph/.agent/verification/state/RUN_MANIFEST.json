@@ -120,13 +120,13 @@
     ]
   },
   "epoch": {
-    "epoch_id": "FORGE-SPEC-9",
-    "pinned_at_commit": "6f3a8951eedd36b0c6699d1fdb821c6abce48652",
-    "candidate_commit_sha": "6f3a8951eedd36b0c6699d1fdb821c6abce48652",
-    "base_revision": "b70162f20bad97f60147e951cb5b9951be116486",
-    "test_overlay_revision": "d06841147f75be68e70337aa208ae3200f4a5386",
+    "epoch_id": "FORGE-SPEC-10",
+    "pinned_at_commit": "1e6c59a7acc0aa06ac47ac82bc6bb5d576803d23",
+    "candidate_commit_sha": "1e6c59a7acc0aa06ac47ac82bc6bb5d576803d23",
+    "base_revision": "1e6c59a7acc0aa06ac47ac82bc6bb5d576803d23",
+    "test_overlay_revision": "6d8b96f29bf90c5335f4de32b0637cf3d023875e",
     "build_inputs_digest": "sha256:3be2892e7558559ae9e8fcde4c24228cdcddf356eece6735519bd8ac11f27ee4",
-    "artifact_digest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
+    "artifact_digest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
     "toolchain": {
       "node": "v24.14.1",
       "npm": "11.11.0"

@@ -316,7 +316,13 @@ describe('the execution-time read happens INSIDE the write transaction (VG-AUTHZ
     // MEASURED — an UPDATE that moves `expires_at` into the past is refused with `authority_grant_check`, i.e. a grant
     // can never be STORED already expired. The time-shifted-grant scenario is therefore the clock advancing past a
     // stored instant, which is also what actually happens to a request in flight.
-    const grant = selfGrant(TENANT_A, subjectId, { expiresAt: iso(1_200) });
+    //
+    // THE WINDOW WAS 1 200 ms AND THAT WAS A DEFECT IN THIS TEST, FIXED IN EP-010 M12. The margin must exceed the time
+    // the store-and-read-back path takes, and under load it did not: this test failed with "the grant is unexpired at
+    // request start" on a run where the test took 5 035 ms and setup had already crossed the stored instant — a
+    // failure with nothing to do with the behaviour under test, on a test that passed earlier in the same epoch. The
+    // margin is now an order of magnitude larger than the path it has to survive.
+    const grant = selfGrant(TENANT_A, subjectId, { expiresAt: iso(12_000) });
     await store(TENANT_A, grant);
 
     const requestStartRead = await runner.withTenantTransaction(TENANT_A, async (tx) =>
@@ -327,7 +333,12 @@ describe('the execution-time read happens INSIDE the write transaction (VG-AUTHZ
 
     // WAIT OUT THE WINDOW rather than mocking a clock: the `now` the write transaction passes is the same wall clock the
     // rest of the process reads, and the assertion below confirms the wait actually crossed the stored instant.
-    await new Promise((resolve) => setTimeout(resolve, 1_400));
+    // THE WAIT POLLS RATHER THAN SLEEPING A FIXED INTERVAL, because a fixed interval is a SECOND timing assumption of
+    // exactly the kind that broke this test: 1 400 ms against a 1 200 ms window left 200 ms of slack for everything
+    // else in the suite. Polling can neither outrun the clock nor be outrun by it.
+    while (iso(0) <= grant.expiresAt) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
     assert.ok(iso(0) > grant.expiresAt, 'the clock must genuinely be past the stored expiry before the write');
 
     const refusal = await refusalOf(() =>

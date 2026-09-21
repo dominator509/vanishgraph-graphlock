@@ -1,11 +1,11 @@
 # Final production readiness report
 
-**Verdict: `NO_GO`.** the candidate fails its own verification: 1 clause(s) FAIL and 0 id(s) FAIL across an accounted registry of 484
+**Verdict: `NO_GO`.** the candidate fails its own verification independently of the 5 unsigned external gate(s): VERIFY-NOT-OK, NO-PASSING-ID - a verdict of CONDITIONAL_EXTERNAL_GATES would claim the external gates are the only obstacle, which these blockers contradict
 
-- candidate epoch: `FORGE-SPEC-9`
-- candidate SHA: `c01c388fa6821b621facb066e04aae2a98c7a36a`
-- artifact digest: `sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47`
-- emitted at: `2026-09-21T03:39:03Z`
+- candidate epoch: `FORGE-SPEC-10`
+- candidate SHA: `1e6c59a7acc0aa06ac47ac82bc6bb5d576803d23`
+- artifact digest: `sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46`
+- emitted at: `2026-09-21T10:58:40Z`
 - verdict schema: `schemas/release-gate.schema.json` — validated, 0 problem(s)
 
 ### 1. Executive verdict and exact identity
@@ -38,10 +38,9 @@ Each is a stage of the subgraph; the per-stage statuses and their evidence are i
 
 ### 8. Validated findings ordered by release risk
 
-1. **VERIFY-NOT-OK** — sh scripts/verify.sh did not print verify: ok; the stage it reached last was dependency-audit, and its failure is a release blocker rather than a note (evidence: `.agent/evidence/EP-010/ship-gate-FORGE-SPEC-9/verify.log`)
-2. **DOD-DOD-019** — clause DOD-019 does not pass: reality gate: reality-gate.sh exited 1 WITHOUT its sentinel; the three prose hits recorded in EP-009 remain the gate's only findings (evidence: `.agent/evidence/EP-010/DOD/DOD-019.json`)
-3. **EXTERNAL-GATES-UNSIGNED** — 5 of 5 mandatory external gate(s) are unsigned; while any is open the verdict cannot exceed CONDITIONAL_EXTERNAL_GATES (VG-SHIP-030) (evidence: `.agent/evidence/EP-010/V-021/external-gates.jsonl`)
-4. **NO-PASSING-ID** — not one of the 484 ids carries PASS, so no behaviour was verified end to end through its real entry point (evidence: `.agent/verification/reports/COMPLETE_TEST_ACCOUNTING.csv`)
+1. **VERIFY-NOT-OK** — sh scripts/verify.sh did not print verify: ok; the stage it reached last was smoke, and its failure is a release blocker rather than a note (evidence: `.agent/evidence/EP-010/ship-gate-FORGE-SPEC-10/verify.log`)
+2. **EXTERNAL-GATES-UNSIGNED** — 5 of 5 mandatory external gate(s) are unsigned; while any is open the verdict cannot exceed CONDITIONAL_EXTERNAL_GATES (VG-SHIP-030) (evidence: `.agent/evidence/EP-010/V-021/external-gates.jsonl`)
+3. **NO-PASSING-ID** — not one of the 484 ids carries PASS, so no behaviour was verified end to end through its real entry point (evidence: `.agent/verification/reports/COMPLETE_TEST_ACCOUNTING.csv`)
 
 ### 9. Blocked, deferred, external and not-applicable tests with evidence
 
@@ -53,8 +52,7 @@ The coverage configuration is declared in TESTING.md and enforced by scripts/cov
 
 ### 11. Exact release blockers
 
-- **VERIFY-NOT-OK**: sh scripts/verify.sh did not print verify: ok; the stage it reached last was dependency-audit, and its failure is a release blocker rather than a note → resolve the failing verify.sh stage recorded above and re-run the ship gate
-- **DOD-DOD-019**: clause DOD-019 does not pass: reality gate: reality-gate.sh exited 1 WITHOUT its sentinel; the three prose hits recorded in EP-009 remain the gate's only findings → Any unexplained hit is a release blocker or the affected claim is explicitly marked incomplete.
+- **VERIFY-NOT-OK**: sh scripts/verify.sh did not print verify: ok; the stage it reached last was smoke, and its failure is a release blocker rather than a note → resolve the failing verify.sh stage recorded above and re-run the ship gate
 - **EXTERNAL-GATES-UNSIGNED**: 5 of 5 mandatory external gate(s) are unsigned; while any is open the verdict cannot exceed CONDITIONAL_EXTERNAL_GATES (VG-SHIP-030) → obtain the named participant's sign-off for each gate; an agent can never satisfy one (DOD-039)
 - **NO-PASSING-ID**: not one of the 484 ids carries PASS, so no behaviour was verified end to end through its real entry point → execute the ids in an authorised agentic runner and record PASS only where the oracle and a negative case ran
 
@@ -72,5 +70,5 @@ Pin the epoch (`sh scripts/epoch-pin.sh`), run the subgraph to completion (`sh s
 
 ### 15. Final release predicate
 
-The predicate is: every applicable clause PASS **and** every mandatory external gate signed. Clause status: 16 pass, 1 fail, 25 other. Gate status: 0 signed of 5. **The predicate does not hold, so the verdict is `NO_GO`.**
+The predicate is: every applicable clause PASS **and** every mandatory external gate signed. Clause status: 17 pass, 0 fail, 25 other. Gate status: 0 signed of 5. **The predicate does not hold, so the verdict is `NO_GO`.**
 

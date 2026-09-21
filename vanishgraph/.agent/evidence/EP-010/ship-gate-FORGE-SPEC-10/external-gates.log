@@ -1,0 +1,6 @@
+external gates status: 0/5 signed
+external gates status:   EXTERNAL_REQUIRED  EXT-GATE-01  human UAT of the golden path
+external gates status:   EXTERNAL_REQUIRED  EXT-GATE-02  manual assistive-technology validation at WCAG 2.2 AA
+external gates status:   EXTERNAL_REQUIRED  EXT-GATE-03  legal and compliance review of jurisdictions, agent evidence, templates and claims
+external gates status:   EXTERNAL_REQUIRED  EXT-GATE-04  hardware, HSM or accredited assessment where applicable
+external gates status:   EXTERNAL_REQUIRED  EXT-GATE-05  production deployment authorization

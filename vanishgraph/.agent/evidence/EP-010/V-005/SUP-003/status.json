@@ -16,9 +16,9 @@
     "sentinelFound": true,
     "evidencePath": ".agent/evidence/EP-010/V-004/gate-build.log",
     "digest": "2ade2ac281b3a98e8b4a84fe83a5e8be6bea99ed9d51bbb6b2bf2c41f846ff9e",
-    "epoch": "FORGE-SPEC-9",
-    "artifact_digest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
-    "executed_at": "2026-09-21T01:36:10Z",
+    "epoch": "FORGE-SPEC-10",
+    "artifact_digest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
+    "executed_at": "2026-09-21T06:55:55Z",
     "cached": true,
     "cachedFrom": ".agent/evidence/EP-010/V-004/gate-build.log"
   },
@@ -31,5 +31,5 @@
   "scope_clause": null,
   "dependency_edge_ref": "capability:per-id-definition->V-005",
   "provisioning_action": null,
-  "recorded_at": "2026-09-21T01:36:53Z"
+  "recorded_at": "2026-09-21T06:57:17Z"
 }

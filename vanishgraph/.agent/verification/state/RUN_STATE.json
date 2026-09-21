@@ -1,5 +1,5 @@
 {
-  "status": "IN_PROGRESS",
+  "status": "ALL_DONE",
   "active_node": "EP-010",
   "closed_nodes": [
     "EP-000",
@@ -13,7 +13,7 @@
     "EP-008",
     "EP-009"
   ],
-  "candidate_sha": "6f3a8951eedd36b0c6699d1fdb821c6abce48652",
-  "epoch": "FORGE-SPEC-9",
-  "updated_at": "2026-09-21T05:59:39Z"
+  "candidate_sha": "1e6c59a7acc0aa06ac47ac82bc6bb5d576803d23",
+  "epoch": "FORGE-SPEC-10",
+  "updated_at": "2026-09-21T10:58:40Z"
 }

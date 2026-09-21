@@ -1,0 +1,11 @@
+harness validation: vocabulary 16 status token(s) parsed from SPEC-006 section 4.1; registry 484 rows (sha256 d8a5389cfb296885); matrix 484 decisions; DOD 42 clauses
+harness validation: ledger 6718 row(s), 5010 for a registry id, 6234 belonging to an earlier epoch, 484/484 accounted in this epoch
+harness validation: self-test rejected as required - a fabricated 484-row blanket BLOCKED_CAPABILITY ledger
+harness validation: self-test rejected as required - PASS without evidence
+harness validation: self-test rejected as required - NOT_APPLICABLE without repository evidence
+harness validation: self-test rejected as required - zero-test collection
+harness validation: self-test rejected as required - a missing ID
+harness validation: self-test rejected as required - a duplicated ID
+harness validation: self-test rejected as required - stale-epoch evidence
+harness validation: self-test rejected as required - a prerequisite block without a dependency edge
+harness validation: ok

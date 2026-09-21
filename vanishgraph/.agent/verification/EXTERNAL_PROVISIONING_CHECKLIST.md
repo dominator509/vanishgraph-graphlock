@@ -1,10 +1,11 @@
 # External provisioning checklist
 
-**For:** the human repository owner. **Epoch:** `FORGE-SPEC-9` (`.agent/verification/state/RUN_STATE.json:17`).
-**Pinned artifact:** `dist/vanishgraph-0.1.0.tgz` = `sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47`
+**For:** the human repository owner. **Epoch:** `FORGE-SPEC-10` (`.agent/verification/state/RUN_STATE.json:17`).
+**Pinned artifact:** `dist/vanishgraph-0.1.0.tgz` = `sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46`
 (`.agent/verification/state/ARTIFACT_IDENTITY.json:20`).
-**Verdict today:** `NO_GO` with 4 release blockers and 0 of 5 mandatory external gates signed
-(`.agent/verification/state/RELEASE_GATE.json:2`, `:96`; `.agent/evidence/EP-010/V-021/external-gates.jsonl:1-5`).
+**Verdict today:** `NO_GO` with 3 release blockers — `VERIFY-NOT-OK`, `EXTERNAL-GATES-UNSIGNED`, `NO-PASSING-ID`
+(`.agent/verification/state/RELEASE_GATE.json:2`, `:93`, `:99`, `:105`) — and 0 of 5 mandatory external gates signed
+(`.agent/evidence/EP-010/V-021/external-gates.jsonl:1-5`).
 
 This document lists **only** the items that a human outside the harness must obtain, register, create or sign. Every
 claim below is a citation into this repository; nothing is invented. Where the repository does not say how to obtain
@@ -431,17 +432,15 @@ All five requests are `EXTERNAL_REQUIRED` and carry the same prepared request di
 **current pinned** tarball digest:
 
 ```
-sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47
+sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46
 ```
 
 `dist/vanishgraph-0.1.0.tgz`, `.agent/verification/state/ARTIFACT_IDENTITY.json:20`; equal to
 `requestedArtifactDigest` in all five rows of `.agent/evidence/EP-010/V-021/external-gates.jsonl:1-5`. Check it
 yourself immediately before signing — the recorded command is in
-`.agent/evidence/EP-010/V-021/SIGNOFF_INSTRUCTIONS.md:33-35`. **Drift warning:** `RELEASE_GATE.json:39`, `:47`, `:56`,
-`:66`, `:75` still carry the **superseded** digest `sha256:6fe9573315f6fb4d559a7e47df0437b7caa49780f31567229a109e610a633cab`,
-because that file was emitted at `2026-09-21T03:39:03Z` (`.agent/verification/state/RELEASE_GATE.json:108`) and the
-requests were re-issued at `2026-09-21T05:58:59Z` (`external-gates.jsonl:1`, field `reissuedAt`). Sign the
-`ARTIFACT_IDENTITY.json` value, never the one in `RELEASE_GATE.json`.
+`.agent/evidence/EP-010/V-021/SIGNOFF_INSTRUCTIONS.md:33-35`. **This digest changed in EP-010 M12** (from
+`sha256:81215aaf…`) because the licence review `config/licences/runtime-allowlist.json` ships inside the package:
+any sign-off against the older digest is refused by name. Sign the `ARTIFACT_IDENTITY.json` value, always.
 
 | gate_id | gate | who must sign (`externalPartyRole`, verbatim) | digest to sign | what the participant is asked to do (from `preparedScenarioList`) | record |
 |---|---|---|---|---|---|
@@ -457,20 +456,24 @@ marker at the start of each line is this document's label for the table above: *
 not be copied** into `signoffs.jsonl`.
 
 ```
-<R1> {"gate_id":"EXT-GATE-01","gate":"human UAT of the golden path","status":"SIGNED","externalPartyRole":"Named authorised business participant","signerRef":"<role + roster or ticket label - no personal data beyond what the role requires>","signatureMethod":"<how the sign-off was produced and where it is kept>","signedAt":"<ISO-8601 UTC timestamp, e.g. 2026-09-22T10:00:00Z>","signedArtifactDigest":"sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47","scope":"<what you reviewed or exercised, against which scenario list>","unresolvedFindings":"none","evidencePath":"<path to the stored signature or record>"}
-<R2> {"gate_id":"EXT-GATE-02","gate":"manual assistive-technology validation at WCAG 2.2 AA","status":"SIGNED","externalPartyRole":"Named assistive-technology practitioner","signerRef":"<role + roster or ticket label>","signatureMethod":"<how the sign-off was produced and where it is kept>","signedAt":"<ISO-8601 UTC timestamp>","signedArtifactDigest":"sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47","scope":"<what you reviewed or exercised, against which scenario list>","unresolvedFindings":"none","evidencePath":"<path to the stored signature or record>"}
-<R3> {"gate_id":"EXT-GATE-03","gate":"legal and compliance review of jurisdictions, agent evidence, templates and claims","status":"SIGNED","externalPartyRole":"Qualified counsel","signerRef":"<role + roster or ticket label>","signatureMethod":"<how the sign-off was produced and where it is kept>","signedAt":"<ISO-8601 UTC timestamp>","signedArtifactDigest":"sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47","scope":"<what you reviewed or exercised, against which scenario list>","unresolvedFindings":"none","evidencePath":"<path to the stored signature or record>"}
-<R4> {"gate_id":"EXT-GATE-04","gate":"hardware, HSM or accredited assessment where applicable","status":"SIGNED","externalPartyRole":"Accredited assessor","signerRef":"<role + roster or ticket label>","signatureMethod":"<how the sign-off was produced and where it is kept>","signedAt":"<ISO-8601 UTC timestamp>","signedArtifactDigest":"sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47","scope":"<what you reviewed or exercised, against which scenario list>","unresolvedFindings":"none","evidencePath":"<path to the stored signature or record>"}
-<R5> {"gate_id":"EXT-GATE-05","gate":"production deployment authorization","status":"SIGNED","externalPartyRole":"Authorised operator (manual only)","signerRef":"<operator name and role>","signatureMethod":"<how the authorization was produced and where it is kept>","signedAt":"<ISO-8601 UTC timestamp>","signedArtifactDigest":"sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47","scope":"<the deployed digest, the health-surface readings you took and the environment>","unresolvedFindings":"none","evidencePath":"<path to the stored authorization record>"}
+<R1> {"gate_id":"EXT-GATE-01","gate":"human UAT of the golden path","status":"SIGNED","externalPartyRole":"Named authorised business participant","signerRef":"<role + roster or ticket label - no personal data beyond what the role requires>","signatureMethod":"<how the sign-off was produced and where it is kept>","signedAt":"<ISO-8601 UTC timestamp, e.g. 2026-09-22T10:00:00Z>","signedArtifactDigest":"sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46","scope":"<what you reviewed or exercised, against which scenario list>","unresolvedFindings":"none","evidencePath":"<path to the stored signature or record - the file must EXIST>","evidenceDigest":"<sha256 of that file's bytes>"}
+<R2> {"gate_id":"EXT-GATE-02","gate":"manual assistive-technology validation at WCAG 2.2 AA","status":"SIGNED","externalPartyRole":"Named assistive-technology practitioner","signerRef":"<role + roster or ticket label>","signatureMethod":"<how the sign-off was produced and where it is kept>","signedAt":"<ISO-8601 UTC timestamp>","signedArtifactDigest":"sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46","scope":"<what you reviewed or exercised, against which scenario list>","unresolvedFindings":"none","evidencePath":"<path to the stored signature or record - the file must EXIST>","evidenceDigest":"<sha256 of that file's bytes>"}
+<R3> {"gate_id":"EXT-GATE-03","gate":"legal and compliance review of jurisdictions, agent evidence, templates and claims","status":"SIGNED","externalPartyRole":"Qualified counsel","signerRef":"<role + roster or ticket label>","signatureMethod":"<how the sign-off was produced and where it is kept>","signedAt":"<ISO-8601 UTC timestamp>","signedArtifactDigest":"sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46","scope":"<what you reviewed or exercised, against which scenario list>","unresolvedFindings":"none","evidencePath":"<path to the stored signature or record - the file must EXIST>","evidenceDigest":"<sha256 of that file's bytes>"}
+<R4> {"gate_id":"EXT-GATE-04","gate":"hardware, HSM or accredited assessment where applicable","status":"SIGNED","externalPartyRole":"Accredited assessor","signerRef":"<role + roster or ticket label>","signatureMethod":"<how the sign-off was produced and where it is kept>","signedAt":"<ISO-8601 UTC timestamp>","signedArtifactDigest":"sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46","scope":"<what you reviewed or exercised, against which scenario list>","unresolvedFindings":"none","evidencePath":"<path to the stored signature or record - the file must EXIST>","evidenceDigest":"<sha256 of that file's bytes>"}
+<R5> {"gate_id":"EXT-GATE-05","gate":"production deployment authorization","status":"SIGNED","externalPartyRole":"Authorised operator (manual only)","signerRef":"<operator name and role>","signatureMethod":"<how the authorization was produced and where it is kept>","signedAt":"<ISO-8601 UTC timestamp>","signedArtifactDigest":"sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46","scope":"<the deployed digest, the health-surface readings you took and the environment>","unresolvedFindings":"none","evidencePath":"<path to the stored authorization record - the file must EXIST>","evidenceDigest":"<sha256 of that file's bytes>"}
 ```
 
-Rules that the machine check actually enforces, so a record is not silently refused
-(`scripts/production-readiness-check.sh:190-203`): `status` must be `SIGNED`; `signedArtifactDigest` must equal the
-pinned tarball digest; `externalPartyRole` must be **exactly** the role in the request file; and `signerRef`,
-`signatureMethod`, `signedAt`, `scope`, `unresolvedFindings` must each be a non-blank string — write `none` for
-`unresolvedFindings` when there are none, because an empty value is rejected
-(`.agent/evidence/EP-010/V-021/SIGNOFF_INSTRUCTIONS.md:26`). A refused record produces a blocker named
-`EXTERNAL-GATE-SIGNOFF-INVALID-<gate_id>` (`scripts/production-readiness-check.sh:200`).
+Rules that the machine check actually enforces, so a record is not silently refused — implemented ONCE in
+`scripts/external-gates-status.sh` (EP-010 M12; the rules used to be duplicated and both copies were wrong, so no
+signature could ever register): `status` must be `SIGNED`; `signedArtifactDigest` must equal the pinned tarball
+digest; `externalPartyRole` must be **exactly** the role in the request file; `signerRef`, `signatureMethod`,
+`signedAt`, `scope` and `unresolvedFindings` must each be a non-blank string (write `none` for `unresolvedFindings`
+when there are none, because an empty value is rejected); `evidencePath` must name a file that EXISTS; and
+`evidenceDigest` must be the sha256 of that file's bytes, so a claim resolves to a stored artifact hash
+(VG-EVIDENCE-002). A refused record produces a blocker named `EXTERNAL-GATE-SIGNOFF-INVALID-<gate_id>` in
+`.agent/verification/state/EXTERNAL_GATES_STATUS.json` and prints both values when they disagree. **No check proves a
+signature is authentic** — these rules verify shape, and a fabricated record would have to fabricate a stored
+artifact and its hash as well.
 
 **An AI agent can never produce one of these.** `DOD-039` passes only because the five gates exist and none is signed
 ("an agent may never sign one", `.agent/verification/state/DOD_STATUS.jsonl:39`); each request row carries its own
@@ -801,13 +804,13 @@ Provisioning changes the picture for none of them by itself:
 
 | blocker id | what it says (`.agent/verification/state/RELEASE_GATE.json`) | fixed by this checklist? |
 |---|---|---|
-| `VERIFY-NOT-OK` | "`sh scripts/verify.sh` did not print `verify: ok`; the stage it reached last was `dependency-audit`, and its failure is a release blocker rather than a note" (`:83-87`) | **No.** A failing gate stage is source/repository work; no credential or environment target in Part A or Part C makes a failing gate pass. `DOD-021` remains `PARTIAL` (`.agent/verification/state/DOD_STATUS.jsonl:21`) |
+| `VERIFY-NOT-OK` | "`sh scripts/verify.sh` did not print `verify: ok`; the stage it reached last was `smoke`, and its failure is a release blocker rather than a note" (`.agent/verification/state/RELEASE_GATE.json:93`) | **No — and it is now the single most valuable thing to fix.** After EP-010 M12 the ladder reaches **13 of 15** stages and stops at `smoke` on a REAL product divergence: SPEC-003 §5.17.2 declares `/v1/ready` as `{"dependencyState":"READY\|NOT_READY","checkedAt":"…","failedChecks":[…]}` with per-dependency names, while `src/http/routes/health.ts` implements `{status, checks}` — and specs outrank code, so the implementation is wrong. Beyond it, `test-e2e` needs a browser runtime (`BLOCKED_ENVIRONMENT` when absent) and `live-fire` will not print its sentinel while 2 of its 12 outcomes need named external participants, so `verify: ok` is **not reachable by code alone**. No credential in Part A or target in Part C makes a failing gate pass; `DOD-021` remains `PARTIAL` (`.agent/verification/state/DOD_STATUS.jsonl:21`) |
 | `DOD-DOD-019` | "clause `DOD-019` does not pass: reality gate: `reality-gate.sh` exited 1 WITHOUT its sentinel; the three prose hits recorded in EP-009 remain the gate's only findings" (`:89-93`) | **No.** `DOD-019` is `FAIL` (`.agent/verification/state/DOD_STATUS.jsonl:19`); the placeholder/stub/fake scan is a code-and-prose finding |
 | `EXTERNAL-GATES-UNSIGNED` | "5 of 5 mandatory external gate(s) are unsigned; while any is open the verdict cannot exceed `CONDITIONAL_EXTERNAL_GATES` (VG-SHIP-030)" (`:95-99`) | **Only by Part B, and only a human can do it.** Provisioning produces the conditions a participant needs; it never produces the sign-off (`DOD-039`, `.agent/verification/state/DOD_STATUS.jsonl:39`) |
 | `NO-PASSING-ID` | "not one of the 484 ids carries PASS, so no behaviour was verified end to end through its real entry point" (`:101-105`) | **No.** Provisioning flips 7 of 484 `BLOCKED_CREDENTIALS` rows at most; the remaining 205 `BLOCKED_PREREQUISITE` rows are `capability:execution-mapping` (190) and `capability:per-id-definition` (15) — missing per-ID execution mappings and definitions, not missing credentials — and 266 rows are `PARTIAL`. Reaching `PASS` requires executing the IDs in an authorised agentic runner and recording a PASS only where the oracle and a negative case ran (`RELEASE_GATE.json:104`) |
 
 Clauses that provisioning does reach, and clauses it does not, in the same taxonomy
-(`.agent/verification/state/DOD_STATUS.jsonl`; the verdict records 16 of 42 `PASS`, 1 `FAIL`, 25 other,
+(`.agent/verification/state/DOD_STATUS.jsonl`; the verdict records 17 of 42 `PASS`, 0 `FAIL`, 25 other,
 `.agent/verification/state/RELEASE_GATE.json:7-13`):
 
 | clause | status | what provisioning does |
@@ -820,7 +823,7 @@ Clauses that provisioning does reach, and clauses it does not, in the same taxon
 | `DOD-022` | `DEFERRED_LONG_RUNNING` (`:22`), `DOD-038` | **Partially.** C-1 + C-7 supply the environment and the runner; the durations themselves cannot be provisioned |
 | `DOD-039` | `EXTERNAL_REQUIRED` (`:39`) | **No.** Only the five named humans can close it (Part B) |
 | `DOD-003`, `DOD-005`, `DOD-016` | `PASS` / `PARTIAL` / `PARTIAL` (`:3`, `:5`, `:16`) | **No or partially.** C-4 and C-5 change recorded format/signature facts; `DOD-016`'s from-prior path needs C-3 |
-| `DOD-019` | `FAIL` (`:19`) | **No** |
+| `DOD-019` | `PASS` (`:19`) | **No, and it no longer needs to be.** This clause was `FAIL` when this list was written; the three prose hits were reworded at their source in EP-010 M12 (no allow-list entry was added), and `reality gate: ok` now prints |
 | `DOD-001`, `-008`, `-010`…`-015`, `-017`, `-021`, `-027`, `-028`, `-033`, `-037` | `PARTIAL` | **No.** These are test-execution, coverage, mutation, observability and reporting gaps in the candidate, not provisioning gaps |
 
 **The two largest blocked groups are not credential items at all.** Of the 484 accounted IDs in `FORGE-SPEC-9`, 190 are

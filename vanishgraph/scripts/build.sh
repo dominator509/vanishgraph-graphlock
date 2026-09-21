@@ -20,7 +20,22 @@ cd "$(dirname "$0")/.."
 [ -d src ] || { echo "build: FAIL - src/ is missing" >&2; exit 1; }
 [ -d node_modules ] || { echo "build: FAIL - dependencies not installed; run npm ci" >&2; exit 1; }
 
-rm -rf dist
+# CLEAN THE COMPILED OUTPUT WITHOUT DESTROYING THE DISTRIBUTION ARTIFACT. Defect fixed in EP-010 M12.
+# This line used to be `rm -rf dist`, and since EP-009 the DISTRIBUTION artifact - the npm tarball, the CycloneDX
+# SBOM, provenance.json, SHA256SUMS and ARTIFACT_IDENTITY.json - is published into the SAME directory. `verify.sh`
+# runs `build` BEFORE `artifact-identity` in the order the specification mandates and forbids reordering, so the wipe
+# deleted the very artifact the next stage validates: `artifact identity: FAIL - ... does not exist` for all four
+# paths was the last thing standing between this run and `verify: ok`. The compiled output is this script's to clean;
+# the published artifact is not.
+if [ -d dist ]; then
+  find dist -mindepth 1 -maxdepth 1 \
+    ! -name 'vanishgraph-*.tgz' \
+    ! -name '*.cdx.json' \
+    ! -name 'provenance.json' \
+    ! -name 'SHA256SUMS' \
+    ! -name 'ARTIFACT_IDENTITY.json' \
+    -exec rm -rf {} +
+fi
 npx --no-install tsc -p tsconfig.build.json
 
 [ -d dist ] || { echo "build: FAIL - tsc reported success but produced no dist/" >&2; exit 1; }

@@ -1,7 +1,7 @@
 {
-  "epoch": "FORGE-SPEC-9",
-  "candidate_sha": "6f3a8951eedd36b0c6699d1fdb821c6abce48652",
-  "artifact_digest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
+  "epoch": "FORGE-SPEC-10",
+  "candidate_sha": "1e6c59a7acc0aa06ac47ac82bc6bb5d576803d23",
+  "artifact_digest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
   "produced_by": "sh scripts/external-gates-status.sh",
   "signoff_store": ".agent/evidence/EP-010/V-021/signoffs.jsonl",
   "gates": [

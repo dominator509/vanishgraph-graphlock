@@ -226,12 +226,25 @@ if (harnessInvalid) {
 } else if (dodSummary.fail > 0 || registry.failed > 0 || registry.errored > 0) {
   verdict = "NO_GO";
   reason = `the candidate fails its own verification: ${dodSummary.fail} clause(s) FAIL and ${registry.failed} id(s) FAIL across an accounted registry of ${registry.total}`;
-} else if (signedGates < externalGates.length) {
-  verdict = "CONDITIONAL_EXTERNAL_GATES";
-  reason = `${externalGates.length - signedGates} mandatory external gate(s) are unsigned, and VG-SHIP-030 forbids a verdict above CONDITIONAL_EXTERNAL_GATES while any is open`;
 } else {
-  verdict = "GO";
-  reason = "every applicable clause passes with linked evidence, the registry accounts for all 484 ids and every mandatory external gate is signed";
+  // THE UNSIGNED GATES MAY ONLY BE THE SOLE OBSTACLE. Defect fixed in EP-010 M12: this ladder jumped straight from
+  // "no clause FAILs" to CONDITIONAL_EXTERNAL_GATES, so a run whose own verify.sh FAILED at artifact-identity, with
+  // 0 of 484 ids passing, was emitted as CONDITIONAL_EXTERNAL_GATES with a reason naming ONLY the unsigned gates.
+  // That reads as "obtain five signatures and ship", which was false. SPEC-008 section 2's own description of the
+  // token is that GO needs every clause to pass AND every gate signed, and that a CANDIDATE FAILURE is NO_GO;
+  // CONDITIONAL_EXTERNAL_GATES means the external gates are the only thing left. So any surviving blocker other
+  // than the unsigned-gate blocker makes the verdict NO_GO, and the reason names them.
+  const otherBlockers = blockers.filter((entry) => entry.id !== "EXTERNAL-GATES-UNSIGNED");
+  if (otherBlockers.length > 0) {
+    verdict = "NO_GO";
+    reason = `the candidate fails its own verification independently of the ${externalGates.length - signedGates} unsigned external gate(s): ${otherBlockers.map((entry) => entry.id).join(", ")} - a verdict of CONDITIONAL_EXTERNAL_GATES would claim the external gates are the only obstacle, which these blockers contradict`;
+  } else if (signedGates < externalGates.length) {
+    verdict = "CONDITIONAL_EXTERNAL_GATES";
+    reason = `${externalGates.length - signedGates} mandatory external gate(s) are unsigned, and VG-SHIP-030 forbids a verdict above CONDITIONAL_EXTERNAL_GATES while any is open; every other condition for GO holds on this candidate`;
+  } else {
+    verdict = "GO";
+    reason = "every applicable clause passes with linked evidence, the registry accounts for all 484 ids, every recorded blocker is clear and every mandatory external gate is signed";
+  }
 }
 
 const gate = {

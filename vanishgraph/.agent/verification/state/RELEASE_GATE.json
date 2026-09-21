@@ -1,13 +1,13 @@
 {
   "verdict": "NO_GO",
-  "reason": "the candidate fails its own verification: 1 clause(s) FAIL and 0 id(s) FAIL across an accounted registry of 484",
-  "candidate_epoch": "FORGE-SPEC-9",
-  "candidate_sha": "c01c388fa6821b621facb066e04aae2a98c7a36a",
-  "artifact_digest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
+  "reason": "the candidate fails its own verification independently of the 5 unsigned external gate(s): VERIFY-NOT-OK, NO-PASSING-ID - a verdict of CONDITIONAL_EXTERNAL_GATES would claim the external gates are the only obstacle, which these blockers contradict",
+  "candidate_epoch": "FORGE-SPEC-10",
+  "candidate_sha": "1e6c59a7acc0aa06ac47ac82bc6bb5d576803d23",
+  "artifact_digest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
   "dod": {
     "total": 42,
-    "pass": 16,
-    "fail": 1,
+    "pass": 17,
+    "fail": 0,
     "other": 25,
     "unaccounted": 0
   },
@@ -33,63 +33,67 @@
   },
   "external_gates": [
     {
+      "gate_id": "EXT-GATE-01",
       "gate": "human UAT of the golden path",
       "status": "EXTERNAL_REQUIRED",
       "externalPartyRole": "Named authorised business participant",
-      "requestedArtifactDigest": "sha256:6fe9573315f6fb4d559a7e47df0437b7caa49780f31567229a109e610a633cab",
+      "requestedArtifactDigest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
+      "supersededRequestedArtifactDigest": "sha256:6fe9573315f6fb4d559a7e47df0437b7caa49780f31567229a109e610a633cab",
       "requestEvidencePath": ".agent/evidence/EP-010/V-021/external-gates.jsonl",
-      "requestedAt": "2026-09-20T03:29:35Z",
+      "requestedAt": "2026-09-21T05:58:59Z",
       "ownerContactRef": "SPEC-008 section 9; this repository's owner"
     },
     {
+      "gate_id": "EXT-GATE-02",
       "gate": "manual assistive-technology validation at WCAG 2.2 AA",
       "status": "EXTERNAL_REQUIRED",
       "externalPartyRole": "Named assistive-technology practitioner",
-      "requestedArtifactDigest": "sha256:6fe9573315f6fb4d559a7e47df0437b7caa49780f31567229a109e610a633cab",
+      "requestedArtifactDigest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
+      "supersededRequestedArtifactDigest": "sha256:6fe9573315f6fb4d559a7e47df0437b7caa49780f31567229a109e610a633cab",
       "requestEvidencePath": ".agent/evidence/EP-010/V-021/external-gates.jsonl",
-      "requestedAt": "2026-09-20T03:29:35Z",
+      "requestedAt": "2026-09-21T05:58:59Z",
       "ownerContactRef": "SPEC-008 section 9"
     },
     {
+      "gate_id": "EXT-GATE-03",
       "gate": "legal and compliance review of jurisdictions, agent evidence, templates and claims",
       "status": "EXTERNAL_REQUIRED",
       "externalPartyRole": "Qualified counsel",
-      "requestedArtifactDigest": "sha256:6fe9573315f6fb4d559a7e47df0437b7caa49780f31567229a109e610a633cab",
+      "requestedArtifactDigest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
+      "supersededRequestedArtifactDigest": "sha256:6fe9573315f6fb4d559a7e47df0437b7caa49780f31567229a109e610a633cab",
       "requestEvidencePath": "LEGAL_REVIEW_REQUIRED.md and .agent/evidence/EP-010/V-021/external-gates.jsonl",
-      "requestedAt": "2026-09-20T03:29:35Z",
+      "requestedAt": "2026-09-21T05:58:59Z",
       "ownerContactRef": "LEGAL_REVIEW_REQUIRED.md"
     },
     {
+      "gate_id": "EXT-GATE-04",
       "gate": "hardware, HSM or accredited assessment where applicable",
       "status": "EXTERNAL_REQUIRED",
       "externalPartyRole": "Accredited assessor",
-      "requestedArtifactDigest": "sha256:6fe9573315f6fb4d559a7e47df0437b7caa49780f31567229a109e610a633cab",
+      "requestedArtifactDigest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
+      "supersededRequestedArtifactDigest": "sha256:6fe9573315f6fb4d559a7e47df0437b7caa49780f31567229a109e610a633cab",
       "requestEvidencePath": ".agent/evidence/EP-010/V-021/external-gates.jsonl",
-      "requestedAt": "2026-09-20T03:29:35Z",
+      "requestedAt": "2026-09-21T05:58:59Z",
       "ownerContactRef": "ADR-006 (no managed KMS exists) and .agent/verification/CAPABILITY_MATRIX.md"
     },
     {
+      "gate_id": "EXT-GATE-05",
       "gate": "production deployment authorization",
       "status": "EXTERNAL_REQUIRED",
       "externalPartyRole": "Authorised operator (manual only)",
-      "requestedArtifactDigest": "sha256:6fe9573315f6fb4d559a7e47df0437b7caa49780f31567229a109e610a633cab",
+      "requestedArtifactDigest": "sha256:81215aafb76e0c19306b24c7ef01447249a609d3182a35111f4bae85f2273d47",
+      "supersededRequestedArtifactDigest": "sha256:6fe9573315f6fb4d559a7e47df0437b7caa49780f31567229a109e610a633cab",
       "requestEvidencePath": "deploy/production/README.md and .agent/evidence/EP-010/V-021/external-gates.jsonl",
-      "requestedAt": "2026-09-20T03:29:35Z",
+      "requestedAt": "2026-09-21T05:58:59Z",
       "ownerContactRef": "deploy/production/README.md; VG-SCOPE-009"
     }
   ],
   "release_blockers": [
     {
       "id": "VERIFY-NOT-OK",
-      "what": "sh scripts/verify.sh did not print verify: ok; the stage it reached last was dependency-audit, and its failure is a release blocker rather than a note",
-      "evidence": ".agent/evidence/EP-010/ship-gate-FORGE-SPEC-9/verify.log",
+      "what": "sh scripts/verify.sh did not print verify: ok; the stage it reached last was smoke, and its failure is a release blocker rather than a note",
+      "evidence": ".agent/evidence/EP-010/ship-gate-FORGE-SPEC-10/verify.log",
       "next_action": "resolve the failing verify.sh stage recorded above and re-run the ship gate"
-    },
-    {
-      "id": "DOD-DOD-019",
-      "what": "clause DOD-019 does not pass: reality gate: reality-gate.sh exited 1 WITHOUT its sentinel; the three prose hits recorded in EP-009 remain the gate's only findings",
-      "evidence": ".agent/evidence/EP-010/DOD/DOD-019.json",
-      "next_action": "Any unexplained hit is a release blocker or the affected claim is explicitly marked incomplete."
     },
     {
       "id": "EXTERNAL-GATES-UNSIGNED",
@@ -105,5 +109,5 @@
     }
   ],
   "next_action": "resolve the failing verify.sh stage recorded above and re-run the ship gate",
-  "emitted_at": "2026-09-21T03:39:03Z"
+  "emitted_at": "2026-09-21T10:58:40Z"
 }
