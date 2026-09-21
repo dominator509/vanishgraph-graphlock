@@ -75,12 +75,52 @@ interface RedisLike {
   disconnect(): void;
 }
 
+type RedisConstructor = new (url: string, options?: Record<string, unknown>) => RedisLike;
+
+/**
+ * THE VALKEY DRIVER IS LOADED ONCE, AND STARTUP AWAITS IT. MEASURED DEFECT THIS CORRECTS (EP-010 M27), and it was
+ * invisible until the probe was exercised against a real dependency.
+ *
+ * The first version performed `await import('ioredis')` INSIDE the probe closure, so the MODULE LOAD was charged to the
+ * dependency's declared §7.2 budget of 200 ms. Measured in a fresh process:
+ *
+ *     call 1: TOTAL 205.0 ms (import 176.0 ms, probe action 29.0 ms) -> TIMEOUT
+ *     call 2: TOTAL  21.8 ms (import   0.2 ms, probe action 21.6 ms)
+ *     call 3: TOTAL  15.5 ms (import   0.1 ms, probe action 15.3 ms)
+ *
+ * The consequence was measured too, and it is not subtle: `/v1/health` answered 503 with `dependencyState UNHEALTHY`,
+ * `valkey=false` on the FIRST evaluation of roughly one boot in three, and `/v1/ready` answered READY a moment later -
+ * because §7.2 does not retry a TIMEOUT. The dependency was never slow; loading the driver was. A readiness probe may
+ * report a dependency that is genuinely too slow, and it may not report one that is fine.
+ */
+let valkeyDriverModule: Promise<RedisConstructor> | undefined;
+
+function loadValkeyDriver(): Promise<RedisConstructor> {
+  valkeyDriverModule ??= import('ioredis').then((ioredis) => {
+    // The constructor is reached through the module namespace because `ioredis` is CommonJS: the same access pattern the
+    // valkey probe script uses, which its live control exercises.
+    const namespace = ioredis as unknown as { default?: RedisConstructor } & RedisConstructor;
+    return namespace.default ?? namespace;
+  });
+  return valkeyDriverModule;
+}
+
+/**
+ * Load every driver the declared probes need. THE COMPOSITION ROOT AWAITS THIS BEFORE IT LISTENS (main.ts), so no request
+ * can ever be charged for a module load, and the first `/v1/health` measures the dependencies rather than the loader.
+ * Idempotent: the promise is memoized, so a second call is the same load.
+ */
+export function warmUpDependencyClients(): Promise<void> {
+  return loadValkeyDriver().then(() => undefined);
+}
+
 /**
  * Build every client this process has the configuration for.
  *
  * THE VALKEY CLIENT IS BUILT HERE RATHER THAN INJECTED, because the round trip is the declared action and the driver is
  * the application's own (`ioredis`): PING, then write, read back, delete under a namespaced key. Each call opens and
- * closes its own connection, so a readiness probe cannot leak a client or hold a pool open.
+ * closes its own connection, so a readiness probe cannot leak a client or hold a pool open - and the connection itself is
+ * measured at 5.6-21.5 ms, so it fits the declared budget with room to spare once the driver load is out of the way.
  */
 export function createDependencyClients(options: DependencyClientOptions): DependencyClients {
   // BUILT BY ASSIGNMENT, NOT BY AN OBJECT LITERAL: `exactOptionalPropertyTypes` is on in this repository, and a literal
@@ -98,13 +138,7 @@ export function createDependencyClients(options: DependencyClientOptions): Depen
   clients.postgresql = postgresProbe({ querySessionRole: options.querySessionRole, expectedRole: options.expectedRole });
   clients.valkey = valkeyProbe({
     roundTrip: async (key: string): Promise<string> => {
-      // The driver is imported dynamically so that a process which never probes valkey never loads it, and the
-      // constructor is reached through the module namespace because `ioredis` is CommonJS: the same access pattern the
-      // valkey probe script uses, which is exercised by its live control.
-      const ioredis = (await import('ioredis')) as unknown as {
-        default?: new (url: string, options?: Record<string, unknown>) => RedisLike;
-      } & (new (url: string, options?: Record<string, unknown>) => RedisLike);
-      const Redis = (ioredis.default ?? ioredis) as new (url: string, options?: Record<string, unknown>) => RedisLike;
+      const Redis = await loadValkeyDriver();
       const client = new Redis(options.valkeyUrl, { lazyConnect: true, connectTimeout: 3000, maxRetriesPerRequest: 1, enableOfflineQueue: false });
       try {
         await client.connect();

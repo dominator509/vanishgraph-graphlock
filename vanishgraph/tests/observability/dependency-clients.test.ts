@@ -22,13 +22,17 @@
 
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 
 import {
   DECLARED_DEPENDENCIES,
   DEPENDENCY_KEYS,
   type DependencyClients,
 } from '../../src/adapters/observability/dependency-probes.ts';
-import { createDependencyClients, toDependencyProbes } from '../../src/infrastructure/observability/dependency-clients.ts';
+import { createDependencyClients, toDependencyProbes, warmUpDependencyClients } from '../../src/infrastructure/observability/dependency-clients.ts';
+
+const ROOT = resolve(import.meta.dirname, '..', '..');
 
 /** The web role's required set, from config/environment/required.json `service_roles.web`. */
 const WEB_REQUIRED = ['postgresql', 'valkey', 'object-store', 'keycloak-jwks'] as const;
@@ -109,6 +113,40 @@ describe('the composition root reports every declared dependency', () => {
     const outcome = await valkey.run();
     assert.equal(outcome.ok, false);
     assert.equal(outcome.reasonCode, 'TIMEOUT');
+  });
+});
+
+describe('the valkey driver load is not charged to the dependency budget', () => {
+  test('the driver is loaded ONCE, by the memoized loader, and not inside the probe closure', () => {
+    // WHY A STRUCTURAL ASSERTION RATHER THAN A TIMING ONE. The defect was that `await import('ioredis')` sat INSIDE the
+    // round-trip closure the §7.2 200 ms budget covers: measured in a fresh process, the first call took 205.0 ms of which
+    // 176.0 ms was the import, so `/v1/health` answered 503 UNHEALTHY with valkey=false on about one boot in three while
+    // Valkey was idle and healthy. A timing assertion here would be flaky and would not say where the load is; this says
+    // exactly that, and it fails if the import moves back into the timed action.
+    const raw = readFileSync(join(ROOT, 'src', 'infrastructure', 'observability', 'dependency-clients.ts'), 'utf8');
+    // COMMENTS ARE STRIPPED BEFORE COUNTING, because the explanation of this defect necessarily contains the very call
+    // it is about - the first version of this test counted the sentence and failed on prose.
+    const source = raw.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+    const dynamicImports = source.match(/import\(/g) ?? [];
+    assert.equal(dynamicImports.length, 1, 'the driver must be loaded in exactly one place');
+    const loader = source.indexOf('function loadValkeyDriver');
+    const load = source.indexOf("import('ioredis')");
+    const roundTrip = source.indexOf('roundTrip: async');
+    assert.ok(loader >= 0, 'the memoized loader is missing');
+    assert.ok(load > loader, 'the driver load must be inside loadValkeyDriver');
+    assert.ok(roundTrip > load, 'the driver load must come BEFORE the round-trip closure, not inside it');
+    assert.match(source, /valkeyDriverModule \?\?=/, 'the load must be memoized so a second call is the same load');
+  });
+
+  test('the warm-up is idempotent and resolves, and startup awaits it before listening', async () => {
+    await warmUpDependencyClients();
+    await warmUpDependencyClients();
+    // The composition root is what makes it effective: an unawaited warm-up would leave the same race in place.
+    const main = readFileSync(join(ROOT, 'src', 'infrastructure', 'main.ts'), 'utf8');
+    assert.match(main, /await warmUpDependencyClients\(\);/, 'main.ts must await the warm-up');
+    const warmIndex = main.indexOf('await warmUpDependencyClients();');
+    const listenIndex = main.indexOf('await listen(app');
+    assert.ok(warmIndex >= 0 && listenIndex > warmIndex, 'the warm-up must happen BEFORE the process listens');
   });
 });
 

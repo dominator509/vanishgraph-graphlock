@@ -109,8 +109,28 @@ export DATABASE_URL=${DATABASE_URL:-${VG_TEST_DSN_APP:-}}
 # The same declared local default the EP-008 gates use (scripts/induced-failure-readiness.sh, scripts/gate-observability.sh).
 export VALKEY_URL=${VALKEY_URL:-redis://127.0.0.1:56379}
 
+# THE CONFIGURATION SET IS DECLARED ONCE, CHECKED BY THE BLOCK BELOW AND HANDED TO THE CHILD PROCESS BY THE EXPORT
+# AFTER IT, SO THE TWO CANNOT DRIFT.
+#
+# WHY THE EXPORT EXISTS, AND IT IS A MEASURED DEFECT RATHER THAN A PRECAUTION (EP-010 M27). Sourcing a state file
+# assigns SHELL variables; the artifact is a CHILD PROCESS and inherits only EXPORTED ones. The first version of this
+# script sourced the Keycloak and object-store state files and then relied on the `MISSING` check, which reads the shell
+# variables and therefore PASSED - while the process under test could see neither, so `/v1/ready` reported
+# `keycloak-jwks` and `object-store` unreachable and `/v1/health` answered 503 with the reason `MISCONFIGURED`. The
+# configuration was read by the gate and invisible to the artifact the gate was testing. MEASURED both ways on the same
+# artifact: unexported -> 503 with two required dependencies failing; exported -> `dependencyState READY` with all four
+# required checks PASS (object-store 162 ms, keycloak-jwks 171 ms). The values were never the problem.
+REQUIRED_CONFIG="DATABASE_URL VALKEY_URL KEYCLOAK_ISSUER KEYCLOAK_CLIENT_ID KEYCLOAK_CLIENT_SECRET SESSION_SECRET S3_ENDPOINT S3_BUCKET S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY"
+# S3_REGION is exported when a state file declares it and never blocks: config/environment/schema.json declares it
+# OPTIONAL with the local default us-east-1, which the service applies itself.
+OPTIONAL_CONFIG="S3_REGION"
+for NAME in $REQUIRED_CONFIG $OPTIONAL_CONFIG; do
+  eval "VALUE=\${$NAME:-}"
+  if [ -n "$VALUE" ]; then export "$NAME"; fi
+done
+
 MISSING=""
-for NAME in DATABASE_URL VALKEY_URL KEYCLOAK_ISSUER KEYCLOAK_CLIENT_ID KEYCLOAK_CLIENT_SECRET SESSION_SECRET S3_ENDPOINT S3_BUCKET S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY; do
+for NAME in $REQUIRED_CONFIG; do
   eval "VALUE=\${$NAME:-}"
   [ -n "$VALUE" ] || MISSING="$MISSING $NAME"
 done
@@ -164,8 +184,13 @@ if (!up) {
 const health = await get("/health");
 // SPEC-003 section 5.17.1, VERBATIM: the state field is `dependencyState`, NOT `status`, because it is a
 // dependency-health classification and must never be confused with a truth state.
-if (health.status !== 200) problems.push(`/v1/health answered ${health.status}`);
-else {
+if (health.status !== 200) {
+  // THE BODY IS PRINTED WITH THE STATUS, because "answered 503" alone does not say WHICH dependency was unreachable
+  // and a readiness failure is only actionable when it names one (EP-010 M27: this assertion failed once with no
+  // dependency named and the reason had to be recovered by hand).
+  const named = (health.body?.dependencies ?? []).map((entry) => `${entry.name}=${entry.reachable}`);
+  problems.push(`/v1/health answered ${health.status} with dependencyState ${JSON.stringify(health.body?.dependencyState)} and degraded ${JSON.stringify(health.body?.degraded ?? [])}: ${named.join(" ")}`);
+} else {
   if ("status" in (health.body ?? {})) problems.push("/v1/health carries a `status` field, and SPEC-003 section 5.17.1 requires `dependencyState` and forbids `status`");
   if (!["HEALTHY", "DEGRADED", "UNHEALTHY"].includes(health.body?.dependencyState)) problems.push(`/v1/health dependencyState is ${JSON.stringify(health.body?.dependencyState)}, not one of HEALTHY, DEGRADED, UNHEALTHY`);
   if (health.body?.service !== "vanishgraph-api") problems.push(`/v1/health service is ${JSON.stringify(health.body?.service)}, and SPEC-007 fixes it as vanishgraph-api`);
@@ -211,7 +236,7 @@ else {
   for (const check of checks) {
     if (typeof check.reachable !== "boolean") problems.push(`the readiness check ${check.name} does not report reachable as a boolean`);
   }
-  console.log(`smoke test: readiness ${ready.status} dependencyState=${state} with ${checks.length} declared check(s): ${checks.map((check) => `${check.name}=${check.reachable}`).join(" ")}`);
+  console.log(`smoke test: readiness ${ready.status} dependencyState=${state} with ${checks.length} declared check(s): ${checks.map((check) => `${check.name}=${check.reachable}${check.reasonCode === null || check.reasonCode === undefined ? "" : `(${check.reasonCode})`}`).join(" ")}`);
 }
 
 // One denial, asserted through the same running artifact, so this is not only a liveness check.

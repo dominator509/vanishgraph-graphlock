@@ -26,7 +26,7 @@ import { AUDIENCES, verifyToken } from '../adapters/oidc/verify.ts';
 import { JwksCache, httpsJwksFetcher } from '../adapters/oidc/jwks.ts';
 import { PostgresIdempotencyStore } from '../adapters/idempotency/postgres-store.ts';
 import { PostgresTenantRunner } from '../adapters/persistence/postgres-runner.ts';
-import { createDependencyClients, toDependencyProbes } from './observability/dependency-clients.ts';
+import { createDependencyClients, toDependencyProbes, warmUpDependencyClients } from './observability/dependency-clients.ts';
 import { PostgresSubjectQueries } from '../adapters/persistence/subjects.ts';
 import { PostgresSubjectCommands } from '../adapters/persistence/subject-commands.ts';
 import { PostgresSourceQueries, verificationKeysFrom } from '../adapters/persistence/sources.ts';
@@ -149,6 +149,14 @@ async function main(): Promise<number> {
   // The tenant-scoped pool. Constructed once for the process: a pool per request would defeat the
   // point of pooling and exhaust PostgreSQL's connection limit under load.
   const runner = new PostgresTenantRunner({ dsn: parseDsn(config.databaseUrl) });
+
+  // EVERY DRIVER THE READINESS PROBES NEED IS LOADED BEFORE THE PROCESS LISTENS (EP-010 M27, measured).
+  // MEASURED DEFECT THIS CORRECTS: the valkey probe loaded `ioredis` INSIDE its own closure, so the module load (176.0 ms
+  // in a fresh process) was charged to that dependency's declared §7.2 budget of 200 ms. The first `/v1/health` of roughly
+  // one boot in three therefore answered 503 UNHEALTHY with `valkey=false` on an idle, healthy Valkey, and `/v1/ready` -
+  // which does not retry a TIMEOUT - answered READY a moment later. A probe may report a dependency that is genuinely
+  // slow; it may not report one that is fine because the service had not finished loading its own driver.
+  await warmUpDependencyClients();
 
   const app = buildServer({
     version: VERSION,
