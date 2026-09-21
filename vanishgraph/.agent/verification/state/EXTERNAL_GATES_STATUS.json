@@ -1,7 +1,7 @@
 {
   "epoch": "FORGE-SPEC-11",
   "candidate_sha": "8b8cd15b0b05994a1271e43f13f3a44ce86b5c2f",
-  "artifact_digest": "sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46",
+  "artifact_digest": "sha256:0bbac8905baa60b17cd064eac2e2b6bbc7911af738bf10be576bac704f947953",
   "produced_by": "sh scripts/external-gates-status.sh",
   "signoff_store": ".agent/evidence/EP-010/V-021/signoffs.jsonl",
   "gates": [
@@ -65,5 +65,36 @@
   "gates_signed": 0,
   "gates_external_required": 5,
   "gates_marked_signed": 0,
-  "blockers": []
+  "blockers": [
+    {
+      "id": "EXTERNAL-GATE-REQUEST-STALE-EXT-GATE-01",
+      "what": "gate \"human UAT of the golden path\" asks its participant to sign sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46 while the pinned artifact is sha256:0bbac8905baa60b17cd064eac2e2b6bbc7911af738bf10be576bac704f947953, so a signature over this request would attest bytes that do not exist",
+      "evidence": ".agent/evidence/EP-010/V-021/external-gates.jsonl",
+      "next_action": "re-issue the request against the pinned digest before asking the participant to sign; a stale request wastes a real person's attempt"
+    },
+    {
+      "id": "EXTERNAL-GATE-REQUEST-STALE-EXT-GATE-02",
+      "what": "gate \"manual assistive-technology validation at WCAG 2.2 AA\" asks its participant to sign sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46 while the pinned artifact is sha256:0bbac8905baa60b17cd064eac2e2b6bbc7911af738bf10be576bac704f947953, so a signature over this request would attest bytes that do not exist",
+      "evidence": ".agent/evidence/EP-010/V-021/external-gates.jsonl",
+      "next_action": "re-issue the request against the pinned digest before asking the participant to sign; a stale request wastes a real person's attempt"
+    },
+    {
+      "id": "EXTERNAL-GATE-REQUEST-STALE-EXT-GATE-03",
+      "what": "gate \"legal and compliance review of jurisdictions, agent evidence, templates and claims\" asks its participant to sign sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46 while the pinned artifact is sha256:0bbac8905baa60b17cd064eac2e2b6bbc7911af738bf10be576bac704f947953, so a signature over this request would attest bytes that do not exist",
+      "evidence": ".agent/evidence/EP-010/V-021/external-gates.jsonl",
+      "next_action": "re-issue the request against the pinned digest before asking the participant to sign; a stale request wastes a real person's attempt"
+    },
+    {
+      "id": "EXTERNAL-GATE-REQUEST-STALE-EXT-GATE-04",
+      "what": "gate \"hardware, HSM or accredited assessment where applicable\" asks its participant to sign sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46 while the pinned artifact is sha256:0bbac8905baa60b17cd064eac2e2b6bbc7911af738bf10be576bac704f947953, so a signature over this request would attest bytes that do not exist",
+      "evidence": ".agent/evidence/EP-010/V-021/external-gates.jsonl",
+      "next_action": "re-issue the request against the pinned digest before asking the participant to sign; a stale request wastes a real person's attempt"
+    },
+    {
+      "id": "EXTERNAL-GATE-REQUEST-STALE-EXT-GATE-05",
+      "what": "gate \"production deployment authorization\" asks its participant to sign sha256:95ea86065b79c8ad06b9f74f80154655cb36c8b797d04ac1f4bcef1e221f0a46 while the pinned artifact is sha256:0bbac8905baa60b17cd064eac2e2b6bbc7911af738bf10be576bac704f947953, so a signature over this request would attest bytes that do not exist",
+      "evidence": ".agent/evidence/EP-010/V-021/external-gates.jsonl",
+      "next_action": "re-issue the request against the pinned digest before asking the participant to sign; a stale request wastes a real person's attempt"
+    }
+  ]
 }
