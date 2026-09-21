@@ -134,6 +134,16 @@
       "note": null
     },
     {
+      "name": "S3_REGION",
+      "required": false,
+      "lane": "OPTIONAL",
+      "format": "IDENTIFIER",
+      "secret": false,
+      "declared_in": ["code"],
+      "probe": null,
+      "note": "The SigV4 signing region for the object-store probe. OPTIONAL because every S3-compatible endpoint that answers a signature either echoes the region it was signed with (MinIO) or is addressed by a region-specific host, and the declared local object store has region us-east-1; src/infrastructure/main.ts defaults to the literal token us-east-1 when the variable is unset, and scripts/induced-failure-readiness.sh uses the same default for its VG_OBJECT_STORE_REGION override, so the two probes cannot disagree about the local store."
+    },
+    {
       "name": "KEYCLOAK_ISSUER",
       "required": true,
       "lane": "REQUIRED_NOW",

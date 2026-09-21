@@ -23,7 +23,8 @@
 #   2. Configuration is read from the state files the environment declares and from the repository's own
 #      declared local defaults -- never invented. `VALKEY_URL` defaults to the same value the EP-008 gates
 #      declare (`redis://127.0.0.1:56379`), `DATABASE_URL` falls back to the provisioned application DSN, and
-#      the Keycloak values come from the state file EP-009 M4 provisioned. A required key with no provisioned
+#      the Keycloak values come from the state file EP-009 M4 provisioned, and the object-store endpoint, bucket and
+#      credentials from the state file EP-010 M25 provisioned and verified. A required key with no provisioned
 #      value is BLOCKED_CREDENTIALS naming that key: the smoke never substitutes a plausible issuer or a
 #      made-up client id, because that is exactly how a misconfigured deployment comes to look configured
 #      (src/adapters/config/security-config.ts states the same rule for the same reason).
@@ -93,12 +94,23 @@ if [ -f "$KEYCLOAK_ENV" ]; then
   # shellcheck disable=SC1090
   . "$KEYCLOAK_ENV"
 fi
+# THE OBJECT STORE IS A REQUIRED DEPENDENCY OF THE WEB ROLE (config/environment/required.json `service_roles.web`), so
+# the artifact cannot report READY without it and the readiness body must name it (SPEC-007 section 7.2). Its endpoint,
+# bucket and credentials come from the same kind of state file as the database and Keycloak above. S3_REGION is left
+# unset on purpose: that exercises the declared OPTIONAL default the schema documents, rather than a value this script
+# would otherwise be inventing. EP-010 M25 verified this store end to end (HeadBucket plus a signed GetObject with the
+# expected digest, and a wrong digest refused as MISCONFIGURED).
+OBJECTSTORE_ENV=${VG_OBJECTSTORE_STATE_FILE:-C:/tmp/vanishgraph-objectstore.env}
+if [ -f "$OBJECTSTORE_ENV" ]; then
+  # shellcheck disable=SC1090
+  . "$OBJECTSTORE_ENV"
+fi
 export DATABASE_URL=${DATABASE_URL:-${VG_TEST_DSN_APP:-}}
 # The same declared local default the EP-008 gates use (scripts/induced-failure-readiness.sh, scripts/gate-observability.sh).
 export VALKEY_URL=${VALKEY_URL:-redis://127.0.0.1:56379}
 
 MISSING=""
-for NAME in DATABASE_URL VALKEY_URL KEYCLOAK_ISSUER KEYCLOAK_CLIENT_ID KEYCLOAK_CLIENT_SECRET SESSION_SECRET; do
+for NAME in DATABASE_URL VALKEY_URL KEYCLOAK_ISSUER KEYCLOAK_CLIENT_ID KEYCLOAK_CLIENT_SECRET SESSION_SECRET S3_ENDPOINT S3_BUCKET S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY; do
   eval "VALUE=\${$NAME:-}"
   [ -n "$VALUE" ] || MISSING="$MISSING $NAME"
 done

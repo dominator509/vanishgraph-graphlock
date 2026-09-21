@@ -8,25 +8,27 @@
  * permanently 503 and `/v1/health` answered 503 because a REQUIRED dependency could never pass. This module builds the
  * real clients and converts them into the route layer's declared probe shape.
  *
- * A CLIENT IS OMITTED WHEN THIS PROCESS HAS NO CONFIGURATION FOR IT, AND THAT IS NOT THE SAME AS PASSING. The route
- * layer reports only the dependencies it was given probes for, and the runner's own rule is that a dependency with no
- * probe is a dependency nobody is checking (MISCONFIGURED, never a pass). Requiredness comes from the ROLE, not from
- * the declared table: `config/environment/required.json` `service_roles` says the web role does not require
- * provider-transport and the worker role does not require keycloak-jwks.
+ * A CLIENT IS OMITTED WHEN THIS PROCESS HAS NO CONFIGURATION FOR IT, AND THAT IS NOT THE SAME AS PASSING. A dependency
+ * with no client is a dependency nobody is checking, so it is REPORTED as UNKNOWN/MISCONFIGURED rather than dropped -
+ * `createProbeRunner` owns that rule and this module delegates to it instead of restating it. Requiredness comes from
+ * the ROLE, not from the declared table: `config/environment/required.json` `service_roles` says the web role does not
+ * require provider-transport and the worker role does not require keycloak-jwks.
  */
 
 import {
   DECLARED_DEPENDENCIES,
-  classifyProbeFailure,
+  createProbeRunner,
   keycloakJwksProbe,
   objectStoreProbe,
   postgresProbe,
   providerTransportProbe,
   valkeyProbe,
   type DependencyClients,
+  type DependencyKey,
   type Probe,
 } from '../../adapters/observability/dependency-probes.ts';
 import type { DependencyProbe } from '../../http/routes/health.ts';
+import { httpsJwksFetcher, type FetchJwks } from '../../adapters/oidc/jwks.ts';
 
 export interface ObjectStoreConfig {
   readonly endpoint: string;
@@ -45,6 +47,11 @@ export interface DependencyClientOptions {
   readonly expectedRole: string;
   readonly valkeyUrl: string;
   readonly keycloakIssuer: string;
+  /**
+   * The application's declared discovery-plus-JWKS fetch. Injected so a test can drive the probe without a network, and
+   * defaulted to `httpsJwksFetcher()` so this module opens NO SECOND OUTBOUND PATH of its own.
+   */
+  readonly fetchJwks?: FetchJwks;
   /** Absent when no object-store configuration reached this process; the dependency is then simply not checked. */
   readonly objectStore?: ObjectStoreConfig;
   /** Absent when no official transport is declared for this deployment. */
@@ -117,18 +124,20 @@ export function createDependencyClients(options: DependencyClientOptions): Depen
       }
     },
   });
+  // THE JWKS PATH IS THE APPLICATION'S OWN RATHER THAN A THIRD ONE. The first version of this module fetched discovery
+  // and JWKS with the platform `fetch` directly, and `tests/contract/ssrf-controls.test.ts` REFUSED it: the contract
+  // allows exactly ONE module outside the SSRF guard to perform an outbound fetch and caps its recorded-exception list
+  // at one entry, which is `src/adapters/oidc/jwks.ts`. Reusing `httpsJwksFetcher` also means the readiness probe and the
+  // token verifier reach the issuer the same way, including `redirect: 'error'` - a redirect followed by a probe but not
+  // by the verifier would be two different trust decisions for one URL. ROUTING THIS PATH THROUGH THE SSRF GUARD REMAINS
+  // EP-006's RECORDED OPEN WORK, and this comment says so rather than implying the path is guarded.
+  const fetchJwks = options.fetchJwks ?? httpsJwksFetcher();
   clients.keycloakJwks = keycloakJwksProbe({
     discover: async (): Promise<{ issuer: string; keys: number }> => {
-      const base = options.keycloakIssuer.replace(/\/$/, '');
-      const discovery = await fetch(`${base}/.well-known/openid-configuration`, { signal: AbortSignal.timeout(3000) });
-      if (!discovery.ok) throw new Error(`the discovery document answered HTTP ${String(discovery.status)}`);
-      const document = (await discovery.json()) as { issuer?: unknown; jwks_uri?: unknown };
-      const issuer = typeof document.issuer === 'string' ? document.issuer : base;
-      const jwksUri = typeof document.jwks_uri === 'string' ? document.jwks_uri : `${base}/protocol/openid-connect/certs`;
-      const jwks = await fetch(jwksUri, { signal: AbortSignal.timeout(3000) });
-      if (!jwks.ok) throw new Error(`the JWKS document answered HTTP ${String(jwks.status)}`);
-      const keyset = (await jwks.json()) as { keys?: unknown };
-      return { issuer, keys: Array.isArray(keyset.keys) ? keyset.keys.length : 0 };
+      const document = await fetchJwks(options.keycloakIssuer);
+      // The CONFIGURED issuer is reported, because the fetcher returns the keys and not the issuer document; the probe
+      // then refuses anything that is not an HTTPS issuer and anything with no signing key.
+      return { issuer: options.keycloakIssuer, keys: document.keys.length };
     },
   });
 
@@ -152,46 +161,33 @@ export function createDependencyClients(options: DependencyClientOptions): Depen
   return clients;
 }
 
-/** The declared client for each §7.2 dependency name, so a rename cannot silently drop a probe. */
-const CLIENT_FIELD: Readonly<Record<string, keyof DependencyClients>> = Object.freeze({
-  postgresql: 'postgresql',
-  valkey: 'valkey',
-  'job-worker': 'jobWorker',
-  'object-store': 'objectStore',
-  'keycloak-jwks': 'keycloakJwks',
-  'provider-transport': 'providerTransport',
-});
-
 /**
  * Convert the clients into the route layer's probe list.
  *
- * `required` COMES FROM THE ROLE'S SET, NOT FROM THE DECLARED TABLE: the table marks all six required, while the web role
- * does not require provider-transport and the worker role does not require keycloak-jwks (SPEC-007 §7.2 rule 1). A
- * dependency with no client is not listed at all, and the route layer's rule that a response must name every declared
- * dependency is satisfied by the fact that every dependency this process CAN check is named.
+ * EVERY DECLARED DEPENDENCY IS ALWAYS PRESENT, AND THE FIRST VERSION OF THIS FUNCTION GOT THAT WRONG. It skipped a
+ * dependency with no client, so an artifact booted without object-store or worker configuration answered `/v1/ready`
+ * with FOUR checks where SPEC-007 §7.2 declares six - and §7.2's own rule is that a response names every declared
+ * dependency and that `required: false` dependencies report their status rather than disappearing.
+ *
+ * THE MISSING-CLIENT RULE IS NOT RESTATED HERE. `createProbeRunner` already reports a dependency with no client as
+ * UNKNOWN/MISCONFIGURED (dependency-probes.ts, `runProbe`: "A MISSING CLIENT IS A FAILURE, NOT A PASS"), so this
+ * function delegates to the runner and keeps ONE implementation of that rule instead of two that can drift.
+ *
+ * `required` COMES FROM THE ROLE'S SET, NOT FROM THE DECLARED TABLE: the table marks all six required, while the web
+ * role does not require provider-transport and the worker role does not require keycloak-jwks (§7.2 rule 1), so a
+ * dependency this role does not require is reported and does not force NOT_READY.
  */
-export function toDependencyProbes(clients: DependencyClients, requiredKeys: readonly string[]): DependencyProbe[] {
-  const probes: DependencyProbe[] = [];
-  for (const dependency of DECLARED_DEPENDENCIES) {
-    const field = CLIENT_FIELD[dependency.key];
-    if (field === undefined) continue;
-    const run = clients[field];
-    if (run === undefined) continue;
-    probes.push({
-      name: dependency.key,
-      required: requiredKeys.includes(dependency.key),
-      timeoutMs: dependency.timeoutMs,
-      run: async (): Promise<{ ok: boolean; reasonCode: string | null }> => {
-        try {
-          await run();
-          return { ok: true, reasonCode: null };
-        } catch (error) {
-          // The classified reason code crosses the boundary; the driver's message does not, because it can carry a
-          // host, a port or a credential (VG-SEC-002).
-          return { ok: false, reasonCode: classifyProbeFailure(error).reasonCode };
-        }
-      },
-    });
-  }
-  return probes;
+export function toDependencyProbes(clients: DependencyClients, requiredKeys: readonly DependencyKey[]): DependencyProbe[] {
+  const runner = createProbeRunner({ clients, requiredKeys });
+  return DECLARED_DEPENDENCIES.map((dependency) => ({
+    name: dependency.key,
+    required: requiredKeys.includes(dependency.key),
+    timeoutMs: dependency.timeoutMs,
+    run: async (): Promise<{ ok: boolean; reasonCode: string | null }> => {
+      const result = await runner.probe(dependency.key);
+      // The classified reason code crosses the boundary; the driver's message does not, because it can carry a host, a
+      // port or a credential (VG-SEC-002).
+      return result.status === 'PASS' ? { ok: true, reasonCode: null } : { ok: false, reasonCode: result.reasonCode };
+    },
+  }));
 }

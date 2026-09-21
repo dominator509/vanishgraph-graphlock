@@ -283,6 +283,10 @@ async function main(): Promise<number> {
                 objectStore: {
                   endpoint: String(process.env['S3_ENDPOINT']),
                   bucket: String(process.env['S3_BUCKET']),
+                  // S3_REGION is DECLARED as an OPTIONAL key in config/environment/schema.json, and the default below is
+                  // the same declared local default scripts/induced-failure-readiness.sh uses for VG_OBJECT_STORE_REGION
+                  // (`?? "us-east-1"`): one region for the local store, stated once in the configuration surface and once
+                  // in each reader, rather than a second environment name invented here.
                   region: process.env['S3_REGION'] ?? 'us-east-1',
                   accessKeyId: String(process.env['S3_ACCESS_KEY_ID'] ?? ''),
                   secretAccessKey: String(process.env['S3_SECRET_ACCESS_KEY'] ?? ''),
