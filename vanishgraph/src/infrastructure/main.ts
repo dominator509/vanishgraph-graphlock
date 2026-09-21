@@ -26,7 +26,7 @@ import { AUDIENCES, verifyToken } from '../adapters/oidc/verify.ts';
 import { JwksCache, httpsJwksFetcher } from '../adapters/oidc/jwks.ts';
 import { PostgresIdempotencyStore } from '../adapters/idempotency/postgres-store.ts';
 import { PostgresTenantRunner } from '../adapters/persistence/postgres-runner.ts';
-import { createDependencyClients, toDependencyProbes, warmUpDependencyClients } from './observability/dependency-clients.ts';
+import { createDependencyClients, toDependencyProbes, warmUpDependencyClients, warmUpDependencyProbes } from './observability/dependency-clients.ts';
 import { PostgresSubjectQueries } from '../adapters/persistence/subjects.ts';
 import { PostgresSubjectCommands } from '../adapters/persistence/subject-commands.ts';
 import { PostgresSourceQueries, verificationKeysFrom } from '../adapters/persistence/sources.ts';
@@ -150,13 +150,72 @@ async function main(): Promise<number> {
   // point of pooling and exhaust PostgreSQL's connection limit under load.
   const runner = new PostgresTenantRunner({ dsn: parseDsn(config.databaseUrl) });
 
-  // EVERY DRIVER THE READINESS PROBES NEED IS LOADED BEFORE THE PROCESS LISTENS (EP-010 M27, measured).
-  // MEASURED DEFECT THIS CORRECTS: the valkey probe loaded `ioredis` INSIDE its own closure, so the module load (176.0 ms
-  // in a fresh process) was charged to that dependency's declared §7.2 budget of 200 ms. The first `/v1/health` of roughly
-  // one boot in three therefore answered 503 UNHEALTHY with `valkey=false` on an idle, healthy Valkey, and `/v1/ready` -
-  // which does not retry a TIMEOUT - answered READY a moment later. A probe may report a dependency that is genuinely
-  // slow; it may not report one that is fine because the service had not finished loading its own driver.
+  // THE SIX DECLARED DEPENDENCIES, BUILT FROM THIS PROCESS'S OWN CONFIGURATION (EP-010 M26; SPEC-007 §7.2).
+  // What stood here was three probes, two of them stubs that returned ok:false unconditionally, so `/v1/ready` was
+  // permanently 503 and `/v1/health` was 503 because a REQUIRED dependency could never pass - and a probe that can never
+  // pass is as much a defect as one that can never fail. The real actions live in
+  // src/adapters/observability/dependency-probes.ts; `createDependencyClients` only composes them.
+  //
+  // REQUIREDNESS IS THE WEB ROLE'S, from config/environment/required.json `service_roles.web`: all four of these are
+  // required, and the two this role does NOT require are absent from this list on purpose. A dependency with no
+  // configuration gets no client, so it is reported as unconfigured rather than as healthy - and on this process the
+  // worker heartbeat and the provider transport are exactly that, because neither store nor transport is declared for
+  // this role here.
+  const dependencyProbes = toDependencyProbes(
+    createDependencyClients({
+      // A REAL query, not a configuration check: a probe that only read the environment would report ready for a
+      // database that is down (VG-API-059).
+      querySessionRole: async (): Promise<string> => {
+        let role = '';
+        await runner.withTenantTransaction('00000000-0000-4000-8000-000000000000', async (tx) => {
+          const result = (await tx.query('SELECT current_user AS role')) as { rows?: { role?: unknown }[] };
+          role = String(result.rows?.[0]?.role ?? '');
+        });
+        return role;
+      },
+      // The tenant-scoped application role. A pool that connected as the owner would bypass row-level security, and
+      // the probe treats that as the failure it is (VG-DATA-001).
+      expectedRole: 'vg_app',
+      valkeyUrl: config.valkeyUrl,
+      keycloakIssuer: config.keycloakIssuer,
+      // THE OBJECT STORE IS CONFIGURED FROM THE DECLARED VARIABLES, and the probe object's digest is the one
+      // .agent/evidence/EP-010/M25-object-store/object-store-verification.md records as verified.
+      ...(process.env['S3_ENDPOINT'] === undefined || process.env['S3_BUCKET'] === undefined
+        ? {}
+        : {
+            objectStore: {
+              endpoint: String(process.env['S3_ENDPOINT']),
+              bucket: String(process.env['S3_BUCKET']),
+              // S3_REGION is DECLARED as an OPTIONAL key in config/environment/schema.json, and the default below is
+              // the same declared local default scripts/induced-failure-readiness.sh uses for VG_OBJECT_STORE_REGION
+              // (`?? "us-east-1"`): one region for the local store, stated once in the configuration surface and once
+              // in each reader, rather than a second environment name invented here.
+              region: process.env['S3_REGION'] ?? 'us-east-1',
+              accessKeyId: String(process.env['S3_ACCESS_KEY_ID'] ?? ''),
+              secretAccessKey: String(process.env['S3_SECRET_ACCESS_KEY'] ?? ''),
+              probeKey: 'readiness/probe-object',
+              expectedDigest: '870ca51706812c52d2360d17a64dfe68edff9c6a475eb4098c9c24937b031561',
+            },
+          }),
+    }),
+    ['postgresql', 'valkey', 'object-store', 'keycloak-jwks'],
+  );
+
+  // EVERY DRIVER IS LOADED AND EVERY DEPENDENCY PATH IS WARMED BEFORE THIS PROCESS LISTENS (EP-010 M27/M28, measured).
+  //
+  // MEASURED DEFECT THIS CORRECTS, twice over. (1) The valkey probe loaded `ioredis` INSIDE its own closure, so the
+  // module load (176.0 ms in a fresh process) was charged to that dependency's declared §7.2 budget of 200 ms. (2) The
+  // first evaluation after boot cost 144-201 ms per dependency, because the TLS handshakes, the pool's first connection
+  // and the socket setup all happen while one event loop is busy with all of them; the second cost 15-30 ms. The result
+  // was measured, not theorised: `/v1/health` answered 503 UNHEALTHY with `valkey=false` on an idle, healthy Valkey on
+  // roughly one boot in three, while `/v1/ready` answered READY a moment later - because §7.2 does not retry a TIMEOUT.
+  //
+  // The verdict from the warm-up pass is DISCARDED ON PURPOSE. It is not a claim that the dependencies are healthy: every
+  // probe still runs on every request with its own budget and its own classification, so a dependency that is down is
+  // still reported by the request that finds it down. What is removed is COLD START from the readiness decision, which is
+  // this process's own cost rather than the dependency's.
   await warmUpDependencyClients();
+  await warmUpDependencyProbes(dependencyProbes);
 
   const app = buildServer({
     version: VERSION,
@@ -254,57 +313,10 @@ async function main(): Promise<number> {
     health: {
       startedAt: new Date(),
       now: () => new Date(),
-      // THE SIX DECLARED DEPENDENCIES, BUILT FROM THIS PROCESS'S OWN CONFIGURATION (EP-010 M26; SPEC-007 §7.2).
-      // What stood here was three probes, two of them stubs that returned ok:false unconditionally, so `/v1/ready` was
-      // permanently 503 and `/v1/health` was 503 because a REQUIRED dependency could never pass - and a probe that can
-      // never pass is as much a defect as one that can never fail. The real actions live in
-      // src/adapters/observability/dependency-probes.ts; `createDependencyClients` only composes them.
-      //
-      // REQUIREDNESS IS THE WEB ROLE'S, from config/environment/required.json `service_roles.web`: all four of these are
-      // required, and the two this role does NOT require are absent from this list on purpose. A dependency with no
-      // configuration gets no client, so it is reported as unconfigured rather than as healthy - and on this process the
-      // worker heartbeat and the provider transport are exactly that, because neither store nor transport is declared
-      // for this role here.
+      // The composed and WARMED probes, built above so that startup can evaluate them once before this process listens.
+      // `role` is the web role of config/environment/required.json, which decides which checks are required.
       role: 'web',
-      probes: toDependencyProbes(
-        createDependencyClients({
-          // A REAL query, not a configuration check: a probe that only read the environment would report ready for a
-          // database that is down (VG-API-059).
-          querySessionRole: async (): Promise<string> => {
-            let role = '';
-            await runner.withTenantTransaction('00000000-0000-4000-8000-000000000000', async (tx) => {
-              const result = (await tx.query('SELECT current_user AS role')) as { rows?: { role?: unknown }[] };
-              role = String(result.rows?.[0]?.role ?? '');
-            });
-            return role;
-          },
-          // The tenant-scoped application role. A pool that connected as the owner would bypass row-level security, and
-          // the probe treats that as the failure it is (VG-DATA-001).
-          expectedRole: 'vg_app',
-          valkeyUrl: config.valkeyUrl,
-          keycloakIssuer: config.keycloakIssuer,
-          // THE OBJECT STORE IS CONFIGURED FROM THE DECLARED VARIABLES, and the probe object's digest is the one
-          // .agent/evidence/EP-010/M25-object-store/object-store-verification.md records as verified.
-          ...(process.env['S3_ENDPOINT'] === undefined || process.env['S3_BUCKET'] === undefined
-            ? {}
-            : {
-                objectStore: {
-                  endpoint: String(process.env['S3_ENDPOINT']),
-                  bucket: String(process.env['S3_BUCKET']),
-                  // S3_REGION is DECLARED as an OPTIONAL key in config/environment/schema.json, and the default below is
-                  // the same declared local default scripts/induced-failure-readiness.sh uses for VG_OBJECT_STORE_REGION
-                  // (`?? "us-east-1"`): one region for the local store, stated once in the configuration surface and once
-                  // in each reader, rather than a second environment name invented here.
-                  region: process.env['S3_REGION'] ?? 'us-east-1',
-                  accessKeyId: String(process.env['S3_ACCESS_KEY_ID'] ?? ''),
-                  secretAccessKey: String(process.env['S3_SECRET_ACCESS_KEY'] ?? ''),
-                  probeKey: 'readiness/probe-object',
-                  expectedDigest: '870ca51706812c52d2360d17a64dfe68edff9c6a475eb4098c9c24937b031561',
-                },
-              }),
-        }),
-        ['postgresql', 'valkey', 'object-store', 'keycloak-jwks'],
-      ),
+      probes: dependencyProbes,
     },
   });
 

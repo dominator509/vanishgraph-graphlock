@@ -115,6 +115,39 @@ export function warmUpDependencyClients(): Promise<void> {
 }
 
 /**
+ * Evaluate every composed probe once and DISCARD the verdict, so that the first request a client makes is not also the
+ * first time this process has ever reached its dependencies. MEASURED, AND THE MEASUREMENT IS THE REASON THIS EXISTS.
+ *
+ * On a freshly booted artifact the FIRST evaluation cost 144-201 ms per dependency - the TLS handshakes, the pool's first
+ * connection and the socket setup all happen while one event loop is busy with all of them - and the SECOND evaluation
+ * cost 15-30 ms. SPEC-007 §7.2 gives each dependency its own hard budget (valkey 200 ms, postgresql and keycloak-jwks
+ * 300 ms, object-store 400 ms), so the valkey probe's 200 ms was exceeded on the first evaluation of about one boot in
+ * three, and `/v1/health` answered 503 UNHEALTHY with `valkey=false` on an idle, healthy Valkey while `/v1/ready`
+ * answered READY a moment later.
+ *
+ * WHAT THIS DOES AND DOES NOT CHANGE. It removes COLD START from the readiness decision, and it does not hide a
+ * dependency that is down: every probe still runs on every request, with its own budget and its own classification, and a
+ * dependency that is unreachable then is reported then. A warm-up failure is NOT a verdict - the outcome is discarded on
+ * purpose, because a boot-time failure that is never re-checked would be exactly the static answer VG-API-059 forbids.
+ *
+ * One dependency is warmed through a connection this process does not keep: the valkey probe opens and closes its own
+ * connection per call, so the warm-up closes the one it opened and each later evaluation opens its own - measured at
+ * 15-30 ms once the handshakes and the pool exist, which is the point.
+ */
+export async function warmUpDependencyProbes(probes: readonly DependencyProbe[]): Promise<void> {
+  await Promise.all(
+    probes.map(async (probe) => {
+      try {
+        await probe.run();
+      } catch {
+        // Swallowed BY DESIGN: the probe reports its own failure on the next request, and a boot that refuses to start
+        // because a dependency is down could not report that dependency at all.
+      }
+    }),
+  );
+}
+
+/**
  * Build every client this process has the configuration for.
  *
  * THE VALKEY CLIENT IS BUILT HERE RATHER THAN INJECTED, because the round trip is the declared action and the driver is

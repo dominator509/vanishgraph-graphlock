@@ -30,7 +30,8 @@ import {
   DEPENDENCY_KEYS,
   type DependencyClients,
 } from '../../src/adapters/observability/dependency-probes.ts';
-import { createDependencyClients, toDependencyProbes, warmUpDependencyClients } from '../../src/infrastructure/observability/dependency-clients.ts';
+import { createDependencyClients, toDependencyProbes, warmUpDependencyClients, warmUpDependencyProbes } from '../../src/infrastructure/observability/dependency-clients.ts';
+import type { DependencyProbe } from '../../src/http/routes/health.ts';
 
 const ROOT = resolve(import.meta.dirname, '..', '..');
 
@@ -143,10 +144,34 @@ describe('the valkey driver load is not charged to the dependency budget', () =>
     await warmUpDependencyClients();
     // The composition root is what makes it effective: an unawaited warm-up would leave the same race in place.
     const main = readFileSync(join(ROOT, 'src', 'infrastructure', 'main.ts'), 'utf8');
-    assert.match(main, /await warmUpDependencyClients\(\);/, 'main.ts must await the warm-up');
+    assert.match(main, /await warmUpDependencyClients\(\);/, 'main.ts must await the driver warm-up');
+    assert.match(main, /await warmUpDependencyProbes\(dependencyProbes\);/, 'main.ts must warm every dependency path');
     const warmIndex = main.indexOf('await warmUpDependencyClients();');
+    const probesWarmIndex = main.indexOf('await warmUpDependencyProbes(dependencyProbes);');
     const listenIndex = main.indexOf('await listen(app');
-    assert.ok(warmIndex >= 0 && listenIndex > warmIndex, 'the warm-up must happen BEFORE the process listens');
+    assert.ok(warmIndex >= 0 && probesWarmIndex > warmIndex, 'the driver load must be awaited first');
+    assert.ok(listenIndex > probesWarmIndex, 'both warm-ups must happen BEFORE the process listens');
+  });
+
+  test('the warm-up runs every probe and treats a failure as no verdict rather than as a boot failure', async () => {
+    const ran: string[] = [];
+    const probes: DependencyProbe[] = [
+      { name: 'first', required: true, timeoutMs: 100, run: async () => { ran.push('first'); return { ok: true, reasonCode: null }; } },
+      {
+        name: 'second',
+        required: true,
+        timeoutMs: 100,
+        run: async () => {
+          ran.push('second');
+          throw new Error('a warm-up failure must not stop the process from listening');
+        },
+      },
+    ];
+    await warmUpDependencyProbes(probes);
+    assert.deepEqual(ran, ['first', 'second'], 'every probe must be evaluated once');
+    // And the composed set, where all six report MISCONFIGURED: six failures still resolve, because the verdict of the
+    // warm-up pass is discarded on purpose and the probes report for themselves on the next request.
+    await warmUpDependencyProbes(toDependencyProbes({}, WEB_REQUIRED));
   });
 });
 
