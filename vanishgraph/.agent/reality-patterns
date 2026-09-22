@@ -1,2 +1,5 @@
-TODO|FIXME|XXX|HACK
+# HACK is word-boundaried: a bare substring matched the domain predicate
+# mailCanReachAcknowledged ("...hAck..."), which is specified behaviour (VG-ACTION-004),
+# not a workaround marker. Markers (HACK:, // HACK, # HACK) still match.
+TODO|FIXME|XXX|\bHACK\b
 not implemented|PLACEHOLDER|CHANGEME

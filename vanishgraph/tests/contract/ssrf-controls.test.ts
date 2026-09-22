@@ -13,7 +13,7 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { join, relative, resolve, sep } from 'node:path';
 
 import {
   ALLOWED_SCHEMES,
@@ -168,7 +168,10 @@ describe('no module outside the SSRF adapter calls the platform fetch directly (
         // below, and the ledger records routing it through the SSRF guard as open work — a URL the DEPLOYMENT configures
         // is still a URL that could point inward.
         const recordedExceptions = ['src/adapters/oidc/jwks.ts'];
-        const shown = full.replace(`${PROJECT_ROOT}\\`, '').replace(/\\/g, '/');
+        // The path is normalized with relative() and sep so the recorded exception matches on every
+        // platform: the previous PROJECT_ROOT + '\\' prefix strip only matched on Windows, so on POSIX
+        // the exception never matched and this suite failed on every Linux/macOS checkout including CI.
+        const shown = relative(PROJECT_ROOT, full).split(sep).join('/');
         if (recordedExceptions.includes(shown)) continue;
         if (/[^.\w]fetch\s*\(/.test(code) && !/fetchImpl|WorkloadIdentityExchange|transport/.test(code)) {
           offenders.push(shown);

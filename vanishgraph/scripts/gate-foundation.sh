@@ -114,7 +114,7 @@ echo "gate-foundation: zero-collection negative proof ok"
 # 7. verify.sh progression proof. Non-zero exit is REQUIRED here.
 progression=.agent/evidence/EP-001/verify-progression.txt
 if sh scripts/verify.sh >"$progression" 2>&1; then
-  fail "verify.sh exited 0 although artifact-bound stages are unimplemented; a pass here is a fabrication (DOD-027)"
+  fail "verify.sh exited 0 although stages remain uncompletable in this environment; a pass here is a fabrication (DOD-027)"
 fi
 grep -q 'verify: running stage preflight' "$progression"   || fail "verify.sh did not reach preflight"
 grep -q 'verify: running stage unit' "$progression"        || fail "verify.sh did not reach the unit stage"
@@ -124,19 +124,32 @@ grep -q 'format-check: ok' "$progression"                  || fail "format-check
 grep -q 'typecheck: ok' "$progression"                     || fail "typecheck sentinel missing from the verify transcript"
 grep -q 'test-unit: ok' "$progression"                     || fail "test-unit sentinel missing from the verify transcript"
 grep -q 'verify: running stage integration' "$progression" || fail "verify.sh did not reach the integration stage"
-# EP-003 implemented the integration stage, so this gate no longer asserts that integration
-# loud-fails. That assertion was correct while the stage was unimplemented and is now obsolete;
-# keeping it would fail this gate for real progress, and deleting it without replacement would
-# silently drop the property it protected. The property is kept, restated against the stage that
-# IS still unimplemented: the run must stop at the FIRST unimplemented stage with the mandated
-# loud-fail signature, and must still never print `verify: ok`.
 grep -q 'verify: running stage security-check' "$progression" \
-  || fail "verify.sh did not advance past integration to the first unimplemented stage"
-grep -qE '^ERROR: .* is an unimplemented placeholder' "$progression" \
-  || fail "the first unimplemented stage did not fail loudly with the mandated signature"
+  || fail "verify.sh did not advance past integration (security-check is implemented since EP-006)"
+grep -q '^build: ok' "$progression"                       || fail "build sentinel missing from the verify transcript"
+# RESTATED after EP-006/EP-009/EP-010. The assertion below used to expect the run to stop
+# at security-check with the loud-fail placeholder signature. That was correct while
+# security-check was unimplemented and is now obsolete: EP-006 implemented it as a real
+# gate, and every stage after build (artifact-identity, smoke, e2e, live-fire) is
+# implemented too. Keeping the old assertion would fail this gate for real progress, and
+# deleting it without replacement would silently drop the property it protected. The
+# property is kept, restated against what the run can actually complete: it must advance
+# through every stage that can complete in this environment, stop at the FIRST stage it
+# cannot, fail LOUDLY with that stage's named reason (never silently, never with a
+# placeholder signature for a stage that exists), and must still never print `verify: ok`.
+# In a fresh checkout the first uncompletable stage is artifact-identity: the recorded
+# identity cannot validate a tree it was not recorded for, and the distribution
+# artifacts are git-ignored so a fresh clone has none. In the recorded tree with its
+# artifacts present, the run advances further and stops loudly at smoke, e2e, or
+# live-fire instead. The assertion accepts any of those loud failures, because the
+# property is the loud stop, not which stage stops it.
+grep -q 'verify: running stage artifact-identity' "$progression" \
+  || fail "verify.sh did not advance past build to the artifact-identity stage"
+grep -qE '(artifact identity|smoke test|end-to-end tests|live-fire): FAIL' "$progression" \
+  || fail "the first uncompletable stage did not fail loudly with its named reason"
 if grep -qx 'verify: ok' "$progression"; then
-  fail "verify.sh printed its success sentinel while stages are unimplemented (DOD-024)"
+  fail "verify.sh printed its success sentinel while stages remain uncompletable (DOD-024)"
 fi
-echo "gate-foundation: verify.sh progression ok (6 stages green, first unimplemented stage loud-fails, no verify: ok)"
+echo "gate-foundation: verify.sh progression ok (stages through build green, first uncompletable stage loud-fails, no verify: ok)"
 
 echo "gate-foundation: ok"
