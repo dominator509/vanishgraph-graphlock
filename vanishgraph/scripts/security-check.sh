@@ -47,7 +47,7 @@ if grep -nE 'continue-on-error' scripts/*.sh 2>/dev/null | grep -v 'security-che
   exit 1
 fi
 # \\|| true\\ IS MASKING ONLY WHEN IT SILENCES A GATE, AND THE LINE IS DRAWN AT THE COMMAND IT IS APPENDED TO: a
-# best-effort cleanup (m ... || true), a display pipeline, or an assignment that consumes the result has silenced
+# best-effort cleanup (rm ... || true), a display pipeline, or an assignment that consumes the result has silenced
 # nothing, while sh scripts/gate.sh || true has suppressed a failure. MEASURED: a blunt scan for the pattern flagged
 # eleven existing scripts, all of them in the first category, so the scan now looks for the shape that suppresses a gate.
 if grep -nE '(sh scripts/|node --test)[^|]*\|\|[[:space:]]*true' scripts/*.sh 2>/dev/null | grep -v 'security-check.sh' >/dev/null 2>&1; then

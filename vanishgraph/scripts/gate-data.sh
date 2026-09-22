@@ -94,7 +94,9 @@ process.stdout.write(rows.join("\n"));
 listed_tables=$(sed -e 's/#.*//' -e 's/[[:space:]]*$//' db/tenant-scoped-tables.txt | grep -v '^$' | sort)
 [ "$live_tables" = "$listed_tables" ] || {
   echo "gate-data: FAIL - the live tenant-scoped inventory differs from db/tenant-scoped-tables.txt" >&2
-  diff <(printf '%s\n' "$listed_tables") <(printf '%s\n' "$live_tables") >&2 || true
+  printf '%s\n' "$listed_tables" > "$tmp/listed_tables.txt"
+  printf '%s\n' "$live_tables" > "$tmp/live_tables.txt"
+  diff "$tmp/listed_tables.txt" "$tmp/live_tables.txt" >&2 || true
   exit 1
 }
 table_count=$(printf '%s\n' "$live_tables" | grep -c . )
